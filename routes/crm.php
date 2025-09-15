@@ -28,4 +28,32 @@ Route::post('/register', [RegisterController::class, 'register']);
 // Защищенные маршруты
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('crm.dashboard.main');
+    
+    // Маршруты только для тренеров
+    Route::middleware(['role:trainer'])->group(function () {
+        Route::get('/clients', function () {
+            return 'Страница клиентов (только для тренеров)';
+        })->name('crm.clients');
+    });
+    
+    // Маршруты для всех авторизованных
+    Route::get('/calendar', function () {
+        return 'Календарь';
+    })->name('crm.calendar');
+    
+    Route::get('/workouts', function () {
+        return 'Тренировки';
+    })->name('crm.workouts');
+    
+    Route::get('/progress', function () {
+        return 'Прогресс';
+    })->name('crm.progress');
+    
+    Route::get('/nutrition', function () {
+        return 'Дневник питания';
+    })->name('crm.nutrition');
+    
+    Route::get('/settings', function () {
+        return 'Настройки';
+    })->name('crm.settings');
 });
