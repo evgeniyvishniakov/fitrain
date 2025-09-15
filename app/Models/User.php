@@ -22,6 +22,14 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'specialization',
+        'experience_years',
+        'age',
+        'weight',
+        'height',
+        'trainer_id',
+        'role',
     ];
 
     /**
@@ -43,4 +51,53 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Отношения для тренера
+     */
+    public function athletes()
+    {
+        return $this->hasMany(User::class, 'trainer_id');
+    }
+
+    public function workouts()
+    {
+        return $this->hasMany(\App\Models\Crm\Workout::class, 'trainer_id');
+    }
+
+    /**
+     * Отношения для спортсмена
+     */
+    public function trainer()
+    {
+        return $this->belongsTo(User::class, 'trainer_id');
+    }
+
+    public function athleteWorkouts()
+    {
+        return $this->hasMany(\App\Models\Crm\Workout::class, 'athlete_id');
+    }
+
+    public function progress()
+    {
+        return $this->hasMany(\App\Models\Crm\Progress::class, 'athlete_id');
+    }
+
+    public function nutrition()
+    {
+        return $this->hasMany(\App\Models\Crm\Nutrition::class, 'athlete_id');
+    }
+
+    /**
+     * Проверка роли
+     */
+    public function isTrainer()
+    {
+        return $this->hasRole('trainer');
+    }
+
+    public function isAthlete()
+    {
+        return $this->hasRole('athlete');
+    }
 }

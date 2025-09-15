@@ -15,7 +15,7 @@ class TrainerController extends BaseController
         $trainer = auth()->user();
         $athletes = $trainer->athletes()->count();
         $workouts = $trainer->workouts()->count();
-        $recentWorkouts = $trainer->workouts()->latest()->take(5)->get();
+        $recentWorkouts = $trainer->workouts()->with('athlete')->latest()->take(5)->get();
         
         return view('crm.trainer.dashboard', compact('trainer', 'athletes', 'workouts', 'recentWorkouts'));
     }

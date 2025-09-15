@@ -14,9 +14,9 @@ class AthleteController extends BaseController
     public function dashboard()
     {
         $athlete = auth()->user();
-        $workouts = $athlete->workouts()->count();
+        $workouts = $athlete->athleteWorkouts()->count();
         $progress = $athlete->progress()->count();
-        $recentWorkouts = $athlete->workouts()->latest()->take(5)->get();
+        $recentWorkouts = $athlete->athleteWorkouts()->with('trainer')->latest()->take(5)->get();
         
         return view('crm.athlete.dashboard', compact('athlete', 'workouts', 'progress', 'recentWorkouts'));
     }
@@ -48,7 +48,7 @@ class AthleteController extends BaseController
     public function workouts()
     {
         $athlete = auth()->user();
-        $workouts = $athlete->workouts()->paginate(10);
+        $workouts = $athlete->athleteWorkouts()->with('trainer')->paginate(10);
         
         return view('crm.athlete.workouts', compact('workouts'));
     }
