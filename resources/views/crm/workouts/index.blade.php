@@ -12,6 +12,16 @@ function workoutApp() {
         currentWorkout: null,
         search: '',
         status: '',
+        currentPage: 1,
+        itemsPerPage: 2,
+        
+        // Поля формы
+        formTitle: '',
+        formAthleteId: '',
+        formDate: '',
+        formDuration: 60,
+        formDescription: '',
+        formStatus: 'planned',
         
         // Навигация
         showList() {
@@ -21,24 +31,29 @@ function workoutApp() {
         
         showCreate() {
             this.currentView = 'create';
-            this.currentWorkout = {
-                title: '',
-                description: '',
-                athlete_id: '',
-                date: new Date().toISOString().split('T')[0],
-                duration: 60,
-                status: 'planned'
-            };
+            this.currentWorkout = null;
+            this.formTitle = '';
+            this.formDescription = '';
+            this.formAthleteId = '';
+            this.formDate = new Date().toISOString().split('T')[0];
+            this.formDuration = 60;
+            this.formStatus = 'planned';
         },
         
-        showEdit(workout) {
+        showEdit(workoutId) {
             this.currentView = 'edit';
-            this.currentWorkout = { ...workout };
+            this.currentWorkout = this.workouts.find(w => w.id === workoutId);
+            this.formTitle = this.currentWorkout.title;
+            this.formDescription = this.currentWorkout.description || '';
+            this.formAthleteId = this.currentWorkout.athlete_id;
+            this.formDate = this.currentWorkout.date;
+            this.formDuration = this.currentWorkout.duration || 60;
+            this.formStatus = this.currentWorkout.status;
         },
         
-        showView(workout) {
+        showView(workoutId) {
             this.currentView = 'view';
-            this.currentWorkout = workout;
+            this.currentWorkout = this.workouts.find(w => w.id === workoutId);
         },
         
         // Фильтрация
@@ -58,12 +73,89 @@ function workoutApp() {
             return filtered;
         },
         
+        // Пагинация
+        get totalPages() {
+            const total = Math.ceil(this.filteredWorkouts.length / this.itemsPerPage);
+            return total > 0 ? total : 1;
+        },
+        
+        get visiblePages() {
+            const pages = [];
+            const total = this.totalPages;
+            const current = this.currentPage;
+            
+            if (total <= 5) {
+                // Если страниц 5 или меньше, показываем все
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // Показываем максимум 5 страниц
+                let start = Math.max(1, current - 2);
+                let end = Math.min(total, start + 4);
+                
+                if (end - start < 4) {
+                    start = Math.max(1, end - 4);
+                }
+                
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+            }
+            
+            return pages;
+        },
+        
+        get paginatedWorkouts() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.filteredWorkouts.slice(start, end);
+        },
+        
+        goToPage(page) {
+            console.log('Going to page:', page);
+            this.currentPage = page;
+        },
+        
+        previousPage() {
+            if (this.currentPage > 1) {
+                console.log('Previous page');
+                this.currentPage--;
+            }
+        },
+        
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                console.log('Next page');
+                this.currentPage++;
+            }
+        },
+        
+        // Вспомогательные методы
+        getStatusLabel(status) {
+            const labels = {
+                'completed': 'Завершена',
+                'cancelled': 'Отменена',
+                'planned': 'Запланирована'
+            };
+            return labels[status] || status;
+        },
+        
         // Сохранение
         async saveWorkout() {
             try {
-                const url = this.currentWorkout.id ? 
+                const workoutData = {
+                    title: this.formTitle,
+                    description: this.formDescription,
+                    athlete_id: this.formAthleteId,
+                    date: this.formDate,
+                    duration: this.formDuration,
+                    status: this.formStatus
+                };
+                
+                const url = this.currentWorkout && this.currentWorkout.id ? 
                     `/workouts/${this.currentWorkout.id}` : '/workouts';
-                const method = this.currentWorkout.id ? 'PUT' : 'POST';
+                const method = this.currentWorkout && this.currentWorkout.id ? 'PUT' : 'POST';
                 
                 const response = await fetch(url, {
                     method: method,
@@ -71,7 +163,7 @@ function workoutApp() {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify(this.currentWorkout)
+                    body: JSON.stringify(workoutData)
                 });
                 
                 if (response.ok) {
@@ -204,135 +296,244 @@ function workoutApp() {
 @endsection
 
 @section("header-actions")
-    @if(auth()->user()->hasRole('trainer'))
-        <button @click="showCreate()" class="btn">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-            </svg>
-            Создать тренировку
-        </button>
-    @endif
+    <!-- Кнопка добавления перенесена в строку с фильтрами -->
 @endsection
 
 @section("content")
-<div x-data="workoutApp()" class="space-y-6 fade-in-up">
+<div x-data="workoutApp()" class="space-y-6">
     
     <!-- Фильтры и поиск -->
-    <div class="card p-6">
-        <div class="flex flex-col sm:flex-row gap-4">
-            <div class="flex-1">
-                <input type="text" 
-                       x-model="search" 
-                       placeholder="Поиск тренировок..." 
-                       class="input">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <style>
+                .filters-row {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 1rem !important;
+                }
+                .filters-row > div {
+                    width: 100% !important;
+                }
+                .filters-row .buttons-container {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.75rem !important;
+                }
+                @media (min-width: 640px) {
+                    .filters-row .buttons-container {
+                        flex-direction: row !important;
+                    }
+                }
+                @media (min-width: 1024px) {
+                    .filters-row {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        align-items: center !important;
+                        gap: 1rem !important;
+                    }
+                    .filters-row > div {
+                        width: auto !important;
+                    }
+                    .filters-row .search-container {
+                        flex: 1 !important;
+                        min-width: 200px !important;
+                    }
+                    .filters-row .status-container {
+                        width: 200px !important;
+                    }
+                    .filters-row .buttons-container {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        gap: 0.75rem !important;
+                        flex-shrink: 0 !important;
+                    }
+                }
+            </style>
+            <div class="filters-row">
+                <!-- Поиск -->
+                <div class="search-container">
+                    <input type="text" 
+                           x-model="search" 
+                           placeholder="Поиск тренировок..." 
+                           class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                </div>
+                
+                <!-- Фильтр статуса -->
+                <div class="status-container">
+                    <select x-model="status" 
+                            class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
+                        <option value="">Все статусы</option>
+                        <option value="planned">Запланирована</option>
+                        <option value="completed">Завершена</option>
+                        <option value="cancelled">Отменена</option>
+                    </select>
+                </div>
+                
+                <!-- Кнопки -->
+                <div class="buttons-container">
+                    @if(auth()->user()->hasRole('trainer'))
+                        <button @click="showCreate()" 
+                                class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
+                            Добавить тренировку
+                        </button>
+                    @endif
+                </div>
             </div>
-            <div class="flex gap-2">
-                <select x-model="status" class="input">
-                    <option value="">Все статусы</option>
-                    <option value="planned">Запланирована</option>
-                    <option value="completed">Завершена</option>
-                    <option value="cancelled">Отменена</option>
-                </select>
+        </div>
+        
+        <!-- Активные фильтры -->
+        <div x-show="search || status" class="mt-4 pt-4 border-t border-gray-100">
+            <div class="flex flex-wrap gap-2">
+                <span class="text-sm text-gray-500">Активные фильтры:</span>
+                
+                <span x-show="search" 
+                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                    Поиск: "<span x-text="search"></span>"
+                    <button @click="search = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
+                </span>
+                
+                <span x-show="status" 
+                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                    Статус: <span x-text="getStatusLabel(status)"></span>
+                    <button @click="status = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
+                </span>
             </div>
         </div>
     </div>
 
     <!-- СПИСОК ТРЕНИРОВОК -->
     <div x-show="currentView === 'list'" class="space-y-4">
-        <template x-for="workout in filteredWorkouts" :key="workout.id">
-            <div class="card p-6 hover:shadow-lg transition-shadow">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-1" x-text="workout.title"></h3>
-                                <p class="text-gray-600 mb-2" x-text="workout.description || ''"></p>
-                                <div class="flex flex-wrap gap-4 text-sm text-gray-500">
-                                    <div class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                        </svg>
-                                        <span x-text="new Date(workout.date).toLocaleDateString('ru-RU')"></span>
-                                    </div>
-                                    <div class="flex items-center gap-1" x-show="workout.duration">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                        <span x-text="workout.duration + ' мин'"></span>
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                        </svg>
-                                        <span x-text="workout.athlete?.name || workout.trainer?.name || 'Неизвестно'"></span>
-                                    </div>
-                                </div>
+        <template x-for="workout in paginatedWorkouts" :key="workout.id">
+            <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
+                <!-- Статус индикатор -->
+                <div class="absolute top-0 left-0 w-full h-1" 
+                     :class="{
+                         'bg-green-500': workout.status === 'completed',
+                         'bg-red-500': workout.status === 'cancelled',
+                         'bg-blue-500': workout.status === 'planned'
+                     }">
+                </div>
+                
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <!-- Аватарка спортсмена -->
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg text-white font-semibold text-lg">
+                                <span x-text="(workout.athlete?.name || workout.trainer?.name || '?').charAt(0).toUpperCase()"></span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-3">
+                        
                         <!-- Статус -->
-                        <span class="px-3 py-1 rounded-full text-xs font-medium"
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold"
                               :class="{
                                   'bg-green-100 text-green-800': workout.status === 'completed',
                                   'bg-red-100 text-red-800': workout.status === 'cancelled',
                                   'bg-blue-100 text-blue-800': workout.status === 'planned'
                               }"
-                              x-text="{
-                                  'completed': 'Завершена',
-                                  'cancelled': 'Отменена',
-                                  'planned': 'Запланирована'
-                              }[workout.status]">
+                              x-text="getStatusLabel(workout.status)">
                         </span>
+                    </div>
+                    
+                    <!-- Заголовок и описание -->
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors" x-text="workout.title"></h3>
+                        <p class="text-gray-600 text-sm line-clamp-2" x-text="workout.description || ''"></p>
+                    </div>
+                    
+                    <!-- Мета информация -->
+                    <div class="space-y-2 mb-4">
+                        <div class="text-sm text-gray-500">
+                            <span class="font-medium text-gray-700">Дата:</span>
+                            <span x-text="new Date(workout.date).toLocaleDateString('ru-RU')"></span>
+                        </div>
                         
-                        <!-- Действия -->
-                        <div class="flex gap-2">
-                            <button @click="showView(workout)" class="btn-secondary">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
+                        <div class="text-sm text-gray-500" x-show="workout.duration">
+                            <span class="font-medium text-gray-700">Продолжительность:</span>
+                            <span x-text="workout.duration + ' мин'"></span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-500">
+                            <span class="font-medium text-gray-700">Участник:</span>
+                            <span x-text="workout.athlete?.name || workout.trainer?.name || 'Неизвестно'"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Действия -->
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div class="flex space-x-2">
+                            <button @click="showView(workout.id)" 
+                                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                Просмотр
                             </button>
                             
                             @if(auth()->user()->hasRole('trainer'))
-                                <button @click="showEdit(workout)" class="btn-secondary">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                </button>
-                                
-                                <button @click="deleteWorkout(workout.id)" class="btn-danger">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
+                                <button @click="showEdit(workout.id)" 
+                                        class="px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                    Редактировать
                                 </button>
                             @endif
                         </div>
+                        
+                        @if(auth()->user()->hasRole('trainer'))
+                            <button @click="deleteWorkout(workout.id)" 
+                                    class="px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+                                Удалить
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
         </template>
         
+        <!-- Пагинация -->
+        <div x-show="filteredWorkouts.length > 0 && totalPages > 1" class="mt-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                <div class="flex items-center justify-center">
+                    <!-- Навигация -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Предыдущая страница -->
+                        <button @click="previousPage()" 
+                                :disabled="currentPage === 1"
+                                :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
+                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Номера страниц -->
+                        <template x-for="page in visiblePages" :key="page">
+                            <button @click="goToPage(page)" 
+                                    :class="page === currentPage ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'"
+                                    class="px-3 py-2 text-sm font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                <span x-text="page"></span>
+                            </button>
+                        </template>
+                        
+                        <!-- Следующая страница -->
+                        <button @click="nextPage()" 
+                                :disabled="currentPage === totalPages"
+                                :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
+                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Пустое состояние -->
-        <div x-show="filteredWorkouts.length === 0" class="card p-12 text-center">
-            <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Нет тренировок</h3>
-            <p class="text-gray-600 mb-6">У вас пока нет запланированных тренировок</p>
+        <div x-show="filteredWorkouts.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                <span class="text-3xl text-gray-400">💪</span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет тренировок</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">У вас пока нет запланированных тренировок. Создайте первую тренировку для начала работы.</p>
             @if(auth()->user()->hasRole('trainer'))
-                <button @click="showCreate()" class="btn">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                    </svg>
+                <button @click="showCreate()" 
+                        class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     Создать первую тренировку
                 </button>
             @endif
@@ -340,15 +541,13 @@ function workoutApp() {
     </div>
 
     <!-- СОЗДАНИЕ/РЕДАКТИРОВАНИЕ ТРЕНИРОВКИ -->
-    <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="card p-6">
+    <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">
                 <span x-text="currentWorkout?.id ? 'Редактировать тренировку' : 'Создать тренировку'"></span>
             </h3>
-            <button @click="showList()" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 Назад
             </button>
         </div>
@@ -362,8 +561,8 @@ function workoutApp() {
                             Название тренировки *
                         </label>
                         <input type="text" 
-                               x-model="currentWorkout.title"
-                               class="input"
+                               x-model="formTitle"
+                               class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                placeholder="Например: Силовая тренировка"
                                required>
                     </div>
@@ -372,10 +571,12 @@ function workoutApp() {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Спортсмен *
                         </label>
-                        <select x-model="currentWorkout.athlete_id" class="input" required>
+                        <select x-model="formAthleteId" 
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+                                required>
                             <option value="">Выберите спортсмена</option>
                             @foreach($athletes ?? [] as $athlete)
-                                <option value="{{ $athlete->id }}" x-text="{{ $athlete->name }}"></option>
+                                <option value="{{ $athlete->id }}">{{ $athlete->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -385,8 +586,8 @@ function workoutApp() {
                             Дата тренировки *
                         </label>
                         <input type="date" 
-                               x-model="currentWorkout.date"
-                               class="input"
+                               x-model="formDate"
+                               class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                required>
                     </div>
 
@@ -395,8 +596,8 @@ function workoutApp() {
                             Продолжительность (минуты)
                         </label>
                         <input type="number" 
-                               x-model="currentWorkout.duration"
-                               class="input"
+                               x-model="formDuration"
+                               class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                placeholder="60"
                                min="1">
                     </div>
@@ -408,9 +609,9 @@ function workoutApp() {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Описание тренировки
                         </label>
-                        <textarea x-model="currentWorkout.description"
+                        <textarea x-model="formDescription"
                                   rows="6"
-                                  class="input"
+                                  class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                                   placeholder="Опишите план тренировки, упражнения, цели..."></textarea>
                     </div>
 
@@ -418,7 +619,8 @@ function workoutApp() {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Статус
                         </label>
-                        <select x-model="currentWorkout.status" class="input">
+                        <select x-model="formStatus" 
+                                class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             <option value="planned">Запланирована</option>
                             <option value="completed">Завершена</option>
                             <option value="cancelled">Отменена</option>
@@ -429,13 +631,13 @@ function workoutApp() {
 
             <!-- Кнопки -->
             <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
-                <button type="button" @click="showList()" class="btn-secondary">
+                <button type="button" 
+                        @click="showList()" 
+                        class="inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     Отмена
                 </button>
-                <button type="submit" class="btn">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
+                <button type="submit" 
+                        class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     <span x-text="currentWorkout?.id ? 'Обновить' : 'Создать'"></span>
                 </button>
             </div>
@@ -443,51 +645,79 @@ function workoutApp() {
     </div>
 
     <!-- ПРОСМОТР ТРЕНИРОВКИ -->
-    <div x-show="currentView === 'view'" x-transition class="card p-6">
+    <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">Просмотр тренировки</h3>
-            <button @click="showList()" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 Назад
             </button>
         </div>
         
         <div x-show="currentWorkout" class="space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Заголовок и статус -->
+            <div class="flex items-start justify-between">
                 <div>
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4" x-text="currentWorkout?.title"></h4>
-                    <p class="text-gray-600" x-text="currentWorkout?.description || 'Описание отсутствует'"></p>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Дата:</span>
-                        <span class="font-medium" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('ru-RU') : ''"></span>
-                    </div>
-                    <div class="flex justify-between" x-show="currentWorkout?.duration">
-                        <span class="text-gray-600">Продолжительность:</span>
-                        <span class="font-medium" x-text="currentWorkout?.duration + ' мин'"></span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Статус:</span>
-                        <span class="px-2 py-1 rounded-full text-xs font-medium"
+                    <h4 class="text-2xl font-bold text-gray-900 mb-2" x-text="currentWorkout?.title"></h4>
+                    <div class="flex items-center space-x-4">
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold"
                               :class="{
                                   'bg-green-100 text-green-800': currentWorkout?.status === 'completed',
                                   'bg-red-100 text-red-800': currentWorkout?.status === 'cancelled',
                                   'bg-blue-100 text-blue-800': currentWorkout?.status === 'planned'
                               }"
-                              x-text="{
-                                  'completed': 'Завершена',
-                                  'cancelled': 'Отменена',
-                                  'planned': 'Запланирована'
-                              }[currentWorkout?.status]">
+                              x-text="getStatusLabel(currentWorkout?.status)">
                         </span>
                     </div>
                 </div>
             </div>
+            
+            <!-- Описание -->
+            <div class="prose max-w-none" x-show="currentWorkout?.description">
+                <h5 class="text-lg font-semibold text-gray-900 mb-3">Описание</h5>
+                <p class="text-gray-600 whitespace-pre-line" x-text="currentWorkout?.description"></p>
+            </div>
+            
+            <!-- Детали -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="mb-2">
+                        <span class="text-sm font-medium text-gray-500">Дата</span>
+                    </div>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('ru-RU') : ''"></p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-4" x-show="currentWorkout?.duration">
+                    <div class="mb-2">
+                        <span class="text-sm font-medium text-gray-500">Продолжительность</span>
+                    </div>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.duration + ' мин'"></p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="mb-2">
+                        <span class="text-sm font-medium text-gray-500">Участник</span>
+                    </div>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.athlete?.name || currentWorkout?.trainer?.name || 'Неизвестно'"></p>
+                </div>
+            </div>
+            
+            <!-- Действия -->
+            @if(auth()->user()->hasRole('trainer'))
+                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                    <button @click="showEdit(currentWorkout?.id)" 
+                            class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                        Редактировать
+                    </button>
+                    
+                    <button @click="deleteWorkout(currentWorkout?.id)" 
+                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+                        Удалить
+                    </button>
+                </div>
+            @endif
         </div>
     </div>
 </div>
+
 @endsection

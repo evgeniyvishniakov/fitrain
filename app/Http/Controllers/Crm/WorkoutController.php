@@ -14,9 +14,9 @@ class WorkoutController extends BaseController
         $user = auth()->user();
         
         if ($user->hasRole('trainer')) {
-            $workouts = $user->workouts()->with('athlete')->paginate(10);
+            $workouts = $user->workouts()->with('athlete')->paginate(4);
         } else {
-            $workouts = $user->workouts()->with('trainer')->paginate(10);
+            $workouts = $user->workouts()->with('trainer')->paginate(4);
         }
         
         return view('crm.workouts.index', compact('workouts'));
