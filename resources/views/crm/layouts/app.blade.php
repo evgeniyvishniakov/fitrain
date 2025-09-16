@@ -9,6 +9,7 @@
     @vite(['resources/css/app.css'])
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="{{ asset('js/notifications.js') }}"></script>
     @stack("styles")
 </head>
 <body class="theme-light">
@@ -217,5 +218,9 @@
             }
         });
     </script>
+    
+    <!-- Компоненты уведомлений и подтверждений -->
+    @include('components.notification')
+    @include('components.confirm-modal')
 </body>
 </html>

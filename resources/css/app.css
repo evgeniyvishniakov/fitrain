@@ -10,6 +10,44 @@
     overflow: hidden;
 }
 
+/* Исправление курсора в полях ввода */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="number"], 
+input[type="date"], 
+textarea, 
+select {
+    cursor: text !important;
+    caret-color: #ff0000 !important; /* ярко-красный курсор - всегда видно */
+    color: #000000 !important; /* черный текст */
+}
+
+/* Для темной темы */
+.dark input[type="text"], 
+.dark input[type="email"], 
+.dark input[type="password"], 
+.dark input[type="number"], 
+.dark input[type="date"], 
+.dark textarea, 
+.dark select {
+    caret-color: #00ff00 !important; /* ярко-зеленый курсор для темной темы */
+    color: #ffffff !important; /* белый текст */
+}
+
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus, 
+input[type="number"]:focus, 
+input[type="date"]:focus, 
+textarea:focus, 
+select:focus {
+    cursor: text !important;
+    outline: none !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
+}
+
 /* Фиксы для Tailwind */
 .flex {
     display: flex;

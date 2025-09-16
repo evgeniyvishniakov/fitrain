@@ -9,6 +9,7 @@ use App\Http\Controllers\Crm\AthleteController;
 use App\Http\Controllers\Crm\WorkoutController;
 use App\Http\Controllers\Crm\ProgressController;
 use App\Http\Controllers\Crm\NutritionController;
+use App\Http\Controllers\Crm\ExerciseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,15 @@ Route::middleware(["auth"])->group(function () {
     Route::get("/nutrition/{id}/edit", [NutritionController::class, "edit"])->name("crm.nutrition.edit");
     Route::put("/nutrition/{id}", [NutritionController::class, "update"])->name("crm.nutrition.update");
     Route::delete("/nutrition/{id}", [NutritionController::class, "destroy"])->name("crm.nutrition.destroy");
+    
+    // Каталог упражнений
+    Route::get("/exercises", [ExerciseController::class, "index"])->name("crm.exercises.index");
+    Route::get("/exercises/create", [ExerciseController::class, "create"])->name("crm.exercises.create");
+    Route::post("/exercises", [ExerciseController::class, "store"])->name("crm.exercises.store");
+    Route::get("/exercises/{id}", [ExerciseController::class, "show"])->name("crm.exercises.show");
+    Route::get("/exercises/{id}/edit", [ExerciseController::class, "edit"])->name("crm.exercises.edit");
+    Route::put("/exercises/{id}", [ExerciseController::class, "update"])->name("crm.exercises.update");
+    Route::delete("/exercises/{id}", [ExerciseController::class, "destroy"])->name("crm.exercises.destroy");
     
     // Общие маршруты для профиля
     Route::get("/profile", function () {
