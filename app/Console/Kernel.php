@@ -12,7 +12,18 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Генерация новых шаблонов тренировок каждую неделю
+        $schedule->command('templates:generate --count=2')
+                 ->weekly()
+                 ->sundays()
+                 ->at('09:00')
+                 ->withoutOverlapping();
+
+        // Генерация шаблонов для популярных категорий каждый день
+        $schedule->command('templates:generate --count=1')
+                 ->daily()
+                 ->at('08:00')
+                 ->withoutOverlapping();
     }
 
     /**

@@ -10,6 +10,7 @@ use App\Http\Controllers\Crm\WorkoutController;
 use App\Http\Controllers\Crm\ProgressController;
 use App\Http\Controllers\Crm\NutritionController;
 use App\Http\Controllers\Crm\ExerciseController;
+use App\Http\Controllers\Crm\WorkoutTemplateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,14 +79,25 @@ Route::middleware(["auth"])->group(function () {
     Route::put("/nutrition/{id}", [NutritionController::class, "update"])->name("crm.nutrition.update");
     Route::delete("/nutrition/{id}", [NutritionController::class, "destroy"])->name("crm.nutrition.destroy");
     
-    // Каталог упражнений
-    Route::get("/exercises", [ExerciseController::class, "index"])->name("crm.exercises.index");
-    Route::get("/exercises/create", [ExerciseController::class, "create"])->name("crm.exercises.create");
-    Route::post("/exercises", [ExerciseController::class, "store"])->name("crm.exercises.store");
-    Route::get("/exercises/{id}", [ExerciseController::class, "show"])->name("crm.exercises.show");
-    Route::get("/exercises/{id}/edit", [ExerciseController::class, "edit"])->name("crm.exercises.edit");
-    Route::put("/exercises/{id}", [ExerciseController::class, "update"])->name("crm.exercises.update");
-    Route::delete("/exercises/{id}", [ExerciseController::class, "destroy"])->name("crm.exercises.destroy");
+// Каталог упражнений
+Route::get("/exercises", [ExerciseController::class, "index"])->name("crm.exercises.index");
+Route::get("/exercises/api", [ExerciseController::class, "api"])->name("crm.exercises.api");
+Route::get("/exercises/create", [ExerciseController::class, "create"])->name("crm.exercises.create");
+Route::post("/exercises", [ExerciseController::class, "store"])->name("crm.exercises.store");
+Route::get("/exercises/{id}", [ExerciseController::class, "show"])->name("crm.exercises.show");
+Route::get("/exercises/{id}/edit", [ExerciseController::class, "edit"])->name("crm.exercises.edit");
+Route::put("/exercises/{id}", [ExerciseController::class, "update"])->name("crm.exercises.update");
+Route::delete("/exercises/{id}", [ExerciseController::class, "destroy"])->name("crm.exercises.destroy");
+
+// Шаблоны тренировок
+Route::get("/workout-templates", [WorkoutTemplateController::class, "index"])->name("crm.workout-templates.index");
+Route::get("/workout-templates/create", [WorkoutTemplateController::class, "create"])->name("crm.workout-templates.create");
+Route::post("/workout-templates", [WorkoutTemplateController::class, "store"])->name("crm.workout-templates.store");
+Route::post("/workout-templates/generate", [WorkoutTemplateController::class, "generate"])->name("crm.workout-templates.generate");
+Route::get("/workout-templates/{id}", [WorkoutTemplateController::class, "show"])->name("crm.workout-templates.show");
+Route::get("/workout-templates/{id}/edit", [WorkoutTemplateController::class, "edit"])->name("crm.workout-templates.edit");
+Route::put("/workout-templates/{id}", [WorkoutTemplateController::class, "update"])->name("crm.workout-templates.update");
+Route::delete("/workout-templates/{id}", [WorkoutTemplateController::class, "destroy"])->name("crm.workout-templates.destroy");
     
     // Общие маршруты для профиля
     Route::get("/profile", function () {

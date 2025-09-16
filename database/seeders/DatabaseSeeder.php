@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             UserSeeder::class,
             WorkoutSeeder::class,
+            ExerciseSeeder::class,
+            WorkoutTemplateSeeder::class,
         ]);
     }
 }

@@ -113,20 +113,17 @@ function workoutApp() {
         },
         
         goToPage(page) {
-            console.log('Going to page:', page);
             this.currentPage = page;
         },
         
         previousPage() {
             if (this.currentPage > 1) {
-                console.log('Previous page');
                 this.currentPage--;
             }
         },
         
         nextPage() {
             if (this.currentPage < this.totalPages) {
-                console.log('Next page');
                 this.currentPage++;
             }
         },
@@ -166,31 +163,122 @@ function workoutApp() {
                     body: JSON.stringify(workoutData)
                 });
                 
+                const result = await response.json();
+                
                 if (response.ok) {
-                    location.reload(); // Просто перезагружаем страницу
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: this.currentWorkout && this.currentWorkout.id ? 'Тренировка обновлена' : 'Тренировка создана',
+                            message: this.currentWorkout && this.currentWorkout.id ? 
+                                'Тренировка успешно обновлена' : 
+                                'Тренировка успешно добавлена в календарь'
+                        }
+                    }));
+                    
+                    // Обновляем список тренировок
+                    if (this.currentWorkout && this.currentWorkout.id) {
+                        // Редактирование - обновляем существующую
+                        const index = this.workouts.findIndex(w => w.id === this.currentWorkout.id);
+                        if (index !== -1) {
+                            this.workouts[index] = { ...this.currentWorkout, ...workoutData };
+                        }
+                    } else {
+                        // Создание - добавляем новую
+                        this.workouts.unshift(result.workout);
+                    }
+                    
+                    // Переключаемся на список
+                    this.showList();
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка сохранения',
+                            message: result.message || 'Произошла ошибка при сохранении тренировки'
+                        }
+                    }));
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при сохранении тренировки'
+                    }
+                }));
             }
         },
         
         // Удаление
-        async deleteWorkout(id) {
-            if (confirm('Удалить тренировку?')) {
-                try {
-                    const response = await fetch(`/workouts/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        location.reload();
-                    }
-                } catch (error) {
-                    console.error('Ошибка:', error);
+        deleteWorkout(id) {
+            const workout = this.workouts.find(w => w.id === id);
+            const workoutTitle = workout ? workout.title : 'тренировку';
+            
+            // Используем глобальное модальное окно подтверждения
+            window.dispatchEvent(new CustomEvent('show-confirm', {
+                detail: {
+                    title: 'Удалить тренировку',
+                    message: `Вы уверены, что хотите удалить тренировку "${workoutTitle}"?`,
+                    confirmText: 'Удалить',
+                    cancelText: 'Отмена',
+                    onConfirm: () => this.performDelete(id)
                 }
+            }));
+        },
+        
+        async performDelete(id) {
+            try {
+                const response = await fetch(`/workouts/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Тренировка удалена',
+                            message: 'Тренировка успешно удалена из календаря'
+                        }
+                    }));
+                    
+                    // Удаляем из списка
+                    this.workouts = this.workouts.filter(w => w.id !== id);
+                    
+                    // Если удалили все тренировки на текущей странице, переходим на предыдущую
+                    if (this.paginatedWorkouts.length === 0 && this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка удаления',
+                            message: result.message || 'Произошла ошибка при удалении тренировки'
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при удалении тренировки'
+                    }
+                }));
             }
         }
     }

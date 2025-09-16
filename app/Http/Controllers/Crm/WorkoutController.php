@@ -44,18 +44,27 @@ class WorkoutController extends BaseController
             'athlete_id' => 'required|exists:users,id',
             'date' => 'required|date',
             'duration' => 'nullable|integer|min:1',
+            'status' => 'nullable|in:planned,completed,cancelled',
         ]);
         
-        Workout::create([
+        $workout = Workout::create([
             'title' => $request->title,
             'description' => $request->description,
             'trainer_id' => auth()->id(),
             'athlete_id' => $request->athlete_id,
             'date' => $request->date,
             'duration' => $request->duration,
+            'status' => $request->status ?? 'planned',
         ]);
         
-        return redirect()->route('crm.workouts.index')->with('success', 'Тренировка создана');
+        // Загружаем связанные данные для фронтенда
+        $workout->load(['athlete', 'trainer']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Тренировка создана',
+            'workout' => $workout
+        ]);
     }
     
     public function show($id)
@@ -114,7 +123,14 @@ class WorkoutController extends BaseController
         
         $workout->update($request->all());
         
-        return redirect()->route('crm.workouts.index')->with('success', 'Тренировка обновлена');
+        // Загружаем связанные данные для фронтенда
+        $workout->load(['athlete', 'trainer']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Тренировка обновлена',
+            'workout' => $workout
+        ]);
     }
     
     public function destroy($id)
@@ -131,6 +147,9 @@ class WorkoutController extends BaseController
         
         $workout->delete();
         
-        return redirect()->route('crm.workouts.index')->with('success', 'Тренировка удалена');
+        return response()->json([
+            'success' => true,
+            'message' => 'Тренировка удалена'
+        ]);
     }
 }

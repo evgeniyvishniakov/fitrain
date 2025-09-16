@@ -102,4 +102,14 @@ class ExerciseController extends BaseController
             'message' => 'Упражнение удалено из каталога'
         ]);
     }
+
+    public function api()
+    {
+        $exercises = Exercise::active()->get();
+
+        return response()->json([
+            'success' => true,
+            'exercises' => $exercises
+        ]);
+    }
 }

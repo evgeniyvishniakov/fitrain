@@ -1,46 +1,82 @@
 @extends("crm.layouts.app")
 
-@section("title", "Каталог упражнений")
-@section("page-title", "Каталог упражнений")
+@section("title", "Упражнения")
+@section("page-title", "Упражнения")
 
 <script>
-// SPA функциональность для каталога упражнений
-function exerciseCatalogApp() {
+// SPA функциональность для упражнений
+function exerciseApp() {
     return {
-        currentView: 'exercises', // exercises, templates
+        currentView: 'list', // list, create, edit, view
+        exercises: @json(\App\Models\Exercise::active()->orderBy('name')->get()),
+        currentExercise: null,
         search: '',
         category: '',
         equipment: '',
         currentPage: 1,
-        itemsPerPage: 20,
+        itemsPerPage: 4,
         
-        currentView: 'list', // list, create, edit
-        currentExercise: null,
+        // Поля формы
         formName: '',
+        formDescription: '',
         formCategory: '',
         formEquipment: '',
-        formDescription: '',
+        formMuscleGroupsText: '',
+        formInstructions: '',
         
-        exercises: @json($exercises->items()),
+        // Навигация
+        showList() {
+            this.currentView = 'list';
+            this.currentExercise = null;
+        },
+        
+        showCreate() {
+            this.currentView = 'create';
+            this.currentExercise = null;
+            this.formName = '';
+            this.formDescription = '';
+            this.formCategory = '';
+            this.formEquipment = '';
+            this.formMuscleGroupsText = '';
+            this.formInstructions = '';
+        },
+        
+        showEdit(exerciseId) {
+            this.currentView = 'edit';
+            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            this.formName = this.currentExercise.name;
+            this.formDescription = this.currentExercise.description || '';
+            this.formCategory = this.currentExercise.category;
+            this.formEquipment = this.currentExercise.equipment;
+            this.formMuscleGroupsText = Array.isArray(this.currentExercise.muscle_groups) ? this.currentExercise.muscle_groups.join(', ') : '';
+            this.formInstructions = this.currentExercise.instructions || '';
+        },
+        
+        showView(exerciseId) {
+            this.currentView = 'view';
+            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+        },
         
         // Фильтрация
         get filteredExercises() {
             let filtered = this.exercises;
             
             if (this.search) {
-                filtered = filtered.filter(ex => 
-                    ex.name.toLowerCase().includes(this.search.toLowerCase())
+                filtered = filtered.filter(e => 
+                    e.name.toLowerCase().includes(this.search.toLowerCase()) ||
+                    (e.description && e.description.toLowerCase().includes(this.search.toLowerCase())) ||
+                    e.category.toLowerCase().includes(this.search.toLowerCase()) ||
+                    e.equipment.toLowerCase().includes(this.search.toLowerCase())
                 );
             }
             
             if (this.category) {
-                filtered = filtered.filter(ex => ex.category === this.category);
+                filtered = filtered.filter(e => e.category === this.category);
             }
             
             if (this.equipment) {
-                filtered = filtered.filter(ex => ex.equipment === this.equipment);
+                filtered = filtered.filter(e => e.equipment === this.equipment);
             }
-            
             
             return filtered;
         },
@@ -49,6 +85,31 @@ function exerciseCatalogApp() {
         get totalPages() {
             const total = Math.ceil(this.filteredExercises.length / this.itemsPerPage);
             return total > 0 ? total : 1;
+        },
+        
+        get visiblePages() {
+            const pages = [];
+            const total = this.totalPages;
+            const current = this.currentPage;
+            
+            if (total <= 5) {
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                let start = Math.max(1, current - 2);
+                let end = Math.min(total, start + 4);
+                
+                if (end - start < 4) {
+                    start = Math.max(1, end - 4);
+                }
+                
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+            }
+            
+            return pages;
         },
         
         get paginatedExercises() {
@@ -73,76 +134,21 @@ function exerciseCatalogApp() {
             }
         },
         
-        // Вспомогательные методы
-        getCategoryLabel(category) {
-            const labels = {
-                'chest': 'Грудь',
-                'back': 'Спина',
-                'legs': 'Ноги',
-                'shoulders': 'Плечи',
-                'arms': 'Руки',
-                'cardio': 'Кардио',
-                'core': 'Пресс'
-            };
-            return labels[category] || category;
-        },
-        
-        getEquipmentLabel(equipment) {
-            const labels = {
-                'barbell': 'Штанга',
-                'dumbbell': 'Гантели',
-                'bodyweight': 'Собственный вес',
-                'machine': 'Тренажер',
-                'cable': 'Тросы',
-                'kettlebell': 'Гири'
-            };
-            return labels[equipment] || equipment;
-        },
-        
-        
-        switchView(view) {
-            if (view === 'exercises') {
-                this.currentView = 'list';
-            } else {
-                this.currentView = view;
-            }
-            this.currentPage = 1;
-        },
-        
-        // Методы для формы создания упражнения
-        showCreate() {
-            this.currentView = 'create';
-            this.formName = '';
-            this.formCategory = '';
-            this.formEquipment = '';
-            this.formDescription = '';
-        },
-        
-        hideCreate() {
-            this.currentView = 'list';
-            this.currentExercise = null;
-            this.formName = '';
-            this.formCategory = '';
-            this.formEquipment = '';
-            this.formDescription = '';
-        },
-        
-        showEdit(exerciseId) {
-            this.currentView = 'edit';
-            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
-            this.formName = this.currentExercise.name;
-            this.formCategory = this.currentExercise.category;
-            this.formEquipment = this.currentExercise.equipment;
-            this.formDescription = this.currentExercise.description || '';
-        },
-        
+        // Сохранение
         async saveExercise() {
             try {
+                const muscleGroups = this.formMuscleGroupsText
+                    .split(',')
+                    .map(g => g.trim())
+                    .filter(g => g.length > 0);
+                
                 const exerciseData = {
                     name: this.formName,
+                    description: this.formDescription,
                     category: this.formCategory,
                     equipment: this.formEquipment,
-                    description: this.formDescription
+                    muscle_groups: muscleGroups,
+                    instructions: this.formInstructions
                 };
                 
                 const url = this.currentExercise && this.currentExercise.id ? 
@@ -158,186 +164,134 @@ function exerciseCatalogApp() {
                     body: JSON.stringify(exerciseData)
                 });
                 
+                const result = await response.json();
+                
                 if (response.ok) {
-                    const result = await response.json();
-                    
-                    if (this.currentExercise && this.currentExercise.id) {
-                        // Обновляем существующее упражнение
-                        const index = this.exercises.findIndex(ex => ex.id === this.currentExercise.id);
-                        if (index !== -1) {
-                            this.exercises[index] = result.exercise;
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: this.currentExercise && this.currentExercise.id ? 'Упражнение обновлено' : 'Упражнение создано',
+                            message: this.currentExercise && this.currentExercise.id ? 
+                                'Упражнение успешно обновлено' : 
+                                'Упражнение успешно добавлено в базу'
                         }
-                        showSuccess('Успешно', 'Упражнение обновлено');
+                    }));
+                    
+                    // Обновляем список упражнений
+                    if (this.currentExercise && this.currentExercise.id) {
+                        // Редактирование - обновляем существующее
+                        const index = this.exercises.findIndex(e => e.id === this.currentExercise.id);
+                        if (index !== -1) {
+                            this.exercises[index] = { ...this.currentExercise, ...exerciseData };
+                        }
                     } else {
-                        // Добавляем новое упражнение
+                        // Создание - добавляем новое
                         this.exercises.unshift(result.exercise);
-                        showSuccess('Успешно', 'Упражнение добавлено в каталог');
                     }
                     
-                    // Возвращаемся к списку
-                    this.hideCreate();
+                    // Переключаемся на список
+                    this.showList();
                 } else {
-                    showError('Ошибка', 'Не удалось сохранить упражнение');
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка сохранения',
+                            message: result.message || 'Произошла ошибка при сохранении упражнения'
+                        }
+                    }));
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
-                showError('Ошибка', 'Произошла ошибка при сохранении');
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при сохранении упражнения'
+                    }
+                }));
             }
         },
         
-        async deleteExercise(exerciseId) {
-            const exercise = this.exercises.find(ex => ex.id === exerciseId);
+        // Удаление
+        deleteExercise(id) {
+            const exercise = this.exercises.find(e => e.id === id);
             const exerciseName = exercise ? exercise.name : 'упражнение';
             
-            confirmDelete(exerciseName, async () => {
-                try {
-                    const response = await fetch(`/exercises/${exerciseId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        // Удаляем упражнение из списка
-                        this.exercises = this.exercises.filter(ex => ex.id !== exerciseId);
-                        showSuccess('Успешно', 'Упражнение удалено из каталога');
-                    } else {
-                        showError('Ошибка', 'Не удалось удалить упражнение');
-                    }
-                } catch (error) {
-                    console.error('Ошибка:', error);
-                    showError('Ошибка', 'Произошла ошибка при удалении');
+            // Используем глобальное модальное окно подтверждения
+            window.dispatchEvent(new CustomEvent('show-confirm', {
+                detail: {
+                    title: 'Удалить упражнение',
+                    message: `Вы уверены, что хотите удалить упражнение "${exerciseName}"?`,
+                    confirmText: 'Удалить',
+                    cancelText: 'Отмена',
+                    onConfirm: () => this.performDelete(id)
                 }
-            });
+            }));
+        },
+        
+        async performDelete(id) {
+            try {
+                const response = await fetch(`/exercises/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Упражнение удалено',
+                            message: 'Упражнение успешно удалено из базы'
+                        }
+                    }));
+                    
+                    // Удаляем из списка
+                    this.exercises = this.exercises.filter(e => e.id !== id);
+                    
+                    // Если удалили все упражнения на текущей странице, переходим на предыдущую
+                    if (this.paginatedExercises.length === 0 && this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка удаления',
+                            message: result.message || 'Произошла ошибка при удалении упражнения'
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при удалении упражнения'
+                    }
+                }));
+            }
         }
     }
 }
 </script>
 
-@section("sidebar")
-    <a href="{{ route("crm.dashboard.main") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-        </svg>
-        Дашборд
-    </a>
-    <a href="#" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        Календарь
-    </a>
-    <a href="{{ route("crm.workouts.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-        Тренировки
-    </a>
-    <a href="{{ route("crm.exercises.index") }}" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
-        Каталог упражнений
-    </a>
-    <a href="{{ route("crm.progress.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-        Прогресс
-    </a>
-    @if(auth()->user()->hasRole('trainer'))
-        <a href="{{ route("crm.trainer.athletes") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
-            Клиенты
-        </a>
-    @else
-        <a href="{{ route("crm.nutrition.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
-            </svg>
-            Дневник питания
-        </a>
-    @endif
-    <a href="#" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        Настройки
-    </a>
-@endsection
-
-@section("mobile-menu")
-    <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-        </svg>
-        Дашборд
-    </a>
-    <a href="#" class="mobile-nav-link">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        Календарь
-    </a>
-    <a href="{{ route("crm.workouts.index") }}" class="mobile-nav-link">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-        Тренировки
-    </a>
-    <a href="{{ route("crm.exercises.index") }}" class="mobile-nav-link active">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
-        Каталог упражнений
-    </a>
-    <a href="{{ route("crm.progress.index") }}" class="mobile-nav-link">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-        </svg>
-        Прогресс
-    </a>
-    @if(auth()->user()->hasRole('trainer'))
-        <a href="{{ route("crm.trainer.athletes") }}" class="mobile-nav-link">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
-            Клиенты
-        </a>
-    @else
-        <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
-            </svg>
-            Дневник питания
-        </a>
-    @endif
-    <a href="#" class="mobile-nav-link">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        Настройки
-    </a>
-@endsection
-
 @section("header-actions")
-    @if(auth()->user()->hasRole('trainer'))
-        <a href="{{ route('crm.exercises.create') }}" class="btn-primary">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-            </svg>
-            Добавить упражнение
-        </a>
-    @endif
+    <!-- Кнопка добавления перенесена в строку с фильтрами -->
 @endsection
 
 @section("content")
-<div x-data="exerciseCatalogApp()" class="space-y-6">
+<div x-data="exerciseApp()" class="space-y-6">
     
     <!-- Фильтры и поиск -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -375,11 +329,8 @@ function exerciseCatalogApp() {
                         flex: 1 !important;
                         min-width: 200px !important;
                     }
-                    .filters-row .category-container {
-                        width: 180px !important;
-                    }
-                    .filters-row .equipment-container {
-                        width: 180px !important;
+                    .filters-row .filter-container {
+                        width: 200px !important;
                     }
                     .filters-row .buttons-container {
                         display: flex !important;
@@ -398,123 +349,131 @@ function exerciseCatalogApp() {
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
-                <!-- Категория -->
-                <div class="category-container">
+                <!-- Фильтр категории -->
+                <div class="filter-container">
                     <select x-model="category" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">Все категории</option>
-                        <option value="chest">Грудь</option>
-                        <option value="back">Спина</option>
-                        <option value="legs">Ноги</option>
-                        <option value="shoulders">Плечи</option>
-                        <option value="arms">Руки</option>
-                        <option value="cardio">Кардио</option>
-                        <option value="core">Пресс</option>
+                        <option value="Грудь">Грудь</option>
+                        <option value="Спина">Спина</option>
+                        <option value="Ноги">Ноги</option>
+                        <option value="Плечи">Плечи</option>
+                        <option value="Руки">Руки</option>
+                        <option value="Кардио">Кардио</option>
+                        <option value="Гибкость">Гибкость</option>
                     </select>
                 </div>
                 
-                <!-- Оборудование -->
-                <div class="equipment-container">
+                <!-- Фильтр оборудования -->
+                <div class="filter-container">
                     <select x-model="equipment" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">Все оборудование</option>
-                        <option value="barbell">Штанга</option>
-                        <option value="dumbbell">Гантели</option>
-                        <option value="bodyweight">Собственный вес</option>
-                        <option value="machine">Тренажер</option>
-                        <option value="cable">Тросы</option>
-                        <option value="kettlebell">Гири</option>
+                        <option value="Штанга">Штанга</option>
+                        <option value="Гантели">Гантели</option>
+                        <option value="Собственный вес">Собственный вес</option>
+                        <option value="Тренажеры">Тренажеры</option>
+                        <option value="Скакалка">Скакалка</option>
+                        <option value="Турник">Турник</option>
                     </select>
                 </div>
                 
-                <!-- Кнопка добавления -->
-                @if(auth()->user()->hasRole('trainer'))
-                    <div class="buttons-container">
-                        <button @click="showCreate()" class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
+                <!-- Кнопки -->
+                <div class="buttons-container">
+                    @if(auth()->user()->hasRole('trainer'))
+                        <button @click="showCreate()" 
+                                class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
                             Добавить упражнение
                         </button>
-                    </div>
-                @endif
+                    @endif
+                </div>
+            </div>
+        </div>
+        
+        <!-- Активные фильтры -->
+        <div x-show="search || category || equipment" class="mt-4 pt-4 border-t border-gray-100">
+            <div class="flex flex-wrap gap-2">
+                <span class="text-sm text-gray-500">Активные фильтры:</span>
+                <span x-show="search" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Поиск: "<span x-text="search"></span>"
+                    <button @click="search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
+                </span>
+                <span x-show="category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Категория: <span x-text="category"></span>
+                    <button @click="category = ''" class="ml-1 text-green-600 hover:text-green-800">×</button>
+                </span>
+                <span x-show="equipment" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    Оборудование: <span x-text="equipment"></span>
+                    <button @click="equipment = ''" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- Вкладки -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="flex space-x-1 bg-gray-100 p-1 rounded-xl">
-            <button @click="switchView('exercises')" 
-                    :class="currentView === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                    class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors">
-                Упражнения
-            </button>
-            <button @click="switchView('templates')" 
-                    :class="currentView === 'templates' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                    class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors">
-                Шаблоны тренировок
-            </button>
-        </div>
-    </div>
-
-    <!-- СПИСОК УПРАЖНЕНИЙ -->
-    <div x-show="currentView === 'list'" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+    <!-- Список упражнений -->
+    <div x-show="currentView === 'list'" class="space-y-6">
+        <div x-show="paginatedExercises.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
-                <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-indigo-200 p-4">
-                    <!-- Мобильная версия (как было) -->
-                    <div class="mobile-exercise-row">
-                        <!-- Информация в одну линию -->
-                        <div class="mobile-exercise-info">
-                            <span class="mobile-exercise-name" x-text="exercise.name"></span>
-                            <span class="mobile-exercise-category" x-text="getCategoryLabel(exercise.category)"></span>
-                            <span class="mobile-exercise-equipment" x-text="getEquipmentLabel(exercise.equipment)"></span>
-                        </div>
-                        
-                        <!-- Кнопки одинакового размера -->
-                        <div class="flex space-x-1">
-                            <button class="flex-1 px-2 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                                В шаблон
-                            </button>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
+                    <!-- Заголовок -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                <span x-text="exercise.name"></span>
+                            </h3>
+                            <p class="text-gray-600 mb-4" x-text="exercise.description || 'Без описания'"></p>
                             
-                            @if(auth()->user()->hasRole('trainer'))
-                                <button @click="showEdit(exercise.id)" class="flex-1 px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                                    ✏️
-                                </button>
-                                <button @click="deleteExercise(exercise.id)" class="flex-1 px-2 py-1.5 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                    🗑️
-                                </button>
-                            @endif
+                            <!-- Теги -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="exercise.category"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="exercise.equipment"></span>
+                            </div>
+                            
+                            <!-- Группы мышц -->
+                            <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && exercise.muscle_groups.length > 0">
+                                <span x-text="'Группы мышц: ' + exercise.muscle_groups.join(', ')"></span>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Десктопная версия (горизонтальная) -->
-                    <div class="desktop-exercise-row">
-                        <span class="exercise-full-info">
-                            <span class="exercise-name" x-text="exercise.name"></span>
-                            <span class="exercise-details">
-                                (Категория: <span class="exercise-category-name" x-text="getCategoryLabel(exercise.category)"></span>, 
-                                Оборудование: <span class="exercise-equipment-name" x-text="getEquipmentLabel(exercise.equipment)"></span>)
-                            </span>
-                        </span>
-                        <button class="btn-template">В шаблон</button>
+                    <!-- Кнопки -->
+                    <div class="flex space-x-2">
+                        <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                            Просмотр
+                        </button>
                         @if(auth()->user()->hasRole('trainer'))
-                            <button @click="showEdit(exercise.id)" class="btn-edit">✏️</button>
-                            <button @click="deleteExercise(exercise.id)" class="btn-delete">🗑️</button>
+                            <button @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                Редактировать
+                            </button>
+                            <button @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                Удалить
+                            </button>
                         @endif
                     </div>
                 </div>
             </template>
         </div>
         
+        <!-- Пустое состояние -->
+        <div x-show="paginatedExercises.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                <span class="text-3xl text-gray-400">💪</span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет упражнений</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">Добавьте упражнения в базу для создания тренировок.</p>
+            @if(auth()->user()->hasRole('trainer'))
+                <button @click="showCreate()" 
+                        class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    Добавить первое упражнение
+                </button>
+            @endif
+        </div>
+        
         <!-- Пагинация -->
-        <div x-show="filteredExercises.length > 0 && totalPages > 1" class="mt-6">
+        <div x-show="paginatedExercises.length > 0 && totalPages > 1" class="mt-6">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div class="flex items-center justify-center">
-                    <!-- Навигация -->
                     <div class="flex items-center space-x-2">
-                        <!-- Предыдущая страница -->
                         <button @click="previousPage()" 
                                 :disabled="currentPage === 1"
                                 :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
@@ -524,8 +483,7 @@ function exerciseCatalogApp() {
                             </svg>
                         </button>
                         
-                        <!-- Номера страниц -->
-                        <template x-for="page in Array.from({length: totalPages}, (_, i) => i + 1)" :key="page">
+                        <template x-for="page in visiblePages" :key="page">
                             <button @click="goToPage(page)" 
                                     :class="page === currentPage ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'"
                                     class="px-3 py-2 text-sm font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -533,7 +491,6 @@ function exerciseCatalogApp() {
                             </button>
                         </template>
                         
-                        <!-- Следующая страница -->
                         <button @click="nextPage()" 
                                 :disabled="currentPage === totalPages"
                                 :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
@@ -546,251 +503,172 @@ function exerciseCatalogApp() {
                 </div>
             </div>
         </div>
-        
-        <!-- Пустое состояние -->
-        <div x-show="filteredExercises.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                <span class="text-3xl text-gray-400">💪</span>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет упражнений</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">По вашему запросу упражнения не найдены. Попробуйте изменить фильтры или добавить новые упражнения.</p>
-            @if(auth()->user()->hasRole('trainer'))
-                <a href="{{ route('crm.exercises.create') }}" 
-                   class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Добавить первое упражнение
-                </a>
-            @endif
-        </div>
     </div>
 
-    <!-- ШАБЛОНЫ ТРЕНИРОВОК -->
-    <div x-show="currentView === 'templates'" class="space-y-4">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                <span class="text-3xl text-gray-400">📋</span>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Шаблоны тренировок</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">Раздел шаблонов тренировок будет доступен в следующем обновлении.</p>
-            @if(auth()->user()->hasRole('trainer'))
-                <button class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Создать шаблон
-                </button>
-            @endif
-        </div>
-    </div>
-
-    <!-- Форма создания/редактирования упражнения -->
+    <!-- Форма создания/редактирования -->
     <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-900" x-text="currentView === 'create' ? 'Добавить упражнение' : 'Редактировать упражнение'"></h3>
-            <button @click="hideCreate()" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? 'Создать упражнение' : 'Редактировать упражнение'"></h2>
+            <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
         </div>
         
-        <form @submit.prevent="saveExercise()" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <form @submit.prevent="saveExercise()" class="space-y-6">
+            <div class="space-y-6">
+                <!-- Название -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Название *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название упражнения *</label>
                     <input type="text" 
-                           x-model="formName"
-                           class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                           placeholder="Жим лежа"
-                           required>
+                           x-model="formName" 
+                           required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
+                <!-- Три поля в одну строку -->
+                <div class="flex flex-col md:flex-row gap-6 flex-form-row" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <style>
+                        /* Мобильные (< 640px) - в колонку */
+                        @media (max-width: 639px) {
+                            .flex-form-row { flex-direction: column !important; }
+                        }
+                        /* Планшеты (640px - 767px) - в колонку */
+                        @media (min-width: 640px) and (max-width: 767px) {
+                            .flex-form-row { flex-direction: column !important; }
+                        }
+                        /* Планшеты (768px - 1023px) - в линию */
+                        @media (min-width: 768px) and (max-width: 1023px) {
+                            .flex-form-row { flex-direction: row !important; }
+                        }
+                        /* Ноутбуки (1024px - 1279px) - в линию */
+                        @media (min-width: 1024px) and (max-width: 1279px) {
+                            .flex-form-row { flex-direction: row !important; }
+                        }
+                        /* Десктопы (1280px+) - в линию */
+                        @media (min-width: 1280px) {
+                            .flex-form-row { flex-direction: row !important; }
+                        }
+                    </style>
+                    <!-- Категория -->
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>
+                        <select x-model="formCategory" 
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            <option value="">Выберите категорию</option>
+                            <option value="Грудь">Грудь</option>
+                            <option value="Спина">Спина</option>
+                            <option value="Ноги">Ноги</option>
+                            <option value="Плечи">Плечи</option>
+                            <option value="Руки">Руки</option>
+                            <option value="Кардио">Кардио</option>
+                            <option value="Гибкость">Гибкость</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Оборудование -->
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование *</label>
+                        <select x-model="formEquipment" 
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            <option value="">Выберите оборудование</option>
+                            <option value="Штанга">Штанга</option>
+                            <option value="Гантели">Гантели</option>
+                            <option value="Собственный вес">Собственный вес</option>
+                            <option value="Тренажеры">Тренажеры</option>
+                            <option value="Скакалка">Скакалка</option>
+                            <option value="Турник">Турник</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Группы мышц -->
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Группы мышц (через запятую)</label>
+                        <input type="text" 
+                               x-model="formMuscleGroupsText" 
+                               placeholder="например: грудь, плечи, трицепс"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    </div>
+                </div>
+                
+                <!-- Описание -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>
-                    <select x-model="formCategory" 
-                            class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                            required>
-                        <option value="">Выберите</option>
-                        <option value="chest">Грудь</option>
-                        <option value="back">Спина</option>
-                        <option value="legs">Ноги</option>
-                        <option value="shoulders">Плечи</option>
-                        <option value="arms">Руки</option>
-                        <option value="cardio">Кардио</option>
-                        <option value="core">Пресс</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                    <textarea x-model="formDescription" 
+                              rows="4"
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
                 </div>
                 
+                <!-- Инструкции -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование *</label>
-                    <select x-model="formEquipment" 
-                            class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                            required>
-                        <option value="">Выберите</option>
-                        <option value="barbell">Штанга</option>
-                        <option value="dumbbell">Гантели</option>
-                        <option value="bodyweight">Собственный вес</option>
-                        <option value="machine">Тренажер</option>
-                        <option value="cable">Тросы</option>
-                        <option value="kettlebell">Гири</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Инструкции по выполнению</label>
+                    <textarea x-model="formInstructions" 
+                              rows="4"
+                              placeholder="Пошаговые инструкции по выполнению упражнения..."
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
                 </div>
-                
             </div>
             
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
-                <textarea x-model="formDescription" 
-                          rows="2"
-                          class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                          placeholder="Краткое описание..."></textarea>
-            </div>
-            
-            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <!-- Кнопки -->
+            <div class="flex justify-end space-x-4">
                 <button type="button" 
-                        @click="hideCreate()"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                        @click="showList()" 
+                        class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
                     Отмена
                 </button>
-                        <button type="submit" 
-                                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
-                                x-text="currentView === 'create' ? 'Создать упражнение' : 'Сохранить изменения'">
-                        </button>
+                <button type="submit" 
+                        class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    <span x-text="currentView === 'create' ? 'Создать' : 'Сохранить'"></span>
+                </button>
             </div>
         </form>
     </div>
+
+    <!-- Просмотр упражнения -->
+    <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900" x-text="currentExercise?.name || 'Упражнение'"></h2>
+                    <p class="mt-2 text-gray-600" x-text="currentExercise?.description || 'Без описания'"></p>
+                </div>
+                <button @click="showList()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                    Назад к списку
+                </button>
+            </div>
+        </div>
+        
+        <div x-show="currentExercise" class="space-y-6">
+            <!-- Информация об упражнении -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-500 mb-1">Категория</h3>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-500 mb-1">Оборудование</h3>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.equipment"></p>
+                </div>
+            </div>
+            
+            <!-- Группы мышц -->
+            <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Группы мышц</h3>
+                <div class="flex flex-wrap gap-2">
+                    <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" x-text="group"></span>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Инструкции -->
+            <div x-show="currentExercise?.instructions">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Инструкции по выполнению</h3>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
 @endsection
-
-<style>
-/* Мобильная версия */
-.mobile-exercise-row {
-    display: block;
-}
-
-.mobile-exercise-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.mobile-exercise-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.mobile-exercise-name {
-    flex: 1;
-    min-width: 0;
-    font-weight: 600;
-    font-size: 1rem;
-    color: #111827;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.mobile-exercise-category {
-    font-size: 0.875rem;
-    color: #6b7280;
-    white-space: nowrap;
-}
-
-.mobile-exercise-equipment {
-    font-size: 0.875rem;
-    color: #9ca3af;
-    white-space: nowrap;
-}
-
-.mobile-btn-template, .mobile-btn-edit, .mobile-btn-delete {
-    padding: 0.125rem 0.25rem;
-    font-size: 0.625rem;
-    border-radius: 0.25rem;
-    border: 1px solid;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.mobile-btn-template {
-    color: #4338ca;
-    background: #eef2ff;
-    border-color: #c7d2fe;
-}
-
-.mobile-btn-edit {
-    color: #374151;
-    background: #f9fafb;
-    border-color: #d1d5db;
-}
-
-.mobile-btn-delete {
-    color: #dc2626;
-    background: #fef2f2;
-    border-color: #fecaca;
-}
-
-/* Десктопная версия - все в одну линию */
-.desktop-exercise-row {
-    display: none;
-}
-
-@media (min-width: 640px) {
-    .mobile-exercise-row {
-        display: none !important;
-    }
-    
-    .desktop-exercise-row {
-        display: flex !important;
-        align-items: center !important;
-        gap: 1rem !important;
-    }
-    
-    .exercise-full-info {
-        flex: 1;
-        font-size: 0.875rem;
-        color: #111827;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .exercise-name {
-        font-weight: bold;
-    }
-    
-    .exercise-details {
-        font-weight: normal;
-        color: #6b7280;
-    }
-    
-    .exercise-category-name, .exercise-equipment-name {
-        font-weight: bold;
-    }
-    
-    .btn-template, .btn-edit, .btn-delete {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-        border-radius: 0.5rem;
-        border: 1px solid;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-    
-    .btn-template {
-        color: #4338ca;
-        background: #eef2ff;
-        border-color: #c7d2fe;
-    }
-    
-    .btn-edit {
-        color: #374151;
-        background: #f9fafb;
-        border-color: #d1d5db;
-    }
-    
-    .btn-delete {
-        color: #dc2626;
-        background: #fef2f2;
-        border-color: #fecaca;
-    }
-}
-</style>
