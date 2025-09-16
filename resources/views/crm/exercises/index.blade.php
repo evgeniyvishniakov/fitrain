@@ -463,31 +463,46 @@ function exerciseCatalogApp() {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
                 <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-indigo-200 p-4">
-                       <!-- Название -->
-                       <div class="mb-3">
-                           <h3 class="text-sm font-semibold text-gray-900 line-clamp-2" x-text="exercise.name"></h3>
-                       </div>
-                    
-                    <!-- Категория и оборудование -->
-                    <div class="space-y-1 mb-3">
-                        <div class="text-xs text-gray-600" x-text="getCategoryLabel(exercise.category)"></div>
-                        <div class="text-xs text-gray-500" x-text="getEquipmentLabel(exercise.equipment)"></div>
-                    </div>
-                    
-                    <!-- Действия -->
-                    <div class="flex space-x-2">
-                        <button class="flex-1 px-2 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                            В шаблон
-                        </button>
+                    <!-- Мобильная версия (как было) -->
+                    <div class="mobile-exercise-row">
+                        <!-- Информация в одну линию -->
+                        <div class="mobile-exercise-info">
+                            <span class="mobile-exercise-name" x-text="exercise.name"></span>
+                            <span class="mobile-exercise-category" x-text="getCategoryLabel(exercise.category)"></span>
+                            <span class="mobile-exercise-equipment" x-text="getEquipmentLabel(exercise.equipment)"></span>
+                        </div>
                         
+                        <!-- Кнопки одинакового размера -->
+                        <div class="flex space-x-1">
+                            <button class="flex-1 px-2 py-1.5 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                В шаблон
+                            </button>
+                            
                             @if(auth()->user()->hasRole('trainer'))
-                                <button @click="showEdit(exercise.id)" class="px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                                <button @click="showEdit(exercise.id)" class="flex-1 px-2 py-1.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
                                     ✏️
                                 </button>
-                                <button @click="deleteExercise(exercise.id)" class="px-2 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                <button @click="deleteExercise(exercise.id)" class="flex-1 px-2 py-1.5 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                                     🗑️
                                 </button>
                             @endif
+                        </div>
+                    </div>
+                    
+                    <!-- Десктопная версия (горизонтальная) -->
+                    <div class="desktop-exercise-row">
+                        <span class="exercise-full-info">
+                            <span class="exercise-name" x-text="exercise.name"></span>
+                            <span class="exercise-details">
+                                (Категория: <span class="exercise-category-name" x-text="getCategoryLabel(exercise.category)"></span>, 
+                                Оборудование: <span class="exercise-equipment-name" x-text="getEquipmentLabel(exercise.equipment)"></span>)
+                            </span>
+                        </span>
+                        <button class="btn-template">В шаблон</button>
+                        @if(auth()->user()->hasRole('trainer'))
+                            <button @click="showEdit(exercise.id)" class="btn-edit">✏️</button>
+                            <button @click="deleteExercise(exercise.id)" class="btn-delete">🗑️</button>
+                        @endif
                     </div>
                 </div>
             </template>
@@ -643,3 +658,139 @@ function exerciseCatalogApp() {
 </div>
 
 @endsection
+
+<style>
+/* Мобильная версия */
+.mobile-exercise-row {
+    display: block;
+}
+
+.mobile-exercise-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.mobile-exercise-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.mobile-exercise-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mobile-exercise-category {
+    font-size: 0.875rem;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.mobile-exercise-equipment {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+.mobile-btn-template, .mobile-btn-edit, .mobile-btn-delete {
+    padding: 0.125rem 0.25rem;
+    font-size: 0.625rem;
+    border-radius: 0.25rem;
+    border: 1px solid;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.mobile-btn-template {
+    color: #4338ca;
+    background: #eef2ff;
+    border-color: #c7d2fe;
+}
+
+.mobile-btn-edit {
+    color: #374151;
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.mobile-btn-delete {
+    color: #dc2626;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+/* Десктопная версия - все в одну линию */
+.desktop-exercise-row {
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .mobile-exercise-row {
+        display: none !important;
+    }
+    
+    .desktop-exercise-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 1rem !important;
+    }
+    
+    .exercise-full-info {
+        flex: 1;
+        font-size: 0.875rem;
+        color: #111827;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .exercise-name {
+        font-weight: bold;
+    }
+    
+    .exercise-details {
+        font-weight: normal;
+        color: #6b7280;
+    }
+    
+    .exercise-category-name, .exercise-equipment-name {
+        font-weight: bold;
+    }
+    
+    .btn-template, .btn-edit, .btn-delete {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    
+    .btn-template {
+        color: #4338ca;
+        background: #eef2ff;
+        border-color: #c7d2fe;
+    }
+    
+    .btn-edit {
+        color: #374151;
+        background: #f9fafb;
+        border-color: #d1d5db;
+    }
+    
+    .btn-delete {
+        color: #dc2626;
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+}
+</style>
