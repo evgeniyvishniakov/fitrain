@@ -1,7 +1,7 @@
 <!-- Универсальный компонент подтверждения -->
-<div x-data="confirmModalApp()" x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<div x-data="confirmModalApp()" x-show="show" x-cloak x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none !important; visibility: hidden !important; opacity: 0 !important;">
     <!-- Background overlay -->
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="cancel()"></div>
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="cancel()" x-show="show"></div>
 
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4 text-center">
@@ -15,17 +15,17 @@
                             </svg>
                         </div>
                         <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title" x-text="title"></h3>
+                            <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title" x-text="title" x-cloak></h3>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500" x-text="message"></p>
+                                <p class="text-sm text-gray-500" x-text="message" x-cloak></p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                    <button @click="confirm()" type="button" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto" x-text="confirmText">
+                    <button @click="confirm()" type="button" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto" x-text="confirmText" x-cloak>
                     </button>
-                    <button @click="cancel()" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" x-text="cancelText">
+                    <button @click="cancel()" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto" x-text="cancelText" x-cloak>
                     </button>
                 </div>
             </div>
@@ -43,38 +43,100 @@ function confirmModalApp() {
         cancelText: 'Отмена',
         onConfirm: null,
         onCancel: null,
+        isProcessing: false,
         
         init() {
             // Слушаем глобальные события подтверждения
             window.addEventListener('show-confirm', (event) => {
+                // Дополнительная защита от дублирования
+                if (this.show || this.isProcessing) {
+                    console.warn('Модальное окно уже открыто или обрабатывается');
+                    return;
+                }
                 this.showConfirm(event.detail);
+            });
+            
+            // Инициализируем модальное окно как скрытое
+            this.$nextTick(() => {
+                this.$el.style.display = 'none !important';
+                this.$el.style.visibility = 'hidden';
             });
         },
         
         showConfirm(options) {
+            if (this.isProcessing || this.show) return;
+            
+            // Сначала сбрасываем состояние
+            this.reset();
+            this.isProcessing = false;
+            
+            // Устанавливаем новый текст
             this.title = options.title || 'Подтверждение';
             this.message = options.message || 'Вы уверены, что хотите выполнить это действие?';
             this.confirmText = options.confirmText || 'Подтвердить';
             this.cancelText = options.cancelText || 'Отмена';
             this.onConfirm = options.onConfirm || null;
             this.onCancel = options.onCancel || null;
-            this.show = true;
+            
+            // Ждем обновления DOM, затем показываем модальное окно
+            this.$nextTick(() => {
+                this.show = true;
+                this.$el.style.display = 'block';
+                this.$el.style.visibility = 'visible';
+                this.$el.style.opacity = '1';
+            });
         },
         
         confirm() {
+            if (this.isProcessing) return;
+            this.isProcessing = true;
+            
             this.show = false;
-            if (this.onConfirm && typeof this.onConfirm === 'function') {
-                this.onConfirm();
+            const onConfirm = this.onConfirm;
+            
+            // Скрываем модальное окно
+            this.$nextTick(() => {
+                this.$el.style.display = 'none !important';
+                this.$el.style.visibility = 'hidden !important';
+                this.$el.style.opacity = '0 !important';
+            });
+            
+            // Выполняем callback
+            if (onConfirm && typeof onConfirm === 'function') {
+                onConfirm();
             }
-            this.reset();
+            
+            // Сбрасываем состояние
+            setTimeout(() => {
+                this.reset();
+                this.isProcessing = false;
+            }, 200);
         },
         
         cancel() {
+            if (this.isProcessing) return;
+            this.isProcessing = true;
+            
             this.show = false;
-            if (this.onCancel && typeof this.onCancel === 'function') {
-                this.onCancel();
+            const onCancel = this.onCancel;
+            
+            // Скрываем модальное окно
+            this.$nextTick(() => {
+                this.$el.style.display = 'none !important';
+                this.$el.style.visibility = 'hidden !important';
+                this.$el.style.opacity = '0 !important';
+            });
+            
+            // Выполняем callback
+            if (onCancel && typeof onCancel === 'function') {
+                onCancel();
             }
-            this.reset();
+            
+            // Сбрасываем состояние
+            setTimeout(() => {
+                this.reset();
+                this.isProcessing = false;
+            }, 200);
         },
         
         reset() {
@@ -84,6 +146,7 @@ function confirmModalApp() {
             this.cancelText = 'Отмена';
             this.onConfirm = null;
             this.onCancel = null;
+            this.isProcessing = false;
         }
     }
 }

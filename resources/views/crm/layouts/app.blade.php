@@ -10,6 +10,65 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="{{ asset('js/notifications.js') }}"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* Индикатор загрузки */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        /* Предотвращение мигания темы */
+        .theme-dark {
+            background-color: #1f2937 !important;
+            color: #f9fafb !important;
+        }
+        
+        .theme-light {
+            background-color: #ffffff !important;
+            color: #111827 !important;
+        }
+    </style>
+    
+    <script>
+        // Устанавливаем тему до загрузки страницы
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const body = document.body;
+            
+            if (savedTheme === 'dark') {
+                body.classList.add('theme-dark');
+                body.classList.remove('theme-light');
+            } else {
+                body.classList.add('theme-light');
+                body.classList.remove('theme-dark');
+            }
+        })();
+    </script>
     @stack("styles")
 </head>
 <body class="theme-light">
@@ -234,7 +293,7 @@
                         </button>
                         
                         <!-- Аккаунт с выпадающим меню -->
-                        <div class="relative" x-data="{ open: false }">
+                        <div class="relative" x-data="{ open: false }" x-cloak>
                             <button @click="open = !open" class="header-icon transition-colors">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -243,6 +302,7 @@
                             
                             <!-- Выпадающее меню -->
                             <div x-show="open" @click.away="open = false" 
+                                 x-cloak
                                  x-transition:enter="transition ease-out duration-100"
                                  x-transition:enter-start="transform opacity-0 scale-95"
                                  x-transition:enter-end="transform opacity-100 scale-100"

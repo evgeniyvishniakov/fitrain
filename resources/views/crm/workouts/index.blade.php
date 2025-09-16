@@ -400,7 +400,7 @@ function workoutApp() {
 @endsection
 
 @section("content")
-<div x-data="workoutApp()" class="space-y-6">
+<div x-data="workoutApp()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -559,24 +559,18 @@ function workoutApp() {
                     </div>
                     
                     <!-- Действия -->
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                        <div class="flex space-x-2">
-                            <button @click="showView(workout.id)" 
-                                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                                Просмотр
-                            </button>
-                            
-                            @if(auth()->user()->hasRole('trainer'))
-                                <button @click="showEdit(workout.id)" 
-                                        class="px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                                    Редактировать
-                                </button>
-                            @endif
-                        </div>
-                        
+                    <div class="flex space-x-2">
+                        <button @click="showView(workout.id)" 
+                                class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                            Просмотр
+                        </button>
                         @if(auth()->user()->hasRole('trainer'))
+                            <button @click="showEdit(workout.id)" 
+                                    class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                Редактировать
+                            </button>
                             <button @click="deleteWorkout(workout.id)" 
-                                    class="px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+                                    class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                                 Удалить
                             </button>
                         @endif
@@ -804,14 +798,14 @@ function workoutApp() {
             
             <!-- Действия -->
             @if(auth()->user()->hasRole('trainer'))
-                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <div class="flex space-x-2 pt-6 border-t border-gray-200">
                     <button @click="showEdit(currentWorkout?.id)" 
-                            class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                            class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                         Редактировать
                     </button>
                     
                     <button @click="deleteWorkout(currentWorkout?.id)" 
-                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+                            class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                         Удалить
                     </button>
                 </div>

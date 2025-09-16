@@ -870,7 +870,7 @@ function removeExerciseFromAlpine(exerciseId) {
 @endsection
 
 @section("content")
-<div x-data="templatesApp()" class="space-y-6">
+<div x-data="templatesApp()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

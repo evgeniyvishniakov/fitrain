@@ -291,7 +291,7 @@ function exerciseApp() {
 @endsection
 
 @section("content")
-<div x-data="exerciseApp()" class="space-y-6">
+<div x-data="exerciseApp()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
