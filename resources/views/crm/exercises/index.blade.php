@@ -23,6 +23,7 @@ function exerciseApp() {
         formEquipment: '',
         formMuscleGroupsText: '',
         formInstructions: '',
+        formFieldsConfig: ['sets', 'reps', 'weight', 'rest'], // По умолчанию
         
         // Навигация
         showList() {
@@ -39,6 +40,7 @@ function exerciseApp() {
             this.formEquipment = '';
             this.formMuscleGroupsText = '';
             this.formInstructions = '';
+            this.formFieldsConfig = ['sets', 'reps', 'weight', 'rest'];
         },
         
         showEdit(exerciseId) {
@@ -50,6 +52,7 @@ function exerciseApp() {
             this.formEquipment = this.currentExercise.equipment;
             this.formMuscleGroupsText = Array.isArray(this.currentExercise.muscle_groups) ? this.currentExercise.muscle_groups.join(', ') : '';
             this.formInstructions = this.currentExercise.instructions || '';
+            this.formFieldsConfig = this.currentExercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
         },
         
         showView(exerciseId) {
@@ -148,7 +151,8 @@ function exerciseApp() {
                     category: this.formCategory,
                     equipment: this.formEquipment,
                     muscle_groups: muscleGroups,
-                    instructions: this.formInstructions
+                    instructions: this.formInstructions,
+                    fields_config: this.formFieldsConfig
                 };
                 
                 const url = this.currentExercise && this.currentExercise.id ? 
@@ -606,6 +610,204 @@ function exerciseApp() {
                               placeholder="Пошаговые инструкции по выполнению упражнения..."
                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
                 </div>
+                
+                <!-- Конфигурация полей -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div class="flex items-center mb-4">
+                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Поля для ввода данных</h3>
+                            <p class="text-sm text-gray-600">Выберите какие поля будут доступны при добавлении этого упражнения в тренировку</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+                        <!-- Подходы -->
+                        <label class="field-card" :class="formFieldsConfig.includes('sets') ? 'field-card-selected' : 'field-card-unselected'">
+                            <input type="checkbox" 
+                                   x-model="formFieldsConfig" 
+                                   value="sets"
+                                   class="hidden">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
+                                     :class="formFieldsConfig.includes('sets') ? 'bg-indigo-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('sets') ? 'text-indigo-900' : 'text-gray-900'">Подходы</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'">Количество подходов</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Повторения -->
+                        <label class="field-card" :class="formFieldsConfig.includes('reps') ? 'field-card-selected' : 'field-card-unselected'">
+                            <input type="checkbox" 
+                                   x-model="formFieldsConfig" 
+                                   value="reps"
+                                   class="hidden">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
+                                     :class="formFieldsConfig.includes('reps') ? 'bg-green-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('reps') ? 'text-green-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('reps') ? 'text-green-900' : 'text-gray-900'">Повторения</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('reps') ? 'text-green-600' : 'text-gray-500'">Количество повторений</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Вес -->
+                        <label class="field-card" :class="formFieldsConfig.includes('weight') ? 'field-card-selected' : 'field-card-unselected'">
+                            <input type="checkbox" 
+                                   x-model="formFieldsConfig" 
+                                   value="weight"
+                                   class="hidden">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
+                                     :class="formFieldsConfig.includes('weight') ? 'bg-orange-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('weight') ? 'text-orange-900' : 'text-gray-900'">Вес (кг)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'">Рабочий вес</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Отдых -->
+                        <label class="field-card" :class="formFieldsConfig.includes('rest') ? 'field-card-selected' : 'field-card-unselected'">
+                            <input type="checkbox" 
+                                   x-model="formFieldsConfig" 
+                                   value="rest"
+                                   class="hidden">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
+                                     :class="formFieldsConfig.includes('rest') ? 'bg-purple-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('rest') ? 'text-purple-900' : 'text-gray-900'">Отдых (мин)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500'">Время отдыха</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Время -->
+                        <label class="field-card" :class="formFieldsConfig.includes('time') ? 'field-card-selected' : 'field-card-unselected'">
+                            <input type="checkbox" 
+                                   x-model="formFieldsConfig" 
+                                   value="time"
+                                   class="hidden">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
+                                     :class="formFieldsConfig.includes('time') ? 'bg-blue-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('time') ? 'text-blue-900' : 'text-gray-900'">Время (сек)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500'">Продолжительность</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Дистанция -->
+                        <label class="field-card" :class="formFieldsConfig.includes('distance') ? 'field-card-selected' : 'field-card-unselected'">
+                            <input type="checkbox" 
+                                   x-model="formFieldsConfig" 
+                                   value="distance"
+                                   class="hidden">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
+                                     :class="formFieldsConfig.includes('distance') ? 'bg-emerald-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('distance') ? 'text-emerald-900' : 'text-gray-900'">Дистанция (м)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500'">Пройденное расстояние</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Темп -->
+                        <label class="field-card" :class="formFieldsConfig.includes('tempo') ? 'field-card-selected' : 'field-card-unselected'">
+                            <input type="checkbox" 
+                                   x-model="formFieldsConfig" 
+                                   value="tempo"
+                                   class="hidden">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
+                                     :class="formFieldsConfig.includes('tempo') ? 'bg-pink-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('tempo') ? 'text-pink-900' : 'text-gray-900'">Темп/Скорость</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500'">Скорость выполнения</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <!-- Быстрые шаблоны -->
+                    <div class="mt-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">Быстрые шаблоны</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" 
+                                    @click="formFieldsConfig = ['sets', 'reps', 'weight', 'rest']"
+                                    class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+                                💪 Силовое
+                            </button>
+                            <button type="button" 
+                                    @click="formFieldsConfig = ['sets', 'reps', 'rest']"
+                                    class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+                                🏃 Собственный вес
+                            </button>
+                            <button type="button" 
+                                    @click="formFieldsConfig = ['time', 'tempo']"
+                                    class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+                                🏃‍♂️ Кардио
+                            </button>
+                            <button type="button" 
+                                    @click="formFieldsConfig = ['sets', 'time', 'rest']"
+                                    class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+                                ⏱️ Статическое
+                            </button>
+                            <button type="button" 
+                                    @click="formFieldsConfig = ['distance', 'time', 'tempo']"
+                                    class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+                                🏃‍♀️ Бег/Ходьба
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-amber-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm text-amber-800 font-medium">Примечания будут доступны всегда для всех упражнений</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Кнопки -->
@@ -671,4 +873,58 @@ function exerciseApp() {
         </div>
     </div>
 </div>
+
+<style>
+.field-card {
+    @apply p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-md;
+}
+
+.field-card-selected {
+    @apply border-indigo-300 bg-indigo-50 shadow-sm;
+}
+
+.field-card-unselected {
+    @apply border-gray-200 bg-white hover:border-gray-300;
+}
+
+.field-card:hover {
+    @apply transform scale-105;
+}
+
+.field-card-selected:hover {
+    @apply border-indigo-400 bg-indigo-100;
+}
+
+.field-card-unselected:hover {
+    @apply border-gray-300 bg-gray-50;
+}
+
+/* На больших экранах делаем карточки в одну линию */
+@media (min-width: 1024px) {
+    .field-card {
+        @apply p-2;
+    }
+    
+    .field-card .flex {
+        @apply flex-col text-center space-x-0 space-y-1;
+    }
+    
+    .field-card .w-10 {
+        @apply w-6 h-6 mx-auto;
+    }
+    
+    .field-card .w-5 {
+        @apply w-3 h-3;
+    }
+    
+    .field-card .font-medium {
+        @apply text-xs;
+    }
+    
+    .field-card .text-xs {
+        @apply text-xs;
+    }
+}
+</style>
+
 @endsection

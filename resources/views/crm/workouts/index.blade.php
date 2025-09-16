@@ -147,23 +147,29 @@ function workoutApp() {
                 const exerciseId = element.dataset.exerciseId;
                 const exerciseName = element.querySelector('.font-medium').textContent;
                 
-                const sets = parseInt(element.querySelector(`input[name="sets_${exerciseId}"]`).value) || 0;
-                const reps = parseInt(element.querySelector(`input[name="reps_${exerciseId}"]`).value) || 0;
-                const weight = parseFloat(element.querySelector(`input[name="weight_${exerciseId}"]`).value) || 0;
-                const rest = parseFloat(element.querySelector(`input[name="rest_${exerciseId}"]`).value) || 0;
-                const tempo = element.querySelector(`input[name="tempo_${exerciseId}"]`).value || '';
-                const notes = element.querySelector(`input[name="notes_${exerciseId}"]`).value || '';
-                
-                exercises.push({
+                // Собираем все поля динамически
+                const exerciseData = {
                     exercise_id: parseInt(exerciseId),
-                    name: exerciseName,
-                    sets: sets,
-                    reps: reps,
-                    weight: weight,
-                    rest_minutes: rest,
-                    tempo: tempo,
-                    notes: notes
+                    name: exerciseName
+                };
+                
+                // Находим все input поля для этого упражнения
+                const inputs = element.querySelectorAll('input');
+                inputs.forEach(input => {
+                    const name = input.name;
+                    if (name.startsWith('notes_')) {
+                        exerciseData.notes = input.value || '';
+                    } else {
+                        // Извлекаем название поля (sets, reps, weight, etc.)
+                        const fieldName = name.replace(`_${exerciseId}`, '');
+                        const value = input.type === 'number' ? 
+                            (parseFloat(input.value) || 0) : 
+                            (input.value || '');
+                        exerciseData[fieldName] = value;
+                    }
                 });
+                
+                exercises.push(exerciseData);
             });
             
             return exercises;
@@ -1173,6 +1179,157 @@ function addSelectedExercises() {
     closeExerciseModal();
 }
 
+// Генерация HTML для полей на основе конфигурации
+function generateFieldsHtml(exerciseId, fieldsConfig) {
+    const fieldConfigs = {
+        'sets': {
+            label: 'Подходы',
+            icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+            color: 'indigo',
+            type: 'number',
+            min: '1',
+            max: '20',
+            value: '3'
+        },
+        'reps': {
+            label: 'Повторения',
+            icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+            color: 'green',
+            type: 'number',
+            min: '1',
+            max: '100',
+            value: '10'
+        },
+        'weight': {
+            label: 'Вес (кг)',
+            icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+            color: 'orange',
+            type: 'number',
+            min: '0',
+            max: '1000',
+            step: '0.5',
+            value: '0'
+        },
+        'rest': {
+            label: 'Отдых (мин)',
+            icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+            color: 'purple',
+            type: 'number',
+            min: '0',
+            max: '60',
+            step: '0.5',
+            value: '2'
+        },
+        'time': {
+            label: 'Время (сек)',
+            icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+            color: 'blue',
+            type: 'number',
+            min: '0',
+            max: '3600',
+            step: '1',
+            value: '0'
+        },
+        'distance': {
+            label: 'Дистанция (м)',
+            icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+            color: 'green',
+            type: 'number',
+            min: '0',
+            max: '10000',
+            step: '1',
+            value: '0'
+        },
+        'tempo': {
+            label: 'Темп/Скорость',
+            icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+            color: 'purple',
+            type: 'text',
+            placeholder: '2-1-2 или 8 км/ч',
+            value: ''
+        }
+    };
+
+    let html = '';
+    
+    // Генерируем поля из конфигурации
+    fieldsConfig.forEach(field => {
+        if (fieldConfigs[field]) {
+            const config = fieldConfigs[field];
+            const colorClasses = getColorClasses(config.color);
+            
+            html += `
+                <div class="relative">
+                    <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                        <svg class="w-4 h-4 mr-2 text-${config.color}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${config.icon}"/>
+                        </svg>
+                        ${config.label}
+                    </label>
+                    <div class="relative">
+                        <input type="${config.type}" 
+                               name="${field}_${exerciseId}" 
+                               ${config.min ? `min="${config.min}"` : ''}
+                               ${config.max ? `max="${config.max}"` : ''}
+                               ${config.step ? `step="${config.step}"` : ''}
+                               ${config.placeholder ? `placeholder="${config.placeholder}"` : ''}
+                               value="${config.value}"
+                               class="w-full px-4 py-3 text-lg font-semibold text-center ${colorClasses.input} focus:ring-4 ${colorClasses.focusRing} focus:border-${config.color}-400 transition-all duration-200 hover:border-${config.color}-300 rounded-lg">
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    // Всегда добавляем примечания
+    html += `
+        <div class="relative">
+            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Примечания
+            </label>
+            <div class="relative">
+                <input type="text" 
+                       name="notes_${exerciseId}" 
+                       placeholder="Дополнительные заметки..."
+                       class="w-full px-4 py-3 text-sm bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-gray-100 focus:border-gray-400 transition-all duration-200 hover:border-gray-300 placeholder-gray-500">
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+// Получение CSS классов для цветов
+function getColorClasses(color) {
+    const colors = {
+        'indigo': {
+            input: 'bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200',
+            focusRing: 'focus:ring-indigo-100'
+        },
+        'green': {
+            input: 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200',
+            focusRing: 'focus:ring-green-100'
+        },
+        'orange': {
+            input: 'bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200',
+            focusRing: 'focus:ring-orange-100'
+        },
+        'purple': {
+            input: 'bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200',
+            focusRing: 'focus:ring-purple-100'
+        },
+        'blue': {
+            input: 'bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200',
+            focusRing: 'focus:ring-blue-100'
+        }
+    };
+    
+    return colors[color] || colors['gray'];
+}
+
 // Отображение выбранных упражнений в форме
 function displaySelectedExercises(exercises) {
     const container = document.getElementById('selectedExercisesContainer');
@@ -1196,138 +1353,59 @@ function displaySelectedExercises(exercises) {
         // Показываем контейнер с упражнениями
         container.style.display = 'block';
         
-        // Отображаем упражнения
-        list.innerHTML = exercises.map((exercise, index) => `
-            <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-lg" data-exercise-id="${exercise.id}">
-                <!-- Заголовок упражнения -->
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center space-x-3">
-                        <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
-                        <span class="font-medium text-gray-900">${exercise.name}</span>
-                        <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
-                    </div>
-                    <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- Параметры упражнения - современный дизайн -->
-                <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                    <div class="exercise-params-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                        <!-- Подходы -->
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                                Подходы (раз)
-                            </label>
-                            <div class="relative">
-                                <input type="number" 
-                                       name="sets_${exercise.id}" 
-                                       min="1" 
-                                       max="20" 
-                                       value="3"
-                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 hover:border-indigo-300">
-                            </div>
+        // Отображаем упражнения с динамическими полями
+        list.innerHTML = exercises.map((exercise, index) => {
+            const fieldsConfig = exercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
+            const fieldsHtml = generateFieldsHtml(exercise.id, fieldsConfig);
+            
+            return `
+                <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm" data-exercise-id="${exercise.id}">
+                    <!-- Заголовок упражнения -->
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-3 flex-1 cursor-pointer" onclick="toggleExerciseDetails(${exercise.id})">
+                            <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
+                            <span class="font-medium text-gray-900">${exercise.name}</span>
+                            <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
+                            <svg id="chevron-${exercise.id}" class="w-4 h-4 transform transition-transform duration-200 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </div>
-                        
-                        <!-- Повторения -->
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                </svg>
-                                Повторения (раз)
-                            </label>
-                            <div class="relative">
-                                <input type="number" 
-                                       name="reps_${exercise.id}" 
-                                       min="1" 
-                                       max="100" 
-                                       value="10"
-                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-400 transition-all duration-200 hover:border-green-300">
-                            </div>
-                        </div>
-                        
-                        <!-- Вес -->
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                </svg>
-                                Вес (кг)
-                            </label>
-                            <div class="relative">
-                                <input type="number" 
-                                       name="weight_${exercise.id}" 
-                                       min="0" 
-                                       max="1000" 
-                                       step="0.5"
-                                       value="0"
-                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-400 transition-all duration-200 hover:border-orange-300">
-                            </div>
-                        </div>
-                        
-                        <!-- Отдых -->
-                        <div class="relative">
-                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Отдых (мин)
-                            </label>
-                            <div class="relative">
-                                <input type="number" 
-                                       name="rest_${exercise.id}" 
-                                       min="0" 
-                                       max="60" 
-                                       step="0.5"
-                                       value="2"
-                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all duration-200 hover:border-purple-300">
-                            </div>
-                        </div>
+                        <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800 ml-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
                     </div>
                     
-                    <!-- Дополнительные параметры -->
-                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Темп -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                                </svg>
-                                Темп
-                            </label>
-                            <input type="text" 
-                                   name="tempo_${exercise.id}" 
-                                   placeholder="2-1-2 (опускание-пауза-подъем)"
-                                   class="w-full px-4 py-3 text-sm bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 hover:border-blue-300 placeholder-gray-500">
-                        </div>
-                        
-                        <!-- Примечания -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                                <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                                Примечания
-                            </label>
-                            <input type="text" 
-                                   name="notes_${exercise.id}" 
-                                   placeholder="Дополнительные заметки..."
-                                   class="w-full px-4 py-3 text-sm bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-gray-100 focus:border-gray-400 transition-all duration-200 hover:border-gray-300 placeholder-gray-500">
+                    <!-- Параметры упражнения - сворачиваемые -->
+                    <div id="details-${exercise.id}" class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                        <div class="exercise-params-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            ${fieldsHtml}
                         </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } else {
         // Показываем пустое состояние
         emptyState.style.display = 'block';
         container.style.display = 'none';
+    }
+}
+
+// Сворачивание/разворачивание деталей упражнения
+function toggleExerciseDetails(exerciseId) {
+    const detailsElement = document.getElementById(`details-${exerciseId}`);
+    const chevronElement = document.getElementById(`chevron-${exerciseId}`);
+    
+    if (detailsElement.style.display === 'none') {
+        // Разворачиваем
+        detailsElement.style.display = 'block';
+        chevronElement.style.transform = 'rotate(0deg)';
+    } else {
+        // Сворачиваем
+        detailsElement.style.display = 'none';
+        chevronElement.style.transform = 'rotate(180deg)';
     }
 }
 

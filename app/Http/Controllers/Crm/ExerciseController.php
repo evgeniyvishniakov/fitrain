@@ -45,7 +45,8 @@ class ExerciseController extends BaseController
             'equipment' => 'required|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
-            'image_url' => 'nullable|url'
+            'image_url' => 'nullable|url',
+            'fields_config' => 'nullable|array'
         ]);
 
         $exercise = Exercise::create($request->all());
@@ -80,7 +81,8 @@ class ExerciseController extends BaseController
             'equipment' => 'required|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
-            'image_url' => 'nullable|url'
+            'image_url' => 'nullable|url',
+            'fields_config' => 'nullable|array'
         ]);
 
         $exercise->update($request->all());

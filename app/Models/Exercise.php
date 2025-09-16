@@ -18,12 +18,14 @@ class Exercise extends Model
         'difficulty',
         'instructions',
         'image_url',
-        'is_active'
+        'is_active',
+        'fields_config'
     ];
 
     protected $casts = [
         'muscle_groups' => 'array',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'fields_config' => 'array'
     ];
 
     // Константы для категорий
@@ -52,6 +54,17 @@ class Exercise extends Model
         'beginner' => 'Начинающий',
         'intermediate' => 'Средний',
         'advanced' => 'Продвинутый'
+    ];
+
+    // Константы для полей упражнений
+    const AVAILABLE_FIELDS = [
+        'sets' => 'Подходы',
+        'reps' => 'Повторения',
+        'weight' => 'Вес (кг)',
+        'rest' => 'Отдых (мин)',
+        'time' => 'Время (сек)',
+        'distance' => 'Дистанция (м)',
+        'tempo' => 'Темп/Скорость'
     ];
 
     // Скоупы
@@ -89,5 +102,26 @@ class Exercise extends Model
     public function getDifficultyLabelAttribute()
     {
         return self::DIFFICULTY[$this->difficulty] ?? $this->difficulty;
+    }
+
+    // Получить конфигурацию полей для упражнения
+    public function getFieldsConfig()
+    {
+        return $this->fields_config ?? ['sets', 'reps', 'weight', 'rest']; // По умолчанию
+    }
+
+    // Получить доступные поля с лейблами
+    public function getAvailableFieldsWithLabels()
+    {
+        $config = $this->getFieldsConfig();
+        $fields = [];
+        
+        foreach ($config as $field) {
+            if (isset(self::AVAILABLE_FIELDS[$field])) {
+                $fields[$field] = self::AVAILABLE_FIELDS[$field];
+            }
+        }
+        
+        return $fields;
     }
 }
