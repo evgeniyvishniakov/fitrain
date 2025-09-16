@@ -138,16 +138,52 @@ function workoutApp() {
             return labels[status] || status;
         },
         
+        // Сбор данных упражнений
+        collectExerciseData() {
+            const exercises = [];
+            const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
+            
+            exerciseElements.forEach(element => {
+                const exerciseId = element.dataset.exerciseId;
+                const exerciseName = element.querySelector('.font-medium').textContent;
+                
+                const sets = parseInt(element.querySelector(`input[name="sets_${exerciseId}"]`).value) || 0;
+                const reps = parseInt(element.querySelector(`input[name="reps_${exerciseId}"]`).value) || 0;
+                const weight = parseFloat(element.querySelector(`input[name="weight_${exerciseId}"]`).value) || 0;
+                const rest = parseFloat(element.querySelector(`input[name="rest_${exerciseId}"]`).value) || 0;
+                const tempo = element.querySelector(`input[name="tempo_${exerciseId}"]`).value || '';
+                const notes = element.querySelector(`input[name="notes_${exerciseId}"]`).value || '';
+                
+                exercises.push({
+                    exercise_id: parseInt(exerciseId),
+                    name: exerciseName,
+                    sets: sets,
+                    reps: reps,
+                    weight: weight,
+                    rest_minutes: rest,
+                    tempo: tempo,
+                    notes: notes
+                });
+            });
+            
+            return exercises;
+        },
+        
         // Сохранение
         async saveWorkout() {
             try {
+                // Собираем данные упражнений
+                const exercises = this.collectExerciseData();
+                console.log('Собранные данные упражнений:', exercises);
+                
                 const workoutData = {
                     title: this.formTitle,
                     description: this.formDescription,
                     athlete_id: this.formAthleteId,
                     date: this.formDate,
                     duration: this.formDuration,
-                    status: this.formStatus
+                    status: this.formStatus,
+                    exercises: exercises
                 };
                 
                 const url = this.currentWorkout && this.currentWorkout.id ? 
@@ -723,6 +759,42 @@ function workoutApp() {
                 </div>
             </div>
 
+            <!-- Секция упражнений -->
+            <div class="border-t border-gray-200 pt-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Упражнения</h3>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="openExerciseModal()" 
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Добавить упражнение
+                        </button>
+                        <button type="button" onclick="openTemplateModal()" 
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Добавить шаблон
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Выбранные упражнения -->
+                <div id="selectedExercisesContainer" class="space-y-3" style="display: none;">
+                    <h4 class="text-sm font-medium text-gray-700">Выбранные упражнения:</h4>
+                    <div id="selectedExercisesList" class="space-y-2">
+                        <!-- Здесь будут отображаться выбранные упражнения -->
+                    </div>
+                </div>
+                
+                <!-- Пустое состояние -->
+                <div id="emptyExercisesState" class="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
+                    <p>Добавьте упражнения или выберите шаблон тренировки</p>
+                </div>
+            </div>
+
             <!-- Кнопки -->
             <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
                 <button type="button" 
@@ -813,5 +885,516 @@ function workoutApp() {
         </div>
     </div>
 </div>
+
+<!-- Красивое модальное окно для упражнений -->
+<div id="exerciseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 80%; max-height: 80%; width: 100%; overflow: hidden;">
+        <!-- Заголовок -->
+        <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">Выбор упражнений</h3>
+            <button onclick="closeExerciseModal()" style="color: #6b7280; background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+        
+        <!-- Содержимое -->
+        <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+            <!-- Поиск и фильтры -->
+            <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+                <!-- Поиск -->
+                <input type="text" 
+                       id="exercise-search" 
+                       placeholder="Поиск упражнений..." 
+                       style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                       onkeyup="filterExercises()"
+                       onfocus="this.style.borderColor = '#4f46e5'"
+                       onblur="this.style.borderColor = '#d1d5db'">
+                
+                <!-- Фильтр категории -->
+                <select id="category-filter" 
+                        onchange="filterExercises()"
+                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor = '#4f46e5'"
+                        onblur="this.style.borderColor = '#d1d5db'">
+                    <option value="">Все категории</option>
+                    <option value="Грудь">Грудь</option>
+                    <option value="Спина">Спина</option>
+                    <option value="Ноги">Ноги</option>
+                    <option value="Плечи">Плечи</option>
+                    <option value="Руки">Руки</option>
+                    <option value="Кардио">Кардио</option>
+                    <option value="Гибкость">Гибкость</option>
+                </select>
+                
+                <!-- Фильтр оборудования -->
+                <select id="equipment-filter" 
+                        onchange="filterExercises()"
+                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor = '#4f46e5'"
+                        onblur="this.style.borderColor = '#d1d5db'">
+                    <option value="">Все оборудование</option>
+                    <option value="Штанга">Штанга</option>
+                    <option value="Гантели">Гантели</option>
+                    <option value="Собственный вес">Собственный вес</option>
+                    <option value="Тренажеры">Тренажеры</option>
+                    <option value="Скакалка">Скакалка</option>
+                    <option value="Турник">Турник</option>
+                </select>
+            </div>
+            
+            <div id="exercises-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                <p style="color: black;">Загрузка упражнений...</p>
+            </div>
+            
+            <!-- Сообщение о пустых результатах -->
+            <div id="no-results" style="display: none; text-align: center; padding: 40px; color: #6b7280;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Упражнения не найдены</h3>
+                <p style="font-size: 14px;">Попробуйте изменить параметры поиска</p>
+            </div>
+        </div>
+        
+        <!-- Кнопки -->
+        <div style="padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+            <button onclick="closeExerciseModal()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">Отмена</button>
+            <button onclick="addSelectedExercises()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">Готово</button>
+        </div>
+    </div>
+</div>
+
+<!-- Красивое модальное окно для шаблонов -->
+<div id="templateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 80%; max-height: 80%; width: 100%; overflow: hidden;">
+        <!-- Заголовок -->
+        <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">Выбор шаблона тренировки</h3>
+            <button onclick="closeTemplateModal()" style="color: #6b7280; background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+        
+        <!-- Содержимое -->
+        <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+            <div id="templates-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+                <p style="color: black;">Загрузка шаблонов...</p>
+            </div>
+            
+            <!-- Сообщение о пустых результатах -->
+            <div id="no-templates-results" style="display: none; text-align: center; padding: 40px; color: #6b7280;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Шаблоны не найдены</h3>
+                <p style="font-size: 14px;">Создайте шаблон тренировки для быстрого планирования</p>
+            </div>
+        </div>
+        
+        <!-- Кнопки -->
+        <div style="padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
+            <button onclick="closeTemplateModal()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">Отмена</button>
+            <button onclick="addSelectedTemplate()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">Готово</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Глобальные переменные для модальных окон
+let exercises = [];
+let templates = [];
+let selectedTemplate = null;
+
+// Функции для работы с модальными окнами
+function openExerciseModal() {
+    document.getElementById('exerciseModal').style.display = 'block';
+    loadExercises();
+}
+
+function closeExerciseModal() {
+    document.getElementById('exerciseModal').style.display = 'none';
+}
+
+function openTemplateModal() {
+    document.getElementById('templateModal').style.display = 'block';
+    loadTemplates();
+}
+
+function closeTemplateModal() {
+    document.getElementById('templateModal').style.display = 'none';
+}
+
+// Загрузка упражнений
+async function loadExercises() {
+    try {
+        const response = await fetch('/api/exercises');
+        const data = await response.json();
+        if (data.success) {
+            exercises = data.exercises;
+            renderExercises();
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки упражнений:', error);
+    }
+}
+
+// Загрузка шаблонов
+async function loadTemplates() {
+    try {
+        const response = await fetch('/api/workout-templates');
+        const data = await response.json();
+        if (data.success) {
+            templates = data.templates;
+            renderTemplates();
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки шаблонов:', error);
+    }
+}
+
+// Отображение упражнений
+function renderExercises() {
+    const container = document.getElementById('exercises-container');
+    if (exercises.length === 0) {
+        container.innerHTML = '<p style="color: black;">Упражнения не найдены</p>';
+        return;
+    }
+    
+    container.innerHTML = exercises.map(exercise => `
+        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s;" 
+             onclick="toggleExercise(this, ${exercise.id}, '${exercise.name}', '${exercise.category}', '${exercise.equipment}')">
+            <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${exercise.name}</h4>
+            <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exercise.category}</p>
+            <p style="font-size: 14px; color: #9ca3af;">${exercise.equipment}</p>
+        </div>
+    `).join('');
+}
+
+// Отображение шаблонов
+function renderTemplates() {
+    const container = document.getElementById('templates-container');
+    if (templates.length === 0) {
+        container.innerHTML = '<p style="color: black;">Шаблоны не найдены</p>';
+        return;
+    }
+    
+    container.innerHTML = templates.map(template => `
+        <div class="template-item" data-template-id="${template.id}" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s;" onclick="toggleTemplate(this, ${template.id}, '${template.name}', ${JSON.stringify(template.exercises || []).replace(/"/g, '&quot;')})">
+            <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${template.name}</h4>
+            <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${template.exercises ? template.exercises.length : 0} упражнений</p>
+            <p style="font-size: 14px; color: #9ca3af;">${template.description || ''}</p>
+        </div>
+    `).join('');
+}
+
+// Переключение упражнения
+function toggleExercise(element, id, name, category, equipment) {
+    const isSelected = element.style.backgroundColor === 'rgb(239, 246, 255)';
+    
+    if (isSelected) {
+        element.style.backgroundColor = 'white';
+        element.style.borderColor = '#e5e7eb';
+    } else {
+        element.style.backgroundColor = 'rgb(239, 246, 255)';
+        element.style.borderColor = 'rgb(147, 197, 253)';
+    }
+    
+    // Сохраняем данные в data-атрибуты
+    element.dataset.selected = !isSelected;
+    element.dataset.exerciseId = id;
+    element.dataset.exerciseName = name;
+    element.dataset.exerciseCategory = category;
+    element.dataset.exerciseEquipment = equipment;
+}
+
+// Переключение шаблона
+function toggleTemplate(element, id, name, exercises) {
+    // Убираем выделение с других элементов
+    document.querySelectorAll('.template-item').forEach(el => {
+        el.style.backgroundColor = 'white';
+        el.style.borderColor = '#e5e7eb';
+    });
+    
+    // Выделяем текущий элемент
+    element.style.backgroundColor = 'rgb(239, 246, 255)';
+    element.style.borderColor = 'rgb(147, 197, 253)';
+    
+    // Сохраняем выбранный шаблон
+    selectedTemplate = {
+        id: id,
+        name: name,
+        exercises: exercises
+    };
+}
+
+// Фильтрация упражнений
+function filterExercises() {
+    const searchTerm = document.getElementById('exercise-search').value.toLowerCase();
+    const categoryFilter = document.getElementById('category-filter').value.toLowerCase();
+    const equipmentFilter = document.getElementById('equipment-filter').value.toLowerCase();
+
+    const exerciseElements = document.querySelectorAll('#exercises-container > div');
+    const noResults = document.getElementById('no-results');
+    let visibleCount = 0;
+
+    exerciseElements.forEach(element => {
+        const name = element.querySelector('h4').textContent.toLowerCase();
+        const category = element.querySelector('p').textContent.toLowerCase();
+        const equipment = element.querySelectorAll('p')[1].textContent.toLowerCase();
+
+        const matchesSearch = name.includes(searchTerm);
+        const matchesCategory = !categoryFilter || category.includes(categoryFilter);
+        const matchesEquipment = !equipmentFilter || equipment.includes(equipmentFilter);
+
+        if (matchesSearch && matchesCategory && matchesEquipment) {
+            element.style.display = 'block';
+            visibleCount++;
+        } else {
+            element.style.display = 'none';
+        }
+    });
+
+    // Показываем/скрываем сообщение о пустых результатах
+    if (visibleCount === 0) {
+        noResults.style.display = 'block';
+    } else {
+        noResults.style.display = 'none';
+    }
+}
+
+// Добавление выбранных упражнений
+function addSelectedExercises() {
+    const selectedElements = document.querySelectorAll('#exerciseModal [data-selected="true"]');
+    const selectedExercises = Array.from(selectedElements).map(el => ({
+        id: parseInt(el.dataset.exerciseId),
+        name: el.dataset.exerciseName,
+        category: el.dataset.exerciseCategory,
+        equipment: el.dataset.exerciseEquipment
+    }));
+    
+    console.log('Выбрано упражнений:', selectedExercises.length);
+    console.log('Упражнения:', selectedExercises);
+    
+    // Отображаем выбранные упражнения в форме
+    displaySelectedExercises(selectedExercises);
+    
+    closeExerciseModal();
+}
+
+// Отображение выбранных упражнений в форме
+function displaySelectedExercises(exercises) {
+    const container = document.getElementById('selectedExercisesContainer');
+    const list = document.getElementById('selectedExercisesList');
+    const emptyState = document.getElementById('emptyExercisesState');
+    
+    // Принудительно устанавливаем 4 колонки на больших экранах
+    setTimeout(() => {
+        const grids = document.querySelectorAll('.exercise-params-grid');
+        grids.forEach(grid => {
+            if (window.innerWidth >= 768) {
+                grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            }
+        });
+    }, 100);
+    
+    if (exercises.length > 0) {
+        // Скрываем пустое состояние
+        emptyState.style.display = 'none';
+        
+        // Показываем контейнер с упражнениями
+        container.style.display = 'block';
+        
+        // Отображаем упражнения
+        list.innerHTML = exercises.map((exercise, index) => `
+            <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-lg" data-exercise-id="${exercise.id}">
+                <!-- Заголовок упражнения -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
+                        <span class="font-medium text-gray-900">${exercise.name}</span>
+                        <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
+                    </div>
+                    <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Параметры упражнения - современный дизайн -->
+                <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                    <div class="exercise-params-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <!-- Подходы -->
+                        <div class="relative">
+                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                Подходы (раз)
+                            </label>
+                            <div class="relative">
+                                <input type="number" 
+                                       name="sets_${exercise.id}" 
+                                       min="1" 
+                                       max="20" 
+                                       value="3"
+                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all duration-200 hover:border-indigo-300">
+                            </div>
+                        </div>
+                        
+                        <!-- Повторения -->
+                        <div class="relative">
+                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Повторения (раз)
+                            </label>
+                            <div class="relative">
+                                <input type="number" 
+                                       name="reps_${exercise.id}" 
+                                       min="1" 
+                                       max="100" 
+                                       value="10"
+                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-400 transition-all duration-200 hover:border-green-300">
+                            </div>
+                        </div>
+                        
+                        <!-- Вес -->
+                        <div class="relative">
+                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Вес (кг)
+                            </label>
+                            <div class="relative">
+                                <input type="number" 
+                                       name="weight_${exercise.id}" 
+                                       min="0" 
+                                       max="1000" 
+                                       step="0.5"
+                                       value="0"
+                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-400 transition-all duration-200 hover:border-orange-300">
+                            </div>
+                        </div>
+                        
+                        <!-- Отдых -->
+                        <div class="relative">
+                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Отдых (мин)
+                            </label>
+                            <div class="relative">
+                                <input type="number" 
+                                       name="rest_${exercise.id}" 
+                                       min="0" 
+                                       max="60" 
+                                       step="0.5"
+                                       value="2"
+                                       class="w-full px-4 py-3 text-lg font-semibold text-center bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-400 transition-all duration-200 hover:border-purple-300">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Дополнительные параметры -->
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Темп -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                                Темп
+                            </label>
+                            <input type="text" 
+                                   name="tempo_${exercise.id}" 
+                                   placeholder="2-1-2 (опускание-пауза-подъем)"
+                                   class="w-full px-4 py-3 text-sm bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 hover:border-blue-300 placeholder-gray-500">
+                        </div>
+                        
+                        <!-- Примечания -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Примечания
+                            </label>
+                            <input type="text" 
+                                   name="notes_${exercise.id}" 
+                                   placeholder="Дополнительные заметки..."
+                                   class="w-full px-4 py-3 text-sm bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-gray-100 focus:border-gray-400 transition-all duration-200 hover:border-gray-300 placeholder-gray-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        // Показываем пустое состояние
+        emptyState.style.display = 'block';
+        container.style.display = 'none';
+    }
+}
+
+// Удаление упражнения из списка
+function removeExercise(exerciseId) {
+    // Находим элемент с упражнением и удаляем его
+    const exerciseElement = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
+    if (exerciseElement) {
+        exerciseElement.remove();
+    }
+    
+    // Обновляем отображение
+    const remainingExercises = Array.from(document.querySelectorAll('#selectedExercisesList > div')).map(el => {
+        const name = el.querySelector('.font-medium').textContent;
+        const category = el.querySelector('.text-gray-600').textContent.match(/\(([^•]+)/)[1].trim();
+        const equipment = el.querySelector('.text-gray-600').textContent.match(/• ([^)]+)/)[1].trim();
+        return { id: exerciseId, name, category, equipment };
+    });
+    
+    displaySelectedExercises(remainingExercises);
+}
+
+// Добавление выбранного шаблона
+function addSelectedTemplate() {
+    if (selectedTemplate) {
+        console.log('Выбран шаблон:', selectedTemplate);
+        console.log('Упражнения в шаблоне:', selectedTemplate.exercises);
+        
+        // Отображаем упражнения из шаблона
+        displaySelectedExercises(selectedTemplate.exercises);
+    }
+    closeTemplateModal();
+}
+
+// Простые функции для модальных окон
+document.addEventListener('DOMContentLoaded', function() {
+    // Закрытие по клику на фон
+    document.getElementById('exerciseModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeExerciseModal();
+        }
+    });
+    
+    document.getElementById('templateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeTemplateModal();
+        }
+    });
+    
+    // Принудительно устанавливаем 4 колонки на больших экранах
+    function setGridColumns() {
+        const grids = document.querySelectorAll('.exercise-params-grid');
+        grids.forEach(grid => {
+            if (window.innerWidth >= 768) {
+                grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            } else {
+                grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            }
+        });
+    }
+    
+    // Устанавливаем при загрузке
+    setGridColumns();
+    
+    // Устанавливаем при изменении размера окна
+    window.addEventListener('resize', setGridColumns);
+});
+</script>
 
 @endsection

@@ -17,3 +17,21 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// API для упражнений
+Route::get('/exercises', function () {
+    $exercises = \App\Models\Exercise::all();
+    return response()->json([
+        'success' => true,
+        'exercises' => $exercises
+    ]);
+});
+
+// API для шаблонов тренировок
+Route::get('/workout-templates', function () {
+    $templates = \App\Models\WorkoutTemplate::with('exercises')->get();
+    return response()->json([
+        'success' => true,
+        'templates' => $templates
+    ]);
+});
