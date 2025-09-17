@@ -29,7 +29,47 @@ Route::get('/exercises', function () {
 
 // API для шаблонов тренировок
 Route::get('/workout-templates', function () {
-    $templates = \App\Models\WorkoutTemplate::with('exercises')->get();
+    $templates = \App\Models\WorkoutTemplate::active()->get();
+    
+    // Обрабатываем каждый шаблон и загружаем полные данные упражнений
+    $templates->each(function ($template) {
+        if ($template->exercises && is_array($template->exercises)) {
+            $template->exercises = collect($template->exercises)->map(function ($exerciseData) {
+                // Проверяем формат данных упражнения
+                if (isset($exerciseData['exercise_id'])) {
+                    // Старый формат: {exercise_id, sets, reps, weight, rest}
+                    $exercise = \App\Models\Exercise::find($exerciseData['exercise_id']);
+                    if ($exercise) {
+                        return [
+                            'id' => $exercise->id,
+                            'name' => $exercise->name,
+                            'category' => $exercise->category,
+                            'equipment' => $exercise->equipment,
+                            'fields_config' => $exercise->fields_config,
+                            'sets' => $exerciseData['sets'] ?? null,
+                            'reps' => $exerciseData['reps'] ?? null,
+                            'weight' => $exerciseData['weight'] ?? null,
+                            'rest' => $exerciseData['rest'] ?? null
+                        ];
+                    }
+                } elseif (isset($exerciseData['id'])) {
+                    // Новый формат: {id, name, category, equipment}
+                    $exercise = \App\Models\Exercise::find($exerciseData['id']);
+                    if ($exercise) {
+                        return [
+                            'id' => $exercise->id,
+                            'name' => $exercise->name,
+                            'category' => $exercise->category,
+                            'equipment' => $exercise->equipment,
+                            'fields_config' => $exercise->fields_config
+                        ];
+                    }
+                }
+                return $exerciseData;
+            })->filter()->values()->toArray();
+        }
+    });
+    
     return response()->json([
         'success' => true,
         'templates' => $templates

@@ -490,6 +490,75 @@ function workoutApp() {
                         flex-shrink: 0 !important;
                     }
                 }
+                
+                /* Стили для заголовка и кнопок упражнений */
+                .exercise-header-row {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 1rem !important;
+                    margin-bottom: 1rem !important;
+                }
+                
+                .exercise-buttons-container {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.75rem !important;
+                    width: 100% !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .exercise-header-row {
+                        flex-direction: row !important;
+                        align-items: center !important;
+                        justify-content: space-between !important;
+                        gap: 1rem !important;
+                    }
+                    
+                    .exercise-buttons-container {
+                        flex-direction: row !important;
+                        width: auto !important;
+                        flex-shrink: 0 !important;
+                    }
+                }
+                
+                /* Стили для названия и спортсмена в одном ряду */
+                .workout-title-athlete-row {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 1.5rem !important;
+                }
+                
+                .workout-title-field,
+                .workout-athlete-field {
+                    flex: 1 !important;
+                }
+                
+                @media (min-width: 1024px) {
+                    .workout-title-athlete-row {
+                        flex-direction: row !important;
+                        gap: 1rem !important;
+                    }
+                }
+                
+                /* Стили для даты и продолжительности в одном ряду */
+                .workout-date-duration-row {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 1.5rem !important;
+                }
+                
+                .workout-date-field,
+                .workout-duration-field {
+                    flex: 1 !important;
+                }
+                
+                @media (min-width: 1024px) {
+                    .workout-date-duration-row {
+                        flex-direction: row !important;
+                        gap: 1rem !important;
+                    }
+                }
             </style>
             <div class="filters-row">
                 <!-- Поиск -->
@@ -692,50 +761,56 @@ function workoutApp() {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Основная информация -->
                 <div class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Название тренировки *
-                        </label>
-                        <input type="text" 
-                               x-model="formTitle"
-                               class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                               placeholder="Например: Силовая тренировка"
-                               required>
+                    <!-- Название и спортсмен в одном ряду на десктопе -->
+                    <div class="workout-title-athlete-row">
+                        <div class="workout-title-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Название тренировки *
+                            </label>
+                            <input type="text" 
+                                   x-model="formTitle"
+                                   class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                   placeholder="Например: Силовая тренировка"
+                                   required>
+                        </div>
+
+                        <div class="workout-athlete-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Спортсмен *
+                            </label>
+                            <select x-model="formAthleteId" 
+                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
+                                    required>
+                                <option value="">Выберите спортсмена</option>
+                                @foreach($athletes ?? [] as $athlete)
+                                    <option value="{{ $athlete->id }}">{{ $athlete->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Спортсмен *
-                        </label>
-                        <select x-model="formAthleteId" 
-                                class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
-                                required>
-                            <option value="">Выберите спортсмена</option>
-                            @foreach($athletes ?? [] as $athlete)
-                                <option value="{{ $athlete->id }}">{{ $athlete->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <!-- Дата и продолжительность в одном ряду на десктопе -->
+                    <div class="workout-date-duration-row">
+                        <div class="workout-date-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Дата тренировки *
+                            </label>
+                            <input type="date" 
+                                   x-model="formDate"
+                                   class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                   required>
+                        </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Дата тренировки *
-                        </label>
-                        <input type="date" 
-                               x-model="formDate"
-                               class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                               required>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Продолжительность (минуты)
-                        </label>
-                        <input type="number" 
-                               x-model="formDuration"
-                               class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                               placeholder="60"
-                               min="1">
+                        <div class="workout-duration-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Продолжительность (минуты)
+                            </label>
+                            <input type="number" 
+                                   x-model="formDuration"
+                                   class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                   placeholder="60"
+                                   min="1">
+                        </div>
                     </div>
                 </div>
 
@@ -767,19 +842,23 @@ function workoutApp() {
 
             <!-- Секция упражнений -->
             <div class="border-t border-gray-200 pt-6 mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-medium text-gray-900">Упражнения</h3>
-                    <div class="flex gap-3">
+                <div class="exercise-header-row">
+                    <h3 style="font-size: 1.125rem; font-weight: 500; color: #111827; margin: 0;">Упражнения</h3>
+                    <div class="exercise-buttons-container">
                         <button type="button" onclick="openExerciseModal()" 
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: #374151; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f9fafb'"
+                                onmouseout="this.style.backgroundColor='white'">
+                            <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
                             Добавить упражнение
                         </button>
                         <button type="button" onclick="openTemplateModal()" 
-                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: #374151; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f9fafb'"
+                                onmouseout="this.style.backgroundColor='white'">
+                            <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                             Добавить шаблон
@@ -977,6 +1056,43 @@ function workoutApp() {
         
         <!-- Содержимое -->
         <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+            <!-- Поиск и фильтры для шаблонов -->
+            <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+                <!-- Поиск -->
+                <input type="text" 
+                       id="template-search" 
+                       placeholder="Поиск шаблонов..." 
+                       style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
+                       onkeyup="filterTemplates()"
+                       onfocus="this.style.borderColor = '#4f46e5'"
+                       onblur="this.style.borderColor = '#d1d5db'">
+                
+                <!-- Фильтр категории -->
+                <select id="template-category-filter" 
+                        onchange="filterTemplates()"
+                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor = '#4f46e5'"
+                        onblur="this.style.borderColor = '#d1d5db'">
+                    <option value="">Все категории</option>
+                    <option value="strength">Силовая</option>
+                    <option value="cardio">Кардио</option>
+                    <option value="flexibility">Гибкость</option>
+                    <option value="mixed">Смешанная</option>
+                </select>
+                
+                <!-- Фильтр сложности -->
+                <select id="template-difficulty-filter" 
+                        onchange="filterTemplates()"
+                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor = '#4f46e5'"
+                        onblur="this.style.borderColor = '#d1d5db'">
+                    <option value="">Все уровни</option>
+                    <option value="beginner">Начинающий</option>
+                    <option value="intermediate">Средний</option>
+                    <option value="advanced">Продвинутый</option>
+                </select>
+            </div>
+            
             <div id="templates-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
                 <p style="color: black;">Загрузка шаблонов...</p>
             </div>
@@ -1076,13 +1192,26 @@ function renderTemplates() {
         return;
     }
     
-    container.innerHTML = templates.map(template => `
-        <div class="template-item" data-template-id="${template.id}" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s;" onclick="toggleTemplate(this, ${template.id}, '${template.name}', ${JSON.stringify(template.exercises || []).replace(/"/g, '&quot;')})">
-            <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${template.name}</h4>
-            <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${template.exercises ? template.exercises.length : 0} упражнений</p>
-            <p style="font-size: 14px; color: #9ca3af;">${template.description || ''}</p>
-        </div>
-    `).join('');
+    container.innerHTML = templates.map(template => {
+        const exerciseCount = template.exercises ? template.exercises.length : 0;
+        const duration = template.estimated_duration ? `${template.estimated_duration} мин` : 'Не указано';
+        const difficulty = template.difficulty_label || template.difficulty || 'Не указано';
+        const category = template.category || '';
+        
+        return `
+            <div class="template-item" 
+                 data-template-id="${template.id}" 
+                 data-template-category="${category}"
+                 data-template-difficulty="${template.difficulty || ''}"
+                 style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; hover:border-blue-300;" 
+                 onclick="toggleTemplate(this, ${template.id}, '${template.name}', ${JSON.stringify(template.exercises || []).replace(/"/g, '&quot;')})">
+                <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${template.name}</h4>
+                <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exerciseCount} упражнений • ${duration}</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">Сложность: ${difficulty}</p>
+                <p style="font-size: 14px; color: #9ca3af;">${template.description || ''}</p>
+            </div>
+        `;
+    }).join('');
 }
 
 // Переключение упражнения
@@ -1145,6 +1274,42 @@ function filterExercises() {
         const matchesEquipment = !equipmentFilter || equipment.includes(equipmentFilter);
 
         if (matchesSearch && matchesCategory && matchesEquipment) {
+            element.style.display = 'block';
+            visibleCount++;
+        } else {
+            element.style.display = 'none';
+        }
+    });
+
+    // Показываем/скрываем сообщение о пустых результатах
+    if (visibleCount === 0) {
+        noResults.style.display = 'block';
+    } else {
+        noResults.style.display = 'none';
+    }
+}
+
+// Фильтрация шаблонов
+function filterTemplates() {
+    const searchTerm = document.getElementById('template-search').value.toLowerCase();
+    const categoryFilter = document.getElementById('template-category-filter').value.toLowerCase();
+    const difficultyFilter = document.getElementById('template-difficulty-filter').value.toLowerCase();
+
+    const templateElements = document.querySelectorAll('#templates-container > .template-item');
+    const noResults = document.getElementById('no-templates-results');
+    let visibleCount = 0;
+
+    templateElements.forEach(element => {
+        const name = element.querySelector('h4').textContent.toLowerCase();
+        const description = element.querySelectorAll('p')[2] ? element.querySelectorAll('p')[2].textContent.toLowerCase() : '';
+        const category = element.dataset.templateCategory ? element.dataset.templateCategory.toLowerCase() : '';
+        const difficulty = element.dataset.templateDifficulty ? element.dataset.templateDifficulty.toLowerCase() : '';
+
+        const matchesSearch = name.includes(searchTerm) || description.includes(searchTerm);
+        const matchesCategory = !categoryFilter || category.includes(categoryFilter);
+        const matchesDifficulty = !difficultyFilter || difficulty.includes(difficultyFilter);
+
+        if (matchesSearch && matchesCategory && matchesDifficulty) {
             element.style.display = 'block';
             visibleCount++;
         } else {
@@ -1438,11 +1603,17 @@ function removeExercise(exerciseId) {
 // Добавление выбранного шаблона
 function addSelectedTemplate() {
     if (selectedTemplate) {
-        console.log('Выбран шаблон:', selectedTemplate);
-        console.log('Упражнения в шаблоне:', selectedTemplate.exercises);
+        // Преобразуем упражнения из шаблона в формат, который ожидает displaySelectedExercises
+        const templateExercises = selectedTemplate.exercises.map(exercise => ({
+            id: exercise.id,
+            name: exercise.name,
+            category: exercise.category,
+            equipment: exercise.equipment,
+            fields_config: exercise.fields_config || ['sets', 'reps', 'weight', 'rest']
+        }));
         
         // Отображаем упражнения из шаблона
-        displaySelectedExercises(selectedTemplate.exercises);
+        displaySelectedExercises(templateExercises);
     }
     closeTemplateModal();
 }
