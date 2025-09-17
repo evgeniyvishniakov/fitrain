@@ -1163,12 +1163,19 @@ function filterExercises() {
 // Добавление выбранных упражнений
 function addSelectedExercises() {
     const selectedElements = document.querySelectorAll('#exerciseModal [data-selected="true"]');
-    const selectedExercises = Array.from(selectedElements).map(el => ({
-        id: parseInt(el.dataset.exerciseId),
-        name: el.dataset.exerciseName,
-        category: el.dataset.exerciseCategory,
-        equipment: el.dataset.exerciseEquipment
-    }));
+    const selectedExercises = Array.from(selectedElements).map(el => {
+        // Находим полные данные упражнения из загруженного массива
+        const exerciseId = parseInt(el.dataset.exerciseId);
+        const fullExercise = exercises.find(ex => ex.id === exerciseId);
+        
+        return {
+            id: exerciseId,
+            name: el.dataset.exerciseName,
+            category: el.dataset.exerciseCategory,
+            equipment: el.dataset.exerciseEquipment,
+            fields_config: fullExercise ? fullExercise.fields_config : ['sets', 'reps', 'weight', 'rest']
+        };
+    });
     
     console.log('Выбрано упражнений:', selectedExercises.length);
     console.log('Упражнения:', selectedExercises);
