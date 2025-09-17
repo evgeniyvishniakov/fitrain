@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\WorkoutTemplate;
-use App\Models\Exercise;
-use App\Models\User;
+use App\Models\Trainer\WorkoutTemplate;
+use App\Models\Trainer\Exercise;
+use App\Models\Shared\User;
 
 class WorkoutTemplateSeeder extends Seeder
 {

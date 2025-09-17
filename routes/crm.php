@@ -1,16 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Crm\DashboardController;
+use App\Http\Controllers\Crm\Shared\DashboardController;
 use App\Http\Controllers\Crm\Auth\LoginController;
 use App\Http\Controllers\Crm\Auth\RegisterController;
-use App\Http\Controllers\Crm\TrainerController;
-use App\Http\Controllers\Crm\AthleteController;
-use App\Http\Controllers\Crm\WorkoutController;
-use App\Http\Controllers\Crm\ProgressController;
-use App\Http\Controllers\Crm\NutritionController;
-use App\Http\Controllers\Crm\ExerciseController;
-use App\Http\Controllers\Crm\WorkoutTemplateController;
+use App\Http\Controllers\Crm\Trainer\TrainerController;
+use App\Http\Controllers\Crm\Athlete\AthleteController;
+use App\Http\Controllers\Crm\Trainer\WorkoutController;
+use App\Http\Controllers\Crm\Athlete\ProgressController;
+use App\Http\Controllers\Crm\Athlete\NutritionController;
+use App\Http\Controllers\Crm\Trainer\ExerciseController;
+use App\Http\Controllers\Crm\Trainer\WorkoutTemplateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +44,13 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/trainer/athletes/add", [TrainerController::class, "addAthlete"])->name("crm.trainer.add-athlete");
         Route::post("/trainer/athletes", [TrainerController::class, "storeAthlete"])->name("crm.trainer.store-athlete");
         Route::delete("/trainer/athletes/{id}", [TrainerController::class, "removeAthlete"])->name("crm.trainer.remove-athlete");
+        
+        // Тренировки только для тренеров (управление)
+        Route::get("/workouts/create", [WorkoutController::class, "create"])->name("crm.workouts.create");
+        Route::post("/workouts", [WorkoutController::class, "store"])->name("crm.workouts.store");
+        Route::get("/workouts/{id}/edit", [WorkoutController::class, "edit"])->name("crm.workouts.edit");
+        Route::put("/workouts/{id}", [WorkoutController::class, "update"])->name("crm.workouts.update");
+        Route::delete("/workouts/{id}", [WorkoutController::class, "destroy"])->name("crm.workouts.destroy");
     });
     
     // Маршруты только для спортсменов
@@ -54,16 +61,34 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/athlete/workouts", [AthleteController::class, "workouts"])->name("crm.athlete.workouts");
         Route::get("/athlete/progress", [AthleteController::class, "progress"])->name("crm.athlete.progress");
         Route::get("/athlete/nutrition", [AthleteController::class, "nutrition"])->name("crm.athlete.nutrition");
+        
     });
     
     // Маршруты для всех авторизованных
-    Route::get("/workouts", [WorkoutController::class, "index"])->name("crm.workouts.index");
-    Route::get("/workouts/create", [WorkoutController::class, "create"])->name("crm.workouts.create");
-    Route::post("/workouts", [WorkoutController::class, "store"])->name("crm.workouts.store");
-    Route::get("/workouts/{id}", [WorkoutController::class, "show"])->name("crm.workouts.show");
-    Route::get("/workouts/{id}/edit", [WorkoutController::class, "edit"])->name("crm.workouts.edit");
-    Route::put("/workouts/{id}", [WorkoutController::class, "update"])->name("crm.workouts.update");
-    Route::delete("/workouts/{id}", [WorkoutController::class, "destroy"])->name("crm.workouts.destroy");
+    
+    // Общий маршрут для просмотра тренировок (тренеры видят все, атлеты - свои)
+    Route::get("/workouts", function() {
+        if (auth()->user()->hasRole('trainer')) {
+            return app(\App\Http\Controllers\Crm\Trainer\WorkoutController::class)->index();
+        } elseif (auth()->user()->hasRole('athlete')) {
+            return app(\App\Http\Controllers\Crm\Athlete\AthleteController::class)->workouts();
+        }
+        abort(403, 'Доступ запрещен');
+    })->name("crm.workouts.index");
+    
+    // Просмотр конкретной тренировки
+    Route::get("/workouts/{id}", function($id) {
+        if (auth()->user()->hasRole('trainer')) {
+            return app(\App\Http\Controllers\Crm\Trainer\WorkoutController::class)->show($id);
+        } elseif (auth()->user()->hasRole('athlete')) {
+            // Атлеты могут видеть только свои тренировки
+            $workout = \App\Models\Trainer\Workout::where('id', $id)
+                ->where('athlete_id', auth()->id())
+                ->firstOrFail();
+            return view('crm.athlete.workouts.show', compact('workout'));
+        }
+        abort(403, 'Доступ запрещен');
+    })->name("crm.workouts.show");
     
     Route::get("/progress", [ProgressController::class, "index"])->name("crm.progress.index");
     Route::get("/progress/create", [ProgressController::class, "create"])->name("crm.progress.create");

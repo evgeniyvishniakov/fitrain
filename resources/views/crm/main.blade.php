@@ -65,7 +65,7 @@
 
     <!-- ТРЕНИРОВКИ -->
     <div x-show="currentPage === 'workouts'" x-transition>
-        @include('crm.sections.workouts')
+        @include('crm.trainer.sections.workouts')
     </div>
 
     <!-- ПРОГРЕСС -->

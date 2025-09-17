@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\WorkoutTemplate;
-use App\Models\Exercise;
-use App\Models\User;
+use App\Models\Trainer\WorkoutTemplate;
+use App\Models\Trainer\Exercise;
+use App\Models\Shared\User;
 
 class GenerateWorkoutTemplates extends Command
 {

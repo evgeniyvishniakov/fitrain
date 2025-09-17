@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Crm\Workout;
-use App\Models\User;
+use App\Models\Trainer\Workout;
+use App\Models\Shared\User;
 
 class WorkoutSeeder extends Seeder
 {

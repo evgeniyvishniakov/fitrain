@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Crm\Auth;
 
-use App\Http\Controllers\Crm\BaseController;
+use App\Http\Controllers\Crm\Shared\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use App\Models\Shared\User;
 
 class RegisterController extends BaseController
 {

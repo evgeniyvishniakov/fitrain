@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Exercise;
+use App\Models\Trainer\Exercise;
 
 class ExerciseFieldsConfigSeeder extends Seeder
 {

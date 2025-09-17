@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
+use App\Models\Shared\User;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -18,7 +18,6 @@ class UserSeeder extends Seeder
             'phone' => '+7 (999) 123-45-67',
             'specialization' => 'Фитнес, бодибилдинг',
             'experience_years' => 5,
-            'role' => 'trainer',
         ]);
         $trainer->assignRole('trainer');
 
@@ -32,7 +31,6 @@ class UserSeeder extends Seeder
             'weight' => 65.5,
             'height' => 170.0,
             'trainer_id' => $trainer->id,
-            'role' => 'athlete',
         ]);
         $athlete->assignRole('athlete');
 
@@ -46,7 +44,6 @@ class UserSeeder extends Seeder
             'weight' => 80.0,
             'height' => 180.0,
             'trainer_id' => $trainer->id,
-            'role' => 'athlete',
         ]);
         $athlete2->assignRole('athlete');
 

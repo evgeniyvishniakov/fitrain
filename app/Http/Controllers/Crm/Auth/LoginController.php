@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Crm\Auth;
 
-use App\Http\Controllers\Crm\BaseController;
+use App\Http\Controllers\Crm\Shared\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
