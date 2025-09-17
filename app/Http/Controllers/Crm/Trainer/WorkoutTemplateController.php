@@ -27,6 +27,11 @@ class WorkoutTemplateController extends BaseController
         }
 
         $templates = $query->paginate(12);
+        
+        // Добавляем валидные упражнения для каждого шаблона
+        foreach ($templates as $template) {
+            $template->valid_exercises = $template->valid_exercises;
+        }
 
         return view('crm.trainer.workout-templates.index', compact('templates'));
     }

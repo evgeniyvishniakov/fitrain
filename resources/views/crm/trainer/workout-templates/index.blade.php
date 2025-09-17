@@ -12,7 +12,10 @@
 function templatesApp() {
     return {
         currentView: 'list', // list, create, edit, view
-        templates: @json(\App\Models\Trainer\WorkoutTemplate::active()->with('creator')->get()),
+        templates: @json(\App\Models\Trainer\WorkoutTemplate::active()->with('creator')->get()->map(function($template) {
+            $template->valid_exercises = $template->valid_exercises;
+            return $template;
+        })),
         currentTemplate: null,
         search: '',
         category: '',
@@ -83,6 +86,10 @@ function templatesApp() {
         showView(templateId) {
             this.currentView = 'view';
             this.currentTemplate = this.templates.find(t => t.id === templateId);
+            // Добавляем валидные упражнения для отображения
+            if (this.currentTemplate) {
+                this.currentTemplate.valid_exercises = this.currentTemplate.valid_exercises || this.currentTemplate.exercises || [];
+            }
         },
         
         // Фильтрация

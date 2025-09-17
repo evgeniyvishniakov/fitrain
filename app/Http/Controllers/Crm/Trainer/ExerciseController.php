@@ -99,10 +99,35 @@ class ExerciseController extends BaseController
         $exercise = Exercise::findOrFail($id);
         $exercise->update(['is_active' => false]);
 
+        // Обновляем все шаблоны тренировок, удаляя это упражнение
+        $this->removeExerciseFromTemplates($id);
+
         return response()->json([
             'success' => true,
             'message' => 'Упражнение удалено из каталога'
         ]);
+    }
+
+    /**
+     * Удаляет упражнение из всех шаблонов тренировок
+     */
+    private function removeExerciseFromTemplates($exerciseId)
+    {
+        $templates = \App\Models\Trainer\WorkoutTemplate::where('is_active', true)->get();
+        
+        foreach ($templates as $template) {
+            if (is_array($template->exercises)) {
+                $updatedExercises = array_filter($template->exercises, function($exercise) use ($exerciseId) {
+                    $exerciseIdFromTemplate = $exercise['id'] ?? $exercise['exercise_id'] ?? null;
+                    return $exerciseIdFromTemplate != $exerciseId;
+                });
+                
+                // Обновляем шаблон только если что-то изменилось
+                if (count($updatedExercises) !== count($template->exercises)) {
+                    $template->update(['exercises' => array_values($updatedExercises)]);
+                }
+            }
+        }
     }
 
     public function api()
