@@ -208,7 +208,26 @@ class TrainerController extends BaseController
         
         return response()->json([
             'success' => true,
-            'measurements' => $measurements
+            'measurements' => $measurements,
+            'athlete' => [
+                'id' => $athlete->id,
+                'name' => $athlete->name,
+                'weight' => $athlete->weight,
+                'height' => $athlete->height,
+                'email' => $athlete->email,
+                'birth_date' => $athlete->birth_date,
+                'gender' => $athlete->gender,
+                'sport_level' => $athlete->sport_level,
+                'goals' => $athlete->goals,
+                'contact_info' => $athlete->contact_info,
+                'health_restrictions' => $athlete->health_restrictions,
+                'medical_documents' => $athlete->medical_documents,
+                'last_medical_checkup' => $athlete->last_medical_checkup,
+                'profile_modules' => $athlete->profile_modules,
+                'is_active' => $athlete->is_active,
+                'created_at' => $athlete->created_at,
+                'updated_at' => $athlete->updated_at
+            ]
         ]);
     }
     

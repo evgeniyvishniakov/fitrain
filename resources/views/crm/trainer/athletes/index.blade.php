@@ -124,8 +124,12 @@ function athletesApp() {
             this.currentAthlete = this.athletes.find(a => a.id === athleteId);
             this.activeTab = 'overview'; // сбрасываем на первую вкладку
             
+            console.log('Спортсмен ДО загрузки измерений:', this.currentAthlete);
+            
             // Загружаем измерения спортсмена
             await this.loadMeasurements(athleteId);
+            
+            console.log('Спортсмен ПОСЛЕ загрузки измерений:', this.currentAthlete);
         },
         
         // Форматирование чисел - убираем лишние нули
@@ -152,7 +156,21 @@ function athletesApp() {
                 
                 if (response.ok) {
                     console.log('Загруженные измерения:', result.measurements);
+                    console.log('Актуальные данные спортсмена с сервера:', result.athlete);
                     this.measurements = result.measurements;
+                    
+                    // Обновляем данные спортсмена актуальными данными с сервера
+                    if (result.athlete) {
+                        this.currentAthlete = { ...this.currentAthlete, ...result.athlete };
+                        console.log('Обновлен currentAthlete актуальными данными:', this.currentAthlete);
+                        
+                        // Обновляем спортсмена в общем списке
+                        const athleteIndex = this.athletes.findIndex(a => a.id === this.currentAthlete.id);
+                        if (athleteIndex !== -1) {
+                            this.athletes[athleteIndex] = { ...this.athletes[athleteIndex], ...result.athlete };
+                            console.log('Обновлен спортсмен в списке актуальными данными:', this.athletes[athleteIndex]);
+                        }
+                    }
                 } else {
                     console.error('Ошибка загрузки измерений:', result.message);
                     this.measurements = [];
@@ -448,9 +466,11 @@ function athletesApp() {
                     // Обновляем вес и рост в профиле спортсмена
                     if (result.measurement.weight) {
                         this.currentAthlete.weight = result.measurement.weight;
+                        console.log('Обновлен вес в профиле:', this.currentAthlete.weight);
                     }
                     if (result.measurement.height) {
                         this.currentAthlete.height = result.measurement.height;
+                        console.log('Обновлен рост в профиле:', this.currentAthlete.height);
                     }
                     
                     // Обновляем спортсмена в общем списке
@@ -458,6 +478,7 @@ function athletesApp() {
                     if (athleteIndex !== -1) {
                         this.athletes[athleteIndex].weight = this.currentAthlete.weight;
                         this.athletes[athleteIndex].height = this.currentAthlete.height;
+                        console.log('Обновлен спортсмен в списке:', this.athletes[athleteIndex]);
                     }
                     
                     // Показываем уведомление об успехе
@@ -969,35 +990,17 @@ function athletesApp() {
                             <h1 class="text-2xl font-bold text-gray-900">Профиль спортсмена</h1>
                         </div>
                     </div>
-                    <!-- Десктопные кнопки -->
-                    <div class="hidden md:flex gap-2">
+                    <!-- Кнопки действий -->
+                    <div class="profile-buttons">
                         <button @click="showEdit(currentAthlete.id)" 
-                                class="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg">
+                                class="profile-btn profile-btn-edit">
                             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                             Редактировать
                         </button>
                         <button @click="deleteAthlete(currentAthlete.id)" 
-                                class="px-4 py-2 text-red-600 hover:text-red-800 border border-red-300 rounded-lg">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Удалить
-                        </button>
-                    </div>
-                    
-                    <!-- Мобильные кнопки -->
-                    <div class="md:hidden flex flex-col gap-2">
-                        <button @click="showEdit(currentAthlete.id)" 
-                                class="w-full px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg text-sm">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            Редактировать
-                        </button>
-                        <button @click="deleteAthlete(currentAthlete.id)" 
-                                class="w-full px-4 py-2 text-red-600 hover:text-red-800 border border-red-300 rounded-lg text-sm">
+                                class="profile-btn profile-btn-delete">
                             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
@@ -1169,7 +1172,7 @@ function athletesApp() {
                                 
                                 <div class="space-y-3">
                                     <template x-for="measurement in measurements" :key="measurement.id">
-                                        <div class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                        <div class="bg-white rounded-lg p-4 border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow">
                                             <div class="flex items-center justify-between mb-3">
                                                 <h4 class="font-semibold text-gray-900" x-text="new Date(measurement.measurement_date).toLocaleDateString('ru-RU')"></h4>
                                                 <div class="flex items-center space-x-2">
@@ -1193,55 +1196,55 @@ function athletesApp() {
                                             </div>
                                             
                                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                                <div x-show="measurement.weight" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.weight" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Вес</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.weight, ' кг')"></span>
                                                 </div>
-                                                <div x-show="measurement.height" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.height" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Рост</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.height, ' см')"></span>
                                                 </div>
-                                                <div x-show="measurement.body_fat_percentage" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.body_fat_percentage" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">% жира</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.body_fat_percentage, '%')"></span>
                                                 </div>
-                                                <div x-show="measurement.muscle_mass" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.muscle_mass" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Мышцы</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.muscle_mass, ' кг')"></span>
                                                 </div>
-                                                <div x-show="measurement.chest" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.chest" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Грудь</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.chest, ' см')"></span>
                                                 </div>
-                                                <div x-show="measurement.waist" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.waist" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Талия</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.waist, ' см')"></span>
                                                 </div>
-                                                <div x-show="measurement.hips" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.hips" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Бедра</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.hips, ' см')"></span>
                                                 </div>
-                                                <div x-show="measurement.bicep" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.bicep" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Бицепс</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.bicep, ' см')"></span>
                                                 </div>
-                                                <div x-show="measurement.thigh" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.thigh" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Бедро</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.thigh, ' см')"></span>
                                                 </div>
-                                                <div x-show="measurement.neck" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.neck" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Шея</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.neck, ' см')"></span>
                                                 </div>
-                                                <div x-show="measurement.resting_heart_rate" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.resting_heart_rate" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Пульс</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.resting_heart_rate, ' уд/мин')"></span>
                                                 </div>
-                                                <div x-show="measurement.blood_pressure_systolic" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.blood_pressure_systolic" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">Давление</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.blood_pressure_systolic) + '/' + formatNumber(measurement.blood_pressure_diastolic)"></span>
                                                 </div>
-                                                <div x-show="measurement.water_percentage" class="flex flex-col bg-gray-50 p-3 rounded-lg">
+                                                <div x-show="measurement.water_percentage" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
                                                     <span class="text-gray-600 text-xs uppercase tracking-wide">% воды</span>
                                                     <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.water_percentage, '%')"></span>
                                                 </div>
@@ -1653,4 +1656,62 @@ function athletesApp() {
         </div>
     </div>
 </div>
+
+<style>
+/* Кнопки в профиле спортсмена */
+.profile-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.profile-btn-edit {
+    color: #4b5563;
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+}
+
+.profile-btn-edit:hover {
+    color: #1f2937;
+    background-color: #f3f4f6;
+}
+
+.profile-btn-delete {
+    color: #dc2626;
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+}
+
+.profile-btn-delete:hover {
+    color: #991b1b;
+    background-color: #fee2e2;
+}
+
+/* На десктопе - в одну линию */
+@media (min-width: 768px) {
+    .profile-buttons {
+        flex-direction: row;
+        gap: 8px;
+    }
+    
+    .profile-btn {
+        width: auto;
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+}
+</style>
+
 @endsection
