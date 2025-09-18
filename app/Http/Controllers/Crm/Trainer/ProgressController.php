@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Crm\Athlete;
+namespace App\Http\Controllers\Crm\Trainer;
 
 use App\Http\Controllers\Crm\Shared\BaseController;
-use App\Models\Athlete\Progress;
+use App\Models\Trainer\Progress;
 use App\Models\Trainer\Workout;
 use Illuminate\Http\Request;
 

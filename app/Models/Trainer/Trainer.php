@@ -3,7 +3,7 @@
 namespace App\Models\Trainer;
 
 use App\Models\Shared\User;
-use App\Models\Athlete\Athlete;
+use App\Models\Trainer\Athlete;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Trainer extends User
@@ -21,7 +21,7 @@ class Trainer extends User
     
     public function athletes(): HasMany
     {
-        return $this->hasMany(\App\Models\Athlete\Athlete::class, 'trainer_id');
+        return $this->hasMany(\App\Models\Trainer\Athlete::class, 'trainer_id');
     }
     
     public function workouts(): HasMany

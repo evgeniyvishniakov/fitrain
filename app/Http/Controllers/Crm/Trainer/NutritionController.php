@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Crm\Athlete;
+namespace App\Http\Controllers\Crm\Trainer;
 
 use App\Http\Controllers\Crm\Shared\BaseController;
-use App\Models\Athlete\Nutrition;
+use App\Models\Trainer\Nutrition;
 use Illuminate\Http\Request;
 
 class NutritionController extends BaseController

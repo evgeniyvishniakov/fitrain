@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Athlete;
+namespace App\Models\Trainer;
 
 use App\Models\Crm\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +20,7 @@ class Progress extends BaseModel
     
     public function athlete(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Athlete\Athlete::class, 'athlete_id');
+        return $this->belongsTo(\App\Models\Trainer\Athlete::class, 'athlete_id');
     }
     
     public function workout(): BelongsTo

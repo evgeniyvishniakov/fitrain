@@ -5,10 +5,10 @@ use App\Http\Controllers\Crm\Shared\DashboardController;
 use App\Http\Controllers\Crm\Auth\LoginController;
 use App\Http\Controllers\Crm\Auth\RegisterController;
 use App\Http\Controllers\Crm\Trainer\TrainerController;
-use App\Http\Controllers\Crm\Athlete\AthleteController;
+use App\Http\Controllers\Crm\Trainer\AthleteController;
 use App\Http\Controllers\Crm\Trainer\WorkoutController;
-use App\Http\Controllers\Crm\Athlete\ProgressController;
-use App\Http\Controllers\Crm\Athlete\NutritionController;
+use App\Http\Controllers\Crm\Trainer\ProgressController;
+use App\Http\Controllers\Crm\Trainer\NutritionController;
 use App\Http\Controllers\Crm\Trainer\ExerciseController;
 use App\Http\Controllers\Crm\Trainer\WorkoutTemplateController;
 
@@ -41,9 +41,16 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/trainer/profile", [TrainerController::class, "profile"])->name("crm.trainer.profile");
         Route::post("/trainer/profile", [TrainerController::class, "updateProfile"])->name("crm.trainer.profile.update");
         Route::get("/trainer/athletes", [TrainerController::class, "athletes"])->name("crm.trainer.athletes");
+        Route::get("/trainer/athletes/{id}", [TrainerController::class, "showAthlete"])->name("crm.trainer.athlete.show");
         Route::get("/trainer/athletes/add", [TrainerController::class, "addAthlete"])->name("crm.trainer.add-athlete");
         Route::post("/trainer/athletes", [TrainerController::class, "storeAthlete"])->name("crm.trainer.store-athlete");
         Route::delete("/trainer/athletes/{id}", [TrainerController::class, "removeAthlete"])->name("crm.trainer.remove-athlete");
+        
+        // Измерения спортсменов
+        Route::post("/trainer/athletes/{id}/measurements", [TrainerController::class, "storeMeasurement"])->name("crm.trainer.athlete.measurements.store");
+        Route::get("/trainer/athletes/{id}/measurements", [TrainerController::class, "getMeasurements"])->name("crm.trainer.athlete.measurements.get");
+        Route::put("/trainer/athletes/{athleteId}/measurements/{measurementId}", [TrainerController::class, "updateMeasurement"])->name("crm.trainer.athlete.measurements.update");
+        Route::delete("/trainer/athletes/{athleteId}/measurements/{measurementId}", [TrainerController::class, "deleteMeasurement"])->name("crm.trainer.athlete.measurements.delete");
         
         // Тренировки только для тренеров (управление)
         Route::get("/workouts/create", [WorkoutController::class, "create"])->name("crm.workouts.create");
@@ -71,7 +78,7 @@ Route::middleware(["auth"])->group(function () {
         if (auth()->user()->hasRole('trainer')) {
             return app(\App\Http\Controllers\Crm\Trainer\WorkoutController::class)->index();
         } elseif (auth()->user()->hasRole('athlete')) {
-            return app(\App\Http\Controllers\Crm\Athlete\AthleteController::class)->workouts();
+            return app(\App\Http\Controllers\Crm\Trainer\AthleteController::class)->workouts();
         }
         abort(403, 'Доступ запрещен');
     })->name("crm.workouts.index");

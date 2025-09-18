@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Crm\Trainer;
 
 use App\Http\Controllers\Crm\Shared\BaseController;
 use App\Models\Trainer\Workout;
-use App\Models\Athlete\Athlete;
+use App\Models\Trainer\Athlete;
 use Illuminate\Http\Request;
 
 class WorkoutController extends BaseController

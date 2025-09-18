@@ -29,6 +29,19 @@ class User extends Authenticatable
         'weight',
         'height',
         'trainer_id',
+        'avatar',
+        'birth_date',
+        'gender',
+        'sport_level',
+        'goals',
+        'contact_info',
+        'current_weight',
+        'current_height',
+        'health_restrictions',
+        'medical_documents',
+        'last_medical_checkup',
+        'profile_modules',
+        'is_active',
     ];
 
     /**
@@ -49,6 +62,14 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'birth_date' => 'date',
+        'last_medical_checkup' => 'date',
+        'goals' => 'array',
+        'contact_info' => 'array',
+        'health_restrictions' => 'array',
+        'medical_documents' => 'array',
+        'profile_modules' => 'array',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -79,12 +100,12 @@ class User extends Authenticatable
 
     public function progress()
     {
-        return $this->hasMany(\App\Models\Athlete\Progress::class, 'athlete_id');
+        return $this->hasMany(\App\Models\Trainer\Progress::class, 'athlete_id');
     }
 
     public function nutrition()
     {
-        return $this->hasMany(\App\Models\Athlete\Nutrition::class, 'athlete_id');
+        return $this->hasMany(\App\Models\Trainer\Nutrition::class, 'athlete_id');
     }
 
     /**

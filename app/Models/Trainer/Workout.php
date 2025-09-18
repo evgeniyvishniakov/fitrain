@@ -18,6 +18,10 @@ class Workout extends BaseModel
         'duration',
         'status',
     ];
+
+    protected $casts = [
+        'date' => 'date',
+    ];
     
     public function trainer(): BelongsTo
     {
@@ -26,11 +30,11 @@ class Workout extends BaseModel
     
     public function athlete(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Athlete\Athlete::class, 'athlete_id');
+        return $this->belongsTo(\App\Models\Trainer\Athlete::class, 'athlete_id');
     }
     
     public function progress(): HasMany
     {
-        return $this->hasMany(\App\Models\Athlete\Progress::class, 'workout_id');
+        return $this->hasMany(\App\Models\Trainer\Progress::class, 'workout_id');
     }
 }
