@@ -50,6 +50,39 @@ class TrainerController extends BaseController
             $query->latest()->take(1);
         }])->paginate(12);
         
+        // Добавляем финансовые данные для каждого спортсмена
+        $athletes->getCollection()->transform(function ($athlete) {
+            // Суммируем все пакеты из истории платежей
+            $totalSessionsFromHistory = 0;
+            $totalPaidFromHistory = 0;
+            $paymentHistory = $athlete->payment_history ?? [];
+            
+            foreach ($paymentHistory as $payment) {
+                // Извлекаем количество тренировок из описания
+                if (preg_match('/(\d+)\s+тренировок?/', $payment['description'], $matches)) {
+                    $totalSessionsFromHistory += (int)$matches[1];
+                }
+                // Суммируем все платежи
+                $totalPaidFromHistory += $payment['amount'] ?? 0;
+            }
+            
+            $athlete->finance = [
+                'id' => $athlete->id,
+                'package_type' => $athlete->package_type,
+                'total_sessions' => $totalSessionsFromHistory ?: $athlete->total_sessions,
+                'used_sessions' => $athlete->used_sessions,
+                'remaining_sessions' => ($totalSessionsFromHistory ?: $athlete->total_sessions) - $athlete->used_sessions,
+                'package_price' => $athlete->package_price,
+                'purchase_date' => $athlete->purchase_date,
+                'expires_date' => $athlete->expires_date,
+                'status' => $athlete->package_type ? 'active' : 'inactive',
+                'total_paid' => $totalPaidFromHistory ?: $athlete->total_paid,
+                'last_payment_date' => $athlete->last_payment_date,
+                'payment_history' => $paymentHistory
+            ];
+            return $athlete;
+        });
+        
         return view('crm.trainer.athletes.index', compact('athletes'));
     }
     

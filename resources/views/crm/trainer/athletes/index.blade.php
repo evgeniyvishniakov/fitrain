@@ -21,6 +21,19 @@
     }
 }
 
+/* Сетка для информации о пакете */
+.package-info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .package-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 /* Скрытие скроллбара для вкладок */
 .scrollbar-hide {
     -ms-overflow-style: none;
@@ -35,7 +48,7 @@
 // SPA функциональность для спортсменов
 function athletesApp() {
     return {
-        currentView: 'list', // list, create, edit, view, addMeasurement, editMeasurement
+        currentView: 'list', // list, create, edit, view, addMeasurement, editMeasurement, addPayment, editPayment
         athletes: @json($athletes->items()),
         currentAthlete: null,
         activeTab: 'overview', // для вкладок в просмотре
@@ -79,6 +92,18 @@ function athletesApp() {
         measurementBloodPressureSystolic: '',
         measurementBloodPressureDiastolic: '',
         measurementNotes: '',
+        
+        // Поля формы платежей
+        paymentData: {
+            package_type: '',
+            total_sessions: 0,
+            used_sessions: 0,
+            package_price: 0,
+            purchase_date: '',
+            expires_date: '',
+            payment_method: 'Наличные',
+            description: ''
+        },
         
         // Навигация
         showList() {
@@ -249,6 +274,71 @@ function athletesApp() {
             this.measurementBloodPressureSystolic = '';
             this.measurementBloodPressureDiastolic = '';
             this.measurementNotes = '';
+        },
+        
+        showAddPayment() {
+            this.currentView = 'addPayment';
+            this.paymentData = {
+                package_type: '',
+                total_sessions: 0,
+                used_sessions: 0,
+                package_price: 0,
+                purchase_date: new Date().toISOString().split('T')[0],
+                expires_date: '',
+                payment_method: 'Наличные',
+                description: ''
+            };
+        },
+        
+        // Функция для отображения типов пакетов
+        getPackageTypeLabel(type) {
+            const labels = {
+                'single': 'Разовая тренировка',
+                '4_sessions': '4 тренировки',
+                '8_sessions': '8 тренировок',
+                '12_sessions': '12 тренировок',
+                'unlimited': 'Безлимит (месяц)',
+                'custom': 'Произвольное количество'
+            };
+            return labels[type] || type;
+        },
+        
+        // Функция для перевода способов оплаты на украинский
+        getPaymentMethodLabel(method) {
+            const labels = {
+                'cash': 'Готівка',
+                'card': 'Банківська картка',
+                'transfer': 'Банківський переказ',
+                'other': 'Інше'
+            };
+            return labels[method] || method;
+        },
+        
+        // Автоматическое заполнение количества тренировок по типу пакета
+        updateSessionsByPackageType() {
+            const packageType = this.paymentData.package_type;
+            switch(packageType) {
+                case 'single':
+                    this.paymentData.total_sessions = 1;
+                    break;
+                case '4_sessions':
+                    this.paymentData.total_sessions = 4;
+                    break;
+                case '8_sessions':
+                    this.paymentData.total_sessions = 8;
+                    break;
+                case '12_sessions':
+                    this.paymentData.total_sessions = 12;
+                    break;
+                case 'unlimited':
+                    this.paymentData.total_sessions = 999; // Символическое значение для безлимита
+                    break;
+                case 'custom':
+                    // Для произвольного количества не меняем значение
+                    break;
+                default:
+                    this.paymentData.total_sessions = 0;
+            }
         },
         
         editMeasurement(measurement) {
@@ -623,6 +713,213 @@ function athletesApp() {
                         type: 'error',
                         title: 'Ошибка',
                         message: 'Произошла ошибка при сохранении измерения'
+                    }
+                }));
+            }
+        },
+        
+        // Сохранение платежа
+        async savePayment() {
+            try {
+                const paymentData = {
+                    package_type: this.paymentData.package_type,
+                    total_sessions: parseInt(this.paymentData.total_sessions),
+                    used_sessions: parseInt(this.paymentData.used_sessions) || 0,
+                    package_price: parseFloat(this.paymentData.package_price),
+                    purchase_date: this.paymentData.purchase_date,
+                    expires_date: this.paymentData.expires_date,
+                    payment_method: this.paymentData.payment_method,
+                    description: this.paymentData.description
+                };
+                
+                // Определяем URL и метод в зависимости от того, редактируем или создаем
+                const isEdit = this.paymentData.id && this.paymentData.id !== this.currentAthlete.id;
+                const url = isEdit 
+                    ? `/api/athletes/${this.currentAthlete.id}/payments/${this.paymentData.id}`
+                    : `/api/athletes/${this.currentAthlete.id}/payments`;
+                const method = isEdit ? 'PUT' : 'POST';
+                
+                console.log('Sending request to:', url);
+                console.log('Method:', method);
+                console.log('Data:', paymentData);
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                let result;
+                try {
+                    result = await response.json();
+                } catch (error) {
+                    console.error('JSON parse error:', error);
+                    const text = await response.text();
+                    console.error('Response text:', text);
+                    throw new Error('Сервер вернул неверный ответ. Проверьте консоль для подробностей.');
+                }
+                
+                if (response.ok) {
+                    // Обновляем данные спортсмена из ответа сервера
+                    if (result.data) {
+                        this.currentAthlete = result.data;
+                        
+                        // Обновляем финансовые данные для отображения
+                        this.currentAthlete.finance = {
+                            id: this.currentAthlete.id,
+                            package_type: this.currentAthlete.package_type,
+                            total_sessions: this.currentAthlete.total_sessions,
+                            used_sessions: this.currentAthlete.used_sessions,
+                            remaining_sessions: this.currentAthlete.total_sessions - this.currentAthlete.used_sessions,
+                            package_price: this.currentAthlete.package_price,
+                            purchase_date: this.currentAthlete.purchase_date,
+                            expires_date: this.currentAthlete.expires_date,
+                            status: this.currentAthlete.package_type ? 'active' : 'inactive',
+                            total_paid: this.currentAthlete.total_paid,
+                            last_payment_date: this.currentAthlete.last_payment_date,
+                            payment_history: this.currentAthlete.payment_history || []
+                        };
+                    }
+                    
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Успех',
+                            message: isEdit ? 'Платеж успешно обновлен' : 'Платеж успешно сохранен'
+                        }
+                    }));
+                    
+                    // Возвращаемся к просмотру спортсмена на вкладке финансов
+                    this.currentView = 'view';
+                    this.activeTab = 'finance';
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка сохранения',
+                            message: result.message || 'Произошла ошибка при сохранении платежа'
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при сохранении платежа'
+                    }
+                }));
+            }
+        },
+        
+        // Редактирование платежа
+        editPayment(payment) {
+            this.currentView = 'editPayment';
+            this.paymentData = {
+                id: payment.id,
+                package_type: payment.package_type || '',
+                total_sessions: payment.total_sessions || 0,
+                used_sessions: payment.used_sessions || 0,
+                package_price: payment.package_price || 0,
+                purchase_date: payment.purchase_date || '',
+                expires_date: payment.expires_date || '',
+                payment_method: payment.payment_method || 'Наличные',
+                description: payment.description || ''
+            };
+        },
+        
+        editPaymentFromHistory(payment) {
+            // Редактируем конкретный платеж из истории
+            this.currentView = 'editPayment';
+            
+            // Форматируем даты для input type="date"
+            const formatDateForInput = (dateString) => {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toISOString().split('T')[0];
+            };
+            
+            this.paymentData = {
+                id: payment.id, // ID конкретного платежа!
+                package_type: this.currentAthlete.finance.package_type || '',
+                total_sessions: this.currentAthlete.finance.total_sessions || 0,
+                used_sessions: this.currentAthlete.finance.used_sessions || 0,
+                package_price: payment.amount || 0,
+                purchase_date: formatDateForInput(payment.date),
+                expires_date: formatDateForInput(this.currentAthlete.finance.expires_date),
+                payment_method: payment.payment_method || 'Наличные',
+                description: payment.description || ''
+            };
+        },
+        
+        // Удаление платежа
+        async deletePayment(paymentId) {
+            // Используем глобальное модальное окно подтверждения
+            window.dispatchEvent(new CustomEvent('show-confirm', {
+                detail: {
+                    title: 'Удалить пакет',
+                    message: 'Вы уверены, что хотите удалить этот пакет?',
+                    confirmText: 'Удалить',
+                    cancelText: 'Отмена',
+                    onConfirm: () => this.performDeletePayment(paymentId)
+                }
+            }));
+        },
+        
+        // Выполнение удаления платежа
+        async performDeletePayment(paymentId) {
+            try {
+                const response = await fetch(`/api/athletes/${this.currentAthlete.id}/payments/${paymentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Удаляем платеж из данных спортсмена
+                    this.currentAthlete.finance = null;
+                    
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Пакет удален',
+                            message: 'Пакет успешно удален'
+                        }
+                    }));
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка удаления',
+                            message: result.message || 'Произошла ошибка при удалении пакета'
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при удалении пакета'
                     }
                 }));
             }
@@ -1085,6 +1382,231 @@ function athletesApp() {
         </div>
     </div>
 
+    <!-- ДОБАВЛЕНИЕ ПЛАТЕЖА -->
+    <div x-show="currentView === 'addPayment'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">Добавить платеж</h3>
+            <button @click="currentView = 'view'; activeTab = 'finance'" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                Назад
+            </button>
+        </div>
+        
+        <div x-show="currentAthlete" class="space-y-6">
+            <form @submit.prevent="savePayment" class="space-y-6">
+                <!-- Информация о пакете -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Информация о пакете</h4>
+                    <div class="package-info-grid">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Тип пакета</label>
+                            <select x-model="paymentData.package_type" 
+                                    @change="updateSessionsByPackageType()"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Выберите тип пакета</option>
+                                <option value="single">Разовая тренировка</option>
+                                <option value="4_sessions">4 тренировки</option>
+                                <option value="8_sessions">8 тренировок</option>
+                                <option value="12_sessions">12 тренировок</option>
+                                <option value="unlimited">Безлимит (месяц)</option>
+                                <option value="custom">Произвольное количество</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Количество тренировок</label>
+                            <input type="number" x-model="paymentData.total_sessions" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                   placeholder="0"
+                                   :disabled="paymentData.package_type && paymentData.package_type !== 'custom'">
+                            <p class="text-xs text-gray-500 mt-1" x-show="paymentData.package_type && paymentData.package_type !== 'custom'">
+                                Автоматически заполняется по типу пакета
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Стоимость (₴)</label>
+                            <input type="number" x-model="paymentData.package_price" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                   placeholder="0">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Способ оплаты</label>
+                            <select x-model="paymentData.payment_method" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="cash">Наличные</option>
+                                <option value="card">Банковская карта</option>
+                                <option value="transfer">Банковский перевод</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Даты -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Даты</h4>
+                    <div class="package-info-grid">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата покупки</label>
+                            <input type="date" x-model="paymentData.purchase_date" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Срок действия (необязательно)</label>
+                            <input type="date" x-model="paymentData.expires_date" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Оставьте пустым, если пакет действует пока не закончатся тренировки</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Дополнительная информация -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Дополнительная информация</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                            <textarea x-model="paymentData.description" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                      placeholder="Дополнительная информация о платеже..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex justify-end gap-4 pt-6 border-t">
+                    <button type="button" @click="currentView = 'view'; activeTab = 'finance'" 
+                            class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                        Отмена
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
+                        Сохранить платеж
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- РЕДАКТИРОВАНИЕ ПЛАТЕЖА -->
+    <div x-show="currentView === 'editPayment'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">Редактировать платеж</h3>
+            <button @click="currentView = 'view'; activeTab = 'finance'" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                Назад
+            </button>
+        </div>
+        
+        <div x-show="currentAthlete" class="space-y-6">
+            <form @submit.prevent="savePayment" class="space-y-6">
+                <!-- Информация о пакете -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Информация о пакете</h4>
+                    <div class="package-info-grid">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Тип пакета</label>
+                            <select x-model="paymentData.package_type" 
+                                    @change="updateSessionsByPackageType()"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Выберите тип пакета</option>
+                                <option value="single">Разовая тренировка</option>
+                                <option value="4_sessions">4 тренировки</option>
+                                <option value="8_sessions">8 тренировок</option>
+                                <option value="12_sessions">12 тренировок</option>
+                                <option value="unlimited">Безлимит (месяц)</option>
+                                <option value="custom">Произвольное количество</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Количество тренировок</label>
+                            <input type="number" x-model="paymentData.total_sessions" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                   placeholder="0"
+                                   :disabled="paymentData.package_type && paymentData.package_type !== 'custom'">
+                            <p class="text-xs text-gray-500 mt-1" x-show="paymentData.package_type && paymentData.package_type !== 'custom'">
+                                Автоматически заполняется по типу пакета
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Использовано тренировок</label>
+                            <input type="number" x-model="paymentData.used_sessions" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                   placeholder="0">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Стоимость (₴)</label>
+                            <input type="number" x-model="paymentData.package_price" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                   placeholder="0">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Способ оплаты</label>
+                            <select x-model="paymentData.payment_method" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="cash">Наличные</option>
+                                <option value="card">Банковская карта</option>
+                                <option value="transfer">Банковский перевод</option>
+                                <option value="other">Другое</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Даты -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Даты</h4>
+                    <div class="package-info-grid">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата покупки</label>
+                            <input type="date" x-model="paymentData.purchase_date" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Срок действия (необязательно)</label>
+                            <input type="date" x-model="paymentData.expires_date" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <p class="text-xs text-gray-500 mt-1">Оставьте пустым, если пакет действует пока не закончатся тренировки</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Дополнительная информация -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Дополнительная информация</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                            <textarea x-model="paymentData.description" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                      placeholder="Дополнительная информация о платеже..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex justify-end gap-4 pt-6 border-t">
+                    <button type="button" @click="currentView = 'view'; activeTab = 'finance'" 
+                            class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                        Отмена
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
+                        Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ПРОСМОТР СПОРТСМЕНА -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div x-show="currentAthlete">
@@ -1205,6 +1727,11 @@ function athletesApp() {
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Медицинские данные
                             </button>
+                            <button @click="activeTab = 'finance'" 
+                                    :class="activeTab === 'finance' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                    class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
+                                Финансы
+                            </button>
                             <button @click="activeTab = 'general'" 
                                     :class="activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
@@ -1217,7 +1744,7 @@ function athletesApp() {
                     <div class="p-6">
                         <!-- Вкладка "Обзор" -->
                         <div x-show="activeTab === 'overview'" class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
                                 <div class="bg-blue-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.workouts?.length || 0"></div>
                                     <div class="text-sm text-blue-800">Тренировок</div>
@@ -1226,19 +1753,107 @@ function athletesApp() {
                                     <div class="text-2xl font-bold text-green-600" x-text="currentAthlete?.progress?.length || 0"></div>
                                     <div class="text-sm text-green-800">Записей прогресса</div>
                                 </div>
+                                <div class="bg-orange-50 rounded-lg p-4 text-center">
+                                    <div class="text-2xl font-bold text-orange-600" x-text="currentAthlete?.finance?.remaining_sessions || 0"></div>
+                                    <div class="text-sm text-orange-800">Осталось тренировок</div>
+                                </div>
+                                <div class="bg-indigo-50 rounded-lg p-4 text-center">
+                                    <div class="text-2xl font-bold text-indigo-600" x-text="currentAthlete?.finance?.used_sessions || 0"></div>
+                                    <div class="text-sm text-indigo-800">Использовано</div>
+                                </div>
                                 <div class="bg-purple-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.is_active ? 'Да' : 'Нет'"></div>
                                     <div class="text-sm text-purple-800">Активен</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Вкладка "Финансы" -->
+                        <div x-show="activeTab === 'finance'" class="space-y-6">
+                            <!-- Заголовок с кнопкой добавления -->
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Финансовые данные</h3>
+                                <button @click="showAddPayment()" 
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Добавить платеж
+                                </button>
+                            </div>
+
+
+                            <!-- Общая статистика -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-md font-semibold text-gray-900 mb-4">Общая статистика</h4>
+                                <div class="flex flex-wrap items-center justify-between gap-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.finance?.total_paid) || 0).toFixed(2)">0.00</div>
+                                        <div class="text-sm text-gray-500">Всего оплачено (₴)</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.finance?.payment_history?.length || 0">0</div>
+                                        <div class="text-sm text-gray-500">Количество платежей</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.finance?.last_payment_date ? new Date(currentAthlete.finance.last_payment_date).toLocaleDateString('ru-RU') : '—'">—</div>
+                                        <div class="text-sm text-gray-500">Последний платеж</div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- История платежей -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-md font-semibold text-gray-900 mb-4">История платежей</h4>
+                                <div class="space-y-3">
+                                    <template x-for="payment in currentAthlete?.finance?.payment_history || []" :key="payment.id">
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div class="flex-1">
+                                                <div class="font-medium text-gray-900" x-text="payment.description">Пакет 12 тренировок</div>
+                                                <div class="text-sm text-gray-500" x-text="new Date(payment.date).toLocaleDateString('ru-RU')">15.01.2024</div>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <div class="text-right">
+                                                    <div class="font-semibold text-green-600" x-text="payment.amount + ' ₴'">12,000 ₴</div>
+                                                    <div class="text-sm text-gray-500" x-text="payment.payment_method">Карта</div>
+                                                </div>
+                                                <div class="flex space-x-1">
+                                                    <button @click="editPaymentFromHistory(payment)" 
+                                                            class="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                                            title="Редактировать платеж">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="deletePayment(payment.id)" 
+                                                            class="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                            title="Удалить платеж">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    
+                                    <!-- Пустое состояние -->
+                                    <div x-show="!currentAthlete?.finance?.payment_history?.length" class="text-center py-8 text-gray-500">
+                                        <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                        </svg>
+                                        <p>Нет записей о платежах</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Вкладка "Общие данные" -->
                         <div x-show="activeTab === 'general'" class="space-y-6">
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div class="lg:col-span-2">
                                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Личная информация</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="package-info-grid">
                                         <div>
                                             <label class="text-sm font-medium text-gray-500">Полное имя</label>
                                             <div class="text-gray-900 font-medium" x-text="currentAthlete?.name"></div>

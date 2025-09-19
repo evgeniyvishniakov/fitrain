@@ -42,6 +42,17 @@ class User extends Authenticatable
         'last_medical_checkup',
         'profile_modules',
         'is_active',
+        'package_type',
+        'total_sessions',
+        'used_sessions',
+        'package_price',
+        'purchase_date',
+        'expires_date',
+        'payment_method',
+        'payment_description',
+        'payment_history',
+        'total_paid',
+        'last_payment_date',
     ];
 
     /**
@@ -70,6 +81,12 @@ class User extends Authenticatable
         'medical_documents' => 'array',
         'profile_modules' => 'array',
         'is_active' => 'boolean',
+        'purchase_date' => 'date',
+        'expires_date' => 'date',
+        'last_payment_date' => 'date',
+        'payment_history' => 'array',
+        'package_price' => 'decimal:2',
+        'total_paid' => 'decimal:2',
     ];
 
     /**

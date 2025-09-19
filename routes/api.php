@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AthletePaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,4 +45,11 @@ Route::get('/workout-templates', function () {
         'success' => true,
         'templates' => $templates
     ]);
+});
+
+// API для платежей спортсменов
+Route::middleware('web')->group(function () {
+    Route::post('/athletes/{athleteId}/payments', [AthletePaymentController::class, 'store']);
+    Route::put('/athletes/{athleteId}/payments/{paymentId}', [AthletePaymentController::class, 'update']);
+    Route::delete('/athletes/{athleteId}/payments/{paymentId}', [AthletePaymentController::class, 'destroy']);
 });
