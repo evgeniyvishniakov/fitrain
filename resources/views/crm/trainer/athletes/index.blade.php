@@ -51,6 +51,7 @@ function athletesApp() {
         formName: '',
         formEmail: '',
         formPassword: '',
+        showPassword: false,
         formPhone: '',
         formBirthDate: '',
         formGender: '',
@@ -59,6 +60,7 @@ function athletesApp() {
         formSportLevel: '',
         formGoals: [],
         formHealthRestrictions: '',
+        formIsActive: '1',
         
         // Поля формы измерений
         measurementDate: '',
@@ -90,6 +92,7 @@ function athletesApp() {
             this.formName = '';
             this.formEmail = '';
             this.formPassword = '';
+            this.showPassword = false;
             this.formPhone = '';
             this.formBirthDate = '';
             this.formGender = '';
@@ -98,6 +101,31 @@ function athletesApp() {
             this.formSportLevel = '';
             this.formGoals = [];
             this.formHealthRestrictions = '';
+            this.formIsActive = '1';
+        },
+        
+        // Генерация пароля
+        generatePassword() {
+            const length = 12;
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+            let password = "";
+            
+            // Добавляем минимум по одному символу каждого типа
+            password += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)]; // строчная буква
+            password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)]; // заглавная буква
+            password += "0123456789"[Math.floor(Math.random() * 10)]; // цифра
+            password += "!@#$%^&*"[Math.floor(Math.random() * 8)]; // спецсимвол
+            
+            // Заполняем остальные символы случайно
+            for (let i = 4; i < length; i++) {
+                password += charset[Math.floor(Math.random() * charset.length)];
+            }
+            
+            // Перемешиваем символы
+            password = password.split('').sort(() => Math.random() - 0.5).join('');
+            
+            this.formPassword = password;
+            this.showPassword = true; // Показываем сгенерированный пароль
         },
         
         showEdit(athleteId) {
@@ -105,6 +133,8 @@ function athletesApp() {
             this.currentAthlete = this.athletes.find(a => a.id === athleteId);
             this.formName = this.currentAthlete.name;
             this.formEmail = this.currentAthlete.email;
+            this.formPassword = ''; // Оставляем пустым для редактирования
+            this.showPassword = false;
             this.formPhone = this.currentAthlete.phone || '';
             this.formBirthDate = this.currentAthlete.birth_date || '';
             this.formGender = this.currentAthlete.gender || '';
@@ -117,6 +147,7 @@ function athletesApp() {
             this.formSportLevel = this.currentAthlete.sport_level || '';
             this.formGoals = this.currentAthlete.goals || [];
             this.formHealthRestrictions = this.currentAthlete.health_restrictions ? JSON.stringify(this.currentAthlete.health_restrictions) : '';
+            this.formIsActive = this.currentAthlete.is_active ? '1' : '0';
         },
         
         async showView(athleteId) {
@@ -140,6 +171,21 @@ function athletesApp() {
             // Убираем лишние нули после точки
             const formatted = num % 1 === 0 ? num.toString() : num.toFixed(1).replace(/\.?0+$/, '');
             return formatted + unit;
+        },
+
+        // Функция для определения категории ИМТ
+        getBMICategory(bmi) {
+            if (!bmi || isNaN(bmi)) return { text: '—', color: 'text-gray-500', bg: 'bg-gray-100' };
+            
+            if (bmi < 18.5) {
+                return { text: 'Недостаточный вес', color: 'text-blue-600', bg: 'bg-blue-100' };
+            } else if (bmi < 25) {
+                return { text: 'Нормальный вес', color: 'text-green-600', bg: 'bg-green-100' };
+            } else if (bmi < 30) {
+                return { text: 'Избыточный вес', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+            } else {
+                return { text: 'Ожирение', color: 'text-red-600', bg: 'bg-red-100' };
+            }
         },
         
         // Загрузка измерений
@@ -390,6 +436,72 @@ function athletesApp() {
         },
         
         // Обновление
+        async createAthlete() {
+            try {
+                const athleteData = {
+                    name: this.formName,
+                    email: this.formEmail,
+                    password: this.formPassword,
+                    phone: this.formPhone,
+                    birth_date: this.formBirthDate,
+                    gender: this.formGender,
+                    weight: this.formWeight ? parseFloat(this.formWeight) : null,
+                    height: this.formHeight ? parseFloat(this.formHeight) : null,
+                    sport_level: this.formSportLevel,
+                    goals: this.formGoals,
+                    is_active: this.formIsActive === '1',
+                    trainer_id: {{ auth()->id() }}
+                };
+                
+                const response = await fetch('{{ route("crm.trainer.store-athlete") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(athleteData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Добавляем нового спортсмена в список
+                    this.athletes.unshift(result.athlete);
+                    
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Успех',
+                            message: 'Спортсмен успешно создан'
+                        }
+                    }));
+                    
+                    // Возвращаемся к списку
+                    this.currentView = 'list';
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка',
+                            message: result.message || 'Ошибка создания спортсмена'
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Ошибка создания спортсмена:', error);
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Ошибка создания спортсмена'
+                    }
+                }));
+            }
+        },
+        
         updateAthlete() {
             // Здесь будет логика обновления спортсмена
             console.log('Обновление спортсмена:', this.currentAthlete);
@@ -1034,8 +1146,29 @@ function athletesApp() {
                             <!-- Быстрая статистика -->
                             <div class="text-right">
                                 <div class="text-3xl font-bold text-indigo-600" x-text="currentAthlete?.weight && currentAthlete?.height ? formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) : '—'"></div>
-                                <div class="text-sm text-gray-500">ИМТ</div>
+                                <div class="text-sm text-gray-500 flex items-center justify-end gap-1">
+                                    <span>ИМТ</span>
+                                    <!-- Иконка знака вопроса с подсказкой -->
+                                    <div class="relative group">
+                                        <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3 3 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <!-- Всплывающая подсказка -->
+                                        <div class="absolute bottom-full right-0 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                                            <div class="font-semibold mb-2">Индекс массы тела (ИМТ)</div>
+                                            <div class="space-y-1">
+                                                <div class="flex justify-between"><span class="text-blue-300">Менее 18.5:</span> <span>Недостаточный вес</span></div>
+                                                <div class="flex justify-between"><span class="text-green-300">18.5 - 24.9:</span> <span>Нормальный вес</span></div>
+                                                <div class="flex justify-between"><span class="text-yellow-300">25 - 29.9:</span> <span>Избыточный вес</span></div>
+                                                <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span>Ожирение</span></div>
+                                            </div>
+                                            <div class="mt-2 pt-2 border-t border-gray-700 text-gray-300">
+                                                <div x-text="currentAthlete?.weight && currentAthlete?.height ? 'Ваш ИМТ: ' + formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) + ' (' + getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).text + ')' : 'ИМТ не рассчитан'"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
                                 </div>
                             </div>
 
@@ -1047,35 +1180,35 @@ function athletesApp() {
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Обзор
                                 </button>
-                            <button @click="activeTab = 'general'" 
-                                    :class="activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            <button @click="activeTab = 'workouts'" 
+                                    :class="activeTab === 'workouts' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Общие данные
-                            </button>
-                            <button @click="activeTab = 'medical'" 
-                                    :class="activeTab === 'medical' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                                    class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Медицинские данные
-                            </button>
-                            <button @click="activeTab = 'measurements'" 
-                                    :class="activeTab === 'measurements' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                                    class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Измерения
+                                Тренировки
                             </button>
                             <button @click="activeTab = 'progress'" 
                                     :class="activeTab === 'progress' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Прогресс
                             </button>
-                            <button @click="activeTab = 'workouts'" 
-                                    :class="activeTab === 'workouts' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            <button @click="activeTab = 'measurements'" 
+                                    :class="activeTab === 'measurements' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Тренировки
+                                Измерения
                             </button>
                             <button @click="activeTab = 'nutrition'" 
                                     :class="activeTab === 'nutrition' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Питание
+                            </button>
+                            <button @click="activeTab = 'medical'" 
+                                    :class="activeTab === 'medical' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                    class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
+                                Медицинские данные
+                            </button>
+                            <button @click="activeTab = 'general'" 
+                                    :class="activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                    class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
+                                Общие
                             </button>
                         </nav>
                     </div>
@@ -1298,6 +1431,129 @@ function athletesApp() {
     </div>
 
     <!-- РЕДАКТИРОВАНИЕ СПОРТСМЕНА -->
+    <!-- Форма создания спортсмена -->
+    <div x-show="currentView === 'create'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">Добавление спортсмена</h3>
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                Назад
+                    </button>
+                </div>
+        
+        <form @submit.prevent="createAthlete" class="space-y-6">
+            <div class="form-columns">
+                <!-- Левая колонка -->
+                <div class="form-column-left">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
+                        <input type="text" x-model="formName" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input type="email" x-model="formEmail" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Пароль *</label>
+                        <div class="relative">
+                            <input :type="showPassword ? 'text' : 'password'" x-model="formPassword" required
+                                   class="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <div class="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
+                                <button type="button" @click="generatePassword()" 
+                                        class="px-2 py-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
+                                        title="Сгенерировать пароль">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                </button>
+                                <button type="button" @click="showPassword = !showPassword" 
+                                        class="px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
+                                        title="Показать/скрыть пароль">
+                                    <svg x-show="!showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    <svg x-show="showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                                    </svg>
+                                </button>
+    </div>
+</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                        <input type="tel" x-model="formPhone"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
+                        <input type="date" x-model="formBirthDate"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
+                        <select x-model="formGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Выберите пол</option>
+                            <option value="male">Мужской</option>
+                            <option value="female">Женский</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Правая колонка -->
+                <div class="form-column-right">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг)</label>
+                        <input type="number" step="0.1" x-model="formWeight"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
+                        <input type="number" step="0.1" x-model="formHeight"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
+                        <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Выберите уровень</option>
+                            <option value="beginner">Новичок</option>
+                            <option value="intermediate">Любитель</option>
+                            <option value="advanced">Продвинутый</option>
+                            <option value="professional">Профессионал</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Цели</label>
+                        <textarea x-model="formGoals" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                  placeholder="Например: похудение, набор массы, подготовка к соревнованиям"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
+                        <select x-model="formIsActive" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="1">Активный</option>
+                            <option value="0">Неактивный</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="submit" 
+                        class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    Создать спортсмена
+                </button>
+                <button type="button" @click="showList()" 
+                        class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    Отмена
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Форма редактирования спортсмена -->
     <div x-show="currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">Редактирование спортсмена</h3>
@@ -1309,63 +1565,108 @@ function athletesApp() {
         
         <div x-show="currentAthlete" class="space-y-6">
             <form @submit.prevent="updateAthlete" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Имя</label>
-                        <input type="text" x-model="formName" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input type="email" x-model="formEmail" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-        </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
-                        <input type="tel" x-model="formPhone" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <div class="form-columns">
+                    <!-- Левая колонка -->
+                    <div class="form-column-left">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
+                            <input type="text" x-model="formName" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                            <input type="email" x-model="formEmail" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Пароль (оставьте пустым, чтобы не менять)</label>
+                            <div class="relative">
+                                <input :type="showPassword ? 'text' : 'password'" x-model="formPassword"
+                                       class="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <div class="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
+                                    <button type="button" @click="generatePassword()" 
+                                            class="px-2 py-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
+                                            title="Сгенерировать пароль">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                        </svg>
+                                    </button>
+                                    <button type="button" @click="showPassword = !showPassword" 
+                                            class="px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
+                                            title="Показать/скрыть пароль">
+                                        <svg x-show="!showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        <svg x-show="showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                            <input type="tel" x-model="formPhone"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
+                            <input type="date" x-model="formBirthDate"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
+                            <select x-model="formGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Выберите пол</option>
+                                <option value="male">Мужской</option>
+                                <option value="female">Женский</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
-                        <input type="date" x-model="formBirthDate" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
-                        <select x-model="formGender" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Выберите пол</option>
-                            <option value="male">Мужской</option>
-                            <option value="female">Женский</option>
-                            <option value="other">Другой</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
-                        <select x-model="formSportLevel" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Выберите уровень</option>
-                            <option value="beginner">Новичок</option>
-                            <option value="intermediate">Любитель</option>
-                            <option value="advanced">Профи</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг)</label>
-                        <input type="number" step="0.1" x-model="formWeight" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
-                        <input type="number" step="0.1" x-model="formHeight" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    
+                    <!-- Правая колонка -->
+                    <div class="form-column-right">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг)</label>
+                            <input type="number" step="0.1" x-model="formWeight"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
+                            <input type="number" step="0.1" x-model="formHeight"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
+                            <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Выберите уровень</option>
+                                <option value="beginner">Новичок</option>
+                                <option value="intermediate">Любитель</option>
+                                <option value="advanced">Продвинутый</option>
+                                <option value="professional">Профессионал</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Цели</label>
+                            <textarea x-model="formGoals" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                      placeholder="Например: похудение, набор массы, подготовка к соревнованиям"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
+                            <select x-model="formIsActive" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="1">Активный</option>
+                                <option value="0">Неактивный</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="flex space-x-4">
+                <div class="flex justify-end space-x-3">
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Сохранить
+                        Сохранить изменения
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'overview'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -1710,6 +2011,40 @@ function athletesApp() {
         width: auto;
         font-size: 16px;
         padding: 8px 16px;
+    }
+}
+
+/* Форма в две колонки */
+.form-columns {
+    display: block;
+}
+
+.form-column-left,
+.form-column-right {
+    margin-bottom: 24px;
+}
+
+.form-column-left > div,
+.form-column-right > div {
+    margin-bottom: 24px;
+}
+
+/* На десктопе - две колонки */
+@media (min-width: 1024px) {
+    .form-columns {
+        display: flex;
+        gap: 24px;
+    }
+    
+    .form-column-left,
+    .form-column-right {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    
+    .form-column-left > div,
+    .form-column-right > div {
+        margin-bottom: 24px;
     }
 }
 </style>

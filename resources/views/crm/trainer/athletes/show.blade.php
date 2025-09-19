@@ -121,23 +121,23 @@
                 <button onclick="showTab('overview')" id="tab-overview" class="tab-button active py-4 px-1 border-b-2 border-indigo-500 text-indigo-600 font-medium text-sm">
                     Обзор
                 </button>
-                <button onclick="showTab('general')" id="tab-general" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
-                    Общие данные
-                </button>
-                <button onclick="showTab('medical')" id="tab-medical" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
-                    Медицинские данные
-                </button>
-                <button onclick="showTab('measurements')" id="tab-measurements" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
-                    Измерения
+                <button onclick="showTab('workouts')" id="tab-workouts" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                    Тренировки
                 </button>
                 <button onclick="showTab('progress')" id="tab-progress" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
                     Прогресс
                 </button>
-                <button onclick="showTab('workouts')" id="tab-workouts" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
-                    Тренировки
+                <button onclick="showTab('measurements')" id="tab-measurements" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                    Измерения
                 </button>
                 <button onclick="showTab('nutrition')" id="tab-nutrition" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
                     Питание
+                </button>
+                <button onclick="showTab('medical')" id="tab-medical" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                    Медицинские данные
+                </button>
+                <button onclick="showTab('general')" id="tab-general" class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm">
+                    Общие
                 </button>
             </nav>
         </div>

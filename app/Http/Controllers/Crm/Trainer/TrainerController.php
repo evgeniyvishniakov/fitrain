@@ -60,19 +60,33 @@ class TrainerController extends BaseController
     
     public function storeAthlete(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
-            'phone' => 'nullable|string|max:20',
-            'birth_date' => 'nullable|date',
-            'gender' => 'nullable|in:male,female,other',
-            'weight' => 'nullable|numeric|min:0',
-            'height' => 'nullable|numeric|min:0',
-            'sport_level' => 'nullable|in:beginner,intermediate,advanced',
-            'goals' => 'nullable|array',
-            'health_restrictions' => 'nullable|string',
-        ]);
+        // Проверяем, что запрос JSON
+        if (!$request->expectsJson()) {
+            return response()->json(['error' => 'Expected JSON request'], 400);
+        }
+        
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|string|min:8',
+                'phone' => 'nullable|string|max:20',
+                'birth_date' => 'nullable|date',
+                'gender' => 'nullable|in:male,female,other',
+                'weight' => 'nullable|numeric|min:0',
+                'height' => 'nullable|numeric|min:0',
+                'sport_level' => 'nullable|in:beginner,intermediate,advanced',
+                'goals' => 'nullable|array',
+                'health_restrictions' => 'nullable|string',
+                'is_active' => 'nullable|boolean',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка валидации',
+                'errors' => $e->errors()
+            ], 422);
+        }
         
         // Вычисляем возраст из даты рождения
         $age = null;
@@ -80,25 +94,46 @@ class TrainerController extends BaseController
             $age = \Carbon\Carbon::parse($request->birth_date)->age;
         }
         
-        $athlete = Athlete::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'phone' => $request->phone,
-            'birth_date' => $request->birth_date,
-            'age' => $age,
-            'gender' => $request->gender,
-            'weight' => $request->weight,
-            'height' => $request->height,
-            'sport_level' => $request->sport_level,
-            'goals' => $request->goals ? json_encode($request->goals) : null,
-            'health_restrictions' => $request->health_restrictions ? json_encode([['type' => 'Общие ограничения', 'description' => $request->health_restrictions]]) : null,
-            'trainer_id' => auth()->id(),
-        ]);
-        
-        $athlete->assignRole('athlete');
-        
-        return redirect()->route('crm.trainer.athletes')->with('success', 'Спортсмен добавлен');
+        try {
+            $athlete = Athlete::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'phone' => $request->phone,
+                'birth_date' => $request->birth_date,
+                'age' => $age,
+                'gender' => $request->gender,
+                'weight' => $request->weight,
+                'height' => $request->height,
+                'sport_level' => $request->sport_level,
+                'goals' => $request->goals ? json_encode($request->goals) : null,
+                'health_restrictions' => $request->health_restrictions ? json_encode([['type' => 'Общие ограничения', 'description' => $request->health_restrictions]]) : null,
+                'is_active' => $request->is_active ?? true,
+                'trainer_id' => auth()->id(),
+            ]);
+            
+            // Назначаем роль спортсмену
+            try {
+                $athleteRole = \Spatie\Permission\Models\Role::where('name', 'athlete')->first();
+                if ($athleteRole) {
+                    $athlete->assignRole($athleteRole);
+                }
+            } catch (\Exception $e) {
+                // Если не удалось назначить роль, продолжаем без неё
+                \Log::warning('Не удалось назначить роль athlete: ' . $e->getMessage());
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Спортсмен успешно создан',
+                'athlete' => $athlete
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка создания спортсмена: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
     public function showAthlete($id)
