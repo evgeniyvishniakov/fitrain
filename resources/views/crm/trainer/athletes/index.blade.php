@@ -1745,21 +1745,17 @@ function athletesApp() {
                         <!-- Вкладка "Обзор" -->
                         <div x-show="activeTab === 'overview'" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                                <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.workouts?.length || 0"></div>
-                                    <div class="text-sm text-blue-800">Тренировок</div>
-                                </div>
                                 <div class="bg-green-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-green-600" x-text="currentAthlete?.progress?.length || 0"></div>
-                                    <div class="text-sm text-green-800">Записей прогресса</div>
+                                    <div class="text-sm text-green-800">Записей измерений</div>
+                                </div>
+                                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                    <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.finance?.used_sessions || 0"></div>
+                                    <div class="text-sm text-blue-800">Тренировок</div>
                                 </div>
                                 <div class="bg-orange-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-orange-600" x-text="currentAthlete?.finance?.remaining_sessions || 0"></div>
-                                    <div class="text-sm text-orange-800">Осталось тренировок</div>
-                                </div>
-                                <div class="bg-indigo-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-indigo-600" x-text="currentAthlete?.finance?.used_sessions || 0"></div>
-                                    <div class="text-sm text-indigo-800">Использовано</div>
+                                    <div class="text-sm text-orange-800">Осталось</div>
                                 </div>
                                 <div class="bg-purple-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.is_active ? 'Да' : 'Нет'"></div>
@@ -2024,13 +2020,94 @@ function athletesApp() {
                             <p class="mb-4">Здесь будут отображаться графики и аналитика прогресса</p>
                         </div>
 
-                        <div x-show="activeTab === 'workouts'" class="text-center py-12 text-gray-500">
-                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                            </svg>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">Тренировки</h3>
-                            <p class="mb-4">Здесь будут отображаться тренировки спортсмена</p>
-                </div>
+                        <div x-show="activeTab === 'workouts'" class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Тренировки спортсмена</h3>
+                                <span class="text-sm text-gray-500" x-text="(currentAthlete?.workouts || []).length + ' тренировок'"></span>
+                            </div>
+                            
+                            <!-- Список тренировок -->
+                            <div x-show="(currentAthlete?.workouts || []).length === 0" class="text-center py-12 text-gray-500">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                                </svg>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Нет тренировок</h3>
+                                <p class="text-gray-500">У этого спортсмена пока нет тренировок</p>
+                            </div>
+                            
+                            <div x-show="(currentAthlete?.workouts || []).length > 0" class="space-y-3">
+                                <template x-for="workout in (currentAthlete?.workouts || [])" :key="workout.id">
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <!-- Название и информация о тренировке в одну линию -->
+                                                <div class="flex items-center text-sm text-gray-500 whitespace-nowrap">
+                                                    <h4 class="text-lg font-semibold text-gray-900 mr-4" x-text="workout.title"></h4>
+                                                    <span class="mx-2">•</span>
+                                                    <div class="flex items-center">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                        </svg>
+                                                        <span x-text="new Date(workout.date).toLocaleDateString('ru-RU')"></span>
+                                                    </div>
+                                                    <span class="mx-3">•</span>
+                                                    <div class="flex items-center">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                        <span x-text="workout.duration + ' мин'"></span>
+                                                    </div>
+                                                    <span class="mx-3">•</span>
+                                                    <span class="px-2 py-1 text-xs rounded-full"
+                                                          :class="{
+                                                              'bg-green-100 text-green-800': workout.status === 'completed',
+                                                              'bg-yellow-100 text-yellow-800': workout.status === 'planned',
+                                                              'bg-red-100 text-red-800': workout.status === 'cancelled'
+                                                          }"
+                                                          x-text="{
+                                                              'completed': 'Завершена',
+                                                              'planned': 'Запланирована', 
+                                                              'cancelled': 'Отменена'
+                                                          }[workout.status] || workout.status"></span>
+                                                </div>
+                                                
+                                                <!-- Описание тренировки -->
+                                                <p x-show="workout.description" class="text-sm text-gray-600 mt-2" x-text="workout.description"></p>
+                                                
+                                                <!-- Упражнения -->
+                                                <div x-show="(workout.exercises || []).length > 0" class="mt-3">
+                                                    <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
+                                                    <div class="flex flex-wrap gap-1">
+                                                        <template x-for="(exercise, index) in (workout.exercises || []).slice(0, 3)" :key="`exercise-${workout.id}-${index}`">
+                                                            <span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full" x-text="exercise.name || 'Без названия'"></span>
+                                                        </template>
+                                                        <span x-show="(workout.exercises || []).length > 3" class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full" x-text="'+' + ((workout.exercises || []).length - 3) + ' еще'"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Кнопки действий -->
+                                            <div class="flex items-center space-x-2 ml-4">
+                                                <button @click="editWorkout(workout)" 
+                                                        class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                        title="Редактировать тренировку">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                    </svg>
+                                                </button>
+                                                <button @click="deleteWorkout(workout.id)" 
+                                                        class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Удалить тренировку">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
                 
                         <div x-show="activeTab === 'nutrition'" class="text-center py-12 text-gray-500">
                             <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

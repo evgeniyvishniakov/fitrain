@@ -10,12 +10,54 @@ use Illuminate\Http\Request;
 
 class TrainerController extends BaseController
 {
+    /**
+     * Извлекает количество тренировок из описания платежа
+     */
+    private function extractSessionsFromDescription($description)
+    {
+        if (empty($description)) {
+            return 0;
+        }
+        
+        // Проверяем разные форматы описаний
+        // Универсальное регулярное выражение для всех вариантов написания
+        
+        // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок"
+        if (preg_match('/(\d+)\s*тренировок?/ui', $description, $matches)) {
+            $sessions = (int)$matches[1];
+            \Log::info("Extracted {$sessions} sessions from: '{$description}' (тренировок)");
+            return $sessions;
+        }
+        
+        // Вариант с "тренирки": "4 тренирки", "8 тренирки"
+        if (preg_match('/(\d+)\s*тренирки/ui', $description, $matches)) {
+            $sessions = (int)$matches[1];
+            \Log::info("Extracted {$sessions} sessions from: '{$description}' (тренирки)");
+            return $sessions;
+        }
+        
+        // Разовая тренировка
+        if (preg_match('/Разовая\s*тренировка/ui', $description)) {
+            \Log::info("Extracted 1 session from: '{$description}' (single)");
+            return 1;
+        }
+        
+        // Безлимит
+        if (preg_match('/Безлимит/ui', $description)) {
+            \Log::info("Extracted 30 sessions (unlimited) from: '{$description}'");
+            return 30;
+        }
+        
+        \Log::info("No sessions extracted from: '{$description}'");
+        return 0;
+    }
+    
     public function dashboard()
     {
         $trainer = auth()->user();
         $athletes = $trainer->athletes()->count();
-        $workouts = $trainer->workouts()->count();
-        $recentWorkouts = $trainer->workouts()->with('athlete')->latest()->take(5)->get();
+        $workouts = $trainer->trainerWorkouts()->count();
+        $recentWorkouts = $trainer->trainerWorkouts()->with('athlete')->latest()->take(5)->get();
         
         return view('crm.trainer.dashboard', compact('trainer', 'athletes', 'workouts', 'recentWorkouts'));
     }
@@ -59,23 +101,59 @@ class TrainerController extends BaseController
             
             foreach ($paymentHistory as $payment) {
                 // Извлекаем количество тренировок из описания
-                if (preg_match('/(\d+)\s+тренировок?/', $payment['description'], $matches)) {
-                    $totalSessionsFromHistory += (int)$matches[1];
-                }
+                $description = $payment['description'] ?? '';
+                
+                // Отладочная информация
+                \Log::info("Raw description from DB: " . json_encode($description, JSON_UNESCAPED_UNICODE));
+                \Log::info("Description length: " . strlen($description));
+                \Log::info("Description bytes: " . bin2hex($description));
+                
+                $sessions = $this->extractSessionsFromDescription($description);
+                $totalSessionsFromHistory += $sessions;
+                
                 // Суммируем все платежи
                 $totalPaidFromHistory += $payment['amount'] ?? 0;
             }
             
+            // Если нет истории платежей, используем данные из полей пользователя
+            if (empty($paymentHistory)) {
+                $totalSessionsFromHistory = $athlete->total_sessions;
+                $totalPaidFromHistory = $athlete->total_paid;
+            }
+            
+            // Определяем тип пакета для отображения
+            $packageTypeDisplay = $athlete->package_type;
+            if ($totalSessionsFromHistory > 0) {
+                if ($totalSessionsFromHistory == 1) {
+                    $packageTypeDisplay = 'Разовая тренировка';
+                } elseif ($totalSessionsFromHistory >= 30) {
+                    $packageTypeDisplay = 'Безлимит (месяц)';
+                } else {
+                    $packageTypeDisplay = $totalSessionsFromHistory . ' тренировок';
+                }
+            }
+            
+            // Отладочная информация
+            \Log::info('=== ATHLETE DEBUG INFO ===');
+            \Log::info('Athlete ID: ' . $athlete->id);
+            \Log::info('Athlete Name: ' . $athlete->name);
+            \Log::info('Payment History: ' . json_encode($paymentHistory));
+            \Log::info('Total Sessions From History: ' . $totalSessionsFromHistory);
+            \Log::info('Used Sessions: ' . $athlete->used_sessions);
+            \Log::info('Remaining Sessions: ' . (($totalSessionsFromHistory ?: $athlete->total_sessions) - $athlete->used_sessions));
+            \Log::info('Package Type Display: ' . $packageTypeDisplay);
+            \Log::info('========================');
+            
             $athlete->finance = [
                 'id' => $athlete->id,
-                'package_type' => $athlete->package_type,
+                'package_type' => $packageTypeDisplay,
                 'total_sessions' => $totalSessionsFromHistory ?: $athlete->total_sessions,
                 'used_sessions' => $athlete->used_sessions,
                 'remaining_sessions' => ($totalSessionsFromHistory ?: $athlete->total_sessions) - $athlete->used_sessions,
-                'package_price' => $athlete->package_price,
+                'package_price' => $totalPaidFromHistory ?: $athlete->package_price,
                 'purchase_date' => $athlete->purchase_date,
                 'expires_date' => $athlete->expires_date,
-                'status' => $athlete->package_type ? 'active' : 'inactive',
+                'status' => ($totalSessionsFromHistory ?: $athlete->total_sessions) > 0 ? 'active' : 'inactive',
                 'total_paid' => $totalPaidFromHistory ?: $athlete->total_paid,
                 'last_payment_date' => $athlete->last_payment_date,
                 'payment_history' => $paymentHistory

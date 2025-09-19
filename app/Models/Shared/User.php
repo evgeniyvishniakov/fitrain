@@ -97,7 +97,7 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Shared\User::class, 'trainer_id');
     }
 
-    public function workouts()
+    public function trainerWorkouts()
     {
         return $this->hasMany(\App\Models\Trainer\Workout::class, 'trainer_id');
     }
@@ -137,4 +137,15 @@ class User extends Authenticatable
     {
         return $this->hasRole('athlete');
     }
+
+    /**
+     * Тренировки спортсмена
+     */
+    public function workouts()
+    {
+        return $this->hasMany(\App\Models\Trainer\Workout::class, 'athlete_id');
+    }
+
+
+
 }
