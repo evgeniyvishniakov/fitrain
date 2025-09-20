@@ -224,7 +224,7 @@ function calendarApp() {
         <!-- Дни календаря -->
         <div class="grid grid-cols-7">
             <template x-for="day in calendarDays" :key="day.date">
-                <div class="min-h-[160px] border-r border-b border-gray-100 last:border-r-0 hover:bg-gray-50 transition-colors group relative"
+                <div class="calendar-day-cell border-r border-b border-gray-100 last:border-r-0 hover:bg-gray-50 transition-colors group relative"
                      :class="{
                          'bg-indigo-50 ring-2 ring-indigo-200': day.isToday
                      }">
@@ -236,8 +236,8 @@ function calendarApp() {
                                  x-text="day.day"></div>
                         </div>
                         
-                        <!-- Современные карточки тренировок 2024 -->
-                        <div class="space-y-1.5">
+                        <!-- Десктоп: карточки тренировок -->
+                        <div class="space-y-1.5 desktop-workouts">
                             <template x-for="workout in day.workouts.slice(0, 2)" :key="workout.id">
                                 <div @click="showWorkoutDetails(workout)"
                                      class="cursor-pointer rounded p-1.5 text-xs shadow-sm hover:shadow-md transition-all duration-200 border hover:scale-105"
@@ -261,6 +261,20 @@ function calendarApp() {
                                  class="text-xs text-center py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium hover:bg-indigo-200 cursor-pointer transition-colors"
                                  @click="showAllWorkoutsForDay(day)">
                                 +<span x-text="day.workouts.length - 2"></span> еще
+                            </div>
+                        </div>
+                        
+                        <!-- Мобилка: квадратик с количеством -->
+                        <div class="mobile-workouts">
+                            <div x-show="day.workouts.length > 0"
+                                 class="w-6 h-6 text-white text-xs rounded flex items-center justify-center cursor-pointer transition-colors"
+                                 :class="{
+                                     'bg-green-500 hover:bg-green-600': day.workouts.some(w => w.status === 'completed'),
+                                     'bg-red-500 hover:bg-red-600': day.workouts.some(w => w.status === 'cancelled') && !day.workouts.some(w => w.status === 'completed'),
+                                     'bg-indigo-500 hover:bg-indigo-600': day.workouts.some(w => w.status === 'planned') || (!day.workouts.some(w => w.status === 'completed') && !day.workouts.some(w => w.status === 'cancelled'))
+                                 }"
+                                 @click="showAllWorkoutsForDay(day)">
+                                <span x-text="day.workouts.length"></span>
                             </div>
                         </div>
                     </div>
@@ -446,6 +460,36 @@ function calendarApp() {
 @media (min-width: 768px) {
     .calendar-controls {
         width: auto;
+    }
+}
+
+/* Высота ячеек календаря */
+.calendar-day-cell {
+    min-height: 80px;
+}
+
+@media (min-width: 768px) {
+    .calendar-day-cell {
+        min-height: 160px;
+    }
+}
+
+/* Медиазапросы для тренировок */
+.desktop-workouts {
+    display: none;
+}
+
+.mobile-workouts {
+    display: block;
+}
+
+@media (min-width: 768px) {
+    .desktop-workouts {
+        display: block;
+    }
+    
+    .mobile-workouts {
+        display: none;
     }
 }
 </style>
