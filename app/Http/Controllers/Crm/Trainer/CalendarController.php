@@ -56,9 +56,6 @@ class CalendarController extends Controller
         $athletes = collect();
         if ($user->hasRole('trainer')) {
             $athletes = User::where('trainer_id', $user->id)
-                ->whereHas('roles', function($query) {
-                    $query->where('name', 'athlete');
-                })
                 ->orderBy('name')
                 ->get();
         }
@@ -100,7 +97,7 @@ class CalendarController extends Controller
                     'id' => $workout->id,
                     'title' => $workout->title,
                     'description' => $workout->description,
-                    'date' => $workout->date,
+                    'date' => $workout->date->format('Y-m-d'),
                     'time' => $workout->time,
                     'duration' => $workout->duration,
                     'status' => $workout->status,

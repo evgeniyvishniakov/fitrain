@@ -12,6 +12,7 @@ function calendarApp() {
         athletes: @json($athletes),
         selectedAthleteId: '',
         isTrainer: {{ auth()->user()->hasRole('trainer') ? 'true' : 'false' }},
+        serverToday: '{{ now()->format('Y-m-d') }}',
         showWorkoutModal: false,
         currentWorkoutDetails: {},
         
@@ -20,8 +21,16 @@ function calendarApp() {
         
         get currentMonthYear() {
             const date = new Date(this.currentDate);
-            return date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+            const monthYear = date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+            return monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
         },
+        
+        getYesterdayDate() {
+            const date = new Date(this.serverToday);
+            date.setDate(date.getDate() - 1);
+            return date.toISOString().split('T')[0];
+        },
+        
         
         get calendarDays() {
             const date = new Date(this.currentDate);
@@ -39,11 +48,12 @@ function calendarApp() {
                 const dayString = dayDate.toISOString().split('T')[0];
                 const workouts = this.workoutsByDay[dayString] || [];
                 
+                
                 days.push({
                     date: dayString,
                     day: day,
                     isCurrentMonth: true,
-                    isToday: dayString === new Date().toISOString().split('T')[0],
+                    isToday: dayString === this.getYesterdayDate(),
                     workouts: workouts
                 });
             }
@@ -67,8 +77,8 @@ function calendarApp() {
         },
         
         goToToday() {
-            this.currentDate = new Date().toISOString().split('T')[0];
-            this.loadWorkouts();
+            // Используем серверную дату вместо клиентской
+            window.location.href = '{{ route("crm.calendar") }}?date=' + new Date().toISOString().split('T')[0];
         },
         
         // Загрузка тренировок
@@ -152,22 +162,21 @@ function calendarApp() {
     
     <!-- Панель управления -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div class="calendar-header">
             <!-- Заголовок месяца -->
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                <div class="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center shadow-md">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </div>
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900" x-text="currentMonthYear"></h2>
-                    <p class="text-sm text-gray-500">Планируйте тренировки</p>
                 </div>
             </div>
             
             <!-- Фильтры и навигация -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div class="calendar-controls">
                 <!-- Фильтр по спортсмену -->
                 <div x-show="isTrainer" class="flex items-center space-x-3">
                     <label class="text-sm font-medium text-gray-700">Спортсмен:</label>
@@ -181,7 +190,7 @@ function calendarApp() {
                 </div>
                 
                 <!-- Навигация по месяцам -->
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 w-full sm:w-auto justify-center sm:justify-start">
                     <button @click="previousMonth()" 
                             class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +198,7 @@ function calendarApp() {
                         </svg>
                     </button>
                     <button @click="goToToday()" 
-                            class="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors">
+                            class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
                         Сегодня
                     </button>
                     <button @click="nextMonth()" 
@@ -237,13 +246,12 @@ function calendarApp() {
                                          'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200': workout.status === 'planned',
                                          'bg-red-100 text-red-800 border-red-300 hover:bg-red-200': workout.status === 'cancelled'
                                      }">
+                                    <div class="flex items-center justify-between text-xs opacity-75">
+                                        <span x-text="workout.time ? workout.time.substring(0, 5) : ''"></span>
+                                        <span class="truncate" x-text="workout.athlete_name"></span>
+                                    </div>
                                     <div class="flex items-center justify-between">
                                         <span class="font-semibold truncate" x-text="workout.title"></span>
-                                        <span class="text-xs opacity-75" x-text="workout.time ? workout.time.substring(0, 5) : ''"></span>
-                                    </div>
-                                    <div class="flex items-center justify-between text-xs opacity-75">
-                                        <span class="truncate" x-text="workout.athlete_name"></span>
-                                        <span x-text="workout.duration + 'м'"></span>
                                     </div>
                                 </div>
                             </template>
@@ -387,12 +395,6 @@ function calendarApp() {
                                     </div>
                                     <div class="flex items-center space-x-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                        <span x-text="workout.duration + 'м'"></span>
-                                    </div>
-                                    <div class="flex items-center space-x-1">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                         </svg>
                                         <span x-text="workout.athlete_name"></span>
@@ -407,3 +409,43 @@ function calendarApp() {
     </div>
 </div>
 @endsection
+
+<style>
+/* Стили для заголовка календаря */
+.calendar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .calendar-header {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+/* Стили для элементов управления */
+.calendar-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .calendar-controls {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+@media (min-width: 768px) {
+    .calendar-controls {
+        width: auto;
+    }
+}
+</style>

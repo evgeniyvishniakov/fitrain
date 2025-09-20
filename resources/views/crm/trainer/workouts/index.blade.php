@@ -1010,10 +1010,6 @@ function workoutApp() {
                             <span x-text="workout.time ? workout.time.substring(0, 5) : ''"></span>
                         </div>
                         
-                        <div class="text-sm text-gray-500" x-show="workout.duration">
-                            <span class="font-medium text-gray-700">Продолжительность:</span>
-                            <span x-text="workout.duration + ' мин'"></span>
-                        </div>
                         
                         <div class="text-sm text-gray-500">
                             <span class="font-medium text-gray-700">Участник:</span>
