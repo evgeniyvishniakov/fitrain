@@ -180,6 +180,9 @@ function athletesApp() {
             this.currentAthlete = this.athletes.find(a => a.id === athleteId);
             this.activeTab = 'overview'; // сбрасываем на первую вкладку
             
+            // Очищаем предыдущие графики
+            this.destroyCharts();
+            
             console.log('Спортсмен ДО загрузки измерений:', this.currentAthlete);
             
             // Загружаем измерения спортсмена
@@ -212,6 +215,378 @@ function athletesApp() {
                 return { text: 'Ожирение', color: 'text-red-600', bg: 'bg-red-100' };
             }
         },
+
+        // Функция для расчета изменения веса
+        getWeightChange() {
+            if (this.measurements.length < 2) return '—';
+            
+            const firstWeight = this.measurements[this.measurements.length - 1].weight;
+            const lastWeight = this.measurements[0].weight;
+            const change = lastWeight - firstWeight;
+            
+            if (change > 0) {
+                return '+' + this.formatNumber(change, ' кг');
+            } else if (change < 0) {
+                return this.formatNumber(change, ' кг');
+            } else {
+                return '0 кг';
+            }
+        },
+
+        // Очистка графиков
+        destroyCharts() {
+            if (window.weightChart && typeof window.weightChart.destroy === 'function') {
+                window.weightChart.destroy();
+                window.weightChart = null;
+            }
+            if (window.bodyCompositionChart && typeof window.bodyCompositionChart.destroy === 'function') {
+                window.bodyCompositionChart.destroy();
+                window.bodyCompositionChart = null;
+            }
+            if (window.measurementsChart && typeof window.measurementsChart.destroy === 'function') {
+                window.measurementsChart.destroy();
+                window.measurementsChart = null;
+            }
+        },
+
+        // Обновление графиков при переключении вкладки
+        updateCharts() {
+            console.log('=== ОБНОВЛЕНИЕ ГРАФИКОВ ===');
+            
+            // Ждем, пока вкладка станет видимой
+            setTimeout(() => {
+                if (window.weightChart && typeof window.weightChart.resize === 'function') {
+                    window.weightChart.resize();
+                    console.log('График веса обновлен');
+                }
+                if (window.bodyCompositionChart && typeof window.bodyCompositionChart.resize === 'function') {
+                    window.bodyCompositionChart.resize();
+                    console.log('График состава тела обновлен');
+                }
+                if (window.measurementsChart && typeof window.measurementsChart.resize === 'function') {
+                    window.measurementsChart.resize();
+                    console.log('График объемов обновлен');
+                }
+            }, 100);
+        },
+
+        // Инициализация графиков
+        initCharts() {
+            console.log('=== ИНИЦИАЛИЗАЦИЯ ГРАФИКОВ ===');
+            console.log('Количество измерений:', this.measurements.length);
+            console.log('Измерения:', this.measurements);
+            
+            if (this.measurements.length === 0) {
+                console.log('Нет измерений, пропускаем создание графиков');
+                return;
+            }
+            
+            // Проверяем, что Chart.js загружен
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js не загружен');
+                return;
+            }
+            console.log('Chart.js загружен успешно');
+
+            // Очищаем предыдущие графики
+            this.destroyCharts();
+
+            // Подготовка данных
+            const sortedMeasurements = [...this.measurements].reverse(); // Сортируем по дате
+            const labels = sortedMeasurements.map(m => {
+                const date = new Date(m.measurement_date);
+                return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+            });
+
+            console.log('Отсортированные измерения:', sortedMeasurements);
+            console.log('Метки для графиков:', labels);
+
+            // Проверяем наличие canvas элементов
+            console.log('Canvas weightChart:', document.getElementById('weightChart'));
+            console.log('Canvas bodyCompositionChart:', document.getElementById('bodyCompositionChart'));
+            console.log('Canvas measurementsChart:', document.getElementById('measurementsChart'));
+
+            // График веса
+            this.createWeightChart(labels, sortedMeasurements);
+            
+            // График состава тела
+            this.createBodyCompositionChart(labels, sortedMeasurements);
+            
+            // График объемов
+            this.createMeasurementsChart(labels, sortedMeasurements);
+            
+            console.log('=== ГРАФИКИ СОЗДАНЫ ===');
+        },
+
+        // Создание графика веса
+        createWeightChart(labels, measurements) {
+            console.log('=== СОЗДАНИЕ ГРАФИКА ВЕСА ===');
+            const ctx = document.getElementById('weightChart');
+            if (!ctx) {
+                console.error('Canvas элемент weightChart не найден');
+                return;
+            }
+            console.log('Canvas элемент найден:', ctx);
+
+            const weightData = measurements.map(m => m.weight);
+            console.log('Данные веса:', weightData);
+            console.log('Метки:', labels);
+
+            // Уничтожаем предыдущий график если есть
+            if (window.weightChart && typeof window.weightChart.destroy === 'function') {
+                window.weightChart.destroy();
+            }
+
+            try {
+                window.weightChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Вес (кг)',
+                        data: measurements.map(m => m.weight),
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 20,
+                            left: 20,
+                            right: 20
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            min: function(context) {
+                                const values = context.chart.data.datasets[0].data;
+                                return Math.min(...values) - 2;
+                            },
+                            max: function(context) {
+                                const values = context.chart.data.datasets[0].data;
+                                return Math.max(...values) + 2;
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('График веса создан успешно');
+            } catch (error) {
+                console.error('Ошибка создания графика веса:', error);
+            }
+        },
+
+        // Создание графика состава тела
+        createBodyCompositionChart(labels, measurements) {
+            const ctx = document.getElementById('bodyCompositionChart');
+            if (!ctx) return;
+
+            if (window.bodyCompositionChart && typeof window.bodyCompositionChart.destroy === 'function') {
+                window.bodyCompositionChart.destroy();
+            }
+
+            window.bodyCompositionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Процент жира',
+                        data: measurements.map(m => m.body_fat_percentage),
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Мышечная масса (кг)',
+                        data: measurements.map(m => m.muscle_mass),
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 20,
+                            left: 20,
+                            right: 20
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Процент жира (%)'
+                            },
+                            min: function(context) {
+                                const values = context.chart.data.datasets[0].data;
+                                return Math.min(...values) - 2;
+                            },
+                            max: function(context) {
+                                const values = context.chart.data.datasets[0].data;
+                                return Math.max(...values) + 2;
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Мышечная масса (кг)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            min: function(context) {
+                                const values = context.chart.data.datasets[1].data;
+                                return Math.min(...values) - 2;
+                            },
+                            max: function(context) {
+                                const values = context.chart.data.datasets[1].data;
+                                return Math.max(...values) + 2;
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        },
+
+        // Создание графика объемов
+        createMeasurementsChart(labels, measurements) {
+            const ctx = document.getElementById('measurementsChart');
+            if (!ctx) return;
+
+            if (window.measurementsChart && typeof window.measurementsChart.destroy === 'function') {
+                window.measurementsChart.destroy();
+            }
+
+            window.measurementsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Грудь (см)',
+                        data: measurements.map(m => m.chest),
+                        borderColor: '#8B5CF6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Талия (см)',
+                        data: measurements.map(m => m.waist),
+                        borderColor: '#F59E0B',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Бедра (см)',
+                        data: measurements.map(m => m.hips),
+                        borderColor: '#EC4899',
+                        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Бицепс (см)',
+                        data: measurements.map(m => m.bicep),
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Бедро (см)',
+                        data: measurements.map(m => m.thigh),
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 2
+                    }, {
+                        label: 'Шея (см)',
+                        data: measurements.map(m => m.neck),
+                        borderColor: '#6B7280',
+                        backgroundColor: 'rgba(107, 114, 128, 0.1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 20,
+                            left: 20,
+                            right: 20
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            min: function(context) {
+                                const allValues = [];
+                                context.chart.data.datasets.forEach(dataset => {
+                                    allValues.push(...dataset.data);
+                                });
+                                return Math.min(...allValues) - 3;
+                            },
+                            max: function(context) {
+                                const allValues = [];
+                                context.chart.data.datasets.forEach(dataset => {
+                                    allValues.push(...dataset.data);
+                                });
+                                return Math.max(...allValues) + 3;
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        },
         
         // Загрузка измерений
         async loadMeasurements(athleteId) {
@@ -229,6 +604,11 @@ function athletesApp() {
                     console.log('Загруженные измерения:', result.measurements);
                     console.log('Актуальные данные спортсмена с сервера:', result.athlete);
                     this.measurements = result.measurements;
+                    
+                    // Инициализируем графики после загрузки измерений
+                    this.$nextTick(() => {
+                        this.initCharts();
+                    });
                     
                     // Обновляем данные спортсмена актуальными данными с сервера
                     if (result.athlete) {
@@ -1007,28 +1387,35 @@ function athletesApp() {
                 const response = await fetch(`/trainer/athletes/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
                 
                 const result = await response.json();
                 
-                if (response.ok) {
+                if (response.ok && result.success) {
                     // Показываем уведомление об успехе
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
                             title: 'Спортсмен удален',
-                            message: 'Спортсмен успешно удален'
+                            message: result.message || 'Спортсмен успешно удален'
                         }
                     }));
                     
                     // Удаляем из списка
                     this.athletes = this.athletes.filter(a => a.id !== id);
+                    this.totalAthletes = this.athletes.length;
                     
                     // Если удалили всех спортсменов на текущей странице, переходим на предыдущую
                     if (this.paginatedAthletes.length === 0 && this.currentPage > 1) {
                         this.currentPage--;
+                    }
+                    
+                    // Если это был текущий просматриваемый спортсмен, закрываем просмотр
+                    if (this.currentAthlete && this.currentAthlete.id === id) {
+                        this.showList();
                     }
                 } else {
                     // Показываем уведомление об ошибке
@@ -1707,7 +2094,7 @@ function athletesApp() {
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Тренировки
                             </button>
-                            <button @click="activeTab = 'progress'" 
+                            <button @click="activeTab = 'progress'; $nextTick(() => updateCharts())" 
                                     :class="activeTab === 'progress' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Прогресс
@@ -2012,12 +2399,67 @@ function athletesApp() {
                             </div>
                         </div>
 
-                        <div x-show="activeTab === 'progress'" class="text-center py-12 text-gray-500">
-                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">Прогресс</h3>
-                            <p class="mb-4">Здесь будут отображаться графики и аналитика прогресса</p>
+                        <div x-show="activeTab === 'progress'" class="space-y-6">
+                            <!-- Заголовок с количеством измерений -->
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Прогресс спортсмена</h3>
+                                <span class="text-sm text-gray-500" x-text="measurements.length + ' измерений'"></span>
+                            </div>
+
+                            <!-- Графики прогресса -->
+                            <div x-show="measurements.length === 0" class="text-center py-12 text-gray-500">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Нет измерений</h3>
+                                <p class="mb-4">Добавьте измерения для отслеживания прогресса</p>
+                                <button @click="activeTab = 'measurements'" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                    Добавить измерение
+                                </button>
+                            </div>
+
+                            <!-- Графики -->
+                            <div x-show="measurements.length > 0" class="space-y-6">
+                                <!-- График веса -->
+                                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Динамика веса</h4>
+                                    <div class="relative" style="height: 400px;">
+                                        <canvas id="weightChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- График процента жира и мышечной массы -->
+                                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Состав тела</h4>
+                                    <div class="relative" style="height: 400px;">
+                                        <canvas id="bodyCompositionChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- График объемов -->
+                                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Объемы тела</h4>
+                                    <div class="relative" style="height: 400px;">
+                                        <canvas id="measurementsChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- Сводная статистика -->
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                                        <div class="text-sm opacity-90">Начальный вес</div>
+                                        <div class="text-2xl font-bold" x-text="measurements.length > 0 ? formatNumber(measurements[measurements.length - 1].weight, ' кг') : '—'"></div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                                        <div class="text-sm opacity-90">Текущий вес</div>
+                                        <div class="text-2xl font-bold" x-text="measurements.length > 0 ? formatNumber(measurements[0].weight, ' кг') : '—'"></div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                                        <div class="text-sm opacity-90">Изменение веса</div>
+                                        <div class="text-2xl font-bold" x-text="getWeightChange()"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div x-show="activeTab === 'workouts'" class="space-y-4">

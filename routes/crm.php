@@ -12,6 +12,7 @@ use App\Http\Controllers\Crm\Trainer\NutritionController;
 use App\Http\Controllers\Crm\Trainer\ExerciseController;
 use App\Http\Controllers\Crm\Trainer\WorkoutTemplateController;
 use App\Http\Controllers\Crm\Trainer\CalendarController;
+use App\Http\Controllers\Crm\Trainer\SubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +58,9 @@ Route::middleware(["auth"])->group(function () {
         Route::post("/workouts", [WorkoutController::class, "store"])->name("crm.workouts.store");
         Route::put("/workouts/{id}", [WorkoutController::class, "update"])->name("crm.workouts.update");
         Route::delete("/workouts/{id}", [WorkoutController::class, "destroy"])->name("crm.workouts.destroy");
+        
+        // Подписка тренера
+        Route::get("/trainer/subscription", [SubscriptionController::class, "index"])->name("crm.trainer.subscription");
     });
     
     // Маршруты только для спортсменов

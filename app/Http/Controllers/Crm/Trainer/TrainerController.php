@@ -276,6 +276,14 @@ class TrainerController extends BaseController
         
         $athlete->delete();
         
+        // Возвращаем JSON для AJAX запросов
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Спортсмен успешно удален'
+            ]);
+        }
+        
         return redirect()->route('crm.trainer.athletes')->with('success', 'Спортсмен удален');
     }
     
