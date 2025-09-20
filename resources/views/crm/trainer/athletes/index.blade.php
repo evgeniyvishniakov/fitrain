@@ -42,6 +42,81 @@
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
+
+/* Адаптация прогресса для мобилки */
+@media (max-width: 767px) {
+    /* Уменьшенные отступы для мобилки */
+    .p-6 {
+        padding: 0.7rem !important;
+    }
+    
+    .progress-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+        margin: 0 -1rem !important;
+        padding: 0 1rem !important;
+    }
+    
+    .progress-controls {
+        width: 100% !important;
+        justify-content: space-between !important;
+        margin-bottom: 25px !important;
+    }
+    
+    .progress-select {
+        flex: 1 !important;
+        max-width: 150px !important;
+    }
+    
+    .progress-count {
+        font-size: 0.875rem !important;
+        white-space: nowrap !important;
+    }
+    
+    .chart-container {
+        height: 300px !important;
+        margin: 0 -3.4rem !important;
+        padding: 0 1.5rem !important;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        margin: 0 -1rem !important;
+        padding: 0 1rem !important;
+    }
+    
+    .stats-card {
+        padding: 1.5rem !important;
+        margin: 0 !important;
+    }
+    
+    .stats-title {
+        font-size: 0.875rem !important;
+    }
+    
+    .stats-value {
+        font-size: 1.75rem !important;
+    }
+    
+    /* Графики прогресса - расширяем контейнеры */
+    .progress-chart-container {
+        margin: 0 -1.5rem !important;
+        padding: 0 1.5rem !important;
+        gap: 1.5rem !important;
+    }
+    
+    .progress-chart-card {
+        padding: 1rem !important;
+        margin: 0 !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .progress-chart-card:last-child {
+        margin-bottom: 0 !important;
+    }
+}
 </style>
 
 <script>
@@ -54,6 +129,8 @@ function athletesApp() {
         activeTab: 'overview', // для вкладок в просмотре
         measurements: [], // Массив для хранения измерений
         currentMeasurement: null, // Текущее измерение для редактирования
+        selectedMeasurement: 'chest', // Выбранный объем для отображения
+        selectedPeriod: 'all', // Выбранный период для фильтрации
         search: '',
         sportLevel: '',
         currentPage: 1,
@@ -68,8 +145,6 @@ function athletesApp() {
         formPhone: '',
         formBirthDate: '',
         formGender: '',
-        formWeight: '',
-        formHeight: '',
         formSportLevel: '',
         formGoals: [],
         formHealthRestrictions: '',
@@ -121,8 +196,6 @@ function athletesApp() {
             this.formPhone = '';
             this.formBirthDate = '';
             this.formGender = '';
-            this.formWeight = '';
-            this.formHeight = '';
             this.formSportLevel = '';
             this.formGoals = [];
             this.formHealthRestrictions = '';
@@ -164,10 +237,6 @@ function athletesApp() {
             this.formBirthDate = this.currentAthlete.birth_date || '';
             this.formGender = this.currentAthlete.gender || '';
             
-            // Берем вес и рост из последнего измерения, если есть, иначе из профиля
-            const latestMeasurement = this.measurements.length > 0 ? this.measurements[0] : null;
-            this.formWeight = latestMeasurement?.weight || this.currentAthlete.weight || '';
-            this.formHeight = latestMeasurement?.height || this.currentAthlete.height || '';
             
             this.formSportLevel = this.currentAthlete.sport_level || '';
             this.formGoals = this.currentAthlete.goals || [];
@@ -270,6 +339,50 @@ function athletesApp() {
             }, 100);
         },
 
+        // Обновление графика объемов при изменении выбора
+        updateMeasurementsChart() {
+            if (this.measurements.length === 0) return;
+            
+            const filteredMeasurements = this.getFilteredMeasurements();
+            if (filteredMeasurements.length === 0) return;
+            
+            const sortedMeasurements = [...filteredMeasurements].reverse();
+            const labels = sortedMeasurements.map(m => {
+                const date = new Date(m.measurement_date);
+                return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+            });
+            
+            this.createMeasurementsChart(labels, sortedMeasurements);
+        },
+
+        // Получение отфильтрованных измерений по периоду
+        getFilteredMeasurements() {
+            if (this.measurements.length === 0) return [];
+            
+            if (this.selectedPeriod === 'all') {
+                return this.measurements;
+            }
+            
+            const months = parseInt(this.selectedPeriod);
+            const cutoffDate = new Date();
+            cutoffDate.setMonth(cutoffDate.getMonth() - months);
+            
+            return this.measurements.filter(measurement => {
+                const measurementDate = new Date(measurement.measurement_date);
+                return measurementDate >= cutoffDate;
+            });
+        },
+
+        // Подсчет количества отфильтрованных измерений
+        getFilteredMeasurementsCount() {
+            return this.getFilteredMeasurements().length;
+        },
+
+        // Обновление фильтра периодов
+        updatePeriodFilter() {
+            this.initCharts();
+        },
+
         // Инициализация графиков
         initCharts() {
             console.log('=== ИНИЦИАЛИЗАЦИЯ ГРАФИКОВ ===');
@@ -291,8 +404,17 @@ function athletesApp() {
             // Очищаем предыдущие графики
             this.destroyCharts();
 
+            // Получаем отфильтрованные данные по периоду
+            const filteredMeasurements = this.getFilteredMeasurements();
+            console.log('Отфильтрованные измерения:', filteredMeasurements);
+            
+            if (filteredMeasurements.length === 0) {
+                console.log('Нет измерений в выбранном периоде');
+                return;
+            }
+
             // Подготовка данных
-            const sortedMeasurements = [...this.measurements].reverse(); // Сортируем по дате
+            const sortedMeasurements = [...filteredMeasurements].reverse(); // Сортируем по дате
             const labels = sortedMeasurements.map(m => {
                 const date = new Date(m.measurement_date);
                 return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
@@ -499,54 +621,56 @@ function athletesApp() {
                 window.measurementsChart.destroy();
             }
 
+            // Получаем данные для выбранного измерения
+            const measurementConfig = {
+                chest: { label: 'Грудь (см)', color: '#8B5CF6', bgColor: 'rgba(139, 92, 246, 0.1)' },
+                waist: { label: 'Талия (см)', color: '#F59E0B', bgColor: 'rgba(245, 158, 11, 0.1)' },
+                hips: { label: 'Бедра (см)', color: '#EC4899', bgColor: 'rgba(236, 72, 153, 0.1)' },
+                bicep: { label: 'Бицепс (см)', color: '#10B981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+                thigh: { label: 'Бедро (см)', color: '#EF4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
+                neck: { label: 'Шея (см)', color: '#6B7280', bgColor: 'rgba(107, 114, 128, 0.1)' }
+            };
+
+            let datasets = [];
+
+            if (this.selectedMeasurement === 'all') {
+                // Показываем все объемы
+                datasets = Object.keys(measurementConfig).map(key => ({
+                    label: measurementConfig[key].label,
+                    data: measurements.map(m => m[key]),
+                    borderColor: measurementConfig[key].color,
+                    backgroundColor: measurementConfig[key].bgColor,
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4
+                }));
+            } else {
+                // Показываем только выбранный объем
+                const config = measurementConfig[this.selectedMeasurement];
+                datasets = [{
+                    label: config.label,
+                    data: measurements.map(m => m[this.selectedMeasurement]),
+                    borderColor: config.color,
+                    backgroundColor: config.bgColor,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }];
+            }
+
             window.measurementsChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Грудь (см)',
-                        data: measurements.map(m => m.chest),
-                        borderColor: '#8B5CF6',
-                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                        borderWidth: 2
-                    }, {
-                        label: 'Талия (см)',
-                        data: measurements.map(m => m.waist),
-                        borderColor: '#F59E0B',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        borderWidth: 2
-                    }, {
-                        label: 'Бедра (см)',
-                        data: measurements.map(m => m.hips),
-                        borderColor: '#EC4899',
-                        backgroundColor: 'rgba(236, 72, 153, 0.1)',
-                        borderWidth: 2
-                    }, {
-                        label: 'Бицепс (см)',
-                        data: measurements.map(m => m.bicep),
-                        borderColor: '#10B981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 2
-                    }, {
-                        label: 'Бедро (см)',
-                        data: measurements.map(m => m.thigh),
-                        borderColor: '#EF4444',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        borderWidth: 2
-                    }, {
-                        label: 'Шея (см)',
-                        data: measurements.map(m => m.neck),
-                        borderColor: '#6B7280',
-                        backgroundColor: 'rgba(107, 114, 128, 0.1)',
-                        borderWidth: 2
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'top'
+                            position: 'top',
+                            display: this.selectedMeasurement === 'all'
                         }
                     },
                     layout: {
@@ -834,8 +958,6 @@ function athletesApp() {
                 phone: this.formPhone,
                 birth_date: this.formBirthDate,
                 gender: this.formGender,
-                weight: this.formWeight,
-                height: this.formHeight,
                 sport_level: this.formSportLevel,
                 goals: this.formGoals,
                 health_restrictions: this.formHealthRestrictions
@@ -915,8 +1037,6 @@ function athletesApp() {
                     phone: this.formPhone,
                     birth_date: this.formBirthDate,
                     gender: this.formGender,
-                    weight: this.formWeight ? parseFloat(this.formWeight) : null,
-                    height: this.formHeight ? parseFloat(this.formHeight) : null,
                     sport_level: this.formSportLevel,
                     goals: this.formGoals,
                     is_active: this.formIsActive === '1',
@@ -1625,8 +1745,8 @@ function athletesApp() {
                                 <div class="flex items-center flex-wrap gap-4">
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
                                     <span x-show="athlete.age" class="text-sm text-gray-500" x-text="'Возраст: ' + athlete.age + ' лет'"></span>
-                                    <span x-show="athlete.weight" class="text-sm text-gray-500" x-text="'Вес: ' + formatNumber(athlete.weight, ' кг')"></span>
-                                    <span x-show="athlete.height" class="text-sm text-gray-500" x-text="'Рост: ' + formatNumber(athlete.height, ' см')"></span>
+                                    <span x-show="athlete.current_weight" class="text-sm text-gray-500" x-text="'Вес: ' + formatNumber(athlete.current_weight, ' кг')"></span>
+                                    <span x-show="athlete.current_height" class="text-sm text-gray-500" x-text="'Рост: ' + formatNumber(athlete.current_height, ' см')"></span>
                                 </div>
                             </div>
                         </div>
@@ -1677,8 +1797,8 @@ function athletesApp() {
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
                                     <div class="flex flex-wrap gap-2 text-sm text-gray-500 mt-1">
                                         <span x-show="athlete.age" x-text="'Возраст: ' + athlete.age + ' лет'"></span>
-                                        <span x-show="athlete.weight" x-text="'Вес: ' + formatNumber(athlete.weight, ' кг')"></span>
-                                        <span x-show="athlete.height" x-text="'Рост: ' + formatNumber(athlete.height, ' см')"></span>
+                                        <span x-show="athlete.current_weight" x-text="'Вес: ' + formatNumber(athlete.current_weight, ' кг')"></span>
+                                        <span x-show="athlete.current_height" x-text="'Рост: ' + formatNumber(athlete.current_height, ' см')"></span>
                                     </div>
                                 </div>
                             </div>
@@ -2047,14 +2167,16 @@ function athletesApp() {
                                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentAthlete?.name"></h2>
                                 <div class="flex gap-6 text-sm text-gray-500 mt-2">
                                     <span x-text="'Возраст: ' + (currentAthlete?.age || '—')"></span>
-                                    <span x-text="'Вес: ' + formatNumber(currentAthlete?.weight, ' кг')"></span>
-                                    <span x-text="'Рост: ' + formatNumber(currentAthlete?.height, ' см')"></span>
+                                    <span x-text="'Вес: ' + (measurements.length > 0 ? formatNumber(measurements[0].weight, ' кг') : (currentAthlete?.weight ? formatNumber(currentAthlete.weight, ' кг') : '—'))"></span>
+                                    <span x-text="'Рост: ' + (measurements.length > 0 ? formatNumber(measurements[0].height, ' см') : (currentAthlete?.height ? formatNumber(currentAthlete.height, ' см') : '—'))"></span>
                                 </div>
                             </div>
 
                             <!-- Быстрая статистика -->
                             <div class="text-right">
-                                <div class="text-3xl font-bold text-indigo-600" x-text="currentAthlete?.weight && currentAthlete?.height ? formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) : '—'"></div>
+                                <div class="text-3xl font-bold" 
+                                     :class="(measurements.length > 0 && measurements[0].weight && measurements[0].height) ? getBMICategory(measurements[0].weight / Math.pow(measurements[0].height/100, 2)).color : (currentAthlete?.weight && currentAthlete?.height ? getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).color : 'text-gray-500')"
+                                     x-text="(measurements.length > 0 && measurements[0].weight && measurements[0].height) ? formatNumber(measurements[0].weight / Math.pow(measurements[0].height/100, 2)) : (currentAthlete?.weight && currentAthlete?.height ? formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) : '—')"></div>
                                 <div class="text-sm text-gray-500 flex items-center justify-end gap-1">
                                     <span>ИМТ</span>
                                     <!-- Иконка знака вопроса с подсказкой -->
@@ -2072,7 +2194,7 @@ function athletesApp() {
                                                 <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span>Ожирение</span></div>
                                             </div>
                                             <div class="mt-2 pt-2 border-t border-gray-700 text-gray-300">
-                                                <div x-text="currentAthlete?.weight && currentAthlete?.height ? 'Ваш ИМТ: ' + formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) + ' (' + getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).text + ')' : 'ИМТ не рассчитан'"></div>
+                                                <div x-text="(measurements.length > 0 && measurements[0].weight && measurements[0].height) ? 'Ваш ИМТ: ' + formatNumber(measurements[0].weight / Math.pow(measurements[0].height/100, 2)) + ' (' + getBMICategory(measurements[0].weight / Math.pow(measurements[0].height/100, 2)).text + ')' : (currentAthlete?.weight && currentAthlete?.height ? 'Ваш ИМТ: ' + formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) + ' (' + getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).text + ')' : 'ИМТ не рассчитан')"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -2400,10 +2522,20 @@ function athletesApp() {
                         </div>
 
                         <div x-show="activeTab === 'progress'" class="space-y-6">
-                            <!-- Заголовок с количеством измерений -->
-                            <div class="flex items-center justify-between">
+                            <!-- Заголовок с фильтром периодов -->
+                            <div class="progress-header flex items-center justify-between mb-6">
                                 <h3 class="text-lg font-semibold text-gray-900">Прогресс спортсмена</h3>
-                                <span class="text-sm text-gray-500" x-text="measurements.length + ' измерений'"></span>
+                                <div class="progress-controls flex items-center gap-4">
+                                    <span class="text-sm font-medium text-gray-700">Период:</span>
+                                    <select x-model="selectedPeriod" @change="updatePeriodFilter()" class="progress-select px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="all">Все данные</option>
+                                        <option value="1">Последний месяц</option>
+                                        <option value="3">Последние 3 месяца</option>
+                                        <option value="6">Последние 6 месяцев</option>
+                                        <option value="12">Последний год</option>
+                                    </select>
+                                    <span class="progress-count text-sm text-gray-500" x-text="getFilteredMeasurementsCount() + ' измерений'"></span>
+                                </div>
                             </div>
 
                             <!-- Графики прогресса -->
@@ -2419,44 +2551,55 @@ function athletesApp() {
                             </div>
 
                             <!-- Графики -->
-                            <div x-show="measurements.length > 0" class="space-y-6">
+                            <div x-show="measurements.length > 0" class="progress-chart-container space-y-6">
                                 <!-- График веса -->
-                                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
                                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Динамика веса</h4>
-                                    <div class="relative" style="height: 400px;">
+                                    <div class="chart-container relative" style="height: 400px;">
                                         <canvas id="weightChart"></canvas>
                                     </div>
                                 </div>
 
                                 <!-- График процента жира и мышечной массы -->
-                                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
                                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Состав тела</h4>
-                                    <div class="relative" style="height: 400px;">
+                                    <div class="chart-container relative" style="height: 400px;">
                                         <canvas id="bodyCompositionChart"></canvas>
                                     </div>
                                 </div>
 
                                 <!-- График объемов -->
-                                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Объемы тела</h4>
-                                    <div class="relative" style="height: 400px;">
+                                <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h4 class="text-lg font-semibold text-gray-900">Объемы тела</h4>
+                                        <select x-model="selectedMeasurement" @change="updateMeasurementsChart()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                            <option value="all">Все</option>
+                                            <option value="chest">Грудь</option>
+                                            <option value="waist">Талия</option>
+                                            <option value="hips">Бедра</option>
+                                            <option value="bicep">Бицепс</option>
+                                            <option value="thigh">Бедро</option>
+                                            <option value="neck">Шея</option>
+                                        </select>
+                                    </div>
+                                    <div class="chart-container relative" style="height: 400px;">
                                         <canvas id="measurementsChart"></canvas>
                                     </div>
                                 </div>
 
                                 <!-- Сводная статистика -->
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
-                                        <div class="text-sm opacity-90">Начальный вес</div>
-                                        <div class="text-2xl font-bold" x-text="measurements.length > 0 ? formatNumber(measurements[measurements.length - 1].weight, ' кг') : '—'"></div>
+                                <div class="stats-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="stats-card bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                                        <div class="stats-title text-sm opacity-90">Начальный вес</div>
+                                        <div class="stats-value text-2xl font-bold" x-text="measurements.length > 0 ? formatNumber(measurements[measurements.length - 1].weight, ' кг') : '—'"></div>
                                     </div>
-                                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
-                                        <div class="text-sm opacity-90">Текущий вес</div>
-                                        <div class="text-2xl font-bold" x-text="measurements.length > 0 ? formatNumber(measurements[0].weight, ' кг') : '—'"></div>
+                                    <div class="stats-card bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                                        <div class="stats-title text-sm opacity-90">Текущий вес</div>
+                                        <div class="stats-value text-2xl font-bold" x-text="measurements.length > 0 ? formatNumber(measurements[0].weight, ' кг') : '—'"></div>
                                     </div>
-                                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
-                                        <div class="text-sm opacity-90">Изменение веса</div>
-                                        <div class="text-2xl font-bold" x-text="getWeightChange()"></div>
+                                    <div class="stats-card bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                                        <div class="stats-title text-sm opacity-90">Изменение веса</div>
+                                        <div class="stats-value text-2xl font-bold" x-text="getWeightChange()"></div>
                                     </div>
                                 </div>
                             </div>
@@ -2639,16 +2782,6 @@ function athletesApp() {
                 <!-- Правая колонка -->
                 <div class="form-column-right">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг)</label>
-                        <input type="number" step="0.1" x-model="formWeight"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
-                        <input type="number" step="0.1" x-model="formHeight"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
                         <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Выберите уровень</option>
@@ -2670,6 +2803,19 @@ function athletesApp() {
                             <option value="1">Активный</option>
                             <option value="0">Неактивный</option>
                         </select>
+                    </div>
+                    
+                    <!-- Информация о измерениях -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-medium text-blue-800">Измерения спортсмена</h4>
+                                <p class="text-sm text-blue-600 mt-1">После создания спортсмена добавьте первое измерение с весом, ростом и другими параметрами в разделе "Измерения".</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2762,16 +2908,6 @@ function athletesApp() {
                     <!-- Правая колонка -->
                     <div class="form-column-right">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг)</label>
-                            <input type="number" step="0.1" x-model="formWeight"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
-                            <input type="number" step="0.1" x-model="formHeight"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
                             <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="">Выберите уровень</option>
@@ -2793,6 +2929,19 @@ function athletesApp() {
                                 <option value="1">Активный</option>
                                 <option value="0">Неактивный</option>
                             </select>
+                        </div>
+                        
+                        <!-- Информация о измерениях -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <h4 class="text-sm font-medium text-blue-800">Измерения спортсмена</h4>
+                                    <p class="text-sm text-blue-600 mt-1">Вес и рост спортсмена отображаются из последнего измерения. Для изменения веса/роста добавьте новое измерение в разделе "Измерения".</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
