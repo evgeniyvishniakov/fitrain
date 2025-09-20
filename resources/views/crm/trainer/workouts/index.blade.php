@@ -21,6 +21,7 @@ function workoutApp() {
         formTitle: '',
         formAthleteId: '',
         formDate: '',
+        formTime: '',
         formDuration: 60,
         formDescription: '',
         formStatus: 'planned',
@@ -38,6 +39,7 @@ function workoutApp() {
             this.formDescription = '';
             this.formAthleteId = '';
             this.formDate = new Date().toISOString().split('T')[0];
+            this.formTime = '';
             this.formDuration = 60;
             this.formStatus = 'planned';
             
@@ -58,6 +60,12 @@ function workoutApp() {
                 this.formDate = date.toISOString().split('T')[0];
             } else {
                 this.formDate = new Date().toISOString().split('T')[0];
+            }
+            // Обрезаем секунды из времени (если есть)
+            if (this.currentWorkout.time) {
+                this.formTime = this.currentWorkout.time.substring(0, 5); // Берем только HH:MM
+            } else {
+                this.formTime = '';
             }
             this.formDuration = this.currentWorkout.duration || 60;
             this.formStatus = this.currentWorkout.status;
@@ -230,6 +238,7 @@ function workoutApp() {
                     description: this.formDescription,
                     athlete_id: this.formAthleteId,
                     date: this.formDate,
+                    time: this.formTime,
                     duration: this.formDuration,
                     status: this.formStatus,
                     exercises: exercises
@@ -626,6 +635,8 @@ function workoutApp() {
         }
     }
 }
+
+
 </script>
 
 @section("sidebar")
@@ -635,7 +646,7 @@ function workoutApp() {
         </svg>
         Дашборд
     </a>
-    <a href="#" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
@@ -690,7 +701,7 @@ function workoutApp() {
         </svg>
         Дашборд
     </a>
-    <a href="#" class="mobile-nav-link">
+    <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
@@ -850,9 +861,33 @@ function workoutApp() {
                 }
                 
                 .workout-date-field,
+                .workout-time-field,
                 .workout-duration-field {
                     flex: 1 !important;
                 }
+                
+                /* Стили для иконки часов */
+                .workout-time-field .relative {
+                    position: relative;
+                }
+                
+                .workout-time-field .absolute {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    bottom: 0;
+                    display: flex;
+                    align-items: center;
+                    padding-right: 0.75rem;
+                    pointer-events: none;
+                }
+                
+                .workout-time-field input[type="time"] {
+                    padding-right: 3rem !important;
+                }
+                
+                
+                
                 
                 @media (min-width: 1024px) {
                     .workout-date-duration-row {
@@ -968,6 +1003,11 @@ function workoutApp() {
                         <div class="text-sm text-gray-500">
                             <span class="font-medium text-gray-700">Дата:</span>
                             <span x-text="new Date(workout.date).toLocaleDateString('ru-RU')"></span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-500" x-show="workout.time">
+                            <span class="font-medium text-gray-700">Время:</span>
+                            <span x-text="workout.time ? workout.time.substring(0, 5) : ''"></span>
                         </div>
                         
                         <div class="text-sm text-gray-500" x-show="workout.duration">
@@ -1101,7 +1141,7 @@ function workoutApp() {
                         </div>
                     </div>
 
-                    <!-- Дата и продолжительность в одном ряду на десктопе -->
+                    <!-- Дата, время и продолжительность в одном ряду на десктопе -->
                     <div class="workout-date-duration-row">
                         <div class="workout-date-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -1111,6 +1151,24 @@ function workoutApp() {
                                    x-model="formDate"
                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                    required>
+                        </div>
+
+                        <div class="workout-time-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Время тренировки
+                            </label>
+                            <div class="relative">
+                                <input type="time" 
+                                       x-model="formTime"
+                                       id="timeInput"
+                                       step="3600"
+                                       class="block w-full px-3 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="workout-duration-field">
@@ -1248,6 +1306,13 @@ function workoutApp() {
                         <span class="text-sm font-medium text-gray-500">Дата</span>
                     </div>
                     <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('ru-RU') : ''"></p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-4" x-show="currentWorkout?.time">
+                    <div class="mb-2">
+                        <span class="text-sm font-medium text-gray-500">Время</span>
+                    </div>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.time ? currentWorkout.time.substring(0, 5) : ''"></p>
                 </div>
                 
                 <div class="bg-gray-50 rounded-xl p-4" x-show="currentWorkout?.duration">

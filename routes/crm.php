@@ -11,6 +11,7 @@ use App\Http\Controllers\Crm\Trainer\ProgressController;
 use App\Http\Controllers\Crm\Trainer\NutritionController;
 use App\Http\Controllers\Crm\Trainer\ExerciseController;
 use App\Http\Controllers\Crm\Trainer\WorkoutTemplateController;
+use App\Http\Controllers\Crm\Trainer\CalendarController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,9 +54,7 @@ Route::middleware(["auth"])->group(function () {
         Route::delete("/trainer/athletes/{athleteId}/measurements/{measurementId}", [TrainerController::class, "deleteMeasurement"])->name("crm.trainer.athlete.measurements.delete");
         
         // Тренировки только для тренеров (управление)
-        Route::get("/workouts/create", [WorkoutController::class, "create"])->name("crm.workouts.create");
         Route::post("/workouts", [WorkoutController::class, "store"])->name("crm.workouts.store");
-        Route::get("/workouts/{id}/edit", [WorkoutController::class, "edit"])->name("crm.workouts.edit");
         Route::put("/workouts/{id}", [WorkoutController::class, "update"])->name("crm.workouts.update");
         Route::delete("/workouts/{id}", [WorkoutController::class, "destroy"])->name("crm.workouts.destroy");
     });
@@ -142,9 +141,8 @@ Route::delete("/workout-templates/{id}", [WorkoutTemplateController::class, "des
         return redirect()->route('crm.dashboard.main');
     })->name("crm.profile");
     
-    Route::get("/calendar", function () {
-        return "Календарь";
-    })->name("crm.calendar");
+    Route::get("/calendar", [CalendarController::class, "index"])->name("crm.calendar");
+    Route::get("/calendar/workouts", [CalendarController::class, "getWorkoutsForDate"])->name("crm.calendar.workouts");
     
     Route::get("/settings", function () {
         return "Настройки";

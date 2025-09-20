@@ -28,15 +28,6 @@ class WorkoutController extends BaseController
         return view('crm.trainer.workouts.index', compact('workouts', 'athletes'));
     }
     
-    public function create()
-    {
-        if (!auth()->user()->hasRole('trainer')) {
-            abort(403, 'Доступ запрещен');
-        }
-        
-        $athletes = \App\Models\Shared\User::where('trainer_id', auth()->id())->get();
-        return view('crm.trainer.workouts.create', compact('athletes'));
-    }
     
     public function store(Request $request)
     {
@@ -49,6 +40,7 @@ class WorkoutController extends BaseController
             'description' => 'nullable|string',
             'athlete_id' => 'required|exists:users,id',
             'date' => 'required|date',
+            'time' => 'nullable|date_format:H:i',
             'duration' => 'nullable|integer|min:1',
             'status' => 'nullable|in:planned,completed,cancelled',
         ]);
@@ -59,6 +51,7 @@ class WorkoutController extends BaseController
             'trainer_id' => auth()->id(),
             'athlete_id' => $request->athlete_id,
             'date' => $request->date,
+            'time' => $request->time,
             'duration' => $request->duration,
             'status' => $request->status ?? 'planned',
             'is_counted' => false, // По умолчанию не засчитана
@@ -111,22 +104,6 @@ class WorkoutController extends BaseController
         return view('crm.trainer.workouts.show', compact('workout'));
     }
     
-    public function edit($id)
-    {
-        if (!auth()->user()->hasRole('trainer')) {
-            abort(403, 'Доступ запрещен');
-        }
-        
-        $workout = Workout::findOrFail($id);
-        
-        if ($workout->trainer_id !== auth()->id()) {
-            abort(403, 'Доступ запрещен');
-        }
-        
-        $athletes = \App\Models\Shared\User::where('trainer_id', auth()->id())->get();
-        
-        return view('crm.trainer.workouts.edit', compact('workout', 'athletes'));
-    }
     
     public function update(Request $request, $id)
     {
@@ -145,6 +122,7 @@ class WorkoutController extends BaseController
             'description' => 'nullable|string',
             'athlete_id' => 'required|exists:users,id',
             'date' => 'required|date',
+            'time' => 'nullable|date_format:H:i',
             'duration' => 'nullable|integer|min:1',
             'status' => 'required|in:planned,completed,cancelled',
         ]);
@@ -156,6 +134,7 @@ class WorkoutController extends BaseController
             'description' => $request->description,
             'athlete_id' => $request->athlete_id,
             'date' => $request->date,
+            'time' => $request->time,
             'duration' => $request->duration,
             'status' => $request->status,
         ]);

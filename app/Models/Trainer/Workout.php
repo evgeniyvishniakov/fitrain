@@ -15,6 +15,7 @@ class Workout extends BaseModel
         'trainer_id',
         'athlete_id',
         'date',
+        'time',
         'duration',
         'status',
         'is_counted',

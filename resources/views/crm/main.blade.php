@@ -144,15 +144,8 @@ function crmApp() {
         
         // Тренировки
         createWorkout() {
-            this.currentWorkout = {
-                title: '',
-                description: '',
-                athlete_id: '',
-                date: new Date().toISOString().split('T')[0],
-                duration: 60,
-                status: 'planned'
-            };
-            this.currentPage = 'workout-create';
+            // Перенаправляем на страницу тренировок, где есть SPA форма
+            window.location.href = '{{ route("crm.workouts.index") }}';
         },
         
         editWorkout(workout) {
