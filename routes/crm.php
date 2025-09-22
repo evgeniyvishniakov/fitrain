@@ -61,6 +61,14 @@ Route::middleware(["auth"])->group(function () {
         
         // Подписка тренера
         Route::get("/trainer/subscription", [SubscriptionController::class, "index"])->name("crm.trainer.subscription");
+        
+        // Настройки тренера
+        Route::get("/trainer/settings", [\App\Http\Controllers\Crm\Trainer\SettingsController::class, "index"])->name("crm.trainer.settings");
+        Route::post("/trainer/settings/profile", [\App\Http\Controllers\Crm\Trainer\SettingsController::class, "updateProfile"])->name("crm.trainer.settings.profile");
+        Route::post("/trainer/settings/password", [\App\Http\Controllers\Crm\Trainer\SettingsController::class, "updatePassword"])->name("crm.trainer.settings.password");
+        Route::post("/trainer/settings/security", [\App\Http\Controllers\Crm\Trainer\SettingsController::class, "updateSecurity"])->name("crm.trainer.settings.security");
+        Route::post("/trainer/settings/preferences", [\App\Http\Controllers\Crm\Trainer\SettingsController::class, "updatePreferences"])->name("crm.trainer.settings.preferences");
+        Route::post("/trainer/settings/notifications", [\App\Http\Controllers\Crm\Trainer\SettingsController::class, "updateNotifications"])->name("crm.trainer.settings.notifications");
     });
     
     // Маршруты только для спортсменов
