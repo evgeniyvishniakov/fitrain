@@ -4,36 +4,199 @@
 @section("page-title", "Тренировки")
 
 <script>
-// Функциональность для просмотра тренировок
-function athleteWorkoutApp() {
-    return {
-        currentView: 'list', // list, view
-        workouts: @json($workouts->items()),
-        currentWorkout: null,
-        
-        // Навигация
-        showList() {
-            this.currentView = 'list';
-            this.currentWorkout = null;
-        },
-        
-        showView(workoutId) {
-            this.currentView = 'view';
-            this.currentWorkout = this.workouts.find(w => w.id === workoutId);
-        },
-        
-        // Вспомогательные методы
-        getStatusLabel(status) {
-            const labels = {
-                'completed': 'Завершена',
-                'cancelled': 'Отменена',
-                'planned': 'Запланирована',
-                'in_progress': 'В процессе'
-            };
-            return labels[status] || 'Неизвестно';
+        // Функциональность для просмотра тренировок
+        function athleteWorkoutApp() {
+            return {
+                currentView: 'list', // list, view
+                workouts: @json($workouts->items()),
+                currentWorkout: null,
+                exerciseStatuses: {}, // Хранение статусов упражнений
+                exerciseComments: {}, // Хранение комментариев к упражнениям
+                saveTimeout: null, // Таймер для автосохранения
+                lastSaved: null, // Время последнего сохранения
+                workoutProgress: {}, // Прогресс для каждой тренировки
+
+                // Инициализация
+                init() {
+                    this.loadAllWorkoutProgress();
+                },
+
+                // Навигация
+                showList() {
+                    this.currentView = 'list';
+                    this.currentWorkout = null;
+                },
+
+                showView(workoutId) {
+                    this.currentView = 'view';
+                    this.currentWorkout = this.workouts.find(w => w.id === workoutId);
+                    
+                // Загружаем сохраненный прогресс при открытии тренировки
+                this.loadExerciseProgress(workoutId);
+            },
+
+            // Загрузка прогресса для всех тренировок
+            async loadAllWorkoutProgress() {
+                try {
+                    for (let workout of this.workouts) {
+                        const response = await fetch(`/athlete/exercise-progress?workout_id=${workout.id}`, {
+                            method: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        });
+
+                        if (response.ok) {
+                            const responseData = await response.json();
+                            
+                            // Проверяем формат ответа
+                            const progressData = responseData.success ? responseData.progress : responseData;
+                            
+                            this.workoutProgress[workout.id] = {};
+                            
+                            if (Array.isArray(progressData)) {
+                                progressData.forEach(progress => {
+                                    this.workoutProgress[workout.id][progress.exercise_id] = {
+                                        status: progress.status,
+                                        athlete_comment: progress.athlete_comment,
+                                        completed_at: progress.completed_at
+                                    };
+                                });
+                            } else if (progressData && typeof progressData === 'object') {
+                                // Если данные в формате объекта, преобразуем в массив
+                                Object.values(progressData).forEach(progress => {
+                                    this.workoutProgress[workout.id][progress.exercise_id] = {
+                                        status: progress.status,
+                                        athlete_comment: progress.athlete_comment,
+                                        completed_at: progress.completed_at
+                                    };
+                                });
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки прогресса для всех тренировок:', error);
+                }
+            },
+
+            // Получение статуса упражнения для списка тренировок
+            getExerciseStatusForList(workoutId, exerciseId) {
+                return this.workoutProgress[workoutId]?.[exerciseId]?.status || null;
+            },
+
+                // Управление статусом упражнений
+                setExerciseStatus(exerciseId, status) {
+                    this.exerciseStatuses[exerciseId] = status;
+                    
+                    // Если статус не "частично", очищаем комментарий
+                    if (status !== 'partial') {
+                        delete this.exerciseComments[exerciseId];
+                    }
+                    
+                    // Автосохранение через 2 секунды после изменения
+                    this.autoSave();
+                },
+
+                getExerciseStatus(exerciseId) {
+                    return this.exerciseStatuses[exerciseId] || null;
+                },
+
+                // Автосохранение прогресса
+                autoSave() {
+                    // Очищаем предыдущий таймер
+                    if (this.saveTimeout) {
+                        clearTimeout(this.saveTimeout);
+                    }
+                    
+                    // Устанавливаем новый таймер на 2 секунды
+                    this.saveTimeout = setTimeout(() => {
+                        this.saveExerciseProgress();
+                    }, 2000);
+                },
+
+                    // Обновление прогресса на сервере
+                    async saveExerciseProgress() {
+                    if (!this.currentWorkout) return;
+                    
+                    try {
+                        // Собираем все упражнения с изменениями
+                        const exercises = Object.keys(this.exerciseStatuses).map(exerciseId => ({
+                            exercise_id: parseInt(exerciseId),
+                            status: this.exerciseStatuses[exerciseId],
+                            athlete_comment: this.exerciseComments[exerciseId] || null
+                        }));
+
+                        // Показываем индикатор загрузки
+                        showInfo('Сохранение...', 'Сохраняем ваш прогресс...', 2000);
+
+                        const response = await fetch('/athlete/exercise-progress', {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                workout_id: this.currentWorkout.id,
+                                exercises: exercises
+                            })
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // Записываем время последнего сохранения
+                            this.lastSaved = new Date();
+                            
+                            // Показываем уведомление об успешном сохранении
+                            showSuccess('Прогресс сохранен!', `Сохранено ${exercises.length} упражнений с вашими комментариями`);
+                        } else {
+                            showError('Ошибка сохранения', result.message || 'Не удалось сохранить прогресс. Попробуйте еще раз.');
+                        }
+                    } catch (error) {
+                        console.error('Ошибка обновления:', error);
+                        showError('Ошибка соединения', 'Проверьте подключение к интернету и попробуйте еще раз.');
+                    }
+                },
+
+                // Загрузка сохраненного прогресса
+                async loadExerciseProgress(workoutId) {
+                    try {
+                        const response = await fetch(`/athlete/exercise-progress?workout_id=${workoutId}`, {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success && result.progress) {
+                            // Загружаем сохраненные статусы и комментарии
+                            Object.keys(result.progress).forEach(exerciseId => {
+                                const progress = result.progress[exerciseId];
+                                this.exerciseStatuses[exerciseId] = progress.status;
+                                if (progress.athlete_comment) {
+                                    this.exerciseComments[exerciseId] = progress.athlete_comment;
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Ошибка загрузки прогресса:', error);
+                    }
+                },
+
+
+                // Вспомогательные методы
+                getStatusLabel(status) {
+                    const labels = {
+                        'completed': 'Завершена',
+                        'cancelled': 'Отменена',
+                        'planned': 'Запланирована',
+                        'in_progress': 'В процессе'
+                    };
+                    return labels[status] || 'Неизвестно';
+                }
+            }
         }
-    }
-}
 </script>
 
 @section("sidebar")
@@ -117,7 +280,7 @@ function athleteWorkoutApp() {
 @endsection
 
 @section("content")
-<div x-data="athleteWorkoutApp()" class="space-y-6 fade-in-up">
+<div x-data="athleteWorkoutApp()" x-init="init()" class="space-y-6 fade-in-up">
 
     <!-- Статистика -->
     <div x-show="currentView === 'list'" class="stats-container">
@@ -213,7 +376,14 @@ function athleteWorkoutApp() {
                                     <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
                                     <div class="flex flex-wrap gap-1">
                                         @foreach(($workout->exercises ?? [])->take(3) as $exercise)
-                                            <span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full">{{ $exercise->name ?? 'Без названия' }}</span>
+                                            <span class="inline-block px-2 py-1 text-xs rounded-full font-medium"
+                                                  :class="{
+                                                      'bg-green-100 text-green-700': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->id }}) === 'completed',
+                                                      'bg-yellow-100 text-yellow-700': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->id }}) === 'partial',
+                                                      'bg-red-100 text-red-700': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->id }}) === 'not_done',
+                                                      'bg-gray-100 text-gray-600': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->id }}) === null
+                                                  }"
+                                                  :title="getExerciseStatusForList({{ $workout->id }}, {{ $exercise->id }}) === 'partial' && workoutProgress[{{ $workout->id }}]?.[{{ $exercise->id }}]?.athlete_comment ? 'Комментарий: ' + workoutProgress[{{ $workout->id }}][{{ $exercise->id }}].athlete_comment : ''">{{ $exercise->name ?? 'Без названия' }}</span>
                                         @endforeach
                                         @if(($workout->exercises ?? [])->count() > 3)
                                             <span class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">+ {{ ($workout->exercises ?? [])->count() - 3 }} еще</span>
@@ -285,10 +455,15 @@ function athleteWorkoutApp() {
     <!-- Просмотр тренировки -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Просмотр тренировки</h3>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-900">Просмотр тренировки</h3>
+                <div x-show="lastSaved" class="text-sm text-green-600 mt-1">
+                    💾 Последнее сохранение: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
+                </div>
+            </div>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                ← Назад к списку
             </button>
         </div>
         
@@ -419,7 +594,47 @@ function athleteWorkoutApp() {
                                 </div>
                             </div>
                             
-                            <!-- Комментарий к упражнению -->
+                            <!-- Статус выполнения упражнения -->
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-sm font-medium text-gray-700">Статус выполнения:</span>
+                                    <div class="flex space-x-2">
+                                        <button @click="setExerciseStatus(exercise.id, 'completed')" 
+                                                :class="getExerciseStatus(exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
+                                            ✅ Выполнено
+                                        </button>
+                                        <button @click="setExerciseStatus(exercise.id, 'partial')" 
+                                                :class="getExerciseStatus(exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
+                                            ⚠️ Частично
+                                        </button>
+                                        <button @click="setExerciseStatus(exercise.id, 'not_done')" 
+                                                :class="getExerciseStatus(exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
+                                            ❌ Не выполнено
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Поле комментария (появляется при выборе "Частично") -->
+                                <div x-show="getExerciseStatus(exercise.id) === 'partial'" class="mt-3">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Что именно выполнено:
+                                    </label>
+                                    <textarea 
+                                        x-model="exerciseComments[exercise.id]"
+                                        @blur="autoSave()"
+                                        placeholder="Например: Сделал только 2 подхода из 3, в последнем подходе 8 повторений вместо 10..."
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                        rows="3"></textarea>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        💡 Изменения сохраняются автоматически при потере фокуса
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Комментарий тренера к упражнению -->
                             <div x-show="exercise.notes || exercise.pivot?.notes" class="mt-4">
                                 <div class="bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-lg p-4">
                                     <div class="flex items-start">

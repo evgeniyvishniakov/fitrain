@@ -158,6 +158,8 @@ class TrainerController extends BaseController
                 'last_payment_date' => $athlete->last_payment_date,
                 'payment_history' => $paymentHistory
             ];
+            
+            
             return $athlete;
         });
         
@@ -528,5 +530,34 @@ class TrainerController extends BaseController
             'success' => true,
             'message' => 'Измерение успешно удалено'
         ]);
+    }
+    
+    /**
+     * Получение прогресса упражнений для тренера
+     */
+    public function getExerciseProgress(Request $request)
+    {
+        \Log::info('TrainerController::getExerciseProgress called', [
+            'workout_id' => $request->get('workout_id'),
+            'user_id' => auth()->id(),
+            'user_role' => auth()->user()?->roles?->first()?->name
+        ]);
+        
+        $workoutId = $request->get('workout_id');
+        
+        if (!$workoutId) {
+            return response()->json(['error' => 'workout_id is required'], 400);
+        }
+        
+        // Получаем прогресс упражнений для указанной тренировки
+        $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workoutId)->get();
+        
+        \Log::info('Exercise progress found', [
+            'workout_id' => $workoutId,
+            'count' => $progress->count(),
+            'data' => $progress->toArray()
+        ]);
+        
+        return response()->json($progress);
     }
 }

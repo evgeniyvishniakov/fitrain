@@ -229,9 +229,11 @@ function workoutApp() {
         
         // Сохранение
         async saveWorkout() {
+            console.log('💾 Начинаем сохранение тренировки...');
             try {
                 // Собираем данные упражнений
                 const exercises = this.collectExerciseData();
+                console.log('📋 Собрано упражнений:', exercises.length);
                 
                 const workoutData = {
                     title: this.formTitle,
@@ -258,6 +260,7 @@ function workoutApp() {
                 });
                 
                 const result = await response.json();
+                console.log('📡 Ответ сервера:', result);
                 
                 if (response.ok) {
                     // Показываем уведомление об успехе
@@ -274,8 +277,10 @@ function workoutApp() {
                     // Обновляем список тренировок
                     if (this.currentWorkout && this.currentWorkout.id) {
                         // Редактирование - обновляем существующую
+                        console.log('🔄 Обновляем существующую тренировку:', this.currentWorkout.id);
                         const index = this.workouts.findIndex(w => w.id === this.currentWorkout.id);
                         if (index !== -1) {
+                            console.log('📝 Найден индекс тренировки:', index);
                             // Обновляем упражнения с сохранением fields_config
                             const updatedExercises = exercises.map(exercise => {
                                 // Находим оригинальное упражнение для получения fields_config
@@ -306,6 +311,17 @@ function workoutApp() {
                                 ...workoutData,
                                 exercises: updatedExercises
                             };
+                            console.log('✅ Тренировка обновлена в массиве');
+                            
+                            // Обновляем currentWorkout если мы сейчас просматриваем эту тренировку
+                            if (this.currentWorkout && this.currentWorkout.id === this.workouts[index].id) {
+                                this.currentWorkout = this.workouts[index];
+                                console.log('🔄 Обновлен currentWorkout');
+                            }
+                            
+                            // Загружаем прогресс для всех тренировок
+                            console.log('🔄 После обновления тренировки загружаем прогресс...');
+                            await this.loadAllExerciseProgress();
                         }
                     } else {
                         // Создание - добавляем новую
@@ -404,6 +420,56 @@ function workoutApp() {
                 }));
             }
         },
+        
+        // Загрузка прогресса для всех тренировок
+        async loadAllExerciseProgress() {
+            console.log('🔄 Загружаем прогресс для всех тренировок...');
+            try {
+                for (let workout of this.workouts) {
+                    console.log(`📋 Тренировка ${workout.id}:`, workout.exercises?.length || 0, 'упражнений');
+                    if (workout.exercises) {
+                        for (let exercise of workout.exercises) {
+                            console.log(`🏋️ Упражнение ${exercise.exercise_id || exercise.id}:`, exercise.name);
+                            const response = await fetch(`/trainer/exercise-progress?workout_id=${workout.id}`, {
+                                method: 'GET',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                const progressData = await response.json();
+                                console.log('📊 Данные прогресса:', progressData);
+                                const exerciseId = exercise.exercise_id || exercise.id;
+                                const progress = progressData.find(p => p.exercise_id === exerciseId);
+                                
+                                if (progress) {
+                                    console.log('✅ Найден прогресс:', progress);
+                                    exercise.progress = {
+                                        status: progress.status,
+                                        athlete_comment: progress.athlete_comment,
+                                        completed_at: progress.completed_at
+                                    };
+                                } else {
+                                    console.log('❌ Прогресс не найден для упражнения', exerciseId);
+                                    exercise.progress = {
+                                        status: null,
+                                        athlete_comment: null,
+                                        completed_at: null
+                                    };
+                                }
+                            } else {
+                                console.error('❌ Ошибка загрузки прогресса:', response.status);
+                            }
+                        }
+                    }
+                }
+                console.log('✅ Прогресс загружен для всех тренировок');
+            } catch (error) {
+                console.error('❌ Ошибка загрузки прогресса:', error);
+            }
+        },
+        
         
         // Отображение выбранных упражнений в форме
         displaySelectedExercises(exercises) {
@@ -988,10 +1054,21 @@ function workoutApp() {
                         
                         <!-- Упражнения -->
                         <div x-show="(workout.exercises || []).length > 0" class="mt-3">
-                            <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
+                            <div class="mb-2">
+                                <div class="text-xs font-medium text-gray-500">Упражнения:</div>
+                            </div>
                             <div class="flex flex-wrap gap-1">
                                 <template x-for="(exercise, index) in (workout.exercises || []).slice(0, 3)" :key="`exercise-${workout.id}-${index}`">
-                                    <span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full" x-text="exercise.name || 'Без названия'"></span>
+                                    <span class="inline-block px-2 py-1 text-xs rounded-full font-medium"
+                                          :class="{
+                                              'bg-green-100 text-green-800': exercise.progress?.status === 'completed',
+                                              'bg-yellow-100 text-yellow-800': exercise.progress?.status === 'partial',
+                                              'bg-red-100 text-red-800': exercise.progress?.status === 'not_done',
+                                              'bg-gray-100 text-gray-600': !exercise.progress || !exercise.progress.status
+                                          }"
+                                          @click="console.log('🏋️ Упражнение:', exercise.name, 'Прогресс:', exercise.progress)"
+                                          :title="exercise.progress?.athlete_comment ? 'Комментарий: ' + exercise.progress.athlete_comment : ''"
+                                          x-text="exercise.name || 'Без названия'"></span>
                                 </template>
                                 <span x-show="(workout.exercises || []).length > 3" class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full" x-text="'+' + ((workout.exercises || []).length - 3) + ' еще'"></span>
                             </div>
@@ -1450,6 +1527,18 @@ function workoutApp() {
                                     <span class="text-sm font-semibold text-gray-700">Примечания</span>
                                 </div>
                                 <div class="text-sm text-gray-600 bg-gray-50 rounded-lg p-3" x-text="exercise.notes || exercise.pivot?.notes"></div>
+                            </div>
+                            
+                            <!-- Комментарий спортсмена -->
+                            <div x-show="exercise.progress?.status === 'partial' && exercise.progress?.athlete_comment" class="mt-3 pt-3 border-t border-yellow-200">
+                                <div class="flex items-center mb-2">
+                                    <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                    <span class="text-sm font-semibold text-yellow-700">Комментарий спортсмена</span>
+                                    <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">Частично выполнено</span>
+                                </div>
+                                <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="exercise.progress?.athlete_comment || ''"></div>
                             </div>
                         </div>
                     </template>

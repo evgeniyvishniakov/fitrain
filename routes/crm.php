@@ -91,6 +91,9 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/workout-templates/{id}/edit", [WorkoutTemplateController::class, "edit"])->name("crm.workout-templates.edit");
         Route::put("/workout-templates/{id}", [WorkoutTemplateController::class, "update"])->name("crm.workout-templates.update");
         Route::delete("/workout-templates/{id}", [WorkoutTemplateController::class, "destroy"])->name("crm.workout-templates.destroy");
+        
+        // Прогресс упражнений для тренеров
+        Route::get("/trainer/exercise-progress", [TrainerController::class, "getExerciseProgress"])->name("crm.trainer.exercise-progress.get");
     });
     
     // Маршруты только для спортсменов
@@ -103,6 +106,10 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/athlete/nutrition", [AthleteController::class, "nutrition"])->name("crm.athlete.nutrition");
         Route::get("/athlete/settings", [AthleteController::class, "settings"])->name("crm.athlete.settings");
         
+        // Прогресс упражнений
+        Route::patch("/athlete/exercise-progress", [AthleteController::class, "updateExerciseProgress"])->name("crm.athlete.exercise-progress.update");
+        Route::get("/athlete/exercise-progress", [AthleteController::class, "getExerciseProgress"])->name("crm.athlete.exercise-progress.get");
+        
     });
     
     // Маршруты для всех авторизованных
@@ -112,7 +119,7 @@ Route::middleware(["auth"])->group(function () {
         if (auth()->user()->hasRole('trainer')) {
             return app(\App\Http\Controllers\Crm\Trainer\WorkoutController::class)->index();
         } elseif (auth()->user()->hasRole('athlete')) {
-            return app(\App\Http\Controllers\Crm\Trainer\AthleteController::class)->workouts();
+            return app(\App\Http\Controllers\Crm\Athlete\AthleteController::class)->workouts();
         }
         abort(403, 'Доступ запрещен');
     })->name("crm.workouts.index");

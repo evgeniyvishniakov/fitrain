@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Crm\Athlete;
 
 use App\Http\Controllers\Crm\Shared\BaseController;
 use App\Models\Athlete\Athlete;
+use App\Models\Athlete\ExerciseProgress;
 use App\Models\Trainer\Workout;
 use App\Models\Trainer\Progress;
 use App\Models\Trainer\Nutrition;
@@ -125,5 +126,68 @@ class AthleteController extends BaseController
         }
         
         return view('crm.athlete.progress', compact('athlete', 'progressData', 'recentWorkouts', 'measurements'));
+    }
+
+    public function updateExerciseProgress(Request $request)
+    {
+        try {
+            $athlete = auth()->user();
+            
+            $request->validate([
+                'workout_id' => 'required|exists:workouts,id',
+                'exercises' => 'required|array'
+            ]);
+
+            foreach ($request->exercises as $exerciseData) {
+                ExerciseProgress::updateOrCreate(
+                    [
+                        'workout_id' => $request->workout_id,
+                        'exercise_id' => $exerciseData['exercise_id'],
+                        'athlete_id' => $athlete->id
+                    ],
+                    [
+                        'status' => $exerciseData['status'] ?? 'not_done',
+                        'athlete_comment' => $exerciseData['athlete_comment'] ?? null,
+                        'completed_at' => ($exerciseData['status'] ?? 'not_done') === 'completed' ? now() : null
+                    ]
+                );
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Прогресс обновлен'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getExerciseProgress(Request $request)
+    {
+        try {
+            $athlete = auth()->user();
+            
+            $request->validate([
+                'workout_id' => 'required|exists:workouts,id'
+            ]);
+
+            $progress = ExerciseProgress::where('workout_id', $request->workout_id)
+                ->where('athlete_id', $athlete->id)
+                ->get()
+                ->keyBy('exercise_id');
+
+            return response()->json([
+                'success' => true,
+                'progress' => $progress
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

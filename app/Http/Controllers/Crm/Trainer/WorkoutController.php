@@ -25,6 +25,36 @@ class WorkoutController extends BaseController
             $athletes = collect();
         }
         
+        // Добавляем прогресс упражнений для каждой тренировки
+        $workouts->getCollection()->transform(function ($workout) {
+            if ($workout->exercises) {
+                foreach ($workout->exercises as $exercise) {
+                    // Загружаем прогресс для этого упражнения
+                    $exerciseId = $exercise->exercise_id ?? $exercise->id;
+                    $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workout->id)
+                        ->where('exercise_id', $exerciseId)
+                        ->where('athlete_id', $workout->athlete_id)
+                        ->first();
+                    
+                    
+                    if ($progress) {
+                        $exercise->progress = [
+                            'status' => $progress->status,
+                            'athlete_comment' => $progress->athlete_comment,
+                            'completed_at' => $progress->completed_at
+                        ];
+                    } else {
+                        $exercise->progress = [
+                            'status' => null,
+                            'athlete_comment' => null,
+                            'completed_at' => null
+                        ];
+                    }
+                }
+            }
+            return $workout;
+        });
+        
         return view('crm.trainer.workouts.index', compact('workouts', 'athletes'));
     }
     
@@ -82,6 +112,31 @@ class WorkoutController extends BaseController
         $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
             $query->select('exercises.*', 'workout_exercise.*');
         }]);
+        
+        // Добавляем прогресс упражнений для новой тренировки
+        if ($workout->exercises) {
+            foreach ($workout->exercises as $exercise) {
+                $exerciseId = $exercise->exercise_id ?? $exercise->id;
+                $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workout->id)
+                    ->where('exercise_id', $exerciseId)
+                    ->where('athlete_id', $workout->athlete_id)
+                    ->first();
+                
+                if ($progress) {
+                    $exercise->progress = [
+                        'status' => $progress->status,
+                        'athlete_comment' => $progress->athlete_comment,
+                        'completed_at' => $progress->completed_at
+                    ];
+                } else {
+                    $exercise->progress = [
+                        'status' => null,
+                        'athlete_comment' => null,
+                        'completed_at' => null
+                    ];
+                }
+            }
+        }
         
         return response()->json([
             'success' => true,
@@ -192,6 +247,31 @@ class WorkoutController extends BaseController
         $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
             $query->select('exercises.*', 'workout_exercise.*');
         }]);
+        
+        // Добавляем прогресс упражнений для обновленной тренировки
+        if ($workout->exercises) {
+            foreach ($workout->exercises as $exercise) {
+                $exerciseId = $exercise->exercise_id ?? $exercise->id;
+                $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workout->id)
+                    ->where('exercise_id', $exerciseId)
+                    ->where('athlete_id', $workout->athlete_id)
+                    ->first();
+                
+                if ($progress) {
+                    $exercise->progress = [
+                        'status' => $progress->status,
+                        'athlete_comment' => $progress->athlete_comment,
+                        'completed_at' => $progress->completed_at
+                    ];
+                } else {
+                    $exercise->progress = [
+                        'status' => null,
+                        'athlete_comment' => null,
+                        'completed_at' => null
+                    ];
+                }
+            }
+        }
         
         return response()->json([
             'success' => true,
