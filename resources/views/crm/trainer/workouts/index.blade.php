@@ -8,10 +8,10 @@
 function workoutApp() {
     return {
         currentView: 'list', // list, create, edit, view
-        workouts: @json($workouts),
-        totalWorkouts: {{ $workouts->count() }},
-        currentPage: 1,
-        lastPage: 1,
+        workouts: @json($workouts->items()),
+        totalWorkouts: {{ $workouts->total() }},
+        currentPage: {{ $workouts->currentPage() }},
+        lastPage: {{ $workouts->lastPage() }},
         currentWorkout: null,
         search: '',
         status: '',

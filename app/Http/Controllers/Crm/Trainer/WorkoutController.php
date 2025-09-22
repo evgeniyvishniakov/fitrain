@@ -16,12 +16,12 @@ class WorkoutController extends BaseController
         if ($user->hasRole('trainer')) {
             $workouts = $user->trainerWorkouts()->with(['athlete', 'exercises' => function($query) {
                 $query->select('exercises.*', 'workout_exercise.*');
-            }])->latest()->get();
+            }])->latest()->paginate(10);
             $athletes = $user->athletes()->get();
         } else {
             $workouts = $user->workouts()->with(['trainer', 'exercises' => function($query) {
                 $query->select('exercises.*', 'workout_exercise.*');
-            }])->latest()->get();
+            }])->latest()->paginate(10);
             $athletes = collect();
         }
         
@@ -79,7 +79,9 @@ class WorkoutController extends BaseController
         }
         
         // Загружаем связанные данные для фронтенда
-        $workout->load(['athlete', 'trainer']);
+        $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
+            $query->select('exercises.*', 'workout_exercise.*');
+        }]);
         
         return response()->json([
             'success' => true,
@@ -187,7 +189,9 @@ class WorkoutController extends BaseController
         }
         
         // Загружаем связанные данные для фронтенда
-        $workout->load(['athlete', 'trainer']);
+        $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
+            $query->select('exercises.*', 'workout_exercise.*');
+        }]);
         
         return response()->json([
             'success' => true,

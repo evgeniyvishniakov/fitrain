@@ -93,7 +93,7 @@
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
-                    Дашборд
+                    Тренировки
                 </a>
                 <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,25 +101,25 @@
                     </svg>
                     Календарь
                 </a>
-                <a href="{{ route('crm.workouts.index') }}" class="mobile-nav-link {{ request()->routeIs('crm.workouts.*') ? 'active' : '' }}">
+                <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.workouts.index') : route('crm.athlete.workouts') }}" class="mobile-nav-link {{ request()->routeIs('crm.workouts.*') || request()->routeIs('crm.athlete.workouts*') ? 'active' : '' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                     Тренировки
                 </a>
-                <a href="{{ route("crm.exercises.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.exercises.*') ? 'active' : '' }}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                    </svg>
-                    Упражнения
-                </a>
-                <a href="{{ route("crm.workout-templates.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.workout-templates.*') ? 'active' : '' }}">
-                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Шаблоны тренировок
-                </a>
                 @if(auth()->user()->hasRole('trainer'))
+                    <a href="{{ route("crm.exercises.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.exercises.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        Упражнения
+                    </a>
+                    <a href="{{ route("crm.workout-templates.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.workout-templates.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Шаблоны тренировок
+                    </a>
                     <a href="{{ route('crm.trainer.athletes') }}" class="mobile-nav-link {{ request()->routeIs('crm.trainer.athletes*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -133,6 +133,12 @@
                         Подписка
                     </a>
                 @else
+                    <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link {{ request()->routeIs('crm.athlete.progress*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Прогресс
+                    </a>
                     <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.nutrition.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
@@ -165,7 +171,7 @@
     </div>
 
     <!-- Основной контент -->
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen pt-6">
         <!-- Боковая панель (планшет и десктоп) -->
         <div style="display: none;" class="desktop-sidebar">
             <div class="sidebar flex flex-col flex-grow backdrop-blur-md">
@@ -185,7 +191,7 @@
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                         </svg>
-                        Дашборд
+                        Тренировки
                     </a>
                     <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,25 +199,25 @@
                         </svg>
                         Календарь
                     </a>
-                    <a href="{{ route('crm.workouts.index') }}" class="nav-link {{ request()->routeIs('crm.workouts.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                    <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.workouts.index') : route('crm.athlete.workouts') }}" class="nav-link {{ request()->routeIs('crm.workouts.*') || request()->routeIs('crm.athlete.workouts*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                         Тренировки
                     </a>
-                    <a href="{{ route("crm.exercises.index") }}" class="nav-link {{ request()->routeIs('crm.exercises.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                        </svg>
-                        Упражнения
-                    </a>
-                    <a href="{{ route("crm.workout-templates.index") }}" class="nav-link {{ request()->routeIs('crm.workout-templates.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Шаблоны тренировок
-                    </a>
                     @if(auth()->user()->hasRole('trainer'))
+                        <a href="{{ route("crm.exercises.index") }}" class="nav-link {{ request()->routeIs('crm.exercises.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            Упражнения
+                        </a>
+                        <a href="{{ route("crm.workout-templates.index") }}" class="nav-link {{ request()->routeIs('crm.workout-templates.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Шаблоны тренировок
+                        </a>
                         <a href="{{ route('crm.trainer.athletes') }}" class="nav-link {{ request()->routeIs('crm.trainer.athletes*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -225,6 +231,12 @@
                             Подписка
                         </a>
                     @else
+                        <a href="{{ route("crm.athlete.progress") }}" class="nav-link {{ request()->routeIs('crm.athlete.progress*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            Прогресс
+                        </a>
                         <a href="{{ route("crm.nutrition.index") }}" class="nav-link {{ request()->routeIs('crm.nutrition.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
@@ -282,7 +294,7 @@
                     </button>
                     
                     <!-- Заголовок страницы -->
-                    <h1 class="page-title text-2xl font-bold">@yield("page-title", "Дашборд")</h1>
+                    <h1 class="page-title text-2xl font-bold">@yield("page-title", "Тренировки")</h1>
                     
                     <!-- Действия -->
                     <div class="flex items-center space-x-4">

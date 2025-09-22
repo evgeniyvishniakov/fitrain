@@ -28,12 +28,12 @@ class Workout extends BaseModel
     
     public function trainer(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Shared\User::class, 'trainer_id');
+        return $this->belongsTo(\App\Models\Trainer\Trainer::class, 'trainer_id');
     }
     
     public function athlete(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Shared\User::class, 'athlete_id');
+        return $this->belongsTo(\App\Models\Athlete\Athlete::class, 'athlete_id');
     }
     
     public function progress(): HasMany

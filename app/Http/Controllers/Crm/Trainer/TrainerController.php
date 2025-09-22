@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Crm\Trainer;
 
 use App\Http\Controllers\Crm\Shared\BaseController;
 use App\Models\Trainer\Trainer;
-use App\Models\Trainer\Athlete;
+use App\Models\Athlete\Athlete;
 use App\Models\Trainer\Workout;
 use Illuminate\Http\Request;
 
@@ -264,6 +264,67 @@ class TrainerController extends BaseController
         ]);
         
         return view('crm.trainer.athletes.show', compact('athlete'));
+    }
+    
+    public function editAthlete($id)
+    {
+        $athlete = Athlete::where('id', $id)
+            ->where('trainer_id', auth()->id())
+            ->firstOrFail();
+        
+        return view('crm.trainer.athletes.edit', compact('athlete'));
+    }
+    
+    public function updateAthlete(Request $request, $id)
+    {
+        // Логируем запрос для отладки
+        \Log::info('Update Athlete Request:', [
+            'id' => $id,
+            'user_id' => auth()->id(),
+            'user_role' => auth()->user()->roles->pluck('name'),
+            'data' => $request->all(),
+            'is_json' => $request->isJson(),
+            'expects_json' => $request->expectsJson(),
+            'content_type' => $request->header('Content-Type'),
+            'accept' => $request->header('Accept'),
+            'method' => $request->method(),
+            'url' => $request->url()
+        ]);
+        
+        $athlete = Athlete::where('id', $id)
+            ->where('trainer_id', auth()->id())
+            ->firstOrFail();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $athlete->id,
+            'phone' => 'nullable|string|max:20',
+            'age' => 'nullable|integer|min:1|max:120',
+            'weight' => 'nullable|numeric|min:0',
+            'height' => 'nullable|numeric|min:0',
+            'gender' => 'nullable|in:male,female,other',
+            'birth_date' => 'nullable|date',
+            'password' => 'nullable|string|min:8',
+        ]);
+        
+        $updateData = $request->all();
+        
+        // Если пароль указан, хешируем его
+        if ($request->filled('password')) {
+            $updateData['password'] = bcrypt($request->password);
+        } else {
+            // Убираем пароль из данных обновления, если он не указан
+            unset($updateData['password']);
+        }
+        
+        $athlete->update($updateData);
+        
+        // Всегда возвращаем JSON для AJAX запросов
+        return response()->json([
+            'success' => true,
+            'message' => 'Данные спортсмена обновлены',
+            'athlete' => $athlete->fresh()
+        ]);
     }
     
     public function removeAthlete($id)

@@ -21,6 +21,6 @@ class Nutrition extends BaseModel
     
     public function athlete(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Trainer\Athlete::class, 'athlete_id');
+        return $this->belongsTo(\App\Models\Athlete\Athlete::class, 'athlete_id');
     }
 }

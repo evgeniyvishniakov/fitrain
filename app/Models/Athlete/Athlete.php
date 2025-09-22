@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Trainer;
+namespace App\Models\Athlete;
 
 use App\Models\Shared\User;
 use App\Models\Trainer\Trainer;
@@ -56,6 +56,12 @@ class Athlete extends User
     public function workouts(): HasMany
     {
         return $this->hasMany(\App\Models\Trainer\Workout::class, 'athlete_id');
+    }
+    
+    // Алиас для обратной совместимости
+    public function athleteWorkouts(): HasMany
+    {
+        return $this->workouts();
     }
     
     public function progress(): HasMany

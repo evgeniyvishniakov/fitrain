@@ -1092,22 +1092,100 @@ function athletesApp() {
             }
         },
         
-        updateAthlete() {
-            // Здесь будет логика обновления спортсмена
-            console.log('Обновление спортсмена:', this.currentAthlete);
-            
-            // Показываем уведомление об успехе
-            window.dispatchEvent(new CustomEvent('show-notification', {
-                detail: {
-                    type: 'success',
-                    title: 'Успех',
-                    message: 'Данные спортсмена обновлены'
+        async updateAthlete() {
+            try {
+                // Показываем загрузку
+                this.isLoading = true;
+                
+                const requestData = {
+                    name: this.formName,
+                    email: this.formEmail,
+                    phone: this.formPhone,
+                    age: this.formAge,
+                    weight: this.formWeight,
+                    height: this.formHeight,
+                    gender: this.formGender,
+                    birth_date: this.formBirthDate,
+                    password: this.formPassword || null
+                };
+                
+                console.log('Отправляем данные:', requestData);
+                console.log('URL:', `/trainer/athletes/${this.currentAthlete.id}`);
+                
+                // Отправляем AJAX запрос
+                const response = await fetch(`/trainer/athletes/${this.currentAthlete.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('Статус ответа:', response.status);
+                console.log('Заголовки ответа:', response.headers);
+                
+                const responseText = await response.text();
+                console.log('Ответ сервера:', responseText);
+                
+                if (response.ok) {
+                    const responseData = JSON.parse(responseText);
+                    
+                    // Обновляем данные в текущем объекте
+                    this.currentAthlete.name = this.formName;
+                    this.currentAthlete.email = this.formEmail;
+                    this.currentAthlete.phone = this.formPhone;
+                    this.currentAthlete.age = this.formAge;
+                    this.currentAthlete.weight = this.formWeight;
+                    this.currentAthlete.height = this.formHeight;
+                    this.currentAthlete.gender = this.formGender;
+                    this.currentAthlete.birth_date = this.formBirthDate;
+                    
+                    // Обновляем данные в списке спортсменов
+                    const athleteIndex = this.athletes.findIndex(a => a.id === this.currentAthlete.id);
+                    if (athleteIndex !== -1) {
+                        this.athletes[athleteIndex].name = this.formName;
+                        this.athletes[athleteIndex].email = this.formEmail;
+                        this.athletes[athleteIndex].phone = this.formPhone;
+                        this.athletes[athleteIndex].age = this.formAge;
+                        this.athletes[athleteIndex].weight = this.formWeight;
+                        this.athletes[athleteIndex].height = this.formHeight;
+                        this.athletes[athleteIndex].gender = this.formGender;
+                        this.athletes[athleteIndex].birth_date = this.formBirthDate;
+                    }
+                    
+                    // Перезагружаем связанные данные (измерения, прогресс и т.д.)
+                    await this.loadMeasurements(this.currentAthlete.id);
+                    
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Успех',
+                            message: 'Данные спортсмена обновлены'
+                        }
+                    }));
+                    
+                    // Возвращаемся к карточке спортсмена
+                    this.currentView = 'view';
+                    this.activeTab = 'overview';
+                } else {
+                    console.error('Ошибка сервера:', response.status, responseText);
+                    throw new Error(`Ошибка сервера: ${response.status} - ${responseText}`);
                 }
-            }));
-            
-            // Возвращаемся к карточке спортсмена
-            this.currentView = 'view';
-            this.activeTab = 'overview';
+            } catch (error) {
+                console.error('Ошибка:', error);
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: `Не удалось обновить данные спортсмена: ${error.message}`
+                    }
+                }));
+            } finally {
+                this.isLoading = false;
+            }
         },
         
         // Сохранение измерений
