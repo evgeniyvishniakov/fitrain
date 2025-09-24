@@ -462,14 +462,14 @@
     <div x-show="currentView === 'view'" x-cloak x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h3 class="text-xl font-semibold text-gray-900">Просмотр тренировки</h3>
+                <h3 class="workout-view-title text-xl font-semibold text-gray-900">Просмотр<span class="hidden-mobile"> тренировки</span></h3>
                 <div x-show="lastSaved" class="text-sm text-green-600 mt-1">
                     💾 Последнее сохранение: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
                 </div>
             </div>
             <button @click="showList()" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                ← Назад к списку
+                    class="back-button px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                ← Назад<span class="hidden-mobile"> к списку</span>
             </button>
         </div>
         
@@ -602,9 +602,9 @@
                             
                             <!-- Статус выполнения упражнения -->
                             <div class="mt-4 pt-4 border-t border-gray-200">
-                                <div class="flex items-center justify-between mb-3">
+                                <div class="exercise-status-section flex items-center justify-between mb-3">
                                     <span class="text-sm font-medium text-gray-700">Статус выполнения:</span>
-                                    <div class="flex space-x-2">
+                                    <div class="exercise-status-buttons flex space-x-2">
                                         <button @click="setExerciseStatus(exercise.id, 'completed')" 
                                                 :class="getExerciseStatus(exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
@@ -725,6 +725,40 @@
     
     .p-6 {
         padding: 1rem;
+    }
+    
+    /* Скрытие лишнего текста на мобильной версии */
+    .workout-view-title .hidden-mobile {
+        display: none !important;
+    }
+    
+    .back-button .hidden-mobile {
+        display: none !important;
+    }
+    
+    .exercise-params-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+    
+    .exercise-status-buttons {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .exercise-status-buttons button {
+        font-size: 11px !important;
+        padding: 6px 8px !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+    
+    .exercise-status-section {
+        flex-direction: column !important;
+        align-items: flex-start !important;
     }
 }
 
