@@ -103,10 +103,22 @@ class AthleteController extends BaseController
         ]);
         
         try {
-            // Получаем измерения спортсмена
-            $measurements = $athlete->measurements()
+            // Получаем ВСЕ измерения спортсмена для клиентской пагинации
+            $allMeasurements = $athlete->measurements()
                 ->orderBy('measurement_date', 'desc')
-                ->paginate(10);
+                ->get();
+            
+            // Создаем объект пагинации для совместимости с шаблоном
+            $measurements = new \Illuminate\Pagination\LengthAwarePaginator(
+                $allMeasurements,
+                $allMeasurements->count(),
+                6, // itemsPerPage
+                1, // currentPage
+                [
+                    'path' => request()->url(),
+                    'pageName' => 'page',
+                ]
+            );
             
             // Получаем последние измерения для статистики
             $lastMeasurement = $athlete->measurements()
