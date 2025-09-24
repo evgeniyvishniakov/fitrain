@@ -3053,7 +3053,7 @@ function athletesApp() {
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Основная информация</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
                             <input type="date" x-model="measurementDate" required
@@ -3075,7 +3075,7 @@ function athletesApp() {
                 <!-- Состав тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Состав тела</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
                             <input type="number" step="0.1" x-model="measurementBodyFat" 
@@ -3097,7 +3097,7 @@ function athletesApp() {
                 <!-- Объемы тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Объемы тела (см)</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
                             <input type="number" step="0.1" x-model="measurementChest" 
@@ -3134,7 +3134,7 @@ function athletesApp() {
                 <!-- Медицинские показатели -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Пульс в покое (уд/мин)</label>
                             <input type="number" x-model="measurementHeartRate" 
@@ -3193,7 +3193,7 @@ function athletesApp() {
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Основная информация</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
                             <input type="date" x-model="measurementDate" required
@@ -3215,7 +3215,7 @@ function athletesApp() {
                 <!-- Состав тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Состав тела</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
                             <input type="number" step="0.1" x-model="measurementBodyFat" 
@@ -3237,7 +3237,7 @@ function athletesApp() {
                 <!-- Объемы тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Объемы тела (см)</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
                             <input type="number" step="0.1" x-model="measurementChest" 
@@ -3274,7 +3274,7 @@ function athletesApp() {
                 <!-- Медицинские показатели -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Пульс в покое (уд/мин)</label>
                             <input type="number" x-model="measurementHeartRate" 
