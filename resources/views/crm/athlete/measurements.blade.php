@@ -3,6 +3,7 @@
 @section("title", "Измерения")
 @section("page-title", "История измерений")
 
+
 <style>
 .pagination-container {
     text-align: center !important;
@@ -64,6 +65,7 @@
     margin: 0 auto !important;
     display: table !important;
 }
+
 </style>
 
 @section("content")
@@ -152,6 +154,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Основной контент -->
     <div class="space-y-6" x-data="measurementPagination()">
@@ -357,7 +360,7 @@
                 <div id="formMethod" style="display: none;"></div>
                 
                 <!-- Основные параметры -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-3 gap-4 mb-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения *</label>
                         <input type="date" name="measurement_date" id="measurement_date" required
@@ -375,17 +378,17 @@
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
                         <p class="text-xs text-gray-500 mt-1">Рост берется из вашего профиля</p>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Процент жира (%)</label>
-                        <input type="number" name="body_fat_percentage" id="body_fat_percentage" step="0.1"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
                 </div>
                 
                 <!-- Состав тела -->
                 <div class="mb-6">
                     <h4 class="text-md font-semibold text-gray-900 mb-4">Состав тела</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Процент жира (%)</label>
+                            <input type="number" name="body_fat_percentage" id="body_fat_percentage" step="0.1"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Мышечная масса (кг)</label>
                             <input type="number" name="muscle_mass" id="muscle_mass" step="0.1"
@@ -402,7 +405,7 @@
                 <!-- Медицинские показатели -->
                 <div class="mb-6">
                     <h4 class="text-md font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Пульс в покое (уд/мин)</label>
                             <input type="number" name="resting_heart_rate" id="resting_heart_rate" step="1"
@@ -424,7 +427,7 @@
                 <!-- Объемы тела -->
                 <div class="mb-6">
                     <h4 class="text-md font-semibold text-gray-900 mb-4">Объемы тела (см)</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
                             <input type="number" name="chest" id="chest" step="0.1"
@@ -667,7 +670,12 @@ function editMeasurement(measurementId) {
                 const notes = document.getElementById('notes');
                 
                 // Заполняем форму данными
-                if (measurementDate) measurementDate.value = measurement.measurement_date;
+                if (measurementDate) {
+                    // Создаем объект Date и корректируем на часовой пояс
+                    const date = new Date(measurement.measurement_date);
+                    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+                    measurementDate.value = localDate.toISOString().split('T')[0];
+                }
                 if (weight) weight.value = measurement.weight || '';
                 if (height) height.value = {{ auth()->user()->height ?? 'null' }};
                 if (bodyFatPercentage) bodyFatPercentage.value = measurement.body_fat_percentage || '';
@@ -800,7 +808,9 @@ document.addEventListener('DOMContentLoaded', function() {
     window.deleteMeasurement = deleteMeasurement;
     window.submitMeasurementForm = submitMeasurementForm;
     window.closeMeasurementModal = closeMeasurementModal;
+    
 });
+
 
 </script>
 @endsection

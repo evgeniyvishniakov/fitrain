@@ -290,21 +290,21 @@ class AthleteController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->get();
             
-            // Получаем последние тренировки (если метод существует)
+            // Получаем последние тренировки
             $recentWorkouts = collect();
-            if (method_exists($athlete, 'athleteWorkouts')) {
-                $recentWorkouts = $athlete->athleteWorkouts()
+            if (method_exists($athlete, 'workouts')) {
+                $recentWorkouts = $athlete->workouts()
+                    ->with('trainer')
                     ->orderBy('created_at', 'desc')
                     ->take(10)
                     ->get();
             }
             
-            // Получаем измерения (если метод существует)
+            // Получаем измерения, сортируем по measurement_date для корректного отображения графиков
             $measurements = collect();
             if (method_exists($athlete, 'measurements')) {
                 $measurements = $athlete->measurements()
-                    ->orderBy('created_at', 'desc')
-                    ->take(20)
+                    ->orderBy('measurement_date', 'asc') // Сортируем по дате измерения для графиков
                     ->get();
             }
             
