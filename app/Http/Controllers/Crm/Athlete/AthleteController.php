@@ -90,6 +90,184 @@ class AthleteController extends BaseController
         return view('crm.athlete.settings', compact('athlete'));
     }
 
+    public function measurements()
+    {
+        $athlete = auth()->user();
+        
+        // Отладочная информация
+        \Log::info('AthleteController::measurements', [
+            'athlete_id' => $athlete->id,
+            'athlete_name' => $athlete->name,
+            'athlete_email' => $athlete->email,
+            'measurements_count' => $athlete->measurements()->count()
+        ]);
+        
+        try {
+            // Получаем измерения спортсмена
+            $measurements = $athlete->measurements()
+                ->orderBy('measurement_date', 'desc')
+                ->paginate(10);
+            
+            // Получаем последние измерения для статистики
+            $lastMeasurement = $athlete->measurements()
+                ->orderBy('measurement_date', 'desc')
+                ->first();
+            
+            // Подсчитываем общее количество измерений
+            $totalMeasurements = $athlete->measurements()->count();
+            
+            \Log::info('Measurements loaded', [
+                'total_measurements' => $totalMeasurements,
+                'last_measurement_date' => $lastMeasurement ? $lastMeasurement->measurement_date : null,
+                'measurements_on_page' => $measurements->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error loading measurements', [
+                'error' => $e->getMessage(),
+                'athlete_id' => $athlete->id
+            ]);
+            
+            // Если есть ошибки, используем пустые данные
+            $measurements = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+            $lastMeasurement = null;
+            $totalMeasurements = 0;
+        }
+        
+        return view('crm.athlete.measurements', compact('athlete', 'measurements', 'lastMeasurement', 'totalMeasurements'));
+    }
+
+    /**
+     * Создание нового измерения спортсменом
+     */
+    public function storeMeasurement(Request $request)
+    {
+        $request->validate([
+            'measurement_date' => 'required|date',
+            'weight' => 'required|numeric|min:0',
+            'body_fat_percentage' => 'nullable|numeric|min:0|max:100',
+            'muscle_mass' => 'nullable|numeric|min:0',
+            'water_percentage' => 'nullable|numeric|min:0|max:100',
+            'resting_heart_rate' => 'nullable|numeric|min:0',
+            'blood_pressure_systolic' => 'nullable|numeric|min:0',
+            'blood_pressure_diastolic' => 'nullable|numeric|min:0',
+            'chest' => 'nullable|numeric|min:0',
+            'waist' => 'nullable|numeric|min:0',
+            'hips' => 'nullable|numeric|min:0',
+            'bicep' => 'nullable|numeric|min:0',
+            'thigh' => 'nullable|numeric|min:0',
+            'neck' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        $athlete = auth()->user();
+
+        try {
+            // Добавляем рост из профиля спортсмена
+            $data = $request->all();
+            $data['height'] = $athlete->height;
+            
+            $measurement = $athlete->measurements()->create($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Измерение успешно добавлено',
+                'measurement' => $measurement
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при добавлении измерения: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Получение конкретного измерения для редактирования
+     */
+    public function getMeasurement($id)
+    {
+        $athlete = auth()->user();
+        
+        $measurement = $athlete->measurements()->findOrFail($id);
+        
+        return response()->json([
+            'success' => true,
+            'measurement' => $measurement
+        ]);
+    }
+
+    /**
+     * Обновление измерения спортсменом
+     */
+    public function updateMeasurement(Request $request, $id)
+    {
+        $request->validate([
+            'measurement_date' => 'required|date',
+            'weight' => 'required|numeric|min:0',
+            'body_fat_percentage' => 'nullable|numeric|min:0|max:100',
+            'muscle_mass' => 'nullable|numeric|min:0',
+            'water_percentage' => 'nullable|numeric|min:0|max:100',
+            'resting_heart_rate' => 'nullable|numeric|min:0',
+            'blood_pressure_systolic' => 'nullable|numeric|min:0',
+            'blood_pressure_diastolic' => 'nullable|numeric|min:0',
+            'chest' => 'nullable|numeric|min:0',
+            'waist' => 'nullable|numeric|min:0',
+            'hips' => 'nullable|numeric|min:0',
+            'bicep' => 'nullable|numeric|min:0',
+            'thigh' => 'nullable|numeric|min:0',
+            'neck' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000'
+        ]);
+
+        $athlete = auth()->user();
+        
+        $measurement = $athlete->measurements()->findOrFail($id);
+
+        try {
+            // Добавляем рост из профиля спортсмена
+            $data = $request->all();
+            $data['height'] = $athlete->height;
+            
+            $measurement->update($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Измерение успешно обновлено',
+                'measurement' => $measurement
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при обновлении измерения: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Удаление измерения спортсменом
+     */
+    public function deleteMeasurement($id)
+    {
+        $athlete = auth()->user();
+        
+        $measurement = $athlete->measurements()->findOrFail($id);
+
+        try {
+            $measurement->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Измерение успешно удалено'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при удалении измерения: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function progress()
     {
         $athlete = auth()->user();

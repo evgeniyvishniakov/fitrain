@@ -146,6 +146,12 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Trainer\Workout::class, 'athlete_id');
     }
 
-
+    /**
+     * Измерения спортсмена
+     */
+    public function measurements()
+    {
+        return $this->hasMany(\App\Models\Trainer\AthleteMeasurement::class, 'athlete_id');
+    }
 
 }

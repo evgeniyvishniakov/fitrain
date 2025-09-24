@@ -103,6 +103,11 @@ Route::middleware(["auth"])->group(function () {
         Route::post("/athlete/profile", [AthleteController::class, "updateProfile"])->name("crm.athlete.profile.update");
         Route::get("/athlete/workouts", [AthleteController::class, "workouts"])->name("crm.athlete.workouts");
         Route::get("/athlete/progress", [AthleteController::class, "progress"])->name("crm.athlete.progress");
+        Route::get("/athlete/measurements", [AthleteController::class, "measurements"])->name("crm.athlete.measurements");
+        Route::post("/athlete/measurements", [AthleteController::class, "storeMeasurement"])->name("crm.athlete.measurements.store");
+        Route::get("/athlete/measurements/{id}", [AthleteController::class, "getMeasurement"])->name("crm.athlete.measurements.get");
+        Route::put("/athlete/measurements/{id}", [AthleteController::class, "updateMeasurement"])->name("crm.athlete.measurements.update");
+        Route::delete("/athlete/measurements/{id}", [AthleteController::class, "deleteMeasurement"])->name("crm.athlete.measurements.delete");
         Route::get("/athlete/nutrition", [AthleteController::class, "nutrition"])->name("crm.athlete.nutrition");
         Route::get("/athlete/settings", [AthleteController::class, "settings"])->name("crm.athlete.settings");
         

@@ -53,6 +53,185 @@
             background-color: #ffffff !important;
             color: #111827 !important;
         }
+        
+        /* Кнопка мобильного меню на светлой теме */
+        .theme-light .mobile-menu-btn {
+            color: #111827 !important;
+        }
+        
+        .theme-light .mobile-menu-btn:hover {
+            color: #374151 !important;
+        }
+        
+        /* Стили для статистических карточек */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .stat-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .stat-icon-blue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-icon-green {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .stat-icon-purple {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        .stat-icon-orange {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        .stat-svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: white;
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        /* Темная тема для статистических карточек */
+        .theme-dark .stat-card {
+            background: #374151;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .theme-dark .stat-label {
+            color: #9ca3af;
+        }
+        
+        .theme-dark .stat-value {
+            color: #f9fafb;
+        }
+        
+        /* Стили для карточек */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1.5rem 1.5rem 0 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Темная тема для карточек */
+        .theme-dark .card {
+            background: #374151;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .theme-dark .card-header {
+            border-bottom-color: #4b5563;
+        }
+        
+        .theme-dark .card-title {
+            color: #f9fafb;
+        }
+        
+        /* Стили для таблиц */
+        .theme-dark table {
+            color: #f9fafb;
+        }
+        
+        .theme-dark .bg-gray-50 {
+            background-color: #4b5563 !important;
+        }
+        
+        .theme-dark .text-gray-500 {
+            color: #9ca3af !important;
+        }
+        
+        .theme-dark .text-gray-900 {
+            color: #f9fafb !important;
+        }
+        
+        .theme-dark .divide-gray-200 {
+            border-color: #4b5563 !important;
+        }
+        
+        .theme-dark .hover\:bg-gray-50:hover {
+            background-color: #4b5563 !important;
+        }
+        
+        /* Стили для модального окна */
+        #measurementModal {
+            z-index: 9999;
+        }
+        
+        .theme-dark #measurementModal .bg-white {
+            background-color: #374151 !important;
+        }
+        
+        .theme-dark #measurementModal .text-gray-900 {
+            color: #f9fafb !important;
+        }
+        
+        .theme-dark #measurementModal .text-gray-500 {
+            color: #9ca3af !important;
+        }
+        
+        .theme-dark #measurementModal .border-gray-100 {
+            border-color: #4b5563 !important;
+        }
     </style>
     
     <script>
@@ -138,6 +317,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
                         Прогресс
+                    </a>
+                    <a href="{{ route("crm.athlete.measurements") }}" class="mobile-nav-link {{ request()->routeIs('crm.athlete.measurements*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Измерения
                     </a>
                     <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.nutrition.*') ? 'active' : '' }}">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,6 +421,12 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                             </svg>
                             Прогресс
+                        </a>
+                        <a href="{{ route("crm.athlete.measurements") }}" class="nav-link {{ request()->routeIs('crm.athlete.measurements*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Измерения
                         </a>
                         <a href="{{ route("crm.nutrition.index") }}" class="nav-link {{ request()->routeIs('crm.nutrition.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
