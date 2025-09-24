@@ -337,7 +337,7 @@
     <div x-show="currentView === 'list'" class="space-y-4">
         @if($workouts->count() > 0)
             @foreach($workouts as $workout)
-                <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
+                <div class="workout-card group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
                     <!-- Статус индикатор -->
                     <div class="absolute top-0 left-0 w-full h-1"
                          @if($workout->status === 'completed') style="background-color: #10b981;"
@@ -345,17 +345,40 @@
                          @else style="background-color: #3b82f6;" @endif>
                     </div>
 
-                    <div class="p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <!-- Аватарка тренера -->
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg text-white font-semibold text-lg">
-                                    <span>{{ ($workout->trainer->name ?? '?')[0] ?? '?' }}</span>
+                    <div class="workout-content p-6">
+                        <!-- Заголовок, мета-информация и статус -->
+                        <div class="workout-header flex items-center justify-between mb-4">
+                            <div class="workout-title-section flex items-center gap-4">
+                                <h3 class="workout-title text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{{ $workout->title }}</h3>
+                                <div class="workout-meta flex items-center gap-3 text-sm text-gray-600">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                        <span>{{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>{{ \Carbon\Carbon::parse($workout->time)->format('H:i') }}</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span>{{ $workout->duration }} мин</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                        <span>{{ $workout->trainer->name ?? 'Неизвестно' }}</span>
+                                    </div>
                                 </div>
                             </div>
-
                             <!-- Статус -->
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold
+                            <span class="workout-status px-3 py-1 rounded-full text-xs font-semibold
                                 @if($workout->status === 'completed') bg-green-100 text-green-800
                                 @elseif($workout->status === 'cancelled') bg-red-100 text-red-800
                                 @else bg-blue-100 text-blue-800 @endif">
@@ -365,9 +388,8 @@
                             </span>
                         </div>
 
-                        <!-- Заголовок и описание -->
+                        <!-- Описание -->
                         <div class="mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">{{ $workout->title }}</h3>
                             <p class="text-gray-600 text-sm line-clamp-2">{{ $workout->description ?? '' }}</p>
 
                             <!-- Упражнения -->
@@ -393,37 +415,9 @@
                             @endif
                         </div>
 
-                        <!-- Мета информация -->
-                        <div class="space-y-2 mb-4">
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
-                                <span>Дата: {{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
-                            </div>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span>Время: {{ \Carbon\Carbon::parse($workout->time)->format('H:i') }}</span>
-                            </div>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                </svg>
-                                <span>Длительность: {{ $workout->duration }} мин</span>
-                            </div>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                                <span>Тренер: {{ $workout->trainer->name ?? 'Неизвестно' }}</span>
-                            </div>
-                        </div>
-
                         <!-- Кнопки действий -->
-                        <div class="flex space-x-2">
-                            <button @click="showView({{ $workout->id }})" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <div class="flex justify-end">
+                            <button @click="showView({{ $workout->id }})" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 w-auto">
                                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M12 15h.01"/>
                                 </svg>
@@ -656,4 +650,65 @@
     </div>
 
 </div>
+
+<style>
+/* Мобильная адаптация для карточек тренировок */
+@media (max-width: 640px) {
+    .workout-card {
+        margin: 0 8px;
+    }
+    
+    .workout-content {
+        padding: 16px;
+    }
+    
+    .workout-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    
+    .workout-title-section {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    
+    .workout-title {
+        font-size: 1rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .workout-meta {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+    
+    .workout-status {
+        align-self: flex-end !important;
+        margin-top: 0 !important;
+    }
+}
+
+/* Десктопная версия остается как есть */
+@media (min-width: 641px) {
+    .workout-header {
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+    
+    .workout-title-section {
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+    
+    .workout-meta {
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+}
+</style>
 @endsection
