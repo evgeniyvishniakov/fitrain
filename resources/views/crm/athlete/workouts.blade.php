@@ -15,6 +15,7 @@
                 saveTimeout: null, // Таймер для автосохранения
                 lastSaved: null, // Время последнего сохранения
                 workoutProgress: {}, // Прогресс для каждой тренировки
+                isLoading: true, // Флаг загрузки
 
                 // Инициализация
                 init() {
@@ -76,6 +77,9 @@
                     }
                 } catch (error) {
                     console.error('Ошибка загрузки прогресса для всех тренировок:', error);
+                } finally {
+                    // Завершаем загрузку
+                    this.isLoading = false;
                 }
             },
 
@@ -282,8 +286,16 @@
 @section("content")
 <div x-data="athleteWorkoutApp()" x-init="init()" class="space-y-6 fade-in-up">
 
+    <!-- Индикатор загрузки -->
+    <div x-show="isLoading" x-cloak class="flex justify-center items-center py-12">
+        <div class="flex items-center space-x-3">
+            <div class="loading-spinner"></div>
+            <span class="text-gray-600">Загрузка тренировок...</span>
+        </div>
+    </div>
+
     <!-- Статистика -->
-    <div x-show="currentView === 'list'" class="stats-container">
+    <div x-show="currentView === 'list' && !isLoading" x-cloak class="stats-container">
         <div class="stat-card">
             <div class="stat-icon stat-icon-blue">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +346,7 @@
     </div>
 
     <!-- Список тренировок -->
-    <div x-show="currentView === 'list'" class="space-y-4">
+    <div x-show="currentView === 'list' && !isLoading" x-cloak class="space-y-4">
         @if($workouts->count() > 0)
             @foreach($workouts as $workout)
                 <div class="workout-card group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
@@ -363,7 +375,7 @@
                                         </svg>
                                         <span>{{ \Carbon\Carbon::parse($workout->time)->format('H:i') }}</span>
                                     </div>
-                                    <div class="flex items-center">
+                                    <div class="flex items-center duration-field">
                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
@@ -447,7 +459,7 @@
     </div>
 
     <!-- Просмотр тренировки -->
-    <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div x-show="currentView === 'view'" x-cloak x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h3 class="text-xl font-semibold text-gray-900">Просмотр тренировки</h3>
@@ -655,15 +667,15 @@
 /* Мобильная адаптация для карточек тренировок */
 @media (max-width: 640px) {
     .workout-card {
-        margin: 0 8px;
+        margin: 0;
     }
     
     .workout-content {
-        padding: 16px;
+        padding: 1rem;
     }
     
     .workout-header {
-        flex-direction: column !important;
+        flex-direction: row !important;
         align-items: flex-start !important;
         gap: 12px !important;
     }
@@ -672,24 +684,47 @@
         flex-direction: column !important;
         align-items: flex-start !important;
         gap: 8px !important;
-        width: 100% !important;
+        flex: 1 !important;
+        min-width: 0 !important;
     }
     
     .workout-title {
-        font-size: 1rem !important;
+        font-size: 1.125rem !important;
         margin-bottom: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        max-width: 200px !important;
     }
     
     .workout-meta {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 6px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
         width: 100% !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    .workout-meta span {
+        white-space: nowrap !important;
     }
     
     .workout-status {
-        align-self: flex-end !important;
+        align-self: flex-start !important;
         margin-top: 0 !important;
+        flex-shrink: 0 !important;
+        font-size: 10px !important;
+        padding: 4px 8px !important;
+    }
+    
+    
+    .workout-content button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .p-6 {
+        padding: 1rem;
     }
 }
 
@@ -708,6 +743,10 @@
     .workout-meta {
         flex-direction: row !important;
         align-items: center !important;
+    }
+    
+    .duration-field {
+        display: flex !important;
     }
 }
 </style>
