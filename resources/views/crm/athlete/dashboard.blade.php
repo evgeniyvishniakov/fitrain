@@ -487,9 +487,9 @@ function dashboardCalendar() {
 
     <!-- Последнее измерение и график веса -->
     @if($lastMeasurement)
-    <div class="flex gap-6 measurement-chart-row">
+    <div class="measurement-chart-row">
         <!-- Карточка последнего измерения -->
-        <div class="w-1/3">
+        <div class="measurement-detail-card">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 h-full">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-900">Последнее измерение</h3>
@@ -612,7 +612,7 @@ function dashboardCalendar() {
         </div>
 
         <!-- График веса -->
-        <div class="w-2/3">
+        <div class="chart-card">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 h-full">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Динамика веса</h3>
                 <div class="h-80">
@@ -626,6 +626,51 @@ function dashboardCalendar() {
 </div>
 
 <style>
+/* Мобильная адаптация карточек в 2 ряда */
+@media (max-width: 768px) {
+    .stats-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .stats-container .stat-card {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 1rem !important;
+    }
+    
+    .stats-container .stat-content {
+        margin-top: 0.5rem !important;
+    }
+    
+    .stats-container .stat-icon {
+        margin: 0 auto !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .flex.gap-6 {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem !important;
+    }
+    
+    .flex.gap-6 .stat-card {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 1rem !important;
+    }
+    
+    .flex.gap-6 .stat-content {
+        margin-top: 0.5rem !important;
+    }
+    
+    .flex.gap-6 .stat-icon {
+        margin: 0 auto !important;
+    }
+}
+
 .dashboard-bottom-section {
     display: flex !important;
     flex-direction: column !important; /* Mobile: колонка */
@@ -643,9 +688,51 @@ function dashboardCalendar() {
     flex: 1 !important; /* Равная ширина блоков */
 }
 
-/* Стили для блока измерений и графика - равная высота */
+/* Стили для блока измерений и графика */
 .measurement-chart-row {
+    display: flex !important;
+    gap: 1.5rem !important;
     align-items: stretch !important; /* Равная высота блоков */
+}
+
+.measurement-detail-card {
+    flex: 0 0 33.333333% !important; /* 1/3 ширины */
+}
+
+.chart-card {
+    flex: 0 0 66.666667% !important; /* 2/3 ширины */
+}
+
+/* Мобильная адаптация для секции измерения и графика */
+@media (max-width: 768px) {
+    .measurement-chart-row {
+        flex-direction: column !important; /* Мобильные: колонка */
+        gap: 1rem !important;
+    }
+    
+    .measurement-detail-card,
+    .chart-card {
+        flex: none !important; /* Убираем фиксированную ширину на мобильных */
+        width: 100% !important;
+    }
+    
+    .p-6 {
+        padding: 1rem !important;
+    }
+}
+
+/* Стили для темной темы - заголовки черного цвета */
+@media (prefers-color-scheme: dark) {
+    .text-base.font-semibold.text-gray-900,
+    .text-lg.font-semibold.text-gray-900 {
+        color: #000000 !important;
+    }
+}
+
+/* Альтернативный способ для темной темы через класс */
+.dark .text-base.font-semibold.text-gray-900,
+.dark .text-lg.font-semibold.text-gray-900 {
+    color: #000000 !important;
 }
 
 
