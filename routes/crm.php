@@ -102,8 +102,9 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/athlete/dashboard", [AthleteController::class, "dashboard"])->name("crm.athlete.dashboard");
         Route::get("/athlete/profile", [AthleteController::class, "profile"])->name("crm.athlete.profile");
         Route::post("/athlete/profile", [AthleteController::class, "updateProfile"])->name("crm.athlete.profile.update");
-        Route::get("/athlete/workouts", [AthleteController::class, "workouts"])->name("crm.athlete.workouts");
-        Route::get("/athlete/progress", [AthleteController::class, "progress"])->name("crm.athlete.progress");
+    Route::get("/athlete/workouts", [AthleteController::class, "workouts"])->name("crm.athlete.workouts");
+    Route::get("/athlete/workouts/api", [AthleteController::class, "getWorkouts"])->name("crm.athlete.workouts.api");
+    Route::get("/athlete/progress", [AthleteController::class, "progress"])->name("crm.athlete.progress");
         Route::get("/athlete/measurements", [AthleteController::class, "measurements"])->name("crm.athlete.measurements");
         Route::post("/athlete/measurements", [AthleteController::class, "storeMeasurement"])->name("crm.athlete.measurements.store");
         Route::get("/athlete/measurements/{id}", [AthleteController::class, "getMeasurement"])->name("crm.athlete.measurements.get");

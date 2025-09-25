@@ -32,7 +32,62 @@ class AthleteController extends BaseController
             ->orderBy('time', 'desc')
             ->first();
         
+        // Ближайшие тренировки (следующие 7 дней)
+        $upcomingWorkouts = $athlete->workouts()
+            ->with('trainer')
+            ->where('date', '>=', now()->toDateString())
+            ->where('date', '<=', now()->addDays(7)->toDateString())
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
+            ->get();
+        
+        // Все тренировки для календаря (расширенный диапазон)
+        $monthWorkouts = $athlete->workouts()
+            ->with('trainer')
+            ->where('date', '>=', now()->startOfMonth()->subMonth()->toDateString())
+            ->where('date', '<=', now()->endOfMonth()->addMonth()->toDateString())
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
+            ->get();
+        
+        
         $recentWorkouts = $athlete->workouts()->with('trainer')->latest()->take(5)->get();
+        
+        // Данные для карточек измерений
+        $lastMeasurement = $athlete->measurements()->latest('measurement_date')->first();
+        $currentWeight = $lastMeasurement ? $lastMeasurement->weight : $athlete->current_weight;
+        $totalMeasurements = $athlete->measurements()->count();
+        
+        // Рассчитываем ИМТ из последнего измерения
+        $bmi = null;
+        $bmiCategory = null;
+        $bmiColor = null;
+        
+        if ($lastMeasurement && $lastMeasurement->weight && $athlete->current_height) {
+            $heightInMeters = $athlete->current_height / 100;
+            $bmi = round($lastMeasurement->weight / ($heightInMeters * $heightInMeters), 1);
+        } elseif ($athlete->current_weight && $athlete->current_height) {
+            $heightInMeters = $athlete->current_height / 100;
+            $bmi = round($athlete->current_weight / ($heightInMeters * $heightInMeters), 1);
+        }
+        
+        // Определяем категорию и цвет ИМТ
+        if ($bmi) {
+            if ($bmi < 18.5) {
+                $bmiCategory = 'Недостаточный вес';
+                $bmiColor = 'blue';
+            } elseif ($bmi < 25) {
+                $bmiCategory = 'Нормальный вес';
+                $bmiColor = 'green';
+            } elseif ($bmi < 30) {
+                $bmiCategory = 'Избыточный вес';
+                $bmiColor = 'yellow';
+            } else {
+                $bmiCategory = 'Ожирение';
+                $bmiColor = 'red';
+            }
+        }
+        
         
         return view('crm.athlete.dashboard', compact(
             'athlete', 
@@ -40,8 +95,45 @@ class AthleteController extends BaseController
             'plannedWorkouts', 
             'completedWorkouts', 
             'lastOrNextWorkout', 
-            'recentWorkouts'
+            'upcomingWorkouts', 
+            'monthWorkouts', 
+            'recentWorkouts', 
+            'currentWeight', 
+            'bmi', 
+            'bmiCategory', 
+            'bmiColor', 
+            'totalMeasurements', 
+            'lastMeasurement'
         ));
+    }
+    
+    public function getWorkouts(Request $request)
+    {
+        $athlete = auth()->user();
+        
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        $workouts = $athlete->workouts()
+            ->with('trainer')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'workouts' => $workouts->map(function($workout) {
+                return [
+                    'id' => $workout->id,
+                    'title' => $workout->title,
+                    'date' => $workout->date->format('Y-m-d'),
+                    'time' => $workout->time,
+                    'status' => $workout->status,
+                    'trainer_name' => $workout->trainer->name ?? 'Тренер'
+                ];
+            })
+        ]);
     }
     
     public function profile()

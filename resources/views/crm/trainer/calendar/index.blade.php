@@ -26,9 +26,8 @@ function calendarApp() {
         },
         
         getYesterdayDate() {
-            const date = new Date(this.serverToday);
-            date.setDate(date.getDate() - 1);
-            return date.toISOString().split('T')[0];
+            // Используем серверную дату напрямую без создания Date объекта
+            return this.serverToday;
         },
         
         
@@ -44,8 +43,8 @@ function calendarApp() {
             
             // Показываем только дни текущего месяца
             for (let day = 1; day <= lastDay.getDate(); day++) {
-                const dayDate = new Date(year, month, day);
-                const dayString = dayDate.toISOString().split('T')[0];
+                // Используем форматирование без создания Date объекта для избежания проблем с часовыми поясами
+                const dayString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const workouts = this.workoutsByDay[dayString] || [];
                 
                 
@@ -78,7 +77,7 @@ function calendarApp() {
         
         goToToday() {
             // Используем серверную дату вместо клиентской
-            window.location.href = '{{ route("crm.calendar") }}?date=' + new Date().toISOString().split('T')[0];
+            window.location.href = '{{ route("crm.calendar") }}?date=' + this.serverToday;
         },
         
         // Загрузка тренировок
