@@ -59,7 +59,42 @@ class TrainerController extends BaseController
         $workouts = $trainer->trainerWorkouts()->count();
         $recentWorkouts = $trainer->trainerWorkouts()->with('athlete')->latest()->take(5)->get();
         
-        return view('crm.trainer.dashboard', compact('trainer', 'athletes', 'workouts', 'recentWorkouts'));
+        // Данные для календаря (берем тренировки за последние 3 месяца)
+        $startDate = now()->subMonths(3)->format('Y-m-d');
+        $endDate = now()->addMonths(3)->format('Y-m-d');
+        
+        $monthWorkouts = $trainer->trainerWorkouts()
+            ->whereBetween('date', [$startDate, $endDate])
+            ->with('athlete:id,name')
+            ->select('id', 'title', 'date', 'time', 'status', 'athlete_id')
+            ->get()
+            ->map(function($workout) {
+                return [
+                    'id' => $workout->id,
+                    'title' => $workout->title,
+                    'date' => $workout->date->format('Y-m-d'),
+                    'time' => $workout->time,
+                    'status' => $workout->status,
+                    'athlete_name' => $workout->athlete ? $workout->athlete->name : 'Неизвестно'
+                ];
+            });
+        
+        // Ближайшие тренировки
+        $upcomingWorkouts = $trainer->trainerWorkouts()
+            ->where('date', '>=', now()->format('Y-m-d'))
+            ->orderBy('date')
+            ->orderBy('time')
+            ->take(10)
+            ->get();
+        
+        return view('crm.trainer.dashboard', compact(
+            'trainer', 
+            'athletes', 
+            'workouts', 
+            'recentWorkouts',
+            'monthWorkouts',
+            'upcomingWorkouts'
+        ));
     }
     
     public function profile()
