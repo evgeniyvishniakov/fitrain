@@ -53,7 +53,9 @@ class AthleteController extends BaseController
         try {
             // Получаем тренировки спортсмена с тренером и упражнениями
             $workouts = $athlete->workouts()
-                ->with(['trainer', 'exercises'])
+                ->with(['trainer', 'exercises' => function($query) {
+                    $query->select('exercises.*', 'workout_exercise.*');
+                }])
                 ->orderBy('date', 'desc')
                 ->orderBy('time', 'desc')
                 ->paginate(10);
@@ -338,6 +340,7 @@ class AthleteController extends BaseController
                     [
                         'status' => $exerciseData['status'] ?? 'not_done',
                         'athlete_comment' => $exerciseData['athlete_comment'] ?? null,
+                        'sets_data' => $exerciseData['sets_data'] ?? null,
                         'completed_at' => ($exerciseData['status'] ?? 'not_done') === 'completed' ? now() : null
                     ]
                 );

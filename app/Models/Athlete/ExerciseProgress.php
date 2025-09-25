@@ -18,11 +18,13 @@ class ExerciseProgress extends BaseModel
         'athlete_id',
         'status',
         'athlete_comment',
+        'sets_data',
         'completed_at'
     ];
 
     protected $casts = [
         'completed_at' => 'datetime',
+        'sets_data' => 'array',
     ];
 
     public function workout(): BelongsTo
