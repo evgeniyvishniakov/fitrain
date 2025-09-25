@@ -104,7 +104,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Всего тренировок</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $recentWorkouts->count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $recentWorkouts ? $recentWorkouts->count() : 0 }}</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +118,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Записей прогресса</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $progressData->count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $progressData ? $progressData->count() : 0 }}</p>
                 </div>
                 <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600">Измерений</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $measurements->count() }}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $measurements ? $measurements->count() : 0 }}</p>
                 </div>
                 <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +147,7 @@
                 <div>
                     <p class="text-sm font-medium text-gray-600">Последняя тренировка</p>
                     <p class="text-lg font-bold text-gray-900">
-                        @if($recentWorkouts->count() > 0)
+                        @if($recentWorkouts && $recentWorkouts->count() > 0)
                             {{ $recentWorkouts->first()->created_at->format('d.m.Y') }}
                         @else
                             Нет данных
@@ -197,7 +197,7 @@
                 <!-- График веса -->
                 <div id="weightChartContainer" class="bg-white rounded-lg p-4 border border-gray-200">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Динамика веса (кг)</h4>
-                    <div class="relative h-64">
+                    <div class="relative h-64 cursor-pointer" onclick="openChartModal('weight', 'Динамика веса (кг)')">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </div>
@@ -205,7 +205,7 @@
                 <!-- График ИМТ -->
                 <div id="bmiChartContainer" class="bg-white rounded-lg p-4 border border-gray-200">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Динамика ИМТ</h4>
-                    <div class="relative h-64">
+                    <div class="relative h-64 cursor-pointer" onclick="openChartModal('bmi', 'Динамика ИМТ')">
                         <canvas id="bmiChart"></canvas>
                     </div>
                 </div>
@@ -213,7 +213,7 @@
                 <!-- График процента жира -->
                 <div id="bodyFatChartContainer" class="bg-white rounded-lg p-4 border border-gray-200">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Процент жира (%)</h4>
-                    <div class="relative h-64">
+                    <div class="relative h-64 cursor-pointer" onclick="openChartModal('bodyFat', 'Процент жира (%)')">
                         <canvas id="bodyFatChart"></canvas>
                     </div>
                 </div>
@@ -221,7 +221,7 @@
                 <!-- График мышечной массы -->
                 <div id="muscleMassChartContainer" class="bg-white rounded-lg p-4 border border-gray-200">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Мышечная масса (кг)</h4>
-                    <div class="relative h-64">
+                    <div class="relative h-64 cursor-pointer" onclick="openChartModal('muscleMass', 'Мышечная масса (кг)')">
                         <canvas id="muscleMassChart"></canvas>
                     </div>
                 </div>
@@ -240,7 +240,7 @@
                             <option value="neck">Шея</option>
                         </select>
                     </div>
-                    <div class="relative h-96">
+                    <div class="relative h-96 cursor-pointer" onclick="openChartModal('volumes', 'Объемы тела (см)')">
                         <canvas id="bodyVolumesChart"></canvas>
                     </div>
                 </div>
@@ -248,6 +248,29 @@
         </div>
     </div>
 
+    <!-- Модальное окно для увеличения графиков -->
+    <div id="chartModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                <!-- Заголовок модального окна -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 id="modalTitle" class="text-2xl font-bold text-gray-900">График</h3>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    </button>
+    </div>
+
+                <!-- Содержимое модального окна -->
+        <div class="p-6">
+                    <div class="relative h-[60vh]">
+                        <canvas id="modalChart"></canvas>
+                        </div>
+                </div>
+                </div>
+        </div>
+    </div>
 
 </div>
 
@@ -259,29 +282,126 @@ document.addEventListener('DOMContentLoaded', function() {
         initCharts();
         setupChartFilters();
     }, 100);
+    
+    // Настройка модального окна
+    setupModal();
 });
+
+
+// Настройка модального окна
+function setupModal() {
+    const modal = document.getElementById('chartModal');
+    const closeBtn = document.getElementById('closeModal');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeChartModal);
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeChartModal();
+            }
+        });
+    }
+    
+    // Закрытие по Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeChartModal();
+        }
+    });
+}
+
+// Открытие модального окна с графиком
+function openChartModal(chartType, title) {
+    const modal = document.getElementById('chartModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalCanvas = document.getElementById('modalChart');
+    
+    if (!modal || !modalTitle || !modalCanvas) {
+        return;
+    }
+    
+    modalTitle.textContent = title;
+    modal.classList.remove('hidden');
+    createModalChart(chartType);
+}
+
+// Закрытие модального окна
+function closeChartModal() {
+    const modal = document.getElementById('chartModal');
+    const modalCanvas = document.getElementById('modalChart');
+    
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    
+    // Уничтожаем график в модальном окне
+    if (window.modalChart && typeof window.modalChart.destroy === 'function') {
+        window.modalChart.destroy();
+        window.modalChart = null;
+    }
+}
+
+// Создание графика в модальном окне
+function createModalChart(chartType) {
+    const ctx = document.getElementById('modalChart');
+    if (!ctx) return;
+    
+    if (window.modalChart && typeof window.modalChart.destroy === 'function') {
+        window.modalChart.destroy();
+    }
+    
+    let sourceChart = null;
+    switch (chartType) {
+        case 'weight':
+            sourceChart = window.weightChart;
+            break;
+        case 'bmi':
+            sourceChart = window.bmiChart;
+            break;
+        case 'bodyFat':
+            sourceChart = window.bodyFatChart;
+            break;
+        case 'muscleMass':
+            sourceChart = window.muscleMassChart;
+            break;
+        case 'volumes':
+            sourceChart = window.bodyVolumesChart;
+            break;
+    }
+    
+    if (!sourceChart) return;
+    
+    const chartConfig = {
+        type: sourceChart.config.type,
+        data: sourceChart.config.data,
+        options: {
+            ...sourceChart.config.options,
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    };
+    
+    window.modalChart = new Chart(ctx, chartConfig);
+}
 
 // Функция для инициализации графиков
 function initCharts() {
-    console.log('=== ИНИЦИАЛИЗАЦИЯ ГРАФИКОВ ===');
     
     // Получаем данные измерений
-    const measurements = @json($measurements->all());
+    const measurements = @json($measurements ? $measurements->all() : []);
     
-    console.log('Количество измерений:', measurements.length);
-    console.log('Измерения:', measurements);
     
     if (measurements.length === 0) {
-        console.log('Нет измерений, пропускаем создание графиков');
         return;
     }
     
     // Проверяем, что Chart.js загружен
     if (typeof Chart === 'undefined') {
-        console.error('Chart.js не загружен');
         return;
     }
-    console.log('Chart.js загружен успешно');
 
     // Очищаем предыдущие графики
     destroyCharts();
@@ -296,7 +416,6 @@ function initCharts() {
     );
     
     if (validMeasurements.length === 0) {
-        console.log('Нет валидных измерений для графиков');
         return;
     }
     
@@ -306,15 +425,6 @@ function initCharts() {
         return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
     });
 
-    console.log('Валидные измерения:', validMeasurements);
-    console.log('Метки для графиков:', labels);
-
-    // Проверяем наличие canvas элементов
-    console.log('Canvas weightChart:', document.getElementById('weightChart'));
-    console.log('Canvas bmiChart:', document.getElementById('bmiChart'));
-    console.log('Canvas bodyFatChart:', document.getElementById('bodyFatChart'));
-    console.log('Canvas muscleMassChart:', document.getElementById('muscleMassChart'));
-    console.log('Canvas bodyVolumesChart:', document.getElementById('bodyVolumesChart'));
 
     // Создаем графики
     createWeightChart(labels, validMeasurements);
@@ -323,7 +433,6 @@ function initCharts() {
     createMuscleMassChart(labels, validMeasurements);
     createBodyVolumesChart(labels, validMeasurements);
     
-    console.log('=== ГРАФИКИ СОЗДАНЫ ===');
 }
 
 // Очистка графиков
@@ -352,15 +461,12 @@ function destroyCharts() {
 
 // Создание графика веса
 function createWeightChart(labels, measurements) {
-    console.log('=== СОЗДАНИЕ ГРАФИКА ВЕСА ===');
     const ctx = document.getElementById('weightChart');
     if (!ctx) {
-        console.error('Canvas элемент weightChart не найден');
         return;
     }
 
     const weightData = measurements.map(m => m.weight).filter(val => val !== null && val !== undefined);
-    console.log('Данные веса:', weightData);
 
     try {
         window.weightChart = new Chart(ctx, {
@@ -411,9 +517,7 @@ function createWeightChart(labels, measurements) {
                 }
             }
         });
-        console.log('График веса создан успешно');
     } catch (error) {
-        console.error('Ошибка создания графика веса:', error);
     }
 }
 
@@ -608,10 +712,8 @@ function createMuscleMassChart(labels, measurements) {
 
 // Создание графика объемов тела
 function createBodyVolumesChart(labels, measurements) {
-    console.log('=== СОЗДАНИЕ ГРАФИКА ОБЪЕМОВ ТЕЛА ===');
     const ctx = document.getElementById('bodyVolumesChart');
     if (!ctx) {
-        console.error('Canvas элемент bodyVolumesChart не найден');
         return;
     }
 
@@ -623,14 +725,6 @@ function createBodyVolumesChart(labels, measurements) {
     const thighData = measurements.map(m => m.thigh).filter(val => val !== null && val !== undefined);
     const neckData = measurements.map(m => m.neck).filter(val => val !== null && val !== undefined);
 
-    console.log('Данные объемов тела:', {
-        chest: chestData,
-        waist: waistData,
-        hips: hipsData,
-        bicep: bicepData,
-        thigh: thighData,
-        neck: neckData
-    });
 
     try {
         window.bodyVolumesChart = new Chart(ctx, {
@@ -755,9 +849,7 @@ function createBodyVolumesChart(labels, measurements) {
                 }
             }
         });
-        console.log('График объемов тела создан успешно');
     } catch (error) {
-        console.error('Ошибка создания графика объемов тела:', error);
     }
 }
 
@@ -767,31 +859,34 @@ function setupChartFilters() {
     const chartFilter = document.getElementById('chartFilter');
     const volumesFilter = document.getElementById('volumesFilter');
     
+    
     if (timeFilter) {
         timeFilter.addEventListener('change', function() {
             filterChartsByTime(this.value);
         });
+    } else {
     }
     
     if (chartFilter) {
         chartFilter.addEventListener('change', function() {
             filterChartsByType(this.value);
         });
+    } else {
     }
     
     if (volumesFilter) {
         volumesFilter.addEventListener('change', function() {
             filterVolumesChart(this.value);
         });
+    } else {
     }
 }
 
 // Фильтрация графиков по времени
 function filterChartsByTime(timeFilter) {
-    console.log('Фильтрация по времени:', timeFilter);
     
     // Получаем все измерения
-    const allMeasurements = @json($measurements->all());
+    const allMeasurements = @json($measurements ? $measurements->all() : []);
     let filteredMeasurements = allMeasurements;
     
     if (timeFilter !== 'all') {
@@ -825,7 +920,6 @@ function filterChartsByTime(timeFilter) {
 
 // Фильтрация графиков по типу
 function filterChartsByType(chartFilter) {
-    console.log('Фильтрация по типу:', chartFilter);
     
     // Скрываем/показываем контейнеры графиков
     const containers = {
@@ -836,20 +930,23 @@ function filterChartsByType(chartFilter) {
         volumes: document.getElementById('bodyVolumesChartContainer')
     };
     
+    // Проверяем, что все контейнеры существуют
+    const validContainers = Object.values(containers).filter(container => container !== null);
+    
+    if (validContainers.length === 0) {
+        return;
+    }
+    
     // Сначала скрываем все
-    Object.values(containers).forEach(container => {
-        if (container) {
-            container.style.display = 'none';
-        }
+    validContainers.forEach(container => {
+        container.style.display = 'none';
     });
     
     // Показываем нужные в зависимости от фильтра
     switch (chartFilter) {
         case 'all':
-            Object.values(containers).forEach(container => {
-                if (container) {
-                    container.style.display = 'block';
-                }
+            validContainers.forEach(container => {
+                container.style.display = 'block';
             });
             break;
         case 'weight':
@@ -868,10 +965,8 @@ function filterChartsByType(chartFilter) {
 
 // Пересоздание графиков с новыми данными
 function recreateCharts(measurements) {
-    console.log('Пересоздание графиков с данными:', measurements);
     
     if (measurements.length === 0) {
-        console.log('Нет данных для отображения');
         return;
     }
     
@@ -888,7 +983,6 @@ function recreateCharts(measurements) {
     );
     
     if (validMeasurements.length === 0) {
-        console.log('Нет валидных измерений для графиков');
         return;
     }
     
@@ -905,15 +999,12 @@ function recreateCharts(measurements) {
     createMuscleMassChart(labels, validMeasurements);
     createBodyVolumesChart(labels, validMeasurements);
     
-    console.log('Графики пересозданы');
 }
 
 // Фильтрация графика объемов тела
 function filterVolumesChart(volumesFilter) {
-    console.log('Фильтрация объемов тела:', volumesFilter);
     
     if (!window.bodyVolumesChart) {
-        console.log('График объемов тела не создан');
         return;
     }
     
@@ -952,7 +1043,6 @@ function filterVolumesChart(volumesFilter) {
     
     // Обновляем график
     chart.update();
-    console.log('График объемов тела обновлен');
 }
 
 // Вспомогательная функция для скрытия всех линий кроме указанных
@@ -961,5 +1051,6 @@ function hideAllExcept(datasets, allowedLabels) {
         dataset.hidden = !allowedLabels.includes(dataset.label);
     });
 }
+
 </script>
 @endsection
