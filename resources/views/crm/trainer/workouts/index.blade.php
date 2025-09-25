@@ -66,8 +66,19 @@ function workoutApp() {
             this.formAthleteId = this.currentWorkout.athlete_id;
             // Форматируем дату для input[type="date"]
             if (this.currentWorkout.date) {
-                const date = new Date(this.currentWorkout.date);
-                this.formDate = date.toISOString().split('T')[0];
+                // Если дата уже в формате YYYY-MM-DD, используем её как есть
+                if (typeof this.currentWorkout.date === 'string' && this.currentWorkout.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    this.formDate = this.currentWorkout.date;
+                } else {
+                    // Иначе извлекаем дату из ISO строки
+                    const dateStr = this.currentWorkout.date.toString();
+                    if (dateStr.includes('T')) {
+                        this.formDate = dateStr.split('T')[0];
+                    } else {
+                        const date = new Date(this.currentWorkout.date);
+                        this.formDate = date.toISOString().split('T')[0];
+                    }
+                }
             } else {
                 this.formDate = new Date().toISOString().split('T')[0];
             }
@@ -916,6 +927,28 @@ function workoutApp() {
                 return exercise && exercise[field] ? exercise[field] : '';
             }
             return '';
+        },
+        
+        // Форматирование даты для отображения
+        formatDate(dateString) {
+            if (!dateString) return '';
+            
+            // Если дата уже в формате YYYY-MM-DD, просто форматируем её
+            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = dateString.split('-');
+                return `${day}.${month}.${year}`;
+            }
+            
+            // Если дата в формате YYYY-MM-DDTHH:mm:ss.sssZ (ISO), извлекаем только дату
+            if (typeof dateString === 'string' && dateString.includes('T')) {
+                const datePart = dateString.split('T')[0];
+                const [year, month, day] = datePart.split('-');
+                return `${day}.${month}.${year}`;
+            }
+            
+            // Иначе используем стандартное форматирование
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU');
         }
     }
 }
@@ -1424,7 +1457,7 @@ function workoutApp() {
                     <div class="space-y-2 mb-4">
                         <div class="text-sm text-gray-500">
                             <span class="font-medium text-gray-700">Дата:</span>
-                            <span x-text="new Date(workout.date).toLocaleDateString('ru-RU')"></span>
+                            <span x-text="formatDate(workout.date)"></span>
                         </div>
                         
                         <div class="text-sm text-gray-500" x-show="workout.time">

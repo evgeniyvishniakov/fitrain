@@ -22,7 +22,6 @@ class Workout extends BaseModel
     ];
 
     protected $casts = [
-        'date' => 'date',
         'is_counted' => 'boolean',
     ];
     

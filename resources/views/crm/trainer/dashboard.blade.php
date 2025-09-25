@@ -121,7 +121,7 @@
             </div>
             <div class="stat-content">
                 <div class="stat-label">Сегодня</div>
-                <div class="stat-value">3</div>
+                <div class="stat-value">{{ $todayWorkouts }}</div>
             </div>
         </div>
 
@@ -132,8 +132,8 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Прогресс</div>
-                <div class="stat-value">85%</div>
+                <div class="stat-label">Завершено</div>
+                <div class="stat-value">{{ $completedThisMonth }}</div>
             </div>
         </div>
     </div>
@@ -204,49 +204,92 @@
                 </a>
             </div>
             
-            @if(isset($upcomingWorkouts) && $upcomingWorkouts->count() > 0)
-                <div class="space-y-2">
-                    @foreach($upcomingWorkouts->take(4) as $workout)
-                        <div class="workout-item">
-                            <div class="workout-content">
-                                <div class="workout-status-indicator 
-                                    {{ $workout->status === 'completed' ? 'bg-green-500' : 
-                                       ($workout->status === 'planned' ? 'bg-blue-500' : 'bg-red-500') }}">
-                                </div>
-                                <div class="workout-details">
-                                    <span class="workout-title">{{ $workout->title }}</span>
-                                    <span class="workout-date">
-                                        {{ \Carbon\Carbon::parse($workout->date)->format('d.m') }}
-                                        @if($workout->time)
-                                            {{ \Carbon\Carbon::parse($workout->time)->format('H:i') }}
-                                        @endif
+            @php
+                $today = now()->format('Y-m-d');
+                $tomorrow = now()->addDay()->format('Y-m-d');
+                $todayWorkouts = isset($upcomingWorkouts) ? $upcomingWorkouts->where('date', $today) : collect();
+                $tomorrowWorkouts = isset($upcomingWorkouts) ? $upcomingWorkouts->where('date', $tomorrow) : collect();
+                
+                // Если нет тренировок на завтра, но есть на послезавтра, показываем их как "Завтра"
+                if($tomorrowWorkouts->count() == 0 && isset($upcomingWorkouts)) {
+                    $nextDay = now()->addDays(2)->format('Y-m-d');
+                    $tomorrowWorkouts = $upcomingWorkouts->where('date', $nextDay);
+                }
+            @endphp
+            
+            <div class="space-y-4">
+                    @if($todayWorkouts->count() > 0)
+                        <div class="workout-day-group">
+                            <h4 class="workout-day-title">Сегодня</h4>
+                            <div class="space-y-2">
+                                @foreach($todayWorkouts as $workout)
+                                    <div class="workout-item">
+                                        <div class="workout-content">
+                                            <div class="workout-details">
+                                                <span class="workout-title">{{ $workout->title }} - {{ $workout->athlete ? $workout->athlete->name : 'Спортсмен не указан' }}</span>
+                                                <span class="workout-date">
+                                                    @if($workout->time)
+                                                        {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : '' }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                        </div>
+                                    <span class="workout-status-badge
+                                        {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                           ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
+                                        {{ $workout->status === 'completed' ? 'Завершена' : 
+                                           ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
                                     </span>
                                 </div>
-                            </div>
-                            <span class="workout-status-badge
-                                {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                   ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
-                                {{ $workout->status === 'completed' ? 'Завершена' : 
-                                   ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
-                            </span>
+                            @endforeach
                         </div>
-                    @endforeach
-                    @if($upcomingWorkouts->count() > 4)
-                        <div class="text-center pt-1">
-                            <span class="text-xs text-gray-500">+{{ $upcomingWorkouts->count() - 4 }} еще</span>
-                        </div>
-                    @endif
-                </div>
-            @else
-                <div class="text-center py-4">
-                    <div class="text-gray-400 mb-1">
-                        <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
                     </div>
-                    <p class="text-gray-500 text-xs">Нет тренировок</p>
-                </div>
-            @endif
+                @endif
+                
+                    @if($tomorrowWorkouts->count() > 0)
+                        <div class="workout-day-group">
+                            @php
+                                $tomorrowDate = $tomorrowWorkouts->first()->date;
+                                $isActuallyTomorrow = $tomorrowDate === $tomorrow;
+                                $dayTitle = $isActuallyTomorrow ? 'Завтра' : \Carbon\Carbon::parse($tomorrowDate)->format('d.m');
+                            @endphp
+                            <h4 class="workout-day-title">{{ $dayTitle }}</h4>
+                            <div class="space-y-2">
+                                @foreach($tomorrowWorkouts as $workout)
+                                    <div class="workout-item">
+                                        <div class="workout-content">
+                                            <div class="workout-details">
+                                                <span class="workout-title">{{ $workout->title }} - {{ $workout->athlete ? $workout->athlete->name : 'Спортсмен не указан' }}</span>
+                                                <span class="workout-date">
+                                                    @if($workout->time)
+                                                        {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : '' }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                        </div>
+                                    <span class="workout-status-badge
+                                        {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                           ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
+                                        {{ $workout->status === 'completed' ? 'Завершена' : 
+                                           ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+                
+                @if($todayWorkouts->count() == 0 && $tomorrowWorkouts->count() == 0)
+                    <div class="text-center py-4">
+                        <div class="text-gray-400 mb-1">
+                            <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <p class="text-gray-500 text-xs">Нет тренировок на сегодня и завтра</p>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
@@ -692,12 +735,6 @@ window.onclick = function(event) {
     min-width: 0 !important;
 }
 
-.workout-status-indicator {
-    width: 0.75rem !important;
-    height: 0.75rem !important;
-    border-radius: 50% !important;
-    flex-shrink: 0 !important;
-}
 
 .workout-details {
     display: flex !important;
@@ -771,6 +808,21 @@ window.onclick = function(event) {
         margin-left: 0 !important;
         align-self: flex-start !important;
     }
+    
+}
+
+/* Стили для групп тренировок */
+.workout-day-group {
+    margin-bottom: 1rem;
+}
+
+.workout-day-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 /* Мобильная адаптация календаря */

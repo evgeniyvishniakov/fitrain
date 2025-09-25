@@ -55,8 +55,25 @@ class TrainerController extends BaseController
     public function dashboard()
     {
         $trainer = auth()->user();
+        
+        // Общее количество спортсменов
         $athletes = $trainer->athletes()->count();
+        
+        // Общее количество тренировок
         $workouts = $trainer->trainerWorkouts()->count();
+        
+        // Тренировки на сегодня
+        $todayWorkouts = $trainer->trainerWorkouts()
+            ->whereDate('date', now()->format('Y-m-d'))
+            ->count();
+        
+        // Завершенные тренировки за месяц
+        $completedThisMonth = $trainer->trainerWorkouts()
+            ->where('status', 'completed')
+            ->whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->count();
+        
         $recentWorkouts = $trainer->trainerWorkouts()->with('athlete')->latest()->take(5)->get();
         
         // Данные для календаря (берем тренировки за последние 3 месяца)
@@ -72,25 +89,31 @@ class TrainerController extends BaseController
                 return [
                     'id' => $workout->id,
                     'title' => $workout->title,
-                    'date' => $workout->date->format('Y-m-d'),
+                    'date' => $workout->date,
                     'time' => $workout->time,
                     'status' => $workout->status,
                     'athlete_name' => $workout->athlete ? $workout->athlete->name : 'Неизвестно'
                 ];
             });
         
-        // Ближайшие тренировки
+        // Ближайшие тренировки (сегодня и завтра)
+        $today = now()->format('Y-m-d');
+        $tomorrow = now()->addDay()->format('Y-m-d');
+        
         $upcomingWorkouts = $trainer->trainerWorkouts()
-            ->where('date', '>=', now()->format('Y-m-d'))
+            ->with('athlete:id,name')
+            ->whereIn('date', [$today, $tomorrow])
+            ->where('status', '!=', 'cancelled')
             ->orderBy('date')
             ->orderBy('time')
-            ->take(10)
             ->get();
         
         return view('crm.trainer.dashboard', compact(
             'trainer', 
             'athletes', 
             'workouts', 
+            'todayWorkouts',
+            'completedThisMonth',
             'recentWorkouts',
             'monthWorkouts',
             'upcomingWorkouts'

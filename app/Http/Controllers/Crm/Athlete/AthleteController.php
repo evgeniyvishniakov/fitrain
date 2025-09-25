@@ -127,7 +127,7 @@ class AthleteController extends BaseController
                 return [
                     'id' => $workout->id,
                     'title' => $workout->title,
-                    'date' => $workout->date->format('Y-m-d'),
+                    'date' => $workout->date,
                     'time' => $workout->time,
                     'status' => $workout->status,
                     'trainer_name' => $workout->trainer->name ?? 'Тренер'

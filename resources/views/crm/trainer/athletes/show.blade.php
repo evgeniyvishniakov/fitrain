@@ -155,7 +155,7 @@
                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                 <div>
                                     <div class="font-medium text-gray-900">{{ $workout->title }}</div>
-                                    <div class="text-sm text-gray-600">{{ $workout->date ? $workout->date->format('d.m.Y') : '—' }}</div>
+                                    <div class="text-sm text-gray-600">{{ $workout->date ? \Carbon\Carbon::parse($workout->date)->format('d.m.Y') : '—' }}</div>
                                 </div>
                                 <span class="px-2 py-1 text-xs font-medium rounded-full 
                                     @if($workout->status === 'completed') bg-green-100 text-green-800
@@ -618,7 +618,7 @@
                                 @else Отменено @endif
                             </span>
                         </div>
-                        <div class="text-sm text-gray-600 mb-2">{{ $workout->date ? $workout->date->format('d.m.Y') : '—' }}</div>
+                        <div class="text-sm text-gray-600 mb-2">{{ $workout->date ? \Carbon\Carbon::parse($workout->date)->format('d.m.Y') : '—' }}</div>
                         @if($workout->description)
                             <div class="text-sm text-gray-700">{{ $workout->description }}</div>
                         @endif

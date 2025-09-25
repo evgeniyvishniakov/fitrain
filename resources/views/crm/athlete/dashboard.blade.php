@@ -359,7 +359,7 @@ function dashboardCalendar() {
                                     <span class="text-sm text-gray-500 whitespace-nowrap">
                                         {{ \Carbon\Carbon::parse($workout->date)->format('d.m') }}
                                         @if($workout->time)
-                                            {{ \Carbon\Carbon::parse($workout->time)->format('H:i') }}
+                                            {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : '' }}
                                         @endif
                                     </span>
                                 </div>

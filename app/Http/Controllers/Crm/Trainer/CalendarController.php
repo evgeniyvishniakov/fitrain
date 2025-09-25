@@ -49,7 +49,7 @@ class CalendarController extends Controller
             $workout->exercises_count = $workout->exercises->count();
             return $workout;
         })->groupBy(function($workout) {
-            return Carbon::parse($workout->date)->format('Y-m-d');
+            return $workout->date;
         });
         
         // Получаем спортсменов для фильтрации (только для тренера)
@@ -97,7 +97,7 @@ class CalendarController extends Controller
                     'id' => $workout->id,
                     'title' => $workout->title,
                     'description' => $workout->description,
-                    'date' => $workout->date->format('Y-m-d'),
+                    'date' => $workout->date,
                     'time' => $workout->time,
                     'duration' => $workout->duration,
                     'status' => $workout->status,
