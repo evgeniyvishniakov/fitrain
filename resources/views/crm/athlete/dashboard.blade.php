@@ -269,6 +269,7 @@ function dashboardCalendar() {
         </div>
     </div>
 
+
     <!-- Календарь и ближайшие тренировки -->
     <div class="dashboard-bottom-section" x-data="dashboardCalendar()">
         <!-- Календарь -->
@@ -484,6 +485,144 @@ function dashboardCalendar() {
         </div>
     </div>
 
+    <!-- Последнее измерение и график веса -->
+    @if($lastMeasurement)
+    <div class="flex gap-6 measurement-chart-row">
+        <!-- Карточка последнего измерения -->
+        <div class="w-1/3">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 h-full">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Последнее измерение</h3>
+                    <span class="text-sm text-gray-500">{{ $lastMeasurement->measurement_date->format('d.m.Y') }}</span>
+                </div>
+                
+                <!-- Основные параметры -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                        <div class="text-xl font-bold text-blue-600">{{ $lastMeasurement->weight ?? '—' }}</div>
+                        <div class="text-xs text-blue-800">Вес (кг)</div>
+                    </div>
+                    <div class="text-center p-3 rounded-lg 
+                        @if($bmi && $bmiColor === 'blue') bg-blue-50
+                        @elseif($bmi && $bmiColor === 'green') bg-green-50
+                        @elseif($bmi && $bmiColor === 'yellow') bg-yellow-50
+                        @elseif($bmi && $bmiColor === 'red') bg-red-50
+                        @else bg-gray-50
+                        @endif">
+                        <div class="text-xl font-bold 
+                            @if($bmi && $bmiColor === 'blue') text-blue-600
+                            @elseif($bmi && $bmiColor === 'green') text-green-600
+                            @elseif($bmi && $bmiColor === 'yellow') text-yellow-600
+                            @elseif($bmi && $bmiColor === 'red') text-red-600
+                            @else text-gray-600
+                            @endif">{{ $bmi ? number_format($bmi, 1) : '—' }}</div>
+                        <div class="text-xs 
+                            @if($bmi && $bmiColor === 'blue') text-blue-600
+                            @elseif($bmi && $bmiColor === 'green') text-green-600
+                            @elseif($bmi && $bmiColor === 'yellow') text-yellow-600
+                            @elseif($bmi && $bmiColor === 'red') text-red-600
+                            @else text-gray-600
+                            @endif">ИМТ</div>
+                    </div>
+                </div>
+                
+                <!-- Дополнительные параметры -->
+                <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">% жира:</span>
+                        <span class="font-medium">{{ $lastMeasurement->body_fat_percentage ? number_format($lastMeasurement->body_fat_percentage, 1) . '%' : '—' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Мышцы:</span>
+                        <span class="font-medium">{{ $lastMeasurement->muscle_mass ? number_format($lastMeasurement->muscle_mass, 1) . ' кг' : '—' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Вода:</span>
+                        <span class="font-medium">{{ $lastMeasurement->water_percentage ? number_format($lastMeasurement->water_percentage, 1) . '%' : '—' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Пульс:</span>
+                        <span class="font-medium">{{ $lastMeasurement->resting_heart_rate ? round($lastMeasurement->resting_heart_rate) . ' уд/мин' : '—' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Давление:</span>
+                        <span class="font-medium">
+                            @if($lastMeasurement->blood_pressure_systolic && $lastMeasurement->blood_pressure_diastolic)
+                                {{ round($lastMeasurement->blood_pressure_systolic) }}/{{ round($lastMeasurement->blood_pressure_diastolic) }}
+                            @else
+                                —
+                            @endif
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Объемы тела -->
+                @if($lastMeasurement->chest || $lastMeasurement->waist || $lastMeasurement->hips || $lastMeasurement->bicep || $lastMeasurement->thigh || $lastMeasurement->neck)
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h5 class="text-sm font-medium text-gray-700 mb-2">Объемы тела (см)</h5>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        @if($lastMeasurement->chest)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Грудь:</span>
+                            <span class="font-medium">{{ number_format($lastMeasurement->chest, 1) }}</span>
+                        </div>
+                        @endif
+                        @if($lastMeasurement->waist)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Талия:</span>
+                            <span class="font-medium">{{ number_format($lastMeasurement->waist, 1) }}</span>
+                        </div>
+                        @endif
+                        @if($lastMeasurement->hips)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Бедра:</span>
+                            <span class="font-medium">{{ number_format($lastMeasurement->hips, 1) }}</span>
+                        </div>
+                        @endif
+                        @if($lastMeasurement->bicep)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Бицепс:</span>
+                            <span class="font-medium">{{ number_format($lastMeasurement->bicep, 1) }}</span>
+                        </div>
+                        @endif
+                        @if($lastMeasurement->thigh)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Бедро:</span>
+                            <span class="font-medium">{{ number_format($lastMeasurement->thigh, 1) }}</span>
+                        </div>
+                        @endif
+                        @if($lastMeasurement->neck)
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Шея:</span>
+                            <span class="font-medium">{{ number_format($lastMeasurement->neck, 1) }}</span>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
+                
+                <!-- Комментарии -->
+                @if($lastMeasurement->notes)
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h5 class="text-sm font-medium text-gray-700 mb-1">Комментарии</h5>
+                    <p class="text-sm text-gray-600">{{ $lastMeasurement->notes }}</p>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- График веса -->
+        <div class="w-2/3">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 h-full">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Динамика веса</h3>
+                <div class="h-80">
+                    <canvas id="weightChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 
 <style>
@@ -503,6 +642,12 @@ function dashboardCalendar() {
 .dashboard-bottom-section > div {
     flex: 1 !important; /* Равная ширина блоков */
 }
+
+/* Стили для блока измерений и графика - равная высота */
+.measurement-chart-row {
+    align-items: stretch !important; /* Равная высота блоков */
+}
+
 
 /* Стили календаря */
 .calendar-grid {
@@ -626,4 +771,87 @@ function dashboardCalendar() {
 }
 
 </style>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Создаем график веса
+    const ctx = document.getElementById('weightChart');
+    if (ctx) {
+        // Получаем данные измерений
+        const measurements = @json($athlete->measurements()->latest('measurement_date')->take(10)->get());
+        
+        if (measurements.length > 0) {
+            // Сортируем по дате
+            const sortedMeasurements = measurements.sort((a, b) => new Date(a.measurement_date) - new Date(b.measurement_date));
+            
+            // Подготавливаем данные
+            const labels = sortedMeasurements.map(m => {
+                const date = new Date(m.measurement_date);
+                return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+            });
+            
+            const weightData = sortedMeasurements.map(m => m.weight).filter(val => val !== null && val !== undefined);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Вес (кг)',
+                        data: weightData,
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3B82F6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: '#f3f4f6'
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        } else {
+            // Показываем сообщение, если нет данных
+            ctx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-500">Нет данных для отображения</div>';
+        }
+    }
+});
+</script>
+@endpush
 @endsection
