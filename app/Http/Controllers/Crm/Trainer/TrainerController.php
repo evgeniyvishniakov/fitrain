@@ -560,4 +560,57 @@ class TrainerController extends BaseController
         
         return response()->json($progress);
     }
+    
+    /**
+     * Обновление прогресса упражнений для тренера
+     */
+    public function updateExerciseProgress(Request $request)
+    {
+        \Log::info('TrainerController::updateExerciseProgress called', [
+            'workout_id' => $request->get('workout_id'),
+            'exercises' => $request->get('exercises'),
+            'user_id' => auth()->id(),
+            'user_role' => auth()->user()?->roles?->first()?->name
+        ]);
+        
+        $request->validate([
+            'workout_id' => 'required|integer',
+            'exercises' => 'required|array',
+            'exercises.*.exercise_id' => 'required|integer',
+            'exercises.*.status' => 'required|in:completed,partial,not_done',
+            'exercises.*.athlete_comment' => 'nullable|string',
+            'exercises.*.sets_data' => 'nullable|array'
+        ]);
+        
+        $trainer = auth()->user();
+        $workout = Workout::findOrFail($request->workout_id);
+        
+        // Проверяем, что тренер имеет доступ к этой тренировке
+        if ($workout->trainer_id !== $trainer->id) {
+            return response()->json(['error' => 'Доступ запрещен'], 403);
+        }
+        
+        $athlete = $workout->athlete;
+        
+        foreach ($request->exercises as $exerciseData) {
+            \App\Models\Athlete\ExerciseProgress::updateOrCreate(
+                [
+                    'workout_id' => $request->workout_id,
+                    'exercise_id' => $exerciseData['exercise_id'],
+                    'athlete_id' => $athlete->id
+                ],
+                [
+                    'status' => $exerciseData['status'] ?? 'not_done',
+                    'athlete_comment' => $exerciseData['athlete_comment'] ?? null,
+                    'sets_data' => $exerciseData['sets_data'] ?? null,
+                    'completed_at' => ($exerciseData['status'] ?? 'not_done') === 'completed' ? now() : null
+                ]
+            );
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Прогресс обновлен'
+        ]);
+    }
 }

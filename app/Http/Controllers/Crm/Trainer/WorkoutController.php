@@ -41,12 +41,14 @@ class WorkoutController extends BaseController
                         $exercise->progress = [
                             'status' => $progress->status,
                             'athlete_comment' => $progress->athlete_comment,
+                            'sets_data' => $progress->sets_data,
                             'completed_at' => $progress->completed_at
                         ];
                     } else {
                         $exercise->progress = [
                             'status' => null,
                             'athlete_comment' => null,
+                            'sets_data' => null,
                             'completed_at' => null
                         ];
                     }
@@ -126,12 +128,14 @@ class WorkoutController extends BaseController
                     $exercise->progress = [
                         'status' => $progress->status,
                         'athlete_comment' => $progress->athlete_comment,
+                        'sets_data' => $progress->sets_data,
                         'completed_at' => $progress->completed_at
                     ];
                 } else {
                     $exercise->progress = [
                         'status' => null,
                         'athlete_comment' => null,
+                        'sets_data' => null,
                         'completed_at' => null
                     ];
                 }
@@ -261,12 +265,14 @@ class WorkoutController extends BaseController
                     $exercise->progress = [
                         'status' => $progress->status,
                         'athlete_comment' => $progress->athlete_comment,
+                        'sets_data' => $progress->sets_data,
                         'completed_at' => $progress->completed_at
                     ];
                 } else {
                     $exercise->progress = [
                         'status' => null,
                         'athlete_comment' => null,
+                        'sets_data' => null,
                         'completed_at' => null
                     ];
                 }

@@ -15,11 +15,33 @@ class AthleteController extends BaseController
     public function dashboard()
     {
         $athlete = auth()->user();
-        $workouts = $athlete->workouts()->count();
-        $progress = $athlete->progress()->count();
+        
+        // Общее количество тренировок
+        $totalWorkouts = $athlete->workouts()->count();
+        
+        // Запланированные тренировки
+        $plannedWorkouts = $athlete->workouts()->where('status', 'planned')->count();
+        
+        // Завершенные тренировки
+        $completedWorkouts = $athlete->workouts()->where('status', 'completed')->count();
+        
+        // Последняя тренировка или следующая
+        $lastOrNextWorkout = $athlete->workouts()
+            ->with('trainer')
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->first();
+        
         $recentWorkouts = $athlete->workouts()->with('trainer')->latest()->take(5)->get();
         
-        return view('crm.athlete.dashboard', compact('athlete', 'workouts', 'progress', 'recentWorkouts'));
+        return view('crm.athlete.dashboard', compact(
+            'athlete', 
+            'totalWorkouts', 
+            'plannedWorkouts', 
+            'completedWorkouts', 
+            'lastOrNextWorkout', 
+            'recentWorkouts'
+        ));
     }
     
     public function profile()

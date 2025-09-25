@@ -26,6 +26,16 @@ function workoutApp() {
         formDescription: '',
         formStatus: 'planned',
         
+        // Функциональность заполнения упражнений для тренера
+        exerciseStatuses: {}, // Хранение статусов упражнений
+        exerciseComments: {}, // Хранение комментариев к упражнениям
+        exerciseSetsData: {}, // Хранение данных по подходам
+        exerciseSetsExpanded: {}, // Хранение состояния развернутости полей подходов
+        saveTimeout: null, // Таймер для автосохранения
+        lastSaved: null, // Время последнего сохранения
+        workoutProgress: {}, // Прогресс для каждой тренировки
+        lastChangedExercise: null, // Последнее измененное упражнение
+        
         // Навигация
         showList() {
             this.currentView = 'list';
@@ -102,6 +112,214 @@ function workoutApp() {
         showView(workoutId) {
             this.currentView = 'view';
             this.currentWorkout = this.workouts.find(w => w.id === workoutId);
+            // Загружаем сохраненный прогресс при открытии тренировки
+            this.loadExerciseProgress(workoutId);
+        },
+        
+        // Методы для работы с упражнениями (скопированы из athlete/workouts.blade.php)
+        
+        // Управление статусом упражнений
+        setExerciseStatus(exerciseId, status) {
+            this.exerciseStatuses[exerciseId] = status;
+            this.lastChangedExercise = { id: exerciseId, status: status };
+            
+            if (status === 'partial') {
+                // Инициализируем данные по подходам для частичного выполнения
+                const exercise = this.currentWorkout?.exercises?.find(ex => (ex.exercise_id == exerciseId) || (ex.id == exerciseId));
+                if (exercise) {
+                    const totalSets = exercise.sets || exercise.pivot?.sets || 3;
+                    this.initSetsData(exerciseId, totalSets);
+                    // Поля остаются свернутыми по умолчанию
+                    this.exerciseSetsExpanded[exerciseId] = false;
+                }
+            } else {
+                // Если статус не "частично", очищаем комментарий и данные по подходам
+                delete this.exerciseComments[exerciseId];
+                delete this.exerciseSetsData[exerciseId];
+                delete this.exerciseSetsExpanded[exerciseId];
+            }
+            
+            // Автосохранение через 2 секунды после изменения
+            this.autoSave();
+        },
+        
+        // Получение статуса упражнения
+        getExerciseStatus(exerciseId) {
+            return this.exerciseStatuses[exerciseId] || null;
+        },
+        
+        // Инициализация данных по подходам для упражнения
+        initSetsData(exerciseId, totalSets) {
+            if (!this.exerciseSetsData[exerciseId]) {
+                this.exerciseSetsData[exerciseId] = [];
+                const exercise = this.currentWorkout?.exercises?.find(ex => (ex.exercise_id == exerciseId) || (ex.id == exerciseId));
+                const defaultRest = exercise?.rest || exercise?.pivot?.rest || 1.0; // По умолчанию 1 минута
+                
+                for (let i = 0; i < totalSets; i++) {
+                    this.exerciseSetsData[exerciseId].push({
+                        set_number: i + 1,
+                        reps: '',
+                        weight: '',
+                        rest: defaultRest // Автоматически заполняем отдых в минутах
+                    });
+                }
+            }
+        },
+        
+        // Получение данных по подходам для упражнения
+        getSetsData(exerciseId) {
+            return this.exerciseSetsData[exerciseId] || [];
+        },
+        
+        // Обновление данных по подходу
+        updateSetData(exerciseId, setIndex, field, value) {
+            if (!this.exerciseSetsData[exerciseId]) {
+                this.exerciseSetsData[exerciseId] = [];
+            }
+            if (!this.exerciseSetsData[exerciseId][setIndex]) {
+                this.exerciseSetsData[exerciseId][setIndex] = {};
+            }
+            this.exerciseSetsData[exerciseId][setIndex][field] = value;
+            
+            // Обновляем последнее измененное упражнение для правильного уведомления
+            this.lastChangedExercise = { id: exerciseId, status: 'partial' };
+            
+            this.autoSave();
+        },
+        
+        // Управление сворачиванием/разворачиванием полей подходов
+        toggleSetsExpanded(exerciseId) {
+            this.exerciseSetsExpanded[exerciseId] = !this.exerciseSetsExpanded[exerciseId];
+        },
+        
+        // Проверка, развернуты ли поля подходов
+        isSetsExpanded(exerciseId) {
+            return this.exerciseSetsExpanded[exerciseId] || false;
+        },
+        
+        // Автосохранение
+        autoSave() {
+            if (this.saveTimeout) {
+                clearTimeout(this.saveTimeout);
+            }
+            
+            this.saveTimeout = setTimeout(() => {
+                this.saveExerciseProgress();
+            }, 2000);
+        },
+        
+        // Обновление прогресса на сервере
+        async saveExerciseProgress() {
+            if (!this.currentWorkout) return;
+            
+            try {
+                // Собираем все упражнения с изменениями
+                const exercises = Object.keys(this.exerciseStatuses).map(exerciseId => ({
+                    exercise_id: parseInt(exerciseId),
+                    status: this.exerciseStatuses[exerciseId],
+                    athlete_comment: this.exerciseComments[exerciseId] || null,
+                    sets_data: this.exerciseSetsData[exerciseId] || null
+                }));
+
+                // Показываем индикатор загрузки
+                showInfo('Сохранение...', 'Сохраняем прогресс...', 2000);
+
+                const response = await fetch('/trainer/exercise-progress', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        workout_id: this.currentWorkout.id,
+                        exercises: exercises
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Записываем время последнего сохранения
+                    this.lastSaved = new Date();
+                    
+                    // Показываем уведомление только для последнего измененного упражнения
+                    let title = '';
+                    let message = '';
+                    
+                    if (this.lastChangedExercise) {
+                        const { status, id } = this.lastChangedExercise;
+                        
+                        if (status === 'completed') {
+                            title = 'Прогресс сохранен!';
+                            message = 'Упражнение отмечено как выполнено';
+                        } else if (status === 'partial') {
+                            // Проверяем, есть ли данные по подходам
+                            const hasSetsData = this.exerciseSetsData[id] && 
+                                               this.exerciseSetsData[id].some(set => 
+                                                   set.reps || set.weight || set.rest
+                                               );
+                            
+                            if (hasSetsData) {
+                                title = 'Прогресс сохранен!';
+                                message = 'Упражнение сохранено с детализацией';
+                            } else {
+                                title = 'Статус обновлен!';
+                                message = 'Упражнение отмечено как частично выполненное';
+                            }
+                        } else if (status === 'not_done') {
+                            title = 'Статус обновлен!';
+                            message = 'Упражнение отмечено как не выполнено';
+                        }
+                        
+                        // Сбрасываем последнее измененное упражнение
+                        this.lastChangedExercise = null;
+                    } else {
+                        // Fallback для случая, если lastChangedExercise не установлен
+                        title = 'Статус обновлен!';
+                        message = `Обновлено ${exercises.length} упражнений`;
+                    }
+                    
+                    showSuccess(title, message);
+                } else {
+                    showError('Ошибка сохранения', result.message || 'Не удалось сохранить прогресс. Попробуйте еще раз.');
+                }
+            } catch (error) {
+                console.error('Ошибка обновления:', error);
+                showError('Ошибка соединения', 'Проверьте подключение к интернету и попробуйте еще раз.');
+            }
+        },
+        
+        // Загрузка сохраненного прогресса (только из данных упражнений)
+        loadExerciseProgress(workoutId) {
+            // Загружаем данные из уже существующего прогресса в упражнениях
+            if (this.currentWorkout && this.currentWorkout.exercises) {
+                this.currentWorkout.exercises.forEach(exercise => {
+                    const exerciseId = exercise.exercise_id || exercise.id;
+                    if (exercise.progress && exercise.progress.status) {
+                        this.exerciseStatuses[exerciseId] = exercise.progress.status;
+                        
+                        if (exercise.progress.athlete_comment) {
+                            this.exerciseComments[exerciseId] = exercise.progress.athlete_comment;
+                        }
+                        
+                        // Загружаем данные по подходам из прогресса спортсмена
+                        if (exercise.progress.sets_data) {
+                            this.exerciseSetsData[exerciseId] = exercise.progress.sets_data;
+                        }
+                        
+                        // Поля подходов свернуты по умолчанию
+                        this.exerciseSetsExpanded[exerciseId] = false;
+                    }
+                });
+            }
+            
+            // Дополнительно: если есть данные в exerciseSetsData, но нет статуса, устанавливаем "частично"
+            Object.keys(this.exerciseSetsData).forEach(exerciseId => {
+                if (!this.exerciseStatuses[exerciseId] && this.exerciseSetsData[exerciseId] && this.exerciseSetsData[exerciseId].length > 0) {
+                    this.exerciseStatuses[exerciseId] = 'partial';
+                    this.exerciseSetsExpanded[exerciseId] = false; // Свернуто по умолчанию
+                }
+            });
         },
         
         // Фильтрация
@@ -831,6 +1049,133 @@ function workoutApp() {
                     flex-direction: column !important;
                     gap: 1rem !important;
                 }
+                
+                .workout-details-grid {
+                    display: grid !important;
+                    gap: 1.5rem !important;
+                    grid-template-columns: repeat(2, 1fr) !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .workout-details-grid {
+                        grid-template-columns: repeat(4, 1fr) !important;
+                    }
+                }
+                
+                .exercise-params-grid {
+                    display: grid !important;
+                    gap: 1rem !important;
+                    grid-template-columns: repeat(2, 1fr) !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .exercise-params-grid {
+                        grid-template-columns: repeat(4, 1fr) !important;
+                    }
+                }
+                
+                /* Специальные отступы для полей упражнений */
+                .exercise-field .mr-2 {
+                    margin-right: 0.2rem !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .exercise-field .mr-2 {
+                        margin-right: 0.5rem !important;
+                    }
+                }
+                
+                /* Уменьшенный padding для мобилки */
+                .p-6 {
+                    padding: 1rem !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .p-6 {
+                        padding: 1.5rem !important;
+                    }
+                }
+                
+                /* Поля подходов - колонка на мобилке, 3 колонки на десктопе */
+                .sets-fields-grid {
+                    display: grid !important;
+                    gap: 1rem !important;
+                    grid-template-columns: 1fr !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .sets-fields-grid {
+                        grid-template-columns: repeat(3, 1fr) !important;
+                    }
+                }
+                
+                /* Убираем стрелочки у полей ввода чисел */
+                input[type="number"]::-webkit-outer-spin-button,
+                input[type="number"]::-webkit-inner-spin-button {
+                    -webkit-appearance: none !important;
+                    margin: 0 !important;
+                }
+                
+                input[type="number"] {
+                    -moz-appearance: textfield !important;
+                }
+                
+                /* Уменьшенный padding для .p-4 на мобилке */
+                .p-4 {
+                    padding: 0.5rem !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .p-4 {
+                        padding: 1rem !important;
+                    }
+                }
+                
+                /* Статус выполнения - колонка на мобилке, ряд на десктопе */
+                .exercise-status-section {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.5rem !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .exercise-status-section {
+                        flex-direction: row !important;
+                        align-items: center !important;
+                        justify-content: space-between !important;
+                    }
+                }
+                
+                /* Заголовок упражнения - колонка на мобилке, ряд на десктопе */
+                .exercise-header-section {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.5rem !important;
+                    margin-bottom: 0.75rem !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .exercise-header-section {
+                        flex-direction: row !important;
+                        align-items: center !important;
+                        justify-content: space-between !important;
+                    }
+                }
+                
+                /* Заголовок тренировки - колонка на мобилке, ряд на десктопе */
+                .workout-title-section {
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.5rem !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .workout-title-section {
+                        flex-direction: row !important;
+                        align-items: center !important;
+                        justify-content: space-between !important;
+                    }
+                }
                 .filters-row > div {
                     width: 100% !important;
                 }
@@ -1350,20 +1695,16 @@ function workoutApp() {
         
         <div x-show="currentWorkout" class="space-y-6">
             <!-- Заголовок и статус -->
-            <div class="flex items-start justify-between">
-                <div>
-                    <h4 class="text-2xl font-bold text-gray-900 mb-2" x-text="currentWorkout?.title"></h4>
-                    <div class="flex items-center space-x-4">
-                        <span class="px-3 py-1 rounded-full text-sm font-semibold"
-                              :class="{
-                                  'bg-green-100 text-green-800': currentWorkout?.status === 'completed',
-                                  'bg-red-100 text-red-800': currentWorkout?.status === 'cancelled',
-                                  'bg-blue-100 text-blue-800': currentWorkout?.status === 'planned'
-                              }"
-                              x-text="getStatusLabel(currentWorkout?.status)">
-                        </span>
-                    </div>
-                </div>
+            <div class="workout-title-section">
+                <h4 class="text-2xl font-bold text-gray-900" x-text="currentWorkout?.title"></h4>
+                <span class="px-3 py-1 rounded-full text-sm font-semibold"
+                      :class="{
+                          'bg-green-100 text-green-800': currentWorkout?.status === 'completed',
+                          'bg-red-100 text-red-800': currentWorkout?.status === 'cancelled',
+                          'bg-blue-100 text-blue-800': currentWorkout?.status === 'planned'
+                      }"
+                      x-text="getStatusLabel(currentWorkout?.status)">
+                </span>
             </div>
             
             <!-- Описание -->
@@ -1373,7 +1714,7 @@ function workoutApp() {
             </div>
             
             <!-- Детали -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="workout-details-grid">
                 <div class="bg-gray-50 rounded-xl p-4">
                     <div class="mb-2">
                         <span class="text-sm font-medium text-gray-500">Дата</span>
@@ -1409,19 +1750,31 @@ function workoutApp() {
                 <div class="space-y-4">
                     <template x-for="(exercise, index) in (currentWorkout?.exercises || [])" :key="`view-exercise-${index}`">
                         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                            <div class="flex items-center justify-between mb-3">
+                            <div class="exercise-header-section">
                                 <div class="flex items-center space-x-3">
                                     <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
                                     <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
                                     <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
                                 </div>
+                                <div class="exercise-status-badge" x-show="getExerciseStatus(exercise.exercise_id || exercise.id)">
+                                    <span class="px-2 py-1 rounded-full text-xs font-medium"
+                                          :class="{
+                                              'bg-green-100 text-green-800': getExerciseStatus(exercise.exercise_id || exercise.id) === 'completed',
+                                              'bg-yellow-100 text-yellow-800': getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial',
+                                              'bg-red-100 text-red-800': getExerciseStatus(exercise.exercise_id || exercise.id) === 'not_done'
+                                          }"
+                                          x-text="getExerciseStatus(exercise.exercise_id || exercise.id) === 'completed' ? 'Выполнено' : 
+                                                  getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial' ? 'Частично' : 
+                                                  getExerciseStatus(exercise.exercise_id || exercise.id) === 'not_done' ? 'Не выполнено' : ''">
+                                    </span>
+                                </div>
                             </div>
                             
                             <!-- Параметры упражнения -->
-                            <div class="grid gap-4" :class="`grid-cols-${(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).length}`">
+                            <div class="exercise-params-grid">
                                 <!-- Подходы -->
                                 <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('sets')" 
-                                     class="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-4">
+                                     class="exercise-field bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
                                             <svg class="w-4 h-4 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1435,7 +1788,7 @@ function workoutApp() {
                                 
                                 <!-- Повторения -->
                                 <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
-                                     class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
+                                     class="exercise-field bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
                                             <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1449,7 +1802,7 @@ function workoutApp() {
                                 
                                 <!-- Вес -->
                                 <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
-                                     class="bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-lg p-4">
+                                     class="exercise-field bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
                                             <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1463,7 +1816,7 @@ function workoutApp() {
                                 
                                 <!-- Отдых -->
                                 <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
-                                     class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
+                                     class="exercise-field bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
                                             <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1539,6 +1892,154 @@ function workoutApp() {
                                     <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">Частично выполнено</span>
                                 </div>
                                 <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="exercise.progress?.athlete_comment || ''"></div>
+                            </div>
+                            
+                            
+                            <!-- Статус выполнения упражнения (для тренера) -->
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <div class="exercise-status-section mb-3">
+                                    <span class="text-sm font-medium text-gray-700 mb-2 block">Статус выполнения:</span>
+                                    <div class="exercise-status-buttons flex space-x-2">
+                                        <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'completed')" 
+                                                :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
+                                            ✅ Выполнено
+                                        </button>
+                                        <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'partial')" 
+                                                :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
+                                            ⚠️ Частично
+                                        </button>
+                                        <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'not_done')" 
+                                                :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
+                                            ❌ Не выполнено
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Поля для каждого подхода (появляется при выборе "Частично") -->
+                                <div x-show="getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial'" class="mt-4">
+                                    <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-lg p-4">
+                                        <div class="flex items-center justify-between mb-3 cursor-pointer rounded-lg p-2 -m-2"
+                                             @click="toggleSetsExpanded(exercise.exercise_id || exercise.id)">
+                                            <div class="flex items-center">
+                                                <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                                </svg>
+                                                <h6 class="text-sm font-semibold text-yellow-800">Детализация по подходам</h6>
+                                            </div>
+                                            <div class="flex items-center text-xs text-yellow-700 hover:text-yellow-800 transition-colors">
+                                                <span x-text="isSetsExpanded(exercise.exercise_id || exercise.id) ? 'Свернуть' : 'Развернуть'"></span>
+                                                <svg class="w-4 h-4 ml-1 transition-transform" 
+                                                     :class="isSetsExpanded(exercise.exercise_id || exercise.id) ? 'rotate-180' : ''"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Индикатор свернутого состояния -->
+                                        <div x-show="!isSetsExpanded(exercise.exercise_id || exercise.id)" 
+                                             class="text-xs text-yellow-600 mb-2 cursor-pointer rounded-lg p-2 -m-2"
+                                             @click="toggleSetsExpanded(exercise.exercise_id || exercise.id)">
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                <span>Поля подходов свернуты. Нажмите для разворачивания.</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div x-show="isSetsExpanded(exercise.exercise_id || exercise.id)" x-transition>
+                                            <p class="text-xs text-yellow-700 mb-4">Укажите, что именно выполнил спортсмен в каждом подходе:</p>
+                                        
+                                        <div class="space-y-3">
+                                            <template x-for="(set, setIndex) in getSetsData(exercise.exercise_id || exercise.id)" :key="`set-${exercise.exercise_id || exercise.id}-${setIndex}`">
+                                                <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-lg p-4">
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <div class="flex items-center">
+                                                            <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                                            </svg>
+                                                            <span class="text-sm font-semibold text-yellow-800">Подход <span x-text="setIndex + 1"></span></span>
+                                                        </div>
+                                                        <span class="text-xs text-yellow-600">из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
+                                                    </div>
+                                                    
+                                                    <div class="sets-fields-grid">
+                                                        <!-- Повторения -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
+                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-green-800">Повторения</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    x-model="set.reps"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Вес -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
+                                                             class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-purple-800">Вес (кг)</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    step="0.5"
+                                                                    x-model="set.weight"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'weight', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Отдых -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
+                                                             class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-orange-800">Отдых (мин)</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    step="0.1"
+                                                                    x-model="set.rest"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
+                                                                    placeholder="1.0"
+                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        
+                                            <div class="text-xs text-yellow-600 mt-3">
+                                                💡 Изменения сохраняются автоматически при вводе
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </template>

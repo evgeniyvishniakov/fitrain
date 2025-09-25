@@ -94,6 +94,7 @@ Route::middleware(["auth"])->group(function () {
         
         // Прогресс упражнений для тренеров
         Route::get("/trainer/exercise-progress", [TrainerController::class, "getExerciseProgress"])->name("crm.trainer.exercise-progress.get");
+        Route::patch("/trainer/exercise-progress", [TrainerController::class, "updateExerciseProgress"])->name("crm.trainer.exercise-progress.update");
     });
     
     // Маршруты только для спортсменов

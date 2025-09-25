@@ -88,6 +88,7 @@
 
     <!-- Статистика -->
     <div class="stats-container">
+        <!-- Всего тренировок -->
         <div class="stat-card">
             <div class="stat-icon stat-icon-blue">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,23 +96,12 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Тренировки</div>
-                <div class="stat-value">{{ $workouts ?? 0 }}</div>
+                <div class="stat-label">Всего тренировок</div>
+                <div class="stat-value">{{ $totalWorkouts ?? 0 }}</div>
             </div>
         </div>
 
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-green">
-                <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-            </div>
-            <div class="stat-content">
-                <div class="stat-label">Прогресс</div>
-                <div class="stat-value">{{ $progress ?? 0 }}</div>
-            </div>
-        </div>
-
+        <!-- Запланировано -->
         <div class="stat-card">
             <div class="stat-icon stat-icon-yellow">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,20 +109,50 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Сегодня</div>
-                <div class="stat-value">3</div>
+                <div class="stat-label">Запланировано</div>
+                <div class="stat-value">{{ $plannedWorkouts ?? 0 }}</div>
             </div>
         </div>
 
+        <!-- Завершено -->
         <div class="stat-card">
-            <div class="stat-icon stat-icon-purple">
+            <div class="stat-icon stat-icon-green">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Питание</div>
-                <div class="stat-value">85%</div>
+                <div class="stat-label">Завершено</div>
+                <div class="stat-value">{{ $completedWorkouts ?? 0 }}</div>
+            </div>
+        </div>
+
+        <!-- Последняя/Следующая тренировка -->
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-purple">
+                <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">
+                    @if($lastOrNextWorkout)
+                        @if($lastOrNextWorkout->status === 'completed')
+                            Последняя тренировка
+                        @else
+                            Следующая тренировка
+                        @endif
+                    @else
+                        Тренировки
+                    @endif
+                </div>
+                <div class="stat-value">
+                    @if($lastOrNextWorkout)
+                        {{ \Carbon\Carbon::parse($lastOrNextWorkout->date)->format('d.m') }}
+                    @else
+                        0
+                    @endif
+                </div>
             </div>
         </div>
     </div>
