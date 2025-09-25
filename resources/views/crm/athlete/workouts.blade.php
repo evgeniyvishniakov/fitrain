@@ -768,49 +768,78 @@
                                         
                                         <div class="space-y-3">
                                             <template x-for="(set, setIndex) in getSetsData(exercise.exercise_id || exercise.id)" :key="`set-${exercise.exercise_id || exercise.id}-${setIndex}`">
-                                                <div class="bg-white border border-yellow-200 rounded-lg p-3">
-                                                    <div class="flex items-center justify-between mb-2">
-                                                        <span class="text-sm font-medium text-gray-700">Подход <span x-text="setIndex + 1"></span></span>
-                                                        <span class="text-xs text-gray-500">из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
+                                                <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-lg p-4">
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <div class="flex items-center">
+                                                            <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                                            </svg>
+                                                            <span class="text-sm font-semibold text-yellow-800">Подход <span x-text="setIndex + 1"></span></span>
+                                                        </div>
+                                                        <span class="text-xs text-yellow-600">из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
                                                     </div>
                                                     
-                                                    <div class="grid grid-cols-3 gap-3">
+                                                    <div class="grid grid-cols-3 gap-4">
                                                         <!-- Повторения -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')">
-                                                            <label class="block text-xs font-medium text-gray-600 mb-1">Повторения</label>
-                                                            <input 
-                                                                type="number" 
-                                                                x-model="set.reps"
-                                                                @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
-                                                                placeholder="0"
-                                                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
-                                                                min="0">
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
+                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-green-800">Повторения</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    x-model="set.reps"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
                                                         </div>
                                                         
                                                         <!-- Вес -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')">
-                                                            <label class="block text-xs font-medium text-gray-600 mb-1">Вес (кг)</label>
-                                                            <input 
-                                                                type="number" 
-                                                                step="0.5"
-                                                                x-model="set.weight"
-                                                                @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'weight', $event.target.value)"
-                                                                placeholder="0"
-                                                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
-                                                                min="0">
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
+                                                             class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-purple-800">Вес (кг)</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    step="0.5"
+                                                                    x-model="set.weight"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'weight', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
                                                         </div>
                                                         
-                                                        <!-- Отдых (предзаполняется) -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')">
-                                                            <label class="block text-xs font-medium text-gray-600 mb-1">Отдых (мин)</label>
-                                                            <input 
-                                                                type="number" 
-                                                                step="0.1"
-                                                                x-model="set.rest"
-                                                                @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
-                                                                placeholder="1.0"
-                                                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
-                                                                min="0">
+                                                        <!-- Отдых -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
+                                                             class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-orange-800">Отдых (мин)</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    step="0.1"
+                                                                    x-model="set.rest"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
+                                                                    placeholder="1.0"
+                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
