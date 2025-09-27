@@ -587,8 +587,12 @@ window.onclick = function(event) {
     }
 }
 
-.dashboard-bottom-section > div {
-    flex: 1 !important; /* Равная ширина блоков */
+.dashboard-bottom-section > div:first-child {
+    flex: 0 0 40% !important; /* Календарь - 40% ширины */
+}
+
+.dashboard-bottom-section > div:last-child {
+    flex: 0 0 60% !important; /* Тренировки - 60% ширины */
 }
 
 /* Стили календаря */
