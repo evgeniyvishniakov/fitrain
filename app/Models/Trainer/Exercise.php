@@ -18,6 +18,7 @@ class Exercise extends Model
         'difficulty',
         'instructions',
         'image_url',
+        'video_url',
         'is_active',
         'fields_config'
     ];

@@ -156,6 +156,21 @@
                     </div>
 
                     <div>
+                        <label for="video_url" class="block text-sm font-medium text-gray-700 mb-2">
+                            Ссылка на видео
+                        </label>
+                        <input type="url" 
+                               id="video_url" 
+                               name="video_url" 
+                               value="{{ old('video_url', $exercise->video_url) }}"
+                               class="input @error('video_url') border-red-500 @enderror"
+                               placeholder="https://youtube.com/watch?v=...">
+                        @error('video_url')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
                             Категория *
                         </label>

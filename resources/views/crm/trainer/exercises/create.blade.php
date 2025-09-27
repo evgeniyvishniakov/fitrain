@@ -121,10 +121,10 @@
         <form method="POST" action="{{ route('crm.exercises.store') }}" class="space-y-4">
             @csrf
             
-            <!-- Основные поля в одну строку -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Название и ссылка на видео в одном ряду -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Название *</label>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Название упражнения *</label>
                     <input type="text" 
                            id="name" 
                            name="name" 
@@ -136,6 +136,23 @@
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label for="video_url" class="block text-sm font-medium text-gray-700 mb-2">Ссылка на видео</label>
+                    <input type="url" 
+                           id="video_url" 
+                           name="video_url" 
+                           value="{{ old('video_url') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('video_url') border-red-500 @enderror"
+                           placeholder="https://youtube.com/watch?v=...">
+                    @error('video_url')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Остальные поля в одну строку -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <div>
                     <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>

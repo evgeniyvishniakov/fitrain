@@ -13,9 +13,16 @@
                 exerciseStatuses: {}, // Хранение статусов упражнений
                 exerciseComments: {}, // Хранение комментариев к упражнениям
                 exerciseSetsData: {}, // Хранение данных по подходам
-                exerciseSetsExpanded: {}, // Хранение состояния развернутости полей подходов
-                saveTimeout: null, // Таймер для автосохранения
-                lastSaved: null, // Время последнего сохранения
+        exerciseSetsExpanded: {}, // Хранение состояния развернутости полей подходов
+        saveTimeout: null, // Таймер для автосохранения
+        lastSaved: null, // Время последнего сохранения
+        
+        // Модальное окно для видео
+        videoModal: {
+            isOpen: false,
+            url: '',
+            title: ''
+        },
                 workoutProgress: {}, // Прогресс для каждой тренировки
                 isLoading: true, // Флаг загрузки
                 lastChangedExercise: null, // Последнее измененное упражнение
@@ -28,6 +35,11 @@
 
                 // Навигация
                 showList() {
+                    // Обновляем данные в списке перед возвратом
+                    if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
+                        this.updateWorkoutProgressInList();
+                    }
+                    
                     this.currentView = 'list';
                     this.currentWorkout = null;
                 },
@@ -114,6 +126,9 @@
                         delete this.exerciseSetsData[exerciseId];
                         delete this.exerciseSetsExpanded[exerciseId];
                     }
+                    
+                    // Немедленно обновляем данные в списке
+                    this.updateWorkoutProgressInList();
                     
                     // Автосохранение через 2 секунды после изменения
                     this.autoSave();
@@ -267,6 +282,9 @@
                             }
                             
                             showSuccess(title, message);
+                            
+                            // Обновляем данные в списке тренировок
+                            this.updateWorkoutProgressInList();
                         } else {
                             showError('Ошибка сохранения', result.message || 'Не удалось сохранить прогресс. Попробуйте еще раз.');
                         }
@@ -305,6 +323,40 @@
                     }
                 },
 
+                // Обновление прогресса упражнений в списке тренировок
+                updateWorkoutProgressInList() {
+                    if (!this.currentWorkout) return;
+                    
+                    // Находим тренировку в списке
+                    const workoutInList = this.workouts.find(w => w.id === this.currentWorkout.id);
+                    if (!workoutInList) return;
+                    
+                    // Обновляем прогресс упражнений в списке
+                    if (workoutInList.exercises) {
+                        workoutInList.exercises.forEach(exercise => {
+                            const exerciseId = exercise.exercise_id || exercise.id;
+                            
+                            // Обновляем статус упражнения в workoutProgress
+                            if (this.exerciseStatuses[exerciseId]) {
+                                if (!this.workoutProgress[this.currentWorkout.id]) {
+                                    this.workoutProgress[this.currentWorkout.id] = {};
+                                }
+                                
+                                this.workoutProgress[this.currentWorkout.id][exerciseId] = {
+                                    status: this.exerciseStatuses[exerciseId],
+                                    athlete_comment: this.exerciseComments[exerciseId] || null,
+                                    sets_data: this.exerciseSetsData[exerciseId] || null
+                                };
+                            }
+                        });
+                        
+                        // Принудительно обновляем реактивность Alpine.js
+                        this.$nextTick(() => {
+                            // Триггерим обновление через изменение массива
+                            this.workouts = [...this.workouts];
+                        });
+                    }
+                },
 
                 // Вспомогательные методы
                 getStatusLabel(status) {
@@ -315,6 +367,136 @@
                         'in_progress': 'В процессе'
                     };
                     return labels[status] || 'Неизвестно';
+                },
+                
+                // Методы для работы с видео модальным окном
+                openVideoModal(url, title) {
+                    this.videoModal.isOpen = true;
+                    this.videoModal.url = url;
+                    this.videoModal.title = title;
+                },
+                
+                closeVideoModal() {
+                    this.videoModal.isOpen = false;
+                    this.videoModal.url = '';
+                    this.videoModal.title = '';
+                },
+                
+                isYouTubeUrl(url) {
+                    if (!url) return false;
+                    return url.includes('youtube.com') || url.includes('youtu.be');
+                },
+                
+                getYouTubeEmbedUrl(url) {
+                    if (!url) return '';
+                    
+                    let videoId = '';
+                    
+                    // youtube.com/watch?v=VIDEO_ID
+                    if (url.includes('youtube.com/watch?v=')) {
+                        videoId = url.split('v=')[1].split('&')[0];
+                    }
+                    // youtu.be/VIDEO_ID
+                    else if (url.includes('youtu.be/')) {
+                        videoId = url.split('youtu.be/')[1].split('?')[0];
+                    }
+                    // youtube.com/embed/VIDEO_ID
+                    else if (url.includes('youtube.com/embed/')) {
+                        videoId = url.split('embed/')[1].split('?')[0];
+                    }
+                    
+                    return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+                },
+                
+                // Простой метод для открытия модального окна
+                openSimpleModal(url, title) {
+                    
+                    // Создаем модальное окно
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.8);
+                        z-index: 9999;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    `;
+                    
+                    // Создаем контент
+                    const content = document.createElement('div');
+                    content.style.cssText = `
+                        position: relative;
+                        background: white;
+                        border-radius: 12px;
+                        padding: 20px;
+                        width: 80%;
+                        max-width: 800px;
+                        max-height: 80%;
+                        overflow: hidden;
+                    `;
+                    
+                    // Создаем заголовок
+                    const header = document.createElement('div');
+                    header.style.cssText = `
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 20px;
+                        border-bottom: 1px solid #eee;
+                        padding-bottom: 10px;
+                    `;
+                    header.innerHTML = `
+                        <h3 style="margin: 0; font-size: 18px; font-weight: bold;">${title}</h3>
+                        <button style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+                    `;
+                    
+                    // Добавляем обработчик клика на кнопку закрытия
+                    const closeButton = header.querySelector('button');
+                    closeButton.addEventListener('click', function() {
+                        modal.remove();
+                    });
+                    
+                    // Создаем видео
+                    const videoContainer = document.createElement('div');
+                    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                        const embedUrl = this.getYouTubeEmbedUrl(url);
+                        videoContainer.style.cssText = `
+                            position: relative;
+                            padding-bottom: 56.25%;
+                            height: 0;
+                            overflow: hidden;
+                        `;
+                        videoContainer.innerHTML = `
+                            <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
+                        `;
+                    } else {
+                        videoContainer.innerHTML = `
+                            <div style="text-align: center;">
+                                <a href="${url}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
+                                    Открыть видео
+                                </a>
+                            </div>
+                        `;
+                    }
+                    
+                    // Собираем все вместе
+                    content.appendChild(header);
+                    content.appendChild(videoContainer);
+                    modal.appendChild(content);
+                    
+                    // Добавляем в DOM
+                    document.body.appendChild(modal);
+                    
+                    // Закрытие по клику на фон
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
                 }
             }
         }
@@ -666,10 +848,20 @@
                                     <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
                                     
                                 </div>
+                                <!-- Ссылка на видео упражнения -->
+                                <div x-show="exercise.video_url" class="exercise-video-link">
+                                    <button @click="openSimpleModal(exercise.video_url, exercise.name)"
+                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        Видео
+                                    </button>
+                                </div>
                             </div>
                             
                             <!-- Параметры упражнения -->
-                            <div class="exercise-params-grid grid grid-cols-4 gap-4">
+                            <div class="exercise-params-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                                 <!-- Подходы -->
                                 <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('sets')" 
                                      class="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-4">
@@ -723,6 +915,49 @@
                                             <span class="text-sm font-semibold text-orange-800">Отдых (мин)</span>
                                         </div>
                                         <div class="text-2xl font-bold text-orange-900" x-text="exercise.rest || exercise.pivot?.rest || 1.0"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Время -->
+                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('time')" 
+                                     class="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
+                                    <div class="text-center">
+                                        <div class="flex items-center justify-center mb-2">
+                                            <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            <span class="text-sm font-semibold text-blue-800">Время (сек)</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-blue-900" x-text="exercise.time || exercise.pivot?.time || 0"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Темп -->
+                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('tempo')" 
+                                     class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
+                                    <div class="text-center">
+                                        <div class="flex items-center justify-center mb-2">
+                                            <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                            </svg>
+                                            <span class="text-sm font-semibold text-purple-800">Темп/Скорость</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-purple-900" x-text="exercise.tempo || exercise.pivot?.tempo || ''"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Дистанция -->
+                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('distance')" 
+                                     class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
+                                    <div class="text-center">
+                                        <div class="flex items-center justify-center mb-2">
+                                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            </svg>
+                                            <span class="text-sm font-semibold text-green-800">Дистанция (м)</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-green-900" x-text="exercise.distance || exercise.pivot?.distance || 0"></div>
                                     </div>
                                 </div>
                             </div>
@@ -799,7 +1034,7 @@
                                                         <span class="text-xs text-yellow-600">из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
                                                     </div>
                                                     
-                                                    <div class="grid grid-cols-3 gap-4">
+                                                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                         <!-- Повторения -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
                                                              class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
@@ -858,6 +1093,66 @@
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
                                                                     placeholder="1.0"
                                                                     class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Время -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('time')" 
+                                                             class="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-blue-800">Время (сек)</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    x-model="set.time"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'time', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-blue-900 bg-transparent border-none outline-none"
+                                                                    min="0">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Темп -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('tempo')" 
+                                                             class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-purple-800">Темп/Скорость</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="text" 
+                                                                    x-model="set.tempo"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'tempo', $event.target.value)"
+                                                                    placeholder=""
+                                                                    class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Дистанция -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('distance')" 
+                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-green-800">Дистанция (м)</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    x-model="set.distance"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'distance', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none"
                                                                     min="0">
                                                             </div>
                                                         </div>
@@ -1024,4 +1319,6 @@
     }
 }
 </style>
+
+
 @endsection

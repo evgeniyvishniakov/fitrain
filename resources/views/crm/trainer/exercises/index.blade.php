@@ -23,6 +23,7 @@ function exerciseApp() {
         formEquipment: '',
         formMuscleGroupsText: '',
         formInstructions: '',
+        formVideoUrl: '',
         formFieldsConfig: ['sets', 'reps', 'weight', 'rest'], // По умолчанию
         
         // Навигация
@@ -40,6 +41,7 @@ function exerciseApp() {
             this.formEquipment = '';
             this.formMuscleGroupsText = '';
             this.formInstructions = '';
+            this.formVideoUrl = '';
             this.formFieldsConfig = ['sets', 'reps', 'weight', 'rest'];
         },
         
@@ -52,6 +54,7 @@ function exerciseApp() {
             this.formEquipment = this.currentExercise.equipment;
             this.formMuscleGroupsText = Array.isArray(this.currentExercise.muscle_groups) ? this.currentExercise.muscle_groups.join(', ') : '';
             this.formInstructions = this.currentExercise.instructions || '';
+            this.formVideoUrl = this.currentExercise.video_url || '';
             this.formFieldsConfig = this.currentExercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
         },
         
@@ -152,6 +155,7 @@ function exerciseApp() {
                     equipment: this.formEquipment,
                     muscle_groups: muscleGroups,
                     instructions: this.formInstructions,
+                    video_url: this.formVideoUrl,
                     fields_config: this.formFieldsConfig
                 };
                 
@@ -285,6 +289,33 @@ function exerciseApp() {
                     }
                 }));
             }
+        },
+        
+        // Методы для работы с видео
+        isYouTubeUrl(url) {
+            if (!url) return false;
+            return url.includes('youtube.com') || url.includes('youtu.be');
+        },
+        
+        getYouTubeEmbedUrl(url) {
+            if (!url) return '';
+            
+            let videoId = '';
+            
+            // youtube.com/watch?v=VIDEO_ID
+            if (url.includes('youtube.com/watch?v=')) {
+                videoId = url.split('v=')[1].split('&')[0];
+            }
+            // youtu.be/VIDEO_ID
+            else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            }
+            // youtube.com/embed/VIDEO_ID
+            else if (url.includes('youtube.com/embed/')) {
+                videoId = url.split('embed/')[1].split('?')[0];
+            }
+            
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
         }
     }
 }
@@ -518,13 +549,23 @@ function exerciseApp() {
         
         <form @submit.prevent="saveExercise()" class="space-y-6">
             <div class="space-y-6">
-                <!-- Название -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Название упражнения *</label>
-                    <input type="text" 
-                           x-model="formName" 
-                           required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                <!-- Название и ссылка на видео в одном ряду -->
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Название упражнения *</label>
+                        <input type="text" 
+                               x-model="formName" 
+                               required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    </div>
+                    
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ссылка на видео</label>
+                        <input type="url" 
+                               x-model="formVideoUrl" 
+                               placeholder="https://youtube.com/watch?v=..."
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    </div>
                 </div>
                 
                 <!-- Три поля в одну строку -->
@@ -868,6 +909,30 @@ function exerciseApp() {
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Инструкции по выполнению</h3>
                 <div class="bg-gray-50 rounded-lg p-4">
                     <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
+                </div>
+            </div>
+            
+            <!-- Видео -->
+            <div x-show="currentExercise?.video_url" class="mt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Видео упражнения</h3>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center">
+                        <a :href="currentExercise?.video_url" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            Открыть видео
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

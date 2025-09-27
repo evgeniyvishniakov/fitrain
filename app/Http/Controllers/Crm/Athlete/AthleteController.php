@@ -168,7 +168,7 @@ class AthleteController extends BaseController
             // Получаем тренировки спортсмена с тренером и упражнениями
             $workouts = $athlete->workouts()
                 ->with(['trainer', 'exercises' => function($query) {
-                    $query->select('exercises.*', 'workout_exercise.*');
+                    $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
                 }])
                 ->orderBy('date', 'desc')
                 ->orderBy('time', 'desc')

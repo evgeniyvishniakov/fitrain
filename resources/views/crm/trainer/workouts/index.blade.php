@@ -10,6 +10,7 @@ function workoutApp() {
         currentView: 'list', // list, create, edit, view
         workouts: @json($workouts->items()),
         totalWorkouts: {{ $workouts->total() }},
+        
         currentPage: {{ $workouts->currentPage() }},
         lastPage: {{ $workouts->lastPage() }},
         currentWorkout: null,
@@ -33,12 +34,24 @@ function workoutApp() {
         exerciseSetsExpanded: {}, // Хранение состояния развернутости полей подходов
         saveTimeout: null, // Таймер для автосохранения
         lastSaved: null, // Время последнего сохранения
+        
+        // Модальное окно для видео
+        videoModal: {
+            isOpen: false,
+            url: '',
+            title: ''
+        },
         workoutProgress: {}, // Прогресс для каждой тренировки
         lastChangedExercise: null, // Последнее измененное упражнение
         exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
         
         // Навигация
         showList() {
+            // Обновляем данные в списке перед возвратом
+            if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
+                this.updateWorkoutProgressInList();
+            }
+            
             this.currentView = 'list';
             this.currentWorkout = null;
         },
@@ -127,6 +140,46 @@ function workoutApp() {
             // Загружаем сохраненный прогресс при открытии тренировки
             this.loadExerciseProgress(workoutId);
         },
+
+        // Обновление прогресса упражнений в списке тренировок
+        updateWorkoutProgressInList() {
+            if (!this.currentWorkout) return;
+            
+            // Находим тренировку в списке
+            const workoutInList = this.workouts.find(w => w.id === this.currentWorkout.id);
+            if (!workoutInList) return;
+            
+            // Обновляем прогресс упражнений в списке
+            if (workoutInList.exercises) {
+                workoutInList.exercises.forEach(exercise => {
+                    const exerciseId = exercise.exercise_id || exercise.id;
+                    
+                    // Обновляем статус упражнения
+                    if (this.exerciseStatuses[exerciseId]) {
+                        if (!exercise.progress) {
+                            exercise.progress = {};
+                        }
+                        exercise.progress.status = this.exerciseStatuses[exerciseId];
+                        
+                        // Обновляем комментарий
+                        if (this.exerciseComments[exerciseId]) {
+                            exercise.progress.athlete_comment = this.exerciseComments[exerciseId];
+                        }
+                        
+                        // Обновляем данные по подходам
+                        if (this.exerciseSetsData[exerciseId]) {
+                            exercise.progress.sets_data = this.exerciseSetsData[exerciseId];
+                        }
+                    }
+                });
+                
+                // Принудительно обновляем реактивность Alpine.js
+                this.$nextTick(() => {
+                    // Триггерим обновление через изменение массива
+                    this.workouts = [...this.workouts];
+                });
+            }
+        },
         
         // Методы для работы с упражнениями (скопированы из athlete/workouts.blade.php)
         
@@ -150,6 +203,9 @@ function workoutApp() {
                 delete this.exerciseSetsData[exerciseId];
                 delete this.exerciseSetsExpanded[exerciseId];
             }
+            
+            // Немедленно обновляем данные в списке
+            this.updateWorkoutProgressInList();
             
             // Автосохранение через 2 секунды после изменения
             this.autoSave();
@@ -302,6 +358,9 @@ function workoutApp() {
                     }
                     
                     showSuccess(title, message);
+                    
+                    // Обновляем данные в списке тренировок
+                    this.updateWorkoutProgressInList();
                 } else {
                     showError('Ошибка сохранения', result.message || 'Не удалось сохранить прогресс. Попробуйте еще раз.');
                 }
@@ -960,6 +1019,137 @@ function workoutApp() {
             // Иначе используем стандартное форматирование
             const date = new Date(dateString);
             return date.toLocaleDateString('ru-RU');
+        },
+        
+        // Методы для работы с видео модальным окном
+        openVideoModal(url, title) {
+            console.log('Opening video modal:', { url, title });
+            this.videoModal.isOpen = true;
+            this.videoModal.url = url;
+            this.videoModal.title = title;
+        },
+        
+        closeVideoModal() {
+            this.videoModal.isOpen = false;
+            this.videoModal.url = '';
+            this.videoModal.title = '';
+        },
+        
+        isYouTubeUrl(url) {
+            if (!url) return false;
+            return url.includes('youtube.com') || url.includes('youtu.be');
+        },
+        
+        getYouTubeEmbedUrl(url) {
+            if (!url) return '';
+            
+            let videoId = '';
+            
+            // youtube.com/watch?v=VIDEO_ID
+            if (url.includes('youtube.com/watch?v=')) {
+                videoId = url.split('v=')[1].split('&')[0];
+            }
+            // youtu.be/VIDEO_ID
+            else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split('?')[0];
+            }
+            // youtube.com/embed/VIDEO_ID
+            else if (url.includes('youtube.com/embed/')) {
+                videoId = url.split('embed/')[1].split('?')[0];
+            }
+            
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+        },
+        
+        // Простой метод для открытия модального окна
+        openSimpleModal(url, title) {
+            
+            // Создаем модальное окно
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            // Создаем контент
+            const content = document.createElement('div');
+            content.style.cssText = `
+                position: relative;
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                width: 80%;
+                max-width: 800px;
+                max-height: 80%;
+                overflow: hidden;
+            `;
+            
+            // Создаем заголовок
+            const header = document.createElement('div');
+            header.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 10px;
+            `;
+            header.innerHTML = `
+                <h3 style="margin: 0; font-size: 18px; font-weight: bold;">${title}</h3>
+                <button style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+            `;
+            
+            // Добавляем обработчик клика на кнопку закрытия
+            const closeButton = header.querySelector('button');
+            closeButton.addEventListener('click', function() {
+                modal.remove();
+            });
+            
+            // Создаем видео
+            const videoContainer = document.createElement('div');
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                const embedUrl = this.getYouTubeEmbedUrl(url);
+                videoContainer.style.cssText = `
+                    position: relative;
+                    padding-bottom: 56.25%;
+                    height: 0;
+                    overflow: hidden;
+                `;
+                videoContainer.innerHTML = `
+                    <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>
+                `;
+            } else {
+                videoContainer.innerHTML = `
+                    <div style="text-align: center;">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
+                            Открыть видео
+                        </a>
+                    </div>
+                `;
+            }
+            
+            // Собираем все вместе
+            content.appendChild(header);
+            content.appendChild(videoContainer);
+            modal.appendChild(content);
+            
+            // Добавляем в DOM
+            document.body.appendChild(modal);
+            
+            // Закрытие по клику на фон
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
     }
 }
@@ -1084,6 +1274,7 @@ function workoutApp() {
 @section("content")
 <div x-data="workoutApp()" x-cloak class="space-y-6">
     
+
     <!-- Фильтры и поиск -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -1809,17 +2000,16 @@ function workoutApp() {
                                     <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
                                     <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
                                 </div>
-                                <div class="exercise-status-badge" x-show="getExerciseStatus(exercise.exercise_id || exercise.id)">
-                                    <span class="px-2 py-1 rounded-full text-xs font-medium"
-                                          :class="{
-                                              'bg-green-100 text-green-800': getExerciseStatus(exercise.exercise_id || exercise.id) === 'completed',
-                                              'bg-yellow-100 text-yellow-800': getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial',
-                                              'bg-red-100 text-red-800': getExerciseStatus(exercise.exercise_id || exercise.id) === 'not_done'
-                                          }"
-                                          x-text="getExerciseStatus(exercise.exercise_id || exercise.id) === 'completed' ? 'Выполнено' : 
-                                                  getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial' ? 'Частично' : 
-                                                  getExerciseStatus(exercise.exercise_id || exercise.id) === 'not_done' ? 'Не выполнено' : ''">
-                                    </span>
+                                <!-- Ссылка на видео упражнения -->
+                                <div x-show="exercise.video_url" class="exercise-video-link">
+                                    <!-- Кнопка для модального окна -->
+                                    <button @click="openSimpleModal(exercise.video_url, exercise.name)"
+                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        Видео
+                                    </button>
                                 </div>
                             </div>
                             
@@ -2871,5 +3061,45 @@ document.addEventListener('DOMContentLoaded', function() {
     
 });
 </script>
+
+<!-- Простое модальное окно для видео -->
+<div x-show="videoModal.isOpen" 
+     x-cloak
+     style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    
+    <!-- Фон для закрытия -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" @click="closeVideoModal()"></div>
+    
+    <!-- Модальное окно -->
+    <div style="position: relative; background: white; border-radius: 12px; padding: 20px; max-width: 90%; max-height: 90%; overflow: hidden;">
+        
+        <!-- Заголовок -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: bold;" x-text="videoModal.title"></h3>
+            <button @click="closeVideoModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        
+        <!-- Контент -->
+        <div>
+            <div x-show="isYouTubeUrl(videoModal.url)" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                <iframe :src="getYouTubeEmbedUrl(videoModal.url)" 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                        allowfullscreen>
+                </iframe>
+            </div>
+            <div x-show="!isYouTubeUrl(videoModal.url)" style="text-align: center;">
+                <a :href="videoModal.url" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
+                    <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    Открыть видео
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection

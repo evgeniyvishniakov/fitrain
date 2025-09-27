@@ -46,6 +46,7 @@ class ExerciseController extends BaseController
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
             'image_url' => 'nullable|url',
+            'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);
 
@@ -82,6 +83,7 @@ class ExerciseController extends BaseController
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
             'image_url' => 'nullable|url',
+            'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);
 

@@ -15,12 +15,12 @@ class WorkoutController extends BaseController
         
         if ($user->hasRole('trainer')) {
             $workouts = $user->trainerWorkouts()->with(['athlete', 'exercises' => function($query) {
-                $query->select('exercises.*', 'workout_exercise.*');
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
             }])->latest()->paginate(10);
             $athletes = $user->athletes()->get();
         } else {
             $workouts = $user->workouts()->with(['trainer', 'exercises' => function($query) {
-                $query->select('exercises.*', 'workout_exercise.*');
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
             }])->latest()->paginate(10);
             $athletes = collect();
         }
@@ -29,6 +29,11 @@ class WorkoutController extends BaseController
         $workouts->getCollection()->transform(function ($workout) {
             if ($workout->exercises) {
                 foreach ($workout->exercises as $exercise) {
+                    // Отладочная информация
+                    if ($exercise->video_url) {
+                        \Log::info("Exercise with video found: " . $exercise->name . " - " . $exercise->video_url);
+                    }
+                    
                     // Загружаем прогресс для этого упражнения
                     $exerciseId = $exercise->exercise_id ?? $exercise->id;
                     $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workout->id)
