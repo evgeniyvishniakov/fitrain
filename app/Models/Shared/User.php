@@ -37,6 +37,9 @@ class User extends Authenticatable
         'contact_info',
         'current_weight',
         'current_height',
+        'language_code',
+        'currency_code',
+        'timezone',
         'health_restrictions',
         'medical_documents',
         'last_medical_checkup',
@@ -152,6 +155,38 @@ class User extends Authenticatable
     public function measurements()
     {
         return $this->hasMany(\App\Models\Trainer\AthleteMeasurement::class, 'athlete_id');
+    }
+
+    /**
+     * Язык пользователя
+     */
+    public function language()
+    {
+        return $this->belongsTo(\App\Models\Language::class, 'language_code', 'code');
+    }
+
+    /**
+     * Валюта пользователя
+     */
+    public function currency()
+    {
+        return $this->belongsTo(\App\Models\Currency::class, 'currency_code', 'code');
+    }
+
+    /**
+     * Получить язык пользователя или дефолтный
+     */
+    public function getLanguage()
+    {
+        return $this->language ?? \App\Models\Language::getDefault();
+    }
+
+    /**
+     * Получить валюту пользователя или дефолтную
+     */
+    public function getCurrency()
+    {
+        return $this->currency ?? \App\Models\Currency::getDefault();
     }
 
 }

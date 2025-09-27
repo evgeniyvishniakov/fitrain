@@ -89,19 +89,17 @@ class SettingsController extends BaseController
     public function updatePreferences(Request $request)
     {
         $request->validate([
-            'language' => 'required|string|in:ru,en',
-            'currency' => 'required|string|in:RUB,USD,EUR',
-            'timezone' => 'required|string',
-            'date_format' => 'required|string|in:dd.mm.yyyy,mm/dd/yyyy,yyyy-mm-dd',
-            'time_format' => 'required|string|in:12h,24h',
+            'language_code' => 'required|string|exists:languages,code',
+            'currency_code' => 'required|string|exists:currencies,code',
+            'timezone' => 'required|string|max:50',
         ]);
 
         $user = Auth::user();
         $user->update($request->only([
-            'language', 'currency', 'timezone', 'date_format', 'time_format'
+            'language_code', 'currency_code', 'timezone'
         ]));
 
-        return redirect()->back()->with('success', 'Настройки предпочтений обновлены');
+        return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
     }
 
     /**

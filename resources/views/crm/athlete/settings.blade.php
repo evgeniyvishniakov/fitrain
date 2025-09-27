@@ -142,6 +142,98 @@
         </div>
     </div>
 
+    <!-- Настройки языка и валюты -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Язык и валюта</h2>
+        
+        <form method="POST" action="{{ route('crm.athlete.settings.update') }}" class="space-y-6">
+            @csrf
+            @method('PUT')
+            
+            <!-- Язык -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900">
+                    <i class="fas fa-language mr-2"></i>Язык интерфейса
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach(\App\Models\Language::getActive() as $language)
+                        <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ $athlete->language_code === $language->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
+                            <input type="radio" name="language_code" value="{{ $language->code }}" 
+                                   {{ $athlete->language_code === $language->code ? 'checked' : '' }}
+                                   class="sr-only">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">{{ $language->flag }}</span>
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ $language->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $language->native_name }}</div>
+                                </div>
+                            </div>
+                            @if($athlete->language_code === $language->code)
+                                <div class="absolute top-2 right-2">
+                                    <i class="fas fa-check-circle text-blue-500"></i>
+                                </div>
+                            @endif
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Валюта -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900">
+                    <i class="fas fa-dollar-sign mr-2"></i>Валюта
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach(\App\Models\Currency::getActive() as $currency)
+                        <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ $athlete->currency_code === $currency->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
+                            <input type="radio" name="currency_code" value="{{ $currency->code }}" 
+                                   {{ $athlete->currency_code === $currency->code ? 'checked' : '' }}
+                                   class="sr-only">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-lg font-medium">{{ $currency->symbol }}</span>
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ $currency->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $currency->code }}</div>
+                                </div>
+                            </div>
+                            @if($athlete->currency_code === $currency->code)
+                                <div class="absolute top-2 right-2">
+                                    <i class="fas fa-check-circle text-blue-500"></i>
+                                </div>
+                            @endif
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Часовой пояс -->
+            <div class="space-y-4">
+                <h3 class="text-base font-medium text-gray-900">
+                    <i class="fas fa-clock mr-2"></i>Часовой пояс
+                </h3>
+                <div class="max-w-md">
+                    <select name="timezone" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="Europe/Moscow" {{ $athlete->timezone === 'Europe/Moscow' ? 'selected' : '' }}>Москва (UTC+3)</option>
+                        <option value="Europe/London" {{ $athlete->timezone === 'Europe/London' ? 'selected' : '' }}>Лондон (UTC+0)</option>
+                        <option value="Europe/Berlin" {{ $athlete->timezone === 'Europe/Berlin' ? 'selected' : '' }}>Берлин (UTC+1)</option>
+                        <option value="Europe/Paris" {{ $athlete->timezone === 'Europe/Paris' ? 'selected' : '' }}>Париж (UTC+1)</option>
+                        <option value="America/New_York" {{ $athlete->timezone === 'America/New_York' ? 'selected' : '' }}>Нью-Йорк (UTC-5)</option>
+                        <option value="America/Los_Angeles" {{ $athlete->timezone === 'America/Los_Angeles' ? 'selected' : '' }}>Лос-Анджелес (UTC-8)</option>
+                        <option value="Asia/Tokyo" {{ $athlete->timezone === 'Asia/Tokyo' ? 'selected' : '' }}>Токио (UTC+9)</option>
+                        <option value="Asia/Shanghai" {{ $athlete->timezone === 'Asia/Shanghai' ? 'selected' : '' }}>Шанхай (UTC+8)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Сохранить настройки
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Статус аккаунта -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Статус аккаунта</h2>

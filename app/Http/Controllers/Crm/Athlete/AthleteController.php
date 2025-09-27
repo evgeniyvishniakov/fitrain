@@ -497,4 +497,23 @@ class AthleteController extends BaseController
             ], 500);
         }
     }
+
+    /**
+     * Обновить настройки спортсмена
+     */
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            'language_code' => 'required|string|exists:languages,code',
+            'currency_code' => 'required|string|exists:currencies,code',
+            'timezone' => 'required|string|max:50',
+        ]);
+
+        $athlete = auth()->user();
+        $athlete->update($request->only([
+            'language_code', 'currency_code', 'timezone'
+        ]));
+
+        return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
+    }
 }

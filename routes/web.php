@@ -16,3 +16,28 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Быстрый доступ к админ панели для разработки
+Route::get('/admin-panel', function () {
+    return redirect()->route('admin.login');
+});
+
+// Временные маршруты для тестирования админки
+Route::prefix('admin')->group(function () {
+    Route::get('/languages', function () {
+        return app(\App\Http\Controllers\Admin\LanguageController::class)->index();
+    });
+    
+    Route::get('/languages/{id}', function ($id) {
+        return app(\App\Http\Controllers\Admin\LanguageController::class)->show($id);
+    });
+    
+    Route::get('/languages/{id}/edit', function ($id) {
+        return app(\App\Http\Controllers\Admin\LanguageController::class)->edit($id);
+    });
+    
+    Route::delete('/languages/{id}', function ($id) {
+        return app(\App\Http\Controllers\Admin\LanguageController::class)->destroy($id);
+    });
+});
+

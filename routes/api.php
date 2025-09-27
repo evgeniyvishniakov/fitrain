@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
 // API для упражнений
 Route::get('/exercises', function () {
     $exercises = \App\Models\Trainer\Exercise::select('id', 'name', 'category', 'equipment', 'fields_config')->get();

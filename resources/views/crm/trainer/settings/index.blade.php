@@ -238,42 +238,86 @@ function settingsApp() {
             <div id="content-preferences" class="tab-content" style="display: none;">
                 <form method="POST" action="{{ route('crm.trainer.settings.preferences') }}" class="space-y-6">
                     @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="language" class="block text-sm font-medium text-gray-700 mb-2">Язык</label>
-                            <select id="language" name="language" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="ru" {{ ($user->language ?? 'ru') == 'ru' ? 'selected' : '' }}>Русский</option>
-                                <option value="en" {{ ($user->language ?? 'ru') == 'en' ? 'selected' : '' }}>English</option>
-                            </select>
+                    
+                    <!-- Язык -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-language mr-2"></i>Язык интерфейса
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach(\App\Models\Language::getActive() as $language)
+                                <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ $user->language_code === $language->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
+                                    <input type="radio" name="language_code" value="{{ $language->code }}" 
+                                           {{ $user->language_code === $language->code ? 'checked' : '' }}
+                                           class="sr-only">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-2xl">{{ $language->flag }}</span>
+                                        <div>
+                                            <div class="font-medium text-gray-900">{{ $language->name }}</div>
+                                            <div class="text-sm text-gray-500">{{ $language->native_name }}</div>
+                                        </div>
+                                    </div>
+                                    @if($user->language_code === $language->code)
+                                        <div class="absolute top-2 right-2">
+                                            <i class="fas fa-check-circle text-blue-500"></i>
+                                        </div>
+                                    @endif
+                                </label>
+                            @endforeach
                         </div>
-                        <div>
-                            <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">Валюта</label>
-                            <select id="currency" name="currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="RUB" {{ ($user->currency ?? 'RUB') == 'RUB' ? 'selected' : '' }}>₽ RUB</option>
-                                <option value="USD" {{ ($user->currency ?? 'RUB') == 'USD' ? 'selected' : '' }}>$ USD</option>
-                                <option value="EUR" {{ ($user->currency ?? 'RUB') == 'EUR' ? 'selected' : '' }}>€ EUR</option>
-                            </select>
+                    </div>
+
+                    <!-- Валюта -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-dollar-sign mr-2"></i>Валюта
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach(\App\Models\Currency::getActive() as $currency)
+                                <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ $user->currency_code === $currency->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
+                                    <input type="radio" name="currency_code" value="{{ $currency->code }}" 
+                                           {{ $user->currency_code === $currency->code ? 'checked' : '' }}
+                                           class="sr-only">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-lg font-medium">{{ $currency->symbol }}</span>
+                                        <div>
+                                            <div class="font-medium text-gray-900">{{ $currency->name }}</div>
+                                            <div class="text-sm text-gray-500">{{ $currency->code }}</div>
+                                        </div>
+                                    </div>
+                                    @if($user->currency_code === $currency->code)
+                                        <div class="absolute top-2 right-2">
+                                            <i class="fas fa-check-circle text-blue-500"></i>
+                                        </div>
+                                    @endif
+                                </label>
+                            @endforeach
                         </div>
-                        <div>
-                            <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Часовой пояс</label>
-                            <select id="timezone" name="timezone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="Europe/Moscow" {{ ($user->timezone ?? 'Europe/Moscow') == 'Europe/Moscow' ? 'selected' : '' }}>Москва (UTC+3)</option>
-                                <option value="Europe/London" {{ ($user->timezone ?? 'Europe/Moscow') == 'Europe/London' ? 'selected' : '' }}>Лондон (UTC+0)</option>
-                                <option value="America/New_York" {{ ($user->timezone ?? 'Europe/Moscow') == 'America/New_York' ? 'selected' : '' }}>Нью-Йорк (UTC-5)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="date_format" class="block text-sm font-medium text-gray-700 mb-2">Формат даты</label>
-                            <select id="date_format" name="date_format" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="d.m.Y" {{ ($user->date_format ?? 'd.m.Y') == 'd.m.Y' ? 'selected' : '' }}>31.12.2023</option>
-                                <option value="Y-m-d" {{ ($user->date_format ?? 'd.m.Y') == 'Y-m-d' ? 'selected' : '' }}>2023-12-31</option>
-                                <option value="m/d/Y" {{ ($user->date_format ?? 'd.m.Y') == 'm/d/Y' ? 'selected' : '' }}>12/31/2023</option>
+                    </div>
+
+                    <!-- Часовой пояс -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-clock mr-2"></i>Часовой пояс
+                        </h3>
+                        <div class="max-w-md">
+                            <select name="timezone" 
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="Europe/Moscow" {{ $user->timezone === 'Europe/Moscow' ? 'selected' : '' }}>Москва (UTC+3)</option>
+                                <option value="Europe/London" {{ $user->timezone === 'Europe/London' ? 'selected' : '' }}>Лондон (UTC+0)</option>
+                                <option value="Europe/Berlin" {{ $user->timezone === 'Europe/Berlin' ? 'selected' : '' }}>Берлин (UTC+1)</option>
+                                <option value="Europe/Paris" {{ $user->timezone === 'Europe/Paris' ? 'selected' : '' }}>Париж (UTC+1)</option>
+                                <option value="America/New_York" {{ $user->timezone === 'America/New_York' ? 'selected' : '' }}>Нью-Йорк (UTC-5)</option>
+                                <option value="America/Los_Angeles" {{ $user->timezone === 'America/Los_Angeles' ? 'selected' : '' }}>Лос-Анджелес (UTC-8)</option>
+                                <option value="Asia/Tokyo" {{ $user->timezone === 'Asia/Tokyo' ? 'selected' : '' }}>Токио (UTC+9)</option>
+                                <option value="Asia/Shanghai" {{ $user->timezone === 'Asia/Shanghai' ? 'selected' : '' }}>Шанхай (UTC+8)</option>
                             </select>
                         </div>
                     </div>
+
                     <div class="flex justify-end">
                         <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            Сохранить настройки
+                            <i class="fas fa-save mr-2"></i>Сохранить настройки
                         </button>
                     </div>
                 </form>

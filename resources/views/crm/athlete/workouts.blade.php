@@ -19,6 +19,7 @@
                 workoutProgress: {}, // Прогресс для каждой тренировки
                 isLoading: true, // Флаг загрузки
                 lastChangedExercise: null, // Последнее измененное упражнение
+                exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
 
                 // Инициализация
                 init() {
@@ -169,6 +170,16 @@
                 // Проверка, развернуты ли поля подходов
                 isSetsExpanded(exerciseId) {
                     return this.exerciseSetsExpanded[exerciseId] || false;
+                },
+
+                // Управление сворачиванием/разворачиванием упражнений в карточках
+                toggleExercisesExpanded(workoutId) {
+                    this.exercisesExpanded[workoutId] = !this.exercisesExpanded[workoutId];
+                },
+
+                // Проверка, развернуты ли упражнения в карточке
+                isExercisesExpanded(workoutId) {
+                    return this.exercisesExpanded[workoutId] || false;
                 },
 
                 // Автосохранение прогресса
@@ -515,18 +526,27 @@
                                 <div class="mt-3">
                                     <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
                                     <div class="flex flex-wrap gap-1">
-                                        @foreach(($workout->exercises ?? [])->take(3) as $exercise)
-                                            <span class="inline-block px-2 py-1 text-xs rounded-full font-medium"
+                                        <!-- Отображаем все упражнения через Alpine.js -->
+                                        <template x-for="(exercise, index) in ({{ json_encode($workout->exercises ?? []) }} || [])" :key="`exercise-{{ $workout->id }}-${index}`">
+                                            <span x-show="index < 3 || isExercisesExpanded({{ $workout->id }})"
+                                                  class="inline-block px-2 py-1 text-xs rounded-full font-medium"
                                                   :class="{
-                                                      'bg-green-100 text-green-700': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->exercise_id ?? $exercise->id }}) === 'completed',
-                                                      'bg-yellow-100 text-yellow-700': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->exercise_id ?? $exercise->id }}) === 'partial',
-                                                      'bg-red-100 text-red-700': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->exercise_id ?? $exercise->id }}) === 'not_done',
-                                                      'bg-gray-100 text-gray-600': getExerciseStatusForList({{ $workout->id }}, {{ $exercise->exercise_id ?? $exercise->id }}) === null
+                                                      'bg-green-100 text-green-700': getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'completed',
+                                                      'bg-yellow-100 text-yellow-700': getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'partial',
+                                                      'bg-red-100 text-red-700': getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'not_done',
+                                                      'bg-gray-100 text-gray-600': getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === null
                                                   }"
-                                                  :title="getExerciseStatusForList({{ $workout->id }}, {{ $exercise->exercise_id ?? $exercise->id }}) === 'partial' && workoutProgress[{{ $workout->id }}]?.[{{ $exercise->exercise_id ?? $exercise->id }}]?.athlete_comment ? 'Комментарий: ' + workoutProgress[{{ $workout->id }}][{{ $exercise->exercise_id ?? $exercise->id }}].athlete_comment : ''">{{ $exercise->name ?? 'Без названия' }}</span>
-                                        @endforeach
+                                                  :title="getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'partial' && workoutProgress[{{ $workout->id }}]?.[exercise.exercise_id || exercise.id]?.athlete_comment ? 'Комментарий: ' + workoutProgress[{{ $workout->id }}][exercise.exercise_id || exercise.id].athlete_comment : ''"
+                                                  x-text="exercise.name || 'Без названия'">
+                                            </span>
+                                        </template>
+                                        
+                                        <!-- Кнопка разворачивания/сворачивания -->
                                         @if(($workout->exercises ?? [])->count() > 3)
-                                            <span class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">+ {{ ($workout->exercises ?? [])->count() - 3 }} еще</span>
+                                            <button @click="toggleExercisesExpanded({{ $workout->id }})" 
+                                                    class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
+                                                <span x-text="isExercisesExpanded({{ $workout->id }}) ? 'Свернуть' : '+{{ ($workout->exercises ?? [])->count() - 3 }} еще'"></span>
+                                            </button>
                                         @endif
                                     </div>
                                 </div>

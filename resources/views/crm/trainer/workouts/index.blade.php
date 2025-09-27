@@ -35,6 +35,7 @@ function workoutApp() {
         lastSaved: null, // Время последнего сохранения
         workoutProgress: {}, // Прогресс для каждой тренировки
         lastChangedExercise: null, // Последнее измененное упражнение
+        exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
         
         // Навигация
         showList() {
@@ -206,6 +207,16 @@ function workoutApp() {
         // Проверка, развернуты ли поля подходов
         isSetsExpanded(exerciseId) {
             return this.exerciseSetsExpanded[exerciseId] || false;
+        },
+
+        // Управление сворачиванием/разворачиванием упражнений в карточках
+        toggleExercisesExpanded(workoutId) {
+            this.exercisesExpanded[workoutId] = !this.exercisesExpanded[workoutId];
+        },
+
+        // Проверка, развернуты ли упражнения в карточке
+        isExercisesExpanded(workoutId) {
+            return this.exercisesExpanded[workoutId] || false;
         },
         
         // Автосохранение
@@ -1436,8 +1447,10 @@ function workoutApp() {
                                 <div class="text-xs font-medium text-gray-500">Упражнения:</div>
                             </div>
                             <div class="flex flex-wrap gap-1">
-                                <template x-for="(exercise, index) in (workout.exercises || []).slice(0, 3)" :key="`exercise-${workout.id}-${index}`">
-                                    <span class="inline-block px-2 py-1 text-xs rounded-full font-medium"
+                                <!-- Отображаем все упражнения через Alpine.js -->
+                                <template x-for="(exercise, index) in (workout.exercises || [])" :key="`exercise-${workout.id}-${index}`">
+                                    <span x-show="index < 3 || isExercisesExpanded(workout.id)"
+                                          class="inline-block px-2 py-1 text-xs rounded-full font-medium"
                                           :class="{
                                               'bg-green-100 text-green-800': exercise.progress?.status === 'completed',
                                               'bg-yellow-100 text-yellow-800': exercise.progress?.status === 'partial',
@@ -1446,9 +1459,16 @@ function workoutApp() {
                                           }"
                                           @click="console.log('🏋️ Упражнение:', exercise.name, 'Прогресс:', exercise.progress)"
                                           :title="exercise.progress?.athlete_comment ? 'Комментарий: ' + exercise.progress.athlete_comment : ''"
-                                          x-text="exercise.name || 'Без названия'"></span>
+                                          x-text="exercise.name || 'Без названия'">
+                                    </span>
                                 </template>
-                                <span x-show="(workout.exercises || []).length > 3" class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full" x-text="'+' + ((workout.exercises || []).length - 3) + ' еще'"></span>
+                                
+                                <!-- Кнопка разворачивания/сворачивания -->
+                                <button x-show="(workout.exercises || []).length > 3" 
+                                        @click="toggleExercisesExpanded(workout.id)" 
+                                        class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
+                                    <span x-text="isExercisesExpanded(workout.id) ? 'Свернуть' : '+' + ((workout.exercises || []).length - 3) + ' еще'"></span>
+                                </button>
                             </div>
                         </div>
                     </div>
