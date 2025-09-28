@@ -1045,18 +1045,19 @@ function workoutApp() {
                 // Отображаем упражнения с динамическими полями и drag and drop
                 list.innerHTML = exercises.map((exercise, index) => {
                     const fieldsConfig = exercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
-                    const fieldsHtml = this.generateFieldsHtml(exercise.id, fieldsConfig, exercise);
+                    const exerciseId = exercise.exercise_id || exercise.id;
+                    const fieldsHtml = this.generateFieldsHtml(exerciseId, fieldsConfig, exercise);
                     
                     return `
                         <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
-                             data-exercise-id="${exercise.id}" 
+                             data-exercise-id="${exerciseId}" 
                              data-exercise-index="${index}"
                              draggable="true" 
-                             ondragstart="handleDragStart(event, ${exercise.id}, ${index})" 
-                             ondragover="handleDragOver(event, ${exercise.id}, ${index})" 
-                             ondrop="handleDrop(event, ${exercise.id}, ${index})" 
-                             ondragenter="handleDragEnter(event, ${exercise.id}, ${index})" 
-                             ondragleave="handleDragLeave(event, ${exercise.id}, ${index})"
+                             ondragstart="handleDragStart(event, ${exerciseId}, ${index})" 
+                             ondragover="handleDragOver(event, ${exerciseId}, ${index})" 
+                             ondrop="handleDrop(event, ${exerciseId}, ${index})" 
+                             ondragenter="handleDragEnter(event, ${exerciseId}, ${index})" 
+                             ondragleave="handleDragLeave(event, ${exerciseId}, ${index})"
                              ondragend="cleanupDragState()">
                             <!-- Заголовок упражнения -->
                             <div class="flex items-center justify-between mb-3">
@@ -2342,14 +2343,14 @@ function workoutApp() {
                                     <!-- Индикатор статуса -->
                                     <span class="inline-block px-2 py-1 text-xs rounded-full font-medium"
                                           :class="{
-                                              'bg-green-100 text-green-800': getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed',
-                                              'bg-yellow-100 text-yellow-800': getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial',
-                                              'bg-red-100 text-red-800': getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done',
-                                              'bg-gray-100 text-gray-600': !getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id)
+                                              'bg-green-100 text-green-800': currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed',
+                                              'bg-yellow-100 text-yellow-800': currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial',
+                                              'bg-red-100 text-red-800': currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done',
+                                              'bg-gray-100 text-gray-600': !currentWorkout || !getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id)
                                           }"
-                                          x-text="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? '✅ Выполнено' : 
+                                          x-text="currentWorkout ? (getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? '✅ Выполнено' : 
                                                   getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? '⚠️ Частично' : 
-                                                  getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? '❌ Не выполнено' : '⏳ Без статуса'">
+                                                  getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? '❌ Не выполнено' : '⏳ Без статуса') : '⏳ Без статуса'">
                                     </span>
                                 </div>
                                 <!-- Ссылка на видео упражнения -->
@@ -2478,7 +2479,7 @@ function workoutApp() {
                             </div>
                             
                             <!-- Комментарий спортсмена -->
-                            <div x-show="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' && workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment" class="mt-3 pt-3 border-t border-yellow-200">
+                            <div x-show="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' && workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment" class="mt-3 pt-3 border-t border-yellow-200">
                                 <div class="flex items-center mb-2">
                                     <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -2486,7 +2487,7 @@ function workoutApp() {
                                     <span class="text-sm font-semibold text-yellow-700">Комментарий спортсмена</span>
                                     <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">Частично выполнено</span>
                                 </div>
-                                <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment || ''"></div>
+                                <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="currentWorkout ? (workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment || '') : ''"></div>
                             </div>
                             
                             
@@ -2496,17 +2497,17 @@ function workoutApp() {
                                     <span class="text-sm font-medium text-gray-700 mb-2 block">Статус выполнения:</span>
                                     <div class="exercise-status-buttons flex space-x-2">
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'completed')" 
-                                                :class="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
                                             ✅ Выполнено
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'partial')" 
-                                                :class="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
                                             ⚠️ Частично
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'not_done')" 
-                                                :class="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
                                             ❌ Не выполнено
                                         </button>
@@ -2514,7 +2515,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Поля для каждого подхода (появляется при выборе "Частично") -->
-                                <div x-show="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' || workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.sets_data" class="mt-4">
+                                <div x-show="currentWorkout && (getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' || workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.sets_data)" class="mt-4">
                                     <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-lg p-4">
                                         <div class="flex items-center justify-between mb-3 cursor-pointer rounded-lg p-2 -m-2"
                                              @click="toggleSetsExpanded(exercise.exercise_id || exercise.id)">
@@ -3365,18 +3366,19 @@ function displaySelectedExercises(exercises) {
         // Отображаем упражнения с динамическими полями
         const htmlContent = exercises.map((exercise, index) => {
             const fieldsConfig = exercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
-            const fieldsHtml = generateFieldsHtml(exercise.id, fieldsConfig, exercise);
+            const exerciseId = exercise.exercise_id || exercise.id;
+            const fieldsHtml = generateFieldsHtml(exerciseId, fieldsConfig, exercise);
             
             return `
                 <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
-                     data-exercise-id="${exercise.id}" 
+                     data-exercise-id="${exerciseId}" 
                      data-exercise-index="${index}"
                      draggable="true" 
-                     ondragstart="handleDragStart(event, ${exercise.id}, ${index})" 
-                     ondragover="handleDragOver(event, ${exercise.id}, ${index})" 
-                     ondrop="handleDrop(event, ${exercise.id}, ${index})" 
-                     ondragenter="handleDragEnter(event, ${exercise.id}, ${index})" 
-                     ondragleave="handleDragLeave(event, ${exercise.id}, ${index})"
+                     ondragstart="handleDragStart(event, ${exerciseId}, ${index})" 
+                     ondragover="handleDragOver(event, ${exerciseId}, ${index})" 
+                     ondrop="handleDrop(event, ${exerciseId}, ${index})" 
+                     ondragenter="handleDragEnter(event, ${exerciseId}, ${index})" 
+                     ondragleave="handleDragLeave(event, ${exerciseId}, ${index})"
                      ondragend="cleanupDragState()">
                     <!-- Заголовок упражнения -->
                     <div class="flex items-center justify-between mb-3">
