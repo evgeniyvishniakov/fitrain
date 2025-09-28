@@ -3,6 +3,221 @@
 @section("title", "Тренировки")
 @section("page-title", "Тренировки")
 
+<script src="{{ asset('js/notifications.js') }}"></script>
+
+<!-- Drag and Drop функциональность для упражнений -->
+<script>
+// Drag and Drop функциональность для упражнений
+let draggedExerciseId = null;
+let draggedExerciseIndex = null;
+
+function handleDragStart(event, exerciseId, exerciseIndex) {
+    // Проверяем, что перетаскивание НЕ началось с кнопки "Удалить"
+    if (event.target.closest('button[onclick*="removeExercise"]')) {
+        event.preventDefault();
+        return false;
+    }
+    
+    // Очищаем предыдущее состояние перетаскивания
+    cleanupDragState();
+    
+    draggedExerciseId = parseInt(exerciseId);
+    draggedExerciseIndex = parseInt(exerciseIndex);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', exerciseId.toString());
+    
+    // Добавляем класс для визуального эффекта
+    event.target.closest('[data-exercise-id]').style.opacity = '0.5';
+    
+    // Добавляем класс для всех элементов, которые могут принимать drop
+    document.querySelectorAll('[data-exercise-id]').forEach(target => {
+        if (target.dataset.exerciseId !== exerciseId.toString()) {
+            target.classList.add('drop-target');
+        }
+    });
+}
+
+function handleDragOver(event, targetExerciseId, targetIndex) {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDragEnter(event, targetExerciseId, targetIndex) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.target.closest('[data-exercise-id]')) {
+        const target = event.target.closest('[data-exercise-id]');
+        if (target.dataset.exerciseId !== draggedExerciseId.toString()) {
+            target.classList.add('drag-over');
+        }
+    }
+    return false;
+}
+
+function handleDragLeave(event, targetExerciseId, targetIndex) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.target.closest('[data-exercise-id]')) {
+        const target = event.target.closest('[data-exercise-id]');
+        target.classList.remove('drag-over');
+    }
+    return false;
+}
+
+function handleDrop(event, targetExerciseId, targetIndex) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Приводим к числу для корректного сравнения
+    const draggedId = parseInt(draggedExerciseId);
+    const targetId = parseInt(targetExerciseId);
+    
+    if (!draggedId || draggedId === targetId) {
+        cleanupDragState();
+        return;
+    }
+    
+    // Получаем текущий список упражнений
+    let exercises = [];
+    
+    // Проверяем, находимся ли мы в режиме редактирования
+    const appElement = document.querySelector('[x-data*="workoutApp"]');
+    if (appElement) {
+        const workoutApp = Alpine.$data(appElement);
+        if (workoutApp && workoutApp.currentWorkout && workoutApp.currentWorkout.exercises) {
+            // Режим редактирования - используем данные из Alpine.js
+            exercises = [...workoutApp.currentWorkout.exercises];
+        }
+    }
+    
+    // Если упражнения не найдены в Alpine.js, получаем их из DOM (режим создания)
+    if (exercises.length === 0) {
+        exercises = getCurrentExercisesFromForm();
+    }
+    
+    if (exercises.length === 0) {
+        cleanupDragState();
+        return;
+    }
+    
+    // Находим индексы упражнений - проверяем разные возможные поля
+    const draggedIndex = exercises.findIndex(ex => ex.id === draggedId || ex.exercise_id === draggedId);
+    const targetIndexNum = exercises.findIndex(ex => ex.id === targetId || ex.exercise_id === targetId);
+    
+    if (draggedIndex === -1 || targetIndexNum === -1) {
+        cleanupDragState();
+        return;
+    }
+    
+    // Проверяем, что упражнения действительно разные
+    if (draggedIndex === targetIndexNum) {
+        cleanupDragState();
+        return;
+    }
+    
+    // Сначала собираем текущие значения полей из DOM
+    let currentFieldValues = [];
+    
+    if (appElement) {
+        const workoutApp = Alpine.$data(appElement);
+        if (workoutApp && workoutApp.collectExerciseData) {
+            // Режим редактирования - используем метод Alpine.js
+            currentFieldValues = workoutApp.collectExerciseData();
+        }
+    }
+    
+    // Если не получилось собрать данные через Alpine.js, собираем через глобальную функцию
+    if (currentFieldValues.length === 0) {
+        currentFieldValues = collectExerciseDataFromDOM();
+    }
+    
+    // Обновляем упражнения с текущими значениями полей
+    exercises.forEach(exercise => {
+        const fieldData = currentFieldValues.find(f => f.exercise_id === exercise.id);
+        if (fieldData) {
+            // Обновляем значения полей из DOM
+            exercise.sets = fieldData.sets || exercise.sets;
+            exercise.reps = fieldData.reps || exercise.reps;
+            exercise.weight = fieldData.weight || exercise.weight;
+            exercise.rest = fieldData.rest || exercise.rest;
+            exercise.time = fieldData.time || exercise.time;
+            exercise.distance = fieldData.distance || exercise.distance;
+            exercise.tempo = fieldData.tempo || exercise.tempo;
+            exercise.notes = fieldData.notes || exercise.notes;
+        }
+    });
+    
+    // Перемещаем упражнение
+    const [draggedExercise] = exercises.splice(draggedIndex, 1);
+    
+    // Вычисляем правильную позицию для вставки
+    let insertIndex = targetIndexNum;
+    
+    exercises.splice(insertIndex, 0, draggedExercise);
+    
+    // Обновляем данные в зависимости от режима
+    if (appElement) {
+        const workoutApp = Alpine.$data(appElement);
+        if (workoutApp && workoutApp.currentWorkout && workoutApp.currentWorkout.exercises) {
+            // Режим редактирования - обновляем данные в Alpine.js
+            workoutApp.currentWorkout.exercises = exercises;
+            workoutApp.displaySelectedExercises(exercises);
+        } else {
+            // Режим создания - перерисовываем через глобальную функцию
+            displaySelectedExercises(exercises);
+        }
+    } else {
+        // Режим создания - перерисовываем через глобальную функцию
+        displaySelectedExercises(exercises);
+    }
+    
+    // Показываем уведомление об успешном изменении порядка
+    showSuccess('Успех!', 'Порядок упражнений изменен');
+    
+    cleanupDragState();
+}
+
+function cleanupDragState() {
+    // Удаляем все классы drag-over
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+    
+    // Восстанавливаем opacity
+    document.querySelectorAll('[data-exercise-id]').forEach(el => {
+        el.style.opacity = '1';
+    });
+    
+    // Сбрасываем переменные
+    draggedExerciseId = null;
+    draggedExerciseIndex = null;
+}
+
+// Добавляем CSS стили для drag and drop
+const style = document.createElement('style');
+style.textContent = `
+    .drop-target {
+        border: 2px dashed #3b82f6;
+        background-color: #eff6ff;
+    }
+    
+    .drag-over {
+        border: 2px solid #3b82f6;
+        background-color: #dbeafe;
+    }
+    
+    [draggable="true"] {
+        cursor: grab;
+    }
+    
+    [draggable="true"]:active {
+        cursor: grabbing;
+    }
+`;
+document.head.appendChild(style);
+</script>
+
 <script>
 // SPA функциональность для тренировок
 function workoutApp() {
@@ -34,6 +249,7 @@ function workoutApp() {
         exerciseSetsExpanded: {}, // Хранение состояния развернутости полей подходов
         saveTimeout: null, // Таймер для автосохранения
         lastSaved: null, // Время последнего сохранения
+        workoutProgress: {}, // Прогресс для каждой тренировки (как у спортсмена)
         
         // Модальное окно для видео
         videoModal: {
@@ -54,6 +270,14 @@ function workoutApp() {
             
             this.currentView = 'list';
             this.currentWorkout = null;
+            
+            // Очищаем форму упражнений при возврате к списку
+            const exercisesList = document.getElementById('selectedExercisesList');
+            if (exercisesList) {
+                exercisesList.innerHTML = '';
+            }
+            document.getElementById('selectedExercisesContainer').style.display = 'none';
+            document.getElementById('emptyExercisesState').style.display = 'block';
         },
         
         showCreate() {
@@ -70,6 +294,11 @@ function workoutApp() {
             // Очищаем форму упражнений
             document.getElementById('selectedExercisesContainer').style.display = 'none';
             document.getElementById('emptyExercisesState').style.display = 'block';
+            // Очищаем список выбранных упражнений
+            const exercisesList = document.getElementById('selectedExercisesList');
+            if (exercisesList) {
+                exercisesList.innerHTML = '';
+            }
         },
         
         showEdit(workoutId) {
@@ -111,20 +340,30 @@ function workoutApp() {
             
             if (exercises.length > 0) {
                 // Преобразуем данные из формата Laravel Eloquent в нужный формат
-                const formattedExercises = exercises.map(exercise => ({
-                    id: exercise.exercise_id, // Используем exercise_id вместо id!
-                    name: exercise.name,
-                    sets: exercise.sets || exercise.pivot?.sets || 3,
-                    reps: exercise.reps || exercise.pivot?.reps || 12,
-                    weight: exercise.weight || exercise.pivot?.weight || 0,
-                    rest: exercise.rest || exercise.pivot?.rest || 60,
-                    time: exercise.time || exercise.pivot?.time || 0,
-                    distance: exercise.distance || exercise.pivot?.distance || 0,
-                    tempo: exercise.tempo || exercise.pivot?.tempo || '',
-                    notes: exercise.notes || exercise.pivot?.notes || '',
-                    category: exercise.category || '',
-                    fields_config: exercise.fields_config || ['sets', 'reps', 'weight', 'rest']
-                }));
+                const formattedExercises = exercises.map(exercise => {
+                    // Функция для безопасного получения значения поля
+                    function safeValue(value, defaultValue = '') {
+                        if (value === null || value === undefined || value === 'null' || value === '') {
+                            return defaultValue;
+                        }
+                        return value;
+                    }
+                    
+                    return {
+                        id: exercise.exercise_id, // Используем exercise_id вместо id!
+                        name: exercise.name,
+                        sets: safeValue(exercise.sets || exercise.pivot?.sets, 3),
+                        reps: safeValue(exercise.reps || exercise.pivot?.reps, 12),
+                        weight: safeValue(exercise.weight || exercise.pivot?.weight, 0),
+                        rest: safeValue(exercise.rest || exercise.pivot?.rest, 60),
+                        time: safeValue(exercise.time || exercise.pivot?.time, 0),
+                        distance: safeValue(exercise.distance || exercise.pivot?.distance, 0),
+                        tempo: safeValue(exercise.tempo || exercise.pivot?.tempo, ''),
+                        notes: safeValue(exercise.notes || exercise.pivot?.notes, ''),
+                        category: exercise.category || '',
+                        fields_config: exercise.fields_config || ['sets', 'reps', 'weight', 'rest']
+                    };
+                });
                 
                 this.displaySelectedExercises(formattedExercises);
             } else {
@@ -139,6 +378,8 @@ function workoutApp() {
             this.currentWorkout = this.workouts.find(w => w.id === workoutId);
             // Загружаем сохраненный прогресс при открытии тренировки
             this.loadExerciseProgress(workoutId);
+            // Загружаем данные подходов из workoutProgress
+            this.loadSetsDataFromProgress(workoutId);
         },
 
         // Обновление прогресса упражнений в списке тренировок
@@ -187,6 +428,19 @@ function workoutApp() {
         setExerciseStatus(exerciseId, status) {
             this.exerciseStatuses[exerciseId] = status;
             this.lastChangedExercise = { id: exerciseId, status: status };
+            
+            // Обновляем workoutProgress для корректной работы в режиме просмотра
+            if (this.currentWorkout && this.currentWorkout.id) {
+                if (!this.workoutProgress[this.currentWorkout.id]) {
+                    this.workoutProgress[this.currentWorkout.id] = {};
+                }
+                this.workoutProgress[this.currentWorkout.id][exerciseId] = {
+                    status: status,
+                    athlete_comment: this.workoutProgress[this.currentWorkout.id][exerciseId]?.athlete_comment || null,
+                    sets_data: this.workoutProgress[this.currentWorkout.id][exerciseId]?.sets_data || null,
+                    completed_at: this.workoutProgress[this.currentWorkout.id][exerciseId]?.completed_at || null
+                };
+            }
             
             if (status === 'partial') {
                 // Инициализируем данные по подходам для частичного выполнения
@@ -788,25 +1042,48 @@ function workoutApp() {
                 // Показываем контейнер с упражнениями
                 container.style.display = 'block';
                 
-                // Отображаем упражнения с динамическими полями
+                // Отображаем упражнения с динамическими полями и drag and drop
                 list.innerHTML = exercises.map((exercise, index) => {
                     const fieldsConfig = exercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
                     const fieldsHtml = this.generateFieldsHtml(exercise.id, fieldsConfig, exercise);
                     
                     return `
-                        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm" data-exercise-id="${exercise.id}">
+                        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
+                             data-exercise-id="${exercise.id}" 
+                             data-exercise-index="${index}"
+                             draggable="true" 
+                             ondragstart="handleDragStart(event, ${exercise.id}, ${index})" 
+                             ondragover="handleDragOver(event, ${exercise.id}, ${index})" 
+                             ondrop="handleDrop(event, ${exercise.id}, ${index})" 
+                             ondragenter="handleDragEnter(event, ${exercise.id}, ${index})" 
+                             ondragleave="handleDragLeave(event, ${exercise.id}, ${index})"
+                             ondragend="cleanupDragState()">
                             <!-- Заголовок упражнения -->
                             <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center space-x-3 flex-1 cursor-pointer" onclick="toggleExerciseDetails(${exercise.id})">
-                                    <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
-                                    <span class="text-sm font-medium text-gray-900">${exercise.name}</span>
-                                    <span class="text-xs text-gray-500">${exercise.category || ''}</span>
+                                <div class="flex items-center space-x-3 flex-1 cursor-move" title="Перетащите для изменения порядка">
+                                    <!-- Drag Handle -->
+                                    <div class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                                        </svg>
+                                    </div>
+                                    <div class="cursor-pointer flex-1" onclick="toggleExerciseDetails(${exercise.id})" onmousedown="event.stopPropagation()">
+                                        <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
+                                        <span class="text-sm font-medium text-gray-900">${exercise.name}</span>
+                                        <span class="text-xs text-gray-500">${exercise.category || ''}</span>
+                                    </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <svg id="chevron-${exercise.id}" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                    <button onclick="removeExercise(${exercise.id})" class="text-red-500 hover:text-red-700 text-sm">
+                                    <div onclick="toggleExerciseDetails(${exercise.id})" 
+                                         onmousedown="event.stopPropagation()" 
+                                         class="cursor-pointer">
+                                        <svg id="chevron-${exercise.id}" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </div>
+                                    <button onclick="removeExercise(${exercise.id})" 
+                                            onmousedown="event.stopPropagation()" 
+                                            class="text-red-500 hover:text-red-700 text-sm">
                                         Удалить
                                     </button>
                                 </div>
@@ -821,6 +1098,10 @@ function workoutApp() {
                         </div>
                     `;
                 }).join('');
+                
+                // Глобальная замена всех "null" значений в HTML
+                const cleanedHtml = list.innerHTML.replace(/value="null"/g, 'value=""').replace(/value='null'/g, 'value=""');
+                list.innerHTML = cleanedHtml;
             } else {
                 // Показываем пустое состояние
                 emptyState.style.display = 'block';
@@ -1150,6 +1431,66 @@ function workoutApp() {
                     modal.remove();
                 }
             });
+        },
+        
+        // Получение статуса упражнения для списка тренировок (как у спортсмена)
+        getExerciseStatusForList(workoutId, exerciseId) {
+            return this.workoutProgress[workoutId]?.[exerciseId]?.status || null;
+        },
+        
+        // Загрузка данных подходов из workoutProgress
+        loadSetsDataFromProgress(workoutId) {
+            if (this.workoutProgress[workoutId]) {
+                Object.keys(this.workoutProgress[workoutId]).forEach(exerciseId => {
+                    const progress = this.workoutProgress[workoutId][exerciseId];
+                    if (progress.sets_data) {
+                        // Загружаем данные подходов в exerciseSetsData
+                        this.exerciseSetsData[exerciseId] = progress.sets_data;
+                        // Поля остаются свернутыми по умолчанию
+                        this.exerciseSetsExpanded[exerciseId] = false;
+                    }
+                });
+            }
+        },
+        
+        // Загрузка прогресса для всех тренировок (как у спортсмена)
+        async loadAllWorkoutProgress() {
+            for (let workout of this.workouts) {
+                if (workout.exercises && workout.exercises.length > 0) {
+                    try {
+                        const response = await fetch(`/trainer/exercise-progress?workout_id=${workout.id}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (Array.isArray(result) && result.length > 0) {
+                            this.workoutProgress[workout.id] = {};
+                            
+                            result.forEach(progress => {
+                                this.workoutProgress[workout.id][progress.exercise_id] = {
+                                    status: progress.status,
+                                    athlete_comment: progress.athlete_comment,
+                                    sets_data: progress.sets_data,
+                                    completed_at: progress.completed_at
+                                };
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Ошибка загрузки прогресса для тренировки ${workout.id}:`, error);
+                    }
+                }
+            }
+        },
+        
+        // Инициализация
+        init() {
+            // Загружаем прогресс для всех тренировок при загрузке страницы
+            this.loadAllWorkoutProgress();
         }
     }
 }
@@ -1272,7 +1613,7 @@ function workoutApp() {
 @endsection
 
 @section("content")
-<div x-data="workoutApp()" x-cloak class="space-y-6">
+<div x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
     
 
     <!-- Фильтры и поиск -->
@@ -1643,12 +1984,11 @@ function workoutApp() {
                                     <span x-show="index < 3 || isExercisesExpanded(workout.id)"
                                           class="inline-block px-2 py-1 text-xs rounded-full font-medium"
                                           :class="{
-                                              'bg-green-100 text-green-800': exercise.progress?.status === 'completed',
-                                              'bg-yellow-100 text-yellow-800': exercise.progress?.status === 'partial',
-                                              'bg-red-100 text-red-800': exercise.progress?.status === 'not_done',
-                                              'bg-gray-100 text-gray-600': !exercise.progress || !exercise.progress.status
+                                              'bg-green-100 text-green-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'completed',
+                                              'bg-yellow-100 text-yellow-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'partial',
+                                              'bg-red-100 text-red-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'not_done',
+                                              'bg-gray-100 text-gray-600': !getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id)
                                           }"
-                                          @click="console.log('🏋️ Упражнение:', exercise.name, 'Прогресс:', exercise.progress)"
                                           :title="exercise.progress?.athlete_comment ? 'Комментарий: ' + exercise.progress.athlete_comment : ''"
                                           x-text="exercise.name || 'Без названия'">
                                     </span>
@@ -1999,6 +2339,18 @@ function workoutApp() {
                                     <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
                                     <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
                                     <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
+                                    <!-- Индикатор статуса -->
+                                    <span class="inline-block px-2 py-1 text-xs rounded-full font-medium"
+                                          :class="{
+                                              'bg-green-100 text-green-800': getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed',
+                                              'bg-yellow-100 text-yellow-800': getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial',
+                                              'bg-red-100 text-red-800': getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done',
+                                              'bg-gray-100 text-gray-600': !getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id)
+                                          }"
+                                          x-text="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? '✅ Выполнено' : 
+                                                  getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? '⚠️ Частично' : 
+                                                  getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? '❌ Не выполнено' : '⏳ Без статуса'">
+                                    </span>
                                 </div>
                                 <!-- Ссылка на видео упражнения -->
                                 <div x-show="exercise.video_url" class="exercise-video-link">
@@ -2126,7 +2478,7 @@ function workoutApp() {
                             </div>
                             
                             <!-- Комментарий спортсмена -->
-                            <div x-show="exercise.progress?.status === 'partial' && exercise.progress?.athlete_comment" class="mt-3 pt-3 border-t border-yellow-200">
+                            <div x-show="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' && workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment" class="mt-3 pt-3 border-t border-yellow-200">
                                 <div class="flex items-center mb-2">
                                     <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
@@ -2134,7 +2486,7 @@ function workoutApp() {
                                     <span class="text-sm font-semibold text-yellow-700">Комментарий спортсмена</span>
                                     <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">Частично выполнено</span>
                                 </div>
-                                <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="exercise.progress?.athlete_comment || ''"></div>
+                                <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment || ''"></div>
                             </div>
                             
                             
@@ -2144,17 +2496,17 @@ function workoutApp() {
                                     <span class="text-sm font-medium text-gray-700 mb-2 block">Статус выполнения:</span>
                                     <div class="exercise-status-buttons flex space-x-2">
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'completed')" 
-                                                :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                :class="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
                                             ✅ Выполнено
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'partial')" 
-                                                :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                :class="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
                                             ⚠️ Частично
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'not_done')" 
-                                                :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
+                                                :class="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
                                             ❌ Не выполнено
                                         </button>
@@ -2162,7 +2514,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Поля для каждого подхода (появляется при выборе "Частично") -->
-                                <div x-show="getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial'" class="mt-4">
+                                <div x-show="getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' || workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.sets_data" class="mt-4">
                                     <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-lg p-4">
                                         <div class="flex items-center justify-between mb-3 cursor-pointer rounded-lg p-2 -m-2"
                                              @click="toggleSetsExpanded(exercise.exercise_id || exercise.id)">
@@ -2739,12 +3091,22 @@ function getCurrentExercisesFromForm() {
         const nameSpans = element.querySelectorAll('.font-medium');
         const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
         
+        // Определяем fields_config на основе видимых полей в DOM
+        const visibleFields = [];
+        const fieldInputs = element.querySelectorAll('input[name*="_"]');
+        fieldInputs.forEach(input => {
+            const fieldName = input.name.split('_')[0];
+            if (!visibleFields.includes(fieldName)) {
+                visibleFields.push(fieldName);
+            }
+        });
+        
         const exerciseData = {
             id: parseInt(exerciseId),
             name: exerciseName,
             category: '',
             equipment: '',
-            fields_config: ['sets', 'reps', 'weight', 'rest']
+            fields_config: visibleFields.length > 0 ? visibleFields : ['sets', 'reps', 'weight', 'rest']
         };
         
         // Собираем значения полей
@@ -2774,8 +3136,59 @@ function getSelectedExerciseIds() {
     return Array.from(exerciseElements).map(el => parseInt(el.dataset.exerciseId));
 }
 
+// Сбор данных упражнений из DOM для режима создания
+function collectExerciseDataFromDOM() {
+    const exercises = [];
+    const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
+    
+    exerciseElements.forEach(element => {
+        const exerciseId = element.dataset.exerciseId;
+        
+        // Ищем название упражнения
+        const nameSpans = element.querySelectorAll('.font-medium');
+        const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
+        
+        // Собираем все поля динамически
+        const exerciseData = {
+            exercise_id: parseInt(exerciseId),
+            name: exerciseName,
+            sets: '',
+            reps: '',
+            weight: '',
+            rest: '',
+            time: '',
+            distance: '',
+            tempo: '',
+            notes: ''
+        };
+        
+        // Собираем значения всех полей
+        ['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'].forEach(field => {
+            const input = element.querySelector(`input[name="${field}_${exerciseId}"]`);
+            if (input) {
+                exerciseData[field] = input.value || '';
+            }
+        });
+        
+        exercises.push(exerciseData);
+    });
+    
+    return exercises;
+}
+
 // Генерация HTML для полей на основе конфигурации
-function generateFieldsHtml(exerciseId, fieldsConfig) {
+function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
+    // Функция для безопасного получения значения поля
+    function getFieldValue(fieldName, defaultValue = '') {
+        if (!exerciseData || exerciseData[fieldName] === undefined || exerciseData[fieldName] === null || exerciseData[fieldName] === 'null' || exerciseData[fieldName] === '') {
+            return defaultValue;
+        }
+        // Дополнительная проверка для строковых значений
+        if (typeof exerciseData[fieldName] === 'string' && exerciseData[fieldName].trim() === '') {
+            return defaultValue;
+        }
+        return exerciseData[fieldName];
+    }
     const fieldConfigs = {
         'sets': {
             label: 'Подходы',
@@ -2868,7 +3281,7 @@ function generateFieldsHtml(exerciseId, fieldsConfig) {
                                ${config.max ? `max="${config.max}"` : ''}
                                ${config.step ? `step="${config.step}"` : ''}
                                ${config.placeholder ? `placeholder="${config.placeholder}"` : ''}
-                               value="${config.value}"
+                               value="${getFieldValue(field, config.value).toString().replace('null', '')}"
                                class="w-full px-4 py-3 text-lg font-semibold text-center ${colorClasses.input} focus:ring-4 ${colorClasses.focusRing} focus:border-${config.color}-400 transition-all duration-200 hover:border-${config.color}-300 rounded-lg">
                     </div>
                 </div>
@@ -2889,6 +3302,7 @@ function generateFieldsHtml(exerciseId, fieldsConfig) {
                 <input type="text" 
                        name="notes_${exerciseId}" 
                        placeholder="Дополнительные заметки..."
+                       value="${getFieldValue('notes', '').toString().replace('null', '')}"
                        class="w-full px-4 py-3 text-sm bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-gray-100 focus:border-gray-400 transition-all duration-200 hover:border-gray-300 placeholder-gray-500">
             </div>
         </div>
@@ -2949,31 +3363,45 @@ function displaySelectedExercises(exercises) {
         container.style.display = 'block';
         
         // Отображаем упражнения с динамическими полями
-        list.innerHTML = exercises.map((exercise, index) => {
+        const htmlContent = exercises.map((exercise, index) => {
             const fieldsConfig = exercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
-            const fieldsHtml = generateFieldsHtml(exercise.id, fieldsConfig);
+            const fieldsHtml = generateFieldsHtml(exercise.id, fieldsConfig, exercise);
             
             return `
-                <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm" data-exercise-id="${exercise.id}">
+                <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
+                     data-exercise-id="${exercise.id}" 
+                     data-exercise-index="${index}"
+                     draggable="true" 
+                     ondragstart="handleDragStart(event, ${exercise.id}, ${index})" 
+                     ondragover="handleDragOver(event, ${exercise.id}, ${index})" 
+                     ondrop="handleDrop(event, ${exercise.id}, ${index})" 
+                     ondragenter="handleDragEnter(event, ${exercise.id}, ${index})" 
+                     ondragleave="handleDragLeave(event, ${exercise.id}, ${index})"
+                     ondragend="cleanupDragState()">
                     <!-- Заголовок упражнения -->
                     <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center space-x-3 flex-1 cursor-pointer" onclick="toggleExerciseDetails(${exercise.id})">
-                            <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
-                            <span class="font-medium text-gray-900">${exercise.name}</span>
-                            <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
-                            <svg id="chevron-${exercise.id}" class="w-4 h-4 transform transition-transform duration-200 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
+                        <div class="flex items-center space-x-3 flex-1 cursor-move" title="Перетащите для изменения порядка">
+                            <!-- Drag Handle -->
+                            <div class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
+                                <span class="font-medium text-gray-900">${exercise.name}</span>
+                                <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
+                            </div>
                         </div>
-                        <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800 ml-2">
+                        <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800 ml-2" onmousedown="event.stopPropagation()">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     </div>
                     
-                    <!-- Параметры упражнения - сворачиваемые -->
-                    <div id="details-${exercise.id}" class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                    <!-- Параметры упражнения - всегда развернуты -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="exercise-params-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
                             ${fieldsHtml}
                         </div>
@@ -2981,6 +3409,11 @@ function displaySelectedExercises(exercises) {
                 </div>
             `;
         }).join('');
+        
+        // Глобальная замена всех "null" значений в HTML
+        const cleanedHtml = htmlContent.replace(/value="null"/g, 'value=""').replace(/value='null'/g, 'value=""');
+        
+        list.innerHTML = cleanedHtml;
     } else {
         // Показываем пустое состояние
         emptyState.style.display = 'block';

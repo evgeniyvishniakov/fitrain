@@ -25,6 +25,26 @@ class Workout extends BaseModel
         'is_counted' => 'boolean',
     ];
     
+    // Мутатор для обработки pivot полей и замены NULL на пустые строки
+    public function getExercisesAttribute($value)
+    {
+        if ($value) {
+            foreach ($value as &$exercise) {
+                if (isset($exercise['pivot'])) {
+                    foreach (['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'] as $field) {
+                        if (isset($exercise['pivot'][$field]) && 
+                            ($exercise['pivot'][$field] === null || 
+                             $exercise['pivot'][$field] === 'null' || 
+                             $exercise['pivot'][$field] === '')) {
+                            $exercise['pivot'][$field] = '';
+                        }
+                    }
+                }
+            }
+        }
+        return $value;
+    }
+    
     public function trainer(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Trainer\Trainer::class, 'trainer_id');
@@ -48,7 +68,7 @@ class Workout extends BaseModel
     public function exercises()
     {
         return $this->belongsToMany(\App\Models\Trainer\Exercise::class, 'workout_exercise', 'workout_id', 'exercise_id')
-                    ->withPivot(['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'])
+                    ->withPivot(['exercise_id', 'sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'])
                     ->withTimestamps();
     }
 }

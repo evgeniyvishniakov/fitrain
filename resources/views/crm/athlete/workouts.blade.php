@@ -704,7 +704,7 @@
                             <p class="text-gray-600 text-sm line-clamp-2">{{ $workout->description ?? '' }}</p>
 
                             <!-- Упражнения -->
-                            @if(($workout->exercises ?? [])->count() > 0)
+                            @if(count($workout->exercises ?? []) > 0)
                                 <div class="mt-3">
                                     <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
                                     <div class="flex flex-wrap gap-1">
@@ -724,10 +724,10 @@
                                         </template>
                                         
                                         <!-- Кнопка разворачивания/сворачивания -->
-                                        @if(($workout->exercises ?? [])->count() > 3)
+                                        @if(count($workout->exercises ?? []) > 3)
                                             <button @click="toggleExercisesExpanded({{ $workout->id }})" 
                                                     class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
-                                                <span x-text="isExercisesExpanded({{ $workout->id }}) ? 'Свернуть' : '+{{ ($workout->exercises ?? [])->count() - 3 }} еще'"></span>
+                                                <span x-text="isExercisesExpanded({{ $workout->id }}) ? 'Свернуть' : '+{{ count($workout->exercises ?? []) - 3 }} еще'"></span>
                                             </button>
                                         @endif
                                     </div>

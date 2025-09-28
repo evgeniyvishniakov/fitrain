@@ -165,14 +165,38 @@ class AthleteController extends BaseController
         $athlete = auth()->user();
         
         try {
-            // Получаем тренировки спортсмена с тренером и упражнениями
+            // Получаем тренировки спортсмена с тренером
             $workouts = $athlete->workouts()
-                ->with(['trainer', 'exercises' => function($query) {
-                    $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
-                }])
+                ->with(['trainer'])
                 ->orderBy('date', 'desc')
                 ->orderBy('time', 'desc')
                 ->paginate(10);
+            
+            // Загружаем упражнения для каждой тренировки отдельно
+            $workouts->getCollection()->transform(function ($workout) {
+                $workout->exercises = $workout->exercises()
+                    ->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*')
+                    ->get();
+                return $workout;
+            });
+            
+            // Обрабатываем null значения в упражнениях
+            $workouts->getCollection()->transform(function ($workout) {
+                if ($workout->exercises) {
+                    foreach ($workout->exercises as $exercise) {
+                        if ($exercise->pivot) {
+                            foreach (['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'] as $field) {
+                                if (isset($exercise->pivot->$field) && 
+                                    ($exercise->pivot->$field === null || 
+                                     $exercise->pivot->$field === 'null')) {
+                                    $exercise->pivot->$field = '';
+                                }
+                            }
+                        }
+                    }
+                }
+                return $workout;
+            });
             
             // Подсчитываем статистику
             $workoutsCount = $athlete->workouts()->count();
@@ -444,8 +468,9 @@ class AthleteController extends BaseController
                 'exercises' => 'required|array'
             ]);
 
+
             foreach ($request->exercises as $exerciseData) {
-                ExerciseProgress::updateOrCreate(
+                $progress = ExerciseProgress::updateOrCreate(
                     [
                         'workout_id' => $request->workout_id,
                         'exercise_id' => $exerciseData['exercise_id'],
@@ -458,6 +483,7 @@ class AthleteController extends BaseController
                         'completed_at' => ($exerciseData['status'] ?? 'not_done') === 'completed' ? now() : null
                     ]
                 );
+                
             }
             
             return response()->json([
@@ -465,6 +491,11 @@ class AthleteController extends BaseController
                 'message' => 'Прогресс обновлен'
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error updating exercise progress', [
+                'error' => $e->getMessage(),
+                'athlete_id' => auth()->user()->id ?? null
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка: ' . $e->getMessage()

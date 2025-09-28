@@ -595,12 +595,6 @@ class TrainerController extends BaseController
      */
     public function getExerciseProgress(Request $request)
     {
-        \Log::info('TrainerController::getExerciseProgress called', [
-            'workout_id' => $request->get('workout_id'),
-            'user_id' => auth()->id(),
-            'user_role' => auth()->user()?->roles?->first()?->name
-        ]);
-        
         $workoutId = $request->get('workout_id');
         
         if (!$workoutId) {
@@ -609,12 +603,6 @@ class TrainerController extends BaseController
         
         // Получаем прогресс упражнений для указанной тренировки
         $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workoutId)->get();
-        
-        \Log::info('Exercise progress found', [
-            'workout_id' => $workoutId,
-            'count' => $progress->count(),
-            'data' => $progress->toArray()
-        ]);
         
         return response()->json($progress);
     }

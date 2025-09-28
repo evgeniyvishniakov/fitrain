@@ -18,44 +18,26 @@ class WorkoutController extends BaseController
                 $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
             }])->latest()->paginate(10);
             $athletes = $user->athletes()->get();
+            
         } else {
             $workouts = $user->workouts()->with(['trainer', 'exercises' => function($query) {
                 $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
             }])->latest()->paginate(10);
-            $athletes = collect();
+            $athletes = [];
         }
         
-        // Добавляем прогресс упражнений для каждой тренировки
+        // Обрабатываем null значения в упражнениях (как у спортсмена)
         $workouts->getCollection()->transform(function ($workout) {
             if ($workout->exercises) {
                 foreach ($workout->exercises as $exercise) {
-                    // Отладочная информация
-                    if ($exercise->video_url) {
-                        \Log::info("Exercise with video found: " . $exercise->name . " - " . $exercise->video_url);
-                    }
-                    
-                    // Загружаем прогресс для этого упражнения
-                    $exerciseId = $exercise->exercise_id ?? $exercise->id;
-                    $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workout->id)
-                        ->where('exercise_id', $exerciseId)
-                        ->where('athlete_id', $workout->athlete_id)
-                        ->first();
-                    
-                    
-                    if ($progress) {
-                        $exercise->progress = [
-                            'status' => $progress->status,
-                            'athlete_comment' => $progress->athlete_comment,
-                            'sets_data' => $progress->sets_data,
-                            'completed_at' => $progress->completed_at
-                        ];
-                    } else {
-                        $exercise->progress = [
-                            'status' => null,
-                            'athlete_comment' => null,
-                            'sets_data' => null,
-                            'completed_at' => null
-                        ];
+                    if ($exercise->pivot) {
+                        foreach (['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'] as $field) {
+                            if (isset($exercise->pivot->$field) && 
+                                ($exercise->pivot->$field === null || 
+                                 $exercise->pivot->$field === 'null')) {
+                                $exercise->pivot->$field = '';
+                            }
+                        }
                     }
                 }
             }
