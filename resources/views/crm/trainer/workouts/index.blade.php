@@ -350,8 +350,8 @@ function workoutApp() {
                     }
                     
                     return {
-                        id: exercise.exercise_id, // Используем exercise_id вместо id!
-                        name: exercise.name,
+                    id: exercise.exercise_id, // Используем exercise_id вместо id!
+                    name: exercise.name,
                         sets: safeValue(exercise.sets || exercise.pivot?.sets, 3),
                         reps: safeValue(exercise.reps || exercise.pivot?.reps, 12),
                         weight: safeValue(exercise.weight || exercise.pivot?.weight, 0),
@@ -360,8 +360,8 @@ function workoutApp() {
                         distance: safeValue(exercise.distance || exercise.pivot?.distance, 0),
                         tempo: safeValue(exercise.tempo || exercise.pivot?.tempo, ''),
                         notes: safeValue(exercise.notes || exercise.pivot?.notes, ''),
-                        category: exercise.category || '',
-                        fields_config: exercise.fields_config || ['sets', 'reps', 'weight', 'rest']
+                    category: exercise.category || '',
+                    fields_config: exercise.fields_config || ['sets', 'reps', 'weight', 'rest']
                     };
                 });
                 
@@ -782,11 +782,9 @@ function workoutApp() {
         
         // Сохранение
         async saveWorkout() {
-            console.log('💾 Начинаем сохранение тренировки...');
             try {
                 // Собираем данные упражнений
                 const exercises = this.collectExerciseData();
-                console.log('📋 Собрано упражнений:', exercises.length);
                 
                 const workoutData = {
                     title: this.formTitle,
@@ -813,7 +811,6 @@ function workoutApp() {
                 });
                 
                 const result = await response.json();
-                console.log('📡 Ответ сервера:', result);
                 
                 if (response.ok) {
                     // Показываем уведомление об успехе
@@ -830,10 +827,8 @@ function workoutApp() {
                     // Обновляем список тренировок
                     if (this.currentWorkout && this.currentWorkout.id) {
                         // Редактирование - обновляем существующую
-                        console.log('🔄 Обновляем существующую тренировку:', this.currentWorkout.id);
                         const index = this.workouts.findIndex(w => w.id === this.currentWorkout.id);
                         if (index !== -1) {
-                            console.log('📝 Найден индекс тренировки:', index);
                             // Обновляем упражнения с сохранением fields_config
                             const updatedExercises = exercises.map(exercise => {
                                 // Находим оригинальное упражнение для получения fields_config
@@ -864,16 +859,13 @@ function workoutApp() {
                                 ...workoutData,
                                 exercises: updatedExercises
                             };
-                            console.log('✅ Тренировка обновлена в массиве');
                             
                             // Обновляем currentWorkout если мы сейчас просматриваем эту тренировку
                             if (this.currentWorkout && this.currentWorkout.id === this.workouts[index].id) {
                                 this.currentWorkout = this.workouts[index];
-                                console.log('🔄 Обновлен currentWorkout');
                             }
                             
                             // Загружаем прогресс для всех тренировок
-                            console.log('🔄 После обновления тренировки загружаем прогресс...');
                             await this.loadAllExerciseProgress();
                         }
                     } else {
@@ -976,13 +968,10 @@ function workoutApp() {
         
         // Загрузка прогресса для всех тренировок
         async loadAllExerciseProgress() {
-            console.log('🔄 Загружаем прогресс для всех тренировок...');
             try {
                 for (let workout of this.workouts) {
-                    console.log(`📋 Тренировка ${workout.id}:`, workout.exercises?.length || 0, 'упражнений');
                     if (workout.exercises) {
                         for (let exercise of workout.exercises) {
-                            console.log(`🏋️ Упражнение ${exercise.exercise_id || exercise.id}:`, exercise.name);
                             const response = await fetch(`/trainer/exercise-progress?workout_id=${workout.id}`, {
                                 method: 'GET',
                                 headers: {
@@ -992,19 +981,16 @@ function workoutApp() {
                             
                             if (response.ok) {
                                 const progressData = await response.json();
-                                console.log('📊 Данные прогресса:', progressData);
                                 const exerciseId = exercise.exercise_id || exercise.id;
                                 const progress = progressData.find(p => p.exercise_id === exerciseId);
                                 
                                 if (progress) {
-                                    console.log('✅ Найден прогресс:', progress);
                                     exercise.progress = {
                                         status: progress.status,
                                         athlete_comment: progress.athlete_comment,
                                         completed_at: progress.completed_at
                                     };
                                 } else {
-                                    console.log('❌ Прогресс не найден для упражнения', exerciseId);
                                     exercise.progress = {
                                         status: null,
                                         athlete_comment: null,
@@ -1012,14 +998,11 @@ function workoutApp() {
                                     };
                                 }
                             } else {
-                                console.error('❌ Ошибка загрузки прогресса:', response.status);
                             }
                         }
                     }
                 }
-                console.log('✅ Прогресс загружен для всех тренировок');
             } catch (error) {
-                console.error('❌ Ошибка загрузки прогресса:', error);
             }
         },
         
@@ -1305,7 +1288,6 @@ function workoutApp() {
         
         // Методы для работы с видео модальным окном
         openVideoModal(url, title) {
-            console.log('Opening video modal:', { url, title });
             this.videoModal.isOpen = true;
             this.videoModal.url = url;
             this.videoModal.title = title;
@@ -3390,10 +3372,10 @@ function displaySelectedExercises(exercises) {
                                 </svg>
                             </div>
                             <div class="flex-1">
-                                <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
-                                <span class="font-medium text-gray-900">${exercise.name}</span>
-                                <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
-                            </div>
+                            <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
+                            <span class="font-medium text-gray-900">${exercise.name}</span>
+                            <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
+                        </div>
                         </div>
                         <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800 ml-2" onmousedown="event.stopPropagation()">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
