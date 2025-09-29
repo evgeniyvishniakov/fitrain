@@ -4,28 +4,60 @@
 @section('page-title', 'Дневник питания')
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen ">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Описание -->
     
-        <div x-data="nutritionApp()" x-init="loadNutritionPlans()">
+        <div x-data="nutritionApp()" x-init="loadNutritionPlans()" x-cloak>
             <!-- Статистика питания -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-red-50 rounded-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-red-600" x-text="getTotalCalories()"></div>
-                    <div class="text-sm text-red-800">Общие калории</div>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-red">
+                        <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Калории сегодня</div>
+                        <div class="stat-value" x-text="getTodayCalories()"></div>
+                    </div>
                 </div>
-                <div class="bg-blue-50 rounded-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-blue-600" x-text="getTotalProteins()"></div>
-                    <div class="text-sm text-blue-800">Общие белки (г)</div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-blue">
+                        <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Белки сегодня (г)</div>
+                        <div class="stat-value" x-text="getTodayProteins()"></div>
+                    </div>
                 </div>
-                <div class="bg-yellow-50 rounded-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-yellow-600" x-text="getTotalCarbs()"></div>
-                    <div class="text-sm text-yellow-800">Общие углеводы (г)</div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-yellow">
+                        <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Углеводы сегодня (г)</div>
+                        <div class="stat-value" x-text="getTodayCarbs()"></div>
+                    </div>
                 </div>
-                <div class="bg-green-50 rounded-lg p-4 text-center">
-                    <div class="text-2xl font-bold text-green-600" x-text="getTotalFats()"></div>
-                    <div class="text-sm text-green-800">Общие жиры (г)</div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-green">
+                        <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Жиры сегодня (г)</div>
+                        <div class="stat-value" x-text="getTodayFats()"></div>
+                    </div>
                 </div>
             </div>
             
@@ -166,7 +198,7 @@ function nutritionApp() {
     return {
         // Переменные для планов питания
         nutritionPlans: [],
-        loadingNutritionPlans: false,
+        loadingNutritionPlans: true,
         
         // Загрузить планы питания
         async loadNutritionPlans() {
@@ -200,44 +232,47 @@ function nutritionApp() {
             }
         },
         
-        // Получить общие калории
-        getTotalCalories() {
-            return this.nutritionPlans.reduce((total, plan) => {
-                if (plan.nutrition_days) {
-                    return total + plan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0);
-                }
-                return total;
-            }, 0).toFixed(0);
+        // Получить сегодняшнюю дату в формате YYYY-MM-DD
+        getTodayDate() {
+            return new Date().toISOString().split('T')[0];
         },
         
-        // Получить общие белки
-        getTotalProteins() {
-            return this.nutritionPlans.reduce((total, plan) => {
+        // Найти день питания на сегодня
+        findTodayNutritionDay() {
+            const today = this.getTodayDate();
+            for (let plan of this.nutritionPlans) {
                 if (plan.nutrition_days) {
-                    return total + plan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0);
+                    const todayDay = plan.nutrition_days.find(day => day.date === today);
+                    if (todayDay) {
+                        return todayDay;
+                    }
                 }
-                return total;
-            }, 0).toFixed(0);
+            }
+            return null;
         },
         
-        // Получить общие углеводы
-        getTotalCarbs() {
-            return this.nutritionPlans.reduce((total, plan) => {
-                if (plan.nutrition_days) {
-                    return total + plan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0);
-                }
-                return total;
-            }, 0).toFixed(0);
+        // Получить калории на сегодня
+        getTodayCalories() {
+            const todayDay = this.findTodayNutritionDay();
+            return todayDay ? parseFloat(todayDay.calories || 0).toFixed(0) : '—';
         },
         
-        // Получить общие жиры
-        getTotalFats() {
-            return this.nutritionPlans.reduce((total, plan) => {
-                if (plan.nutrition_days) {
-                    return total + plan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0);
-                }
-                return total;
-            }, 0).toFixed(0);
+        // Получить белки на сегодня
+        getTodayProteins() {
+            const todayDay = this.findTodayNutritionDay();
+            return todayDay ? parseFloat(todayDay.proteins || 0).toFixed(0) : '—';
+        },
+        
+        // Получить углеводы на сегодня
+        getTodayCarbs() {
+            const todayDay = this.findTodayNutritionDay();
+            return todayDay ? parseFloat(todayDay.carbs || 0).toFixed(0) : '—';
+        },
+        
+        // Получить жиры на сегодня
+        getTodayFats() {
+            const todayDay = this.findTodayNutritionDay();
+            return todayDay ? parseFloat(todayDay.fats || 0).toFixed(0) : '—';
         }
     }
 }
