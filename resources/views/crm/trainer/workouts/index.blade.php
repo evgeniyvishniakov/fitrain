@@ -1865,6 +1865,7 @@ function workoutApp() {
                         gap: 1rem !important;
                     }
                 }
+                
             </style>
             <div class="filters-row">
                 <!-- Поиск -->
@@ -1932,7 +1933,8 @@ function workoutApp() {
                 </div>
                 
                 <div class="p-6">
-                    <div class="flex items-start justify-between mb-4">
+                    <!-- Вся информация в одной строке -->
+                    <div class="flex items-center gap-4 mb-4">
                         <!-- Аватарка спортсмена -->
                         <div class="flex-shrink-0">
                             <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg text-white font-semibold text-lg">
@@ -1940,8 +1942,29 @@ function workoutApp() {
                             </div>
                         </div>
                         
+                        <!-- Название тренировки -->
+                        <div class="flex-shrink-0 min-w-0">
+                            <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="workout.title"></h3>
+                        </div>
+                        
+                        <!-- Информация о дате, времени и участнике -->
+                        <div class="flex-1 flex items-center gap-6 text-sm text-gray-600">
+                            <span class="flex-shrink-0">
+                                <span class="font-medium text-gray-700">Дата:</span>
+                                <span x-text="formatDate(workout.date)" class="text-gray-900 font-semibold"></span>
+                            </span>
+                            <span class="flex-shrink-0">
+                                <span class="font-medium text-gray-700">Время:</span>
+                                <span x-text="workout.time ? workout.time.substring(0, 5) : 'Не указано'" class="text-gray-900 font-semibold"></span>
+                            </span>
+                            <span class="flex-shrink-0">
+                                <span class="font-medium text-gray-700">Участник:</span>
+                                <span x-text="workout.athlete?.name || workout.trainer?.name || 'Не указан'" class="text-gray-900 font-semibold"></span>
+                            </span>
+                        </div>
+                        
                         <!-- Статус -->
-                        <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0"
                               :class="{
                                   'bg-green-100 text-green-800': workout.status === 'completed',
                                   'bg-red-100 text-red-800': workout.status === 'cancelled',
@@ -1951,9 +1974,8 @@ function workoutApp() {
                         </span>
                     </div>
                     
-                    <!-- Заголовок и описание -->
+                    <!-- Описание -->
                     <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors" x-text="workout.title"></h3>
                         <p class="text-gray-600 text-sm line-clamp-2" x-text="workout.description || ''"></p>
                         
                         <!-- Упражнения -->
@@ -1987,24 +2009,6 @@ function workoutApp() {
                         </div>
                     </div>
                     
-                    <!-- Мета информация -->
-                    <div class="space-y-2 mb-4">
-                        <div class="text-sm text-gray-500">
-                            <span class="font-medium text-gray-700">Дата:</span>
-                            <span x-text="formatDate(workout.date)"></span>
-                        </div>
-                        
-                        <div class="text-sm text-gray-500" x-show="workout.time">
-                            <span class="font-medium text-gray-700">Время:</span>
-                            <span x-text="workout.time ? workout.time.substring(0, 5) : ''"></span>
-                        </div>
-                        
-                        
-                        <div class="text-sm text-gray-500">
-                            <span class="font-medium text-gray-700">Участник:</span>
-                            <span x-text="workout.athlete?.name || workout.trainer?.name || 'Неизвестно'"></span>
-                        </div>
-                    </div>
                     
                     <!-- Действия -->
                     <div class="flex space-x-2">

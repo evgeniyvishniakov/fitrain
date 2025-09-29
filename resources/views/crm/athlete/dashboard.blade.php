@@ -36,7 +36,7 @@ function dashboardCalendar() {
                 const dayNum = currentDay.getDate();
                 const dayString = `${year}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                 
-                const dayWorkouts = this.monthWorkouts.filter(workout => {
+                const dayWorkouts = (this.monthWorkouts || []).filter(workout => {
                     const workoutDate = new Date(workout.date);
                     const workoutYear = workoutDate.getFullYear();
                     const workoutMonth = workoutDate.getMonth() + 1;
@@ -90,10 +90,13 @@ function dashboardCalendar() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    this.monthWorkouts = data.workouts;
+                    this.monthWorkouts = data.workouts || [];
+                } else {
+                    this.monthWorkouts = [];
                 }
             } catch (error) {
                 console.error('Ошибка загрузки тренировок:', error);
+                this.monthWorkouts = [];
             }
         },
         

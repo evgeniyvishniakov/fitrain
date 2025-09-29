@@ -48,7 +48,7 @@ class AthleteController extends BaseController
             ->where('date', '<=', now()->endOfMonth()->addMonth()->toDateString())
             ->orderBy('date', 'asc')
             ->orderBy('time', 'asc')
-            ->get();
+            ->get() ?? collect();
         
         
         $recentWorkouts = $athlete->workouts()->with('trainer')->latest()->take(5)->get();

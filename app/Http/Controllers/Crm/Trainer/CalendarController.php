@@ -46,7 +46,7 @@ class CalendarController extends Controller
         $workoutsByDay = $workouts->map(function($workout) {
             $workout->status_color = $this->getStatusColor($workout->status);
             $workout->athlete_name = $workout->athlete->name ?? 'Неизвестно';
-            $workout->exercises_count = $workout->exercises->count();
+            $workout->exercises_count = $workout->exercises ? $workout->exercises->count() : 0;
             return $workout;
         })->groupBy(function($workout) {
             return $workout->date;
@@ -102,7 +102,7 @@ class CalendarController extends Controller
                     'duration' => $workout->duration,
                     'status' => $workout->status,
                     'athlete_name' => $workout->athlete->name ?? 'Неизвестно',
-                    'exercises_count' => $workout->exercises->count(),
+                    'exercises_count' => $workout->exercises ? $workout->exercises->count() : 0,
                     'status_color' => $this->getStatusColor($workout->status),
                 ];
             })

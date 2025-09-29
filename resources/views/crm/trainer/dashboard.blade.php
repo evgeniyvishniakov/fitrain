@@ -224,24 +224,38 @@
                             <div class="space-y-2">
                                 @foreach($todayWorkouts as $workout)
                                     <div class="workout-item">
+                                        <!-- Аватар спортсмена -->
+                                        <div class="workout-avatar">
+                                            @if($workout->athlete && $workout->athlete->avatar)
+                                                <img src="{{ $workout->athlete->avatar }}" alt="{{ $workout->athlete->name }}" class="avatar-img">
+                                            @else
+                                                <div class="avatar-placeholder">
+                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        
+                                        <!-- Основная информация -->
                                         <div class="workout-content">
-                                            <div class="workout-details">
-                                                <span class="workout-title">{{ $workout->title }} - {{ $workout->athlete ? $workout->athlete->name : 'Спортсмен не указан' }}</span>
-                                                <span class="workout-date">
-                                                    @if($workout->time)
-                                                        {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : '' }}
-                                                    @endif
-                                                </span>
+                                            <div class="workout-title">{{ $workout->title }}</div>
+                                            <div class="workout-info-row">
+                                                <span class="workout-date">Дата: {{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
+                                                <span class="workout-time">Время: {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : 'Не указано' }}</span>
+                                                <span class="workout-participant">Участник: {{ $workout->athlete ? $workout->athlete->name : 'Не указан' }}</span>
                                             </div>
                                         </div>
-                                    <span class="workout-status-badge
-                                        {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                           ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ $workout->status === 'completed' ? 'Завершена' : 
-                                           ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
-                                    </span>
-                                </div>
-                            @endforeach
+                                        
+                                        <!-- Статус -->
+                                        <span class="workout-status-badge
+                                            {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                               ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
+                                            {{ $workout->status === 'completed' ? 'Завершена' : 
+                                               ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
+                                        </span>
+                                    </div>
+                                @endforeach
                         </div>
                     </div>
                 @endif
@@ -257,24 +271,38 @@
                             <div class="space-y-2">
                                 @foreach($tomorrowWorkouts as $workout)
                                     <div class="workout-item">
+                                        <!-- Аватар спортсмена -->
+                                        <div class="workout-avatar">
+                                            @if($workout->athlete && $workout->athlete->avatar)
+                                                <img src="{{ $workout->athlete->avatar }}" alt="{{ $workout->athlete->name }}" class="avatar-img">
+                                            @else
+                                                <div class="avatar-placeholder">
+                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        
+                                        <!-- Основная информация -->
                                         <div class="workout-content">
-                                            <div class="workout-details">
-                                                <span class="workout-title">{{ $workout->title }} - {{ $workout->athlete ? $workout->athlete->name : 'Спортсмен не указан' }}</span>
-                                                <span class="workout-date">
-                                                    @if($workout->time)
-                                                        {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : '' }}
-                                                    @endif
-                                                </span>
+                                            <div class="workout-title">{{ $workout->title }}</div>
+                                            <div class="workout-info-row">
+                                                <span class="workout-date">Дата: {{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
+                                                <span class="workout-time">Время: {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : 'Не указано' }}</span>
+                                                <span class="workout-participant">Участник: {{ $workout->athlete ? $workout->athlete->name : 'Не указан' }}</span>
                                             </div>
                                         </div>
-                                    <span class="workout-status-badge
-                                        {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                           ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ $workout->status === 'completed' ? 'Завершена' : 
-                                           ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
-                                    </span>
-                                </div>
-                            @endforeach
+                                        
+                                        <!-- Статус -->
+                                        <span class="workout-status-badge
+                                            {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                               ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
+                                            {{ $workout->status === 'completed' ? 'Завершена' : 
+                                               ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
+                                        </span>
+                                    </div>
+                                @endforeach
                         </div>
                     </div>
                 @endif
