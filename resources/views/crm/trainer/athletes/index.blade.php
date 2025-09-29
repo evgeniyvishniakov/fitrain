@@ -258,10 +258,16 @@ function athletesApp() {
             // Очищаем предыдущие графики
             this.destroyCharts();
             
+            this.loadingAthleteData = true;
             
-            // Загружаем измерения спортсмена
-            await this.loadMeasurements(athleteId);
-            
+            try {
+                // Загружаем измерения спортсмена
+                await this.loadMeasurements(athleteId);
+                // Загружаем планы питания
+                await this.loadNutritionPlans();
+            } finally {
+                this.loadingAthleteData = false;
+            }
         },
         
         // Форматирование чисел - убираем лишние нули
@@ -970,6 +976,9 @@ function athletesApp() {
         loadingNutritionPlans: false,
         detailedNutritionPlan: null,
         
+        // Состояние загрузки данных спортсмена
+        loadingAthleteData: false,
+        
         // Загрузить планы питания
         async loadNutritionPlans() {
             if (!this.currentAthlete) return;
@@ -1026,9 +1035,23 @@ function athletesApp() {
         },
         
         // Удалить план питания
-        async deleteNutritionPlan(planId) {
-            if (!confirm('Вы уверены, что хотите удалить этот план питания?')) return;
+        deleteNutritionPlan(planId) {
+            const plan = this.nutritionPlans.find(p => p.id === planId);
+            const planTitle = plan ? (plan.title || `План питания на ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} г.`) : 'план питания';
             
+            // Используем глобальное модальное окно подтверждения
+            window.dispatchEvent(new CustomEvent('show-confirm', {
+                detail: {
+                    title: 'Удалить план питания',
+                    message: `Вы уверены, что хотите удалить "${planTitle}"?`,
+                    confirmText: 'Удалить',
+                    cancelText: 'Отмена',
+                    onConfirm: () => this.performDeleteNutritionPlan(planId)
+                }
+            }));
+        },
+        
+        async performDeleteNutritionPlan(planId) {
             try {
                 const response = await fetch(`/trainer/nutrition-plans/${planId}`, {
                     method: 'DELETE',
@@ -1056,6 +1079,28 @@ function athletesApp() {
         // Закрыть детальный просмотр
         closeDetailedNutritionPlan() {
             this.detailedNutritionPlan = null;
+        },
+        
+        // Получить текущий вес
+        getCurrentWeight() {
+            if (this.measurements && this.measurements.length > 0) {
+                return this.formatNumber(this.measurements[0].weight, ' кг');
+            }
+            if (this.currentAthlete?.current_weight) {
+                return this.formatNumber(this.currentAthlete.current_weight, ' кг');
+            }
+            return '—';
+        },
+        
+        // Получить текущий рост
+        getCurrentHeight() {
+            if (this.measurements && this.measurements.length > 0) {
+                return this.formatNumber(this.measurements[0].height, ' см');
+            }
+            if (this.currentAthlete?.current_height) {
+                return this.formatNumber(this.currentAthlete.current_height, ' см');
+            }
+            return '—';
         },
         
         // Показать модальное окно быстрого заполнения
@@ -2554,10 +2599,21 @@ function athletesApp() {
                             <!-- Основная информация -->
                                 <div class="flex-1">
                                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentAthlete?.name"></h2>
-                                <div class="flex gap-6 text-sm text-gray-500 mt-2">
-                                    <span x-text="'Возраст: ' + (currentAthlete?.age || '—')"></span>
-                                    <span x-text="'Вес: ' + (measurements.length > 0 ? formatNumber(measurements[0].weight, ' кг') : (currentAthlete?.weight ? formatNumber(currentAthlete.weight, ' кг') : '—'))"></span>
-                                    <span x-text="'Рост: ' + (measurements.length > 0 ? formatNumber(measurements[0].height, ' см') : (currentAthlete?.height ? formatNumber(currentAthlete.height, ' см') : '—'))"></span>
+                                <div class="athlete-profile-data text-sm text-gray-500 mt-2">
+                                    <div class="athlete-profile-item">
+                                        <span class="athlete-profile-label">Возраст:</span>
+                                        <span class="athlete-profile-value" x-text="currentAthlete?.age || '—'"></span>
+                                    </div>
+                                    <div class="athlete-profile-item">
+                                        <span class="athlete-profile-label">Вес:</span>
+                                        <span class="athlete-profile-value" x-show="!loadingAthleteData" x-text="getCurrentWeight()"></span>
+                                        <span class="athlete-profile-value animate-pulse bg-gray-200 rounded" x-show="loadingAthleteData" style="width: 60px; height: 16px;"></span>
+                                    </div>
+                                    <div class="athlete-profile-item">
+                                        <span class="athlete-profile-label">Рост:</span>
+                                        <span class="athlete-profile-value" x-show="!loadingAthleteData" x-text="getCurrentHeight()"></span>
+                                        <span class="athlete-profile-value animate-pulse bg-gray-200 rounded" x-show="loadingAthleteData" style="width: 60px; height: 16px;"></span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -3014,35 +3070,23 @@ function athletesApp() {
                                     <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                                         <div class="flex items-start justify-between">
                                             <div class="flex-1">
-                                                <!-- Название и информация о тренировке в одну линию -->
-                                                <div class="flex items-center text-sm text-gray-500 whitespace-nowrap">
-                                                    <h4 class="text-lg font-semibold text-gray-900 mr-4" x-text="workout.title"></h4>
-                                                    <span class="mx-2">•</span>
-                                                    <div class="flex items-center">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                        </svg>
-                                                        <span x-text="new Date(workout.date).toLocaleDateString('ru-RU')"></span>
+                                                <!-- Название и информация о тренировке -->
+                                                <div class="workout-header">
+                                                    <h4 class="text-lg font-semibold text-gray-900" x-text="workout.title"></h4>
+                                                    <div class="workout-info">
+                                                        <div class="workout-info-item">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                            </svg>
+                                                            <span x-text="new Date(workout.date).toLocaleDateString('ru-RU') + (workout.time ? ' в ' + workout.time : '')"></span>
+                                                        </div>
+                                                        <div class="workout-info-item">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                            <span x-text="workout.duration + ' мин'"></span>
+                                                        </div>
                                                     </div>
-                                                    <span class="mx-3">•</span>
-                                                    <div class="flex items-center">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                        </svg>
-                                                        <span x-text="workout.duration + ' мин'"></span>
-                                                    </div>
-                                                    <span class="mx-3">•</span>
-                                                    <span class="px-2 py-1 text-xs rounded-full"
-                                                          :class="{
-                                                              'bg-green-100 text-green-800': workout.status === 'completed',
-                                                              'bg-yellow-100 text-yellow-800': workout.status === 'planned',
-                                                              'bg-red-100 text-red-800': workout.status === 'cancelled'
-                                                          }"
-                                                          x-text="{
-                                                              'completed': 'Завершена',
-                                                              'planned': 'Запланирована', 
-                                                              'cancelled': 'Отменена'
-                                                          }[workout.status] || workout.status"></span>
                                                 </div>
                                                 
                                                 <!-- Описание тренировки -->
@@ -3060,22 +3104,19 @@ function athletesApp() {
                                                 </div>
                                             </div>
                                             
-                                            <!-- Кнопки действий -->
-                                            <div class="flex items-center space-x-2 ml-4">
-                                                <button @click="editWorkout(workout)" 
-                                                        class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                        title="Редактировать тренировку">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                    </svg>
-                                                </button>
-                                                <button @click="deleteWorkout(workout.id)" 
-                                                        class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Удалить тренировку">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                    </svg>
-                                                </button>
+                                            <!-- Статус тренировки -->
+                                            <div class="flex items-center ml-4">
+                                                <span class="px-3 py-1 text-sm rounded-full font-medium"
+                                                      :class="{
+                                                          'bg-green-100 text-green-800': workout.status === 'completed',
+                                                          'bg-yellow-100 text-yellow-800': workout.status === 'planned',
+                                                          'bg-red-100 text-red-800': workout.status === 'cancelled'
+                                                      }"
+                                                      x-text="{
+                                                          'completed': 'Завершена',
+                                                          'planned': 'Запланирована', 
+                                                          'cancelled': 'Отменена'
+                                                      }[workout.status] || workout.status"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -3130,30 +3171,36 @@ function athletesApp() {
                                         <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                                             <div class="nutrition-plan-card">
                                                 <div class="nutrition-plan-title">
-                                                    <h5 class="text-lg font-medium text-gray-900" x-text="plan.title || `План питания на ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} г. (${plan.nutrition_days ? plan.nutrition_days.length : 0} дней)`"></h5>
+                                                    <h5 class="text-lg font-medium text-gray-900">
+                                                        <span x-text="plan.title || `План питания на ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} г.`"></span>
+                                                        <span class="text-sm text-gray-600" x-text="`(${plan.nutrition_days ? plan.nutrition_days.length : 0} дней)`"></span>
+                                                    </h5>
                                                 </div>
                                                 <div class="nutrition-plan-buttons">
                                                     <button @click="editNutritionPlan(plan)" 
-                                                            class="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                                                            class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
                                                             title="Редактировать план">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                         </svg>
+                                                        <span class="mobile-button-text">Редактировать</span>
                                                     </button>
                                                     <button @click="showDetailedNutritionPlan(plan)" 
-                                                            class="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                                            class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
                                                             title="Подробнее">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                         </svg>
+                                                        <span class="mobile-button-text">Подробнее</span>
                                                     </button>
                                                     <button @click="deleteNutritionPlan(plan.id)" 
-                                                            class="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                                                            class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
                                                             title="Удалить план">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                         </svg>
+                                                        <span class="mobile-button-text">Удалить</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -4067,21 +4114,214 @@ function athletesApp() {
     gap: 4px;
 }
 
+.mobile-button-text {
+    display: none;
+}
+
 /* Медиа-запрос для мобильных устройств */
 @media (max-width: 640px) {
     .nutrition-plan-card {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
     }
     
     .nutrition-plan-title {
         margin-bottom: 12px;
+        text-align: center;
+        line-height: 1.3;
+    }
+    
+    .nutrition-plan-title h5 {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
     }
     
     .nutrition-plan-buttons {
-        align-self: flex-end;
+        align-self: center;
+        gap: 8px;
+    }
+    
+    .nutrition-plan-buttons button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .nutrition-plan-buttons button:first-child {
+        color: #4f46e5;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+    }
+    
+    .nutrition-plan-buttons button:first-child:hover {
+        background: #e0e7ff;
+    }
+    
+    .nutrition-plan-buttons button:nth-child(2) {
+        color: #059669;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+    }
+    
+    .nutrition-plan-buttons button:nth-child(2):hover {
+        background: #d1fae5;
+    }
+    
+    .nutrition-plan-buttons button:last-child {
+        color: #dc2626;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+    
+    .nutrition-plan-buttons button:last-child:hover {
+        background: #fee2e2;
+    }
+    
+    .nutrition-plan-buttons button svg {
+        display: none;
+    }
+    
+    .mobile-button-text {
+        display: inline;
     }
 }
+
+/* Специальный медиа-запрос для вкладки питания на мобилке */
+@media (max-width: 767px) {
+    .p-6 {
+        padding: 0.5rem !important;
+    }
+}
+
+/* Данные спортсмена в профиле - по умолчанию в ряд */
+.athlete-profile-data {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.athlete-profile-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.athlete-profile-label {
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.athlete-profile-value {
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Данные спортсмена в профиле на мобилке - в колонку */
+@media (max-width: 640px) {
+    .athlete-profile-data {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .athlete-profile-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .athlete-profile-label {
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        min-width: 50px;
+    }
+    
+    .athlete-profile-value {
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+    }
+}
+
+/* Тренировки - адаптивность */
+.workout-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.workout-info {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 16px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.workout-info-item {
+    display: flex;
+    align-items: center;
+}
+
+.workout-status {
+    margin-left: auto;
+}
+
+
+/* Тренировки на мобилке */
+@media (max-width: 640px) {
+    .workout-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    
+    .workout-info {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    
+    .workout-info-item {
+        font-size: 13px;
+    }
+    
+    .workout-status {
+        margin-left: 0 !important;
+        align-self: flex-start;
+    }
+}
+
+/* Тренировки на десктопе - принудительно в ряд */
+@media (min-width: 641px) {
+    .workout-info {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 16px !important;
+    }
+    
+    .workout-info-item {
+        white-space: nowrap !important;
+    }
+    
+    .workout-status {
+        margin-left: auto !important;
+    }
+}
+
 
 /* Кнопки в профиле спортсмена */
 .profile-buttons {

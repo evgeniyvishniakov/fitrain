@@ -119,8 +119,11 @@ Route::middleware(["auth"])->group(function () {
         Route::post("/athlete/measurements", [AthleteController::class, "storeMeasurement"])->name("crm.athlete.measurements.store");
         Route::get("/athlete/measurements/{id}", [AthleteController::class, "getMeasurement"])->name("crm.athlete.measurements.get");
         Route::put("/athlete/measurements/{id}", [AthleteController::class, "updateMeasurement"])->name("crm.athlete.measurements.update");
+        
+        // Питание спортсмена
+        Route::get("/athlete/nutrition", [\App\Http\Controllers\Crm\Athlete\NutritionController::class, "index"])->name("crm.athlete.nutrition");
+        Route::get("/athlete/nutrition-plans", [\App\Http\Controllers\Crm\Athlete\NutritionController::class, "getPlans"])->name("crm.athlete.nutrition-plans");
         Route::delete("/athlete/measurements/{id}", [AthleteController::class, "deleteMeasurement"])->name("crm.athlete.measurements.delete");
-        Route::get("/athlete/nutrition", [AthleteController::class, "nutrition"])->name("crm.athlete.nutrition");
         Route::get("/athlete/settings", [AthleteController::class, "settings"])->name("crm.athlete.settings");
         Route::put("/athlete/settings", [AthleteController::class, "updateSettings"])->name("crm.athlete.settings.update");
         
