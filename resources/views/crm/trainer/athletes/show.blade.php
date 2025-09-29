@@ -423,7 +423,7 @@
                     <!-- Заголовок с кнопкой добавления -->
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-900">История измерений</h3>
-                        <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
+                        <button onclick="openMeasurementModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
@@ -638,31 +638,18 @@
                 </div>
             </div>
 
-            <!-- Вкладка "Питание" -->
-            <div id="content-nutrition" class="tab-content hidden">
-                <div class="text-center py-12 text-gray-500">
-                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
-                    </svg>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">Питание</h3>
-                    <p class="mb-4">Здесь будет информация о питании и диете</p>
-                    <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-                        Добавить запись
-                    </button>
-                </div>
-            </div>
 
             <!-- Вкладка "Питание" -->
             <div id="content-nutrition" class="tab-content hidden">
                 <div class="space-y-6">
                     <!-- Заголовок с кнопкой добавления -->
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">Питание и диета</h3>
-                        <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">Планы питания</h3>
+                        <button onclick="openNutritionPlanModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
-                            Добавить запись
+                            Расписать питание (ОБНОВЛЕНО)
                         </button>
                     </div>
                     
@@ -686,15 +673,18 @@
                         </div>
                     </div>
                     
-                    <!-- Планы питания -->
+                    <!-- Список планов питания -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
                         <h4 class="text-md font-semibold text-gray-900 mb-4">Планы питания</h4>
-                        <div class="text-center py-8 text-gray-500">
-                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                            </svg>
-                            <p>Нет планов питания</p>
-                            <p class="text-sm">Создайте план питания для спортсмена</p>
+                        <div id="nutrition-plans-list">
+                            <!-- Планы будут загружены через JavaScript -->
+                            <div class="text-center py-8 text-gray-500">
+                                <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <p>Нет планов питания</p>
+                                <p class="text-sm">Создайте план питания для спортсмена</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -763,7 +753,44 @@
     </div>
 </div>
 
+<!-- Модальное окно для создания плана питания -->
+<div id="nutrition-plan-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <!-- Заголовок модального окна -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900" id="nutrition-modal-title">Создать план питания</h3>
+                <button onclick="closeNutritionPlanModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Содержимое модального окна -->
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div id="nutrition-plan-content">
+                    <!-- Содержимое будет загружено через JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Кнопки модального окна -->
+            <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+                <button onclick="closeNutritionPlanModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg">
+                    Отмена
+                </button>
+                <button onclick="saveNutritionPlan()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    Сохранить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+let currentAthleteId = {{ $athlete->id }};
+let currentNutritionPlan = null;
+
 function showTab(tabName) {
     // Скрываем все вкладки
     document.querySelectorAll('.tab-content').forEach(content => {
@@ -783,6 +810,295 @@ function showTab(tabName) {
     const activeButton = document.getElementById('tab-' + tabName);
     activeButton.classList.add('active', 'border-indigo-500', 'text-indigo-600');
     activeButton.classList.remove('border-transparent', 'text-gray-500');
+    
+    // Загружаем планы питания при открытии вкладки
+    if (tabName === 'nutrition') {
+        loadNutritionPlans();
+    }
+}
+
+// Открытие модального окна для создания плана
+function openNutritionPlanModal() {
+    currentNutritionPlan = null;
+    document.getElementById('nutrition-modal-title').textContent = 'Создать план питания';
+    showCreatePlanForm();
+    document.getElementById('nutrition-plan-modal').classList.remove('hidden');
+}
+
+// Закрытие модального окна
+function closeNutritionPlanModal() {
+    document.getElementById('nutrition-plan-modal').classList.add('hidden');
+    currentNutritionPlan = null;
+}
+
+// Показ формы создания плана
+function showCreatePlanForm() {
+    const content = `
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Выберите месяц и год</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="plan-month" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="1">Январь</option>
+                        <option value="2">Февраль</option>
+                        <option value="3">Март</option>
+                        <option value="4">Апрель</option>
+                        <option value="5">Май</option>
+                        <option value="6">Июнь</option>
+                        <option value="7">Июль</option>
+                        <option value="8">Август</option>
+                        <option value="9">Сентябрь</option>
+                        <option value="10">Октябрь</option>
+                        <option value="11">Ноябрь</option>
+                        <option value="12">Декабрь</option>
+                    </select>
+                    <select id="plan-year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        ${generateYearOptions()}
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Название плана (необязательно)</label>
+                <input type="text" id="plan-title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Например: План на массонабор">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Описание (необязательно)</label>
+                <textarea id="plan-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Дополнительная информация о плане питания"></textarea>
+            </div>
+        </div>
+    `;
+    document.getElementById('nutrition-plan-content').innerHTML = content;
+    
+    // Устанавливаем текущий месяц и год
+    const now = new Date();
+    document.getElementById('plan-month').value = now.getMonth() + 1;
+    document.getElementById('plan-year').value = now.getFullYear();
+}
+
+// Генерация опций для года
+function generateYearOptions() {
+    const currentYear = new Date().getFullYear();
+    let options = '';
+    for (let year = currentYear - 1; year <= currentYear + 2; year++) {
+        options += `<option value="${year}">${year}</option>`;
+    }
+    return options;
+}
+
+// Загрузка планов питания
+async function loadNutritionPlans() {
+    try {
+        const response = await fetch(`/trainer/nutrition-plans?athlete_id=${currentAthleteId}`, {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        if (response.ok) {
+            const plans = await response.json();
+            displayNutritionPlans(plans);
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки планов питания:', error);
+    }
+}
+
+// Отображение планов питания
+function displayNutritionPlans(plans) {
+    const container = document.getElementById('nutrition-plans-list');
+    
+    if (plans.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <p>Нет планов питания</p>
+                <p class="text-sm">Создайте план питания для спортсмена</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = plans.map(plan => `
+        <div class="border border-gray-200 rounded-lg p-4 mb-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h5 class="font-semibold text-gray-900">${plan.title || plan.full_title}</h5>
+                    <p class="text-sm text-gray-600">${plan.nutrition_days?.length || 0} дней заполнено</p>
+                    <p class="text-xs text-gray-500">Создан: ${new Date(plan.created_at).toLocaleDateString('ru-RU')}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="editNutritionPlan(${plan.id})" class="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800 border border-indigo-300 rounded-lg">
+                        Редактировать
+                    </button>
+                    <button onclick="deleteNutritionPlan(${plan.id})" class="px-3 py-1 text-sm text-red-600 hover:text-red-800 border border-red-300 rounded-lg">
+                        Удалить
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Сохранение плана питания
+async function saveNutritionPlan() {
+    const month = document.getElementById('plan-month').value;
+    const year = document.getElementById('plan-year').value;
+    const title = document.getElementById('plan-title').value;
+    const description = document.getElementById('plan-description').value;
+    
+    try {
+        const response = await fetch('/trainer/nutrition-plans', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                athlete_id: currentAthleteId,
+                month: parseInt(month),
+                year: parseInt(year),
+                title: title,
+                description: description
+            })
+        });
+        
+        if (response.ok) {
+            const plan = await response.json();
+            closeNutritionPlanModal();
+            loadNutritionPlans();
+            showSuccess('План питания создан!');
+        } else {
+            const error = await response.json();
+            showError(error.error || 'Ошибка при создании плана');
+        }
+    } catch (error) {
+        console.error('Ошибка сохранения плана:', error);
+        showError('Ошибка при сохранении плана');
+    }
+}
+
+// Редактирование плана питания
+async function editNutritionPlan(planId) {
+    try {
+        const response = await fetch(`/trainer/nutrition-plans/${planId}`, {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        if (response.ok) {
+            currentNutritionPlan = await response.json();
+            showEditPlanForm();
+            document.getElementById('nutrition-modal-title').textContent = 'Редактировать план питания';
+            document.getElementById('nutrition-plan-modal').classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки плана:', error);
+    }
+}
+
+// Показ формы редактирования плана
+function showEditPlanForm() {
+    if (!currentNutritionPlan) return;
+    
+    const content = `
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Выберите месяц и год</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <select id="plan-month" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="1">Январь</option>
+                        <option value="2">Февраль</option>
+                        <option value="3">Март</option>
+                        <option value="4">Апрель</option>
+                        <option value="5">Май</option>
+                        <option value="6">Июнь</option>
+                        <option value="7">Июль</option>
+                        <option value="8">Август</option>
+                        <option value="9">Сентябрь</option>
+                        <option value="10">Октябрь</option>
+                        <option value="11">Ноябрь</option>
+                        <option value="12">Декабрь</option>
+                    </select>
+                    <select id="plan-year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        ${generateYearOptions()}
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Название плана (необязательно)</label>
+                <input type="text" id="plan-title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Например: План на массонабор">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Описание (необязательно)</label>
+                <textarea id="plan-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Дополнительная информация о плане питания"></textarea>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-sm text-blue-800">
+                    <strong>Совет:</strong> После создания плана вы сможете заполнить таблицу БЖУ по дням, как в Excel.
+                </p>
+            </div>
+        </div>
+    `;
+    document.getElementById('nutrition-plan-content').innerHTML = content;
+    
+    // Заполняем поля текущими значениями
+    document.getElementById('plan-month').value = currentNutritionPlan.month;
+    document.getElementById('plan-year').value = currentNutritionPlan.year;
+    document.getElementById('plan-title').value = currentNutritionPlan.title || '';
+    document.getElementById('plan-description').value = currentNutritionPlan.description || '';
+}
+
+// Удаление плана питания
+async function deleteNutritionPlan(planId) {
+    if (!confirm('Вы уверены, что хотите удалить этот план питания?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/trainer/nutrition-plans/${planId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        if (response.ok) {
+            loadNutritionPlans();
+            showSuccess('План питания удален!');
+        } else {
+            showError('Ошибка при удалении плана');
+        }
+    } catch (error) {
+        console.error('Ошибка удаления плана:', error);
+        showError('Ошибка при удалении плана');
+    }
+}
+
+// Функции уведомлений
+function showSuccess(message) {
+    // Используем существующую систему уведомлений
+    if (typeof showNotification === 'function') {
+        showNotification('success', message);
+    } else {
+        alert(message);
+    }
+}
+
+function showError(message) {
+    // Используем существующую систему уведомлений
+    if (typeof showNotification === 'function') {
+        showNotification('error', message);
+    } else {
+        alert('Ошибка: ' + message);
+    }
 }
 </script>
 @endsection

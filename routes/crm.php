@@ -95,6 +95,16 @@ Route::middleware(["auth"])->group(function () {
         // Прогресс упражнений для тренеров
         Route::get("/trainer/exercise-progress", [TrainerController::class, "getExerciseProgress"])->name("crm.trainer.exercise-progress.get");
         Route::patch("/trainer/exercise-progress", [TrainerController::class, "updateExerciseProgress"])->name("crm.trainer.exercise-progress.update");
+        
+        // Планы питания для тренеров
+        Route::get("/trainer/nutrition-plans", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "index"])->name("crm.trainer.nutrition-plans.index");
+        Route::post("/trainer/nutrition-plans", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "store"])->name("crm.trainer.nutrition-plans.store");
+        Route::get("/trainer/nutrition-plans/{id}", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "show"])->name("crm.trainer.nutrition-plans.show");
+        Route::put("/trainer/nutrition-plans/{id}", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "update"])->name("crm.trainer.nutrition-plans.update");
+        Route::delete("/trainer/nutrition-plans/{id}", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "destroy"])->name("crm.trainer.nutrition-plans.destroy");
+        Route::post("/trainer/nutrition-plans/{id}/days", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "saveDays"])->name("crm.trainer.nutrition-plans.save-days");
+        Route::post("/trainer/nutrition-plans/{id}/day", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "saveDay"])->name("crm.trainer.nutrition-plans.save-day");
+        Route::delete("/trainer/nutrition-plans/{planId}/days/{dayId}", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "deleteDay"])->name("crm.trainer.nutrition-plans.delete-day");
     });
     
     // Маршруты только для спортсменов

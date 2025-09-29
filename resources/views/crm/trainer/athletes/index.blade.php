@@ -123,7 +123,7 @@
 // SPA функциональность для спортсменов
 function athletesApp() {
     return {
-        currentView: 'list', // list, create, edit, view, addMeasurement, editMeasurement, addPayment, editPayment
+        currentView: 'list', // list, create, edit, view, addMeasurement, editMeasurement, addPayment, editPayment, addNutrition
         athletes: @json($athletes->items()),
         currentAthlete: null,
         activeTab: 'overview', // для вкладок в просмотре
@@ -167,6 +167,12 @@ function athletesApp() {
         measurementBloodPressureSystolic: '',
         measurementBloodPressureDiastolic: '',
         measurementNotes: '',
+        
+        // Поля формы плана питания
+        nutritionMonth: '',
+        nutritionYear: '',
+        nutritionTitle: '',
+        nutritionDescription: '',
         
         // Поля формы платежей
         paymentData: {
@@ -252,12 +258,10 @@ function athletesApp() {
             // Очищаем предыдущие графики
             this.destroyCharts();
             
-            console.log('Спортсмен ДО загрузки измерений:', this.currentAthlete);
             
             // Загружаем измерения спортсмена
             await this.loadMeasurements(athleteId);
             
-            console.log('Спортсмен ПОСЛЕ загрузки измерений:', this.currentAthlete);
         },
         
         // Форматирование чисел - убираем лишние нули
@@ -320,21 +324,20 @@ function athletesApp() {
 
         // Обновление графиков при переключении вкладки
         updateCharts() {
-            console.log('=== ОБНОВЛЕНИЕ ГРАФИКОВ ===');
             
             // Ждем, пока вкладка станет видимой
             setTimeout(() => {
                 if (window.weightChart && typeof window.weightChart.resize === 'function') {
                     window.weightChart.resize();
-                    console.log('График веса обновлен');
+                    // console.log('График веса обновлен');
                 }
                 if (window.bodyCompositionChart && typeof window.bodyCompositionChart.resize === 'function') {
                     window.bodyCompositionChart.resize();
-                    console.log('График состава тела обновлен');
+                    // console.log('График состава тела обновлен');
                 }
                 if (window.measurementsChart && typeof window.measurementsChart.resize === 'function') {
                     window.measurementsChart.resize();
-                    console.log('График объемов обновлен');
+                    // console.log('График объемов обновлен');
                 }
             }, 100);
         },
@@ -385,12 +388,12 @@ function athletesApp() {
 
         // Инициализация графиков
         initCharts() {
-            console.log('=== ИНИЦИАЛИЗАЦИЯ ГРАФИКОВ ===');
-            console.log('Количество измерений:', this.measurements.length);
-            console.log('Измерения:', this.measurements);
+            // console.log('=== ИНИЦИАЛИЗАЦИЯ ГРАФИКОВ ===');
+            // console.log('Количество измерений:', this.measurements.length);
+            // console.log('Измерения:', this.measurements);
             
             if (this.measurements.length === 0) {
-                console.log('Нет измерений, пропускаем создание графиков');
+                // console.log('Нет измерений, пропускаем создание графиков');
                 return;
             }
             
@@ -399,17 +402,17 @@ function athletesApp() {
                 console.error('Chart.js не загружен');
                 return;
             }
-            console.log('Chart.js загружен успешно');
+            // console.log('Chart.js загружен успешно');
 
             // Очищаем предыдущие графики
             this.destroyCharts();
 
             // Получаем отфильтрованные данные по периоду
             const filteredMeasurements = this.getFilteredMeasurements();
-            console.log('Отфильтрованные измерения:', filteredMeasurements);
+            // console.log('Отфильтрованные измерения:', filteredMeasurements);
             
             if (filteredMeasurements.length === 0) {
-                console.log('Нет измерений в выбранном периоде');
+                // console.log('Нет измерений в выбранном периоде');
                 return;
             }
 
@@ -420,13 +423,13 @@ function athletesApp() {
                 return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
             });
 
-            console.log('Отсортированные измерения:', sortedMeasurements);
-            console.log('Метки для графиков:', labels);
+            // console.log('Отсортированные измерения:', sortedMeasurements);
+            // console.log('Метки для графиков:', labels);
 
             // Проверяем наличие canvas элементов
-            console.log('Canvas weightChart:', document.getElementById('weightChart'));
-            console.log('Canvas bodyCompositionChart:', document.getElementById('bodyCompositionChart'));
-            console.log('Canvas measurementsChart:', document.getElementById('measurementsChart'));
+            // console.log('Canvas weightChart:', document.getElementById('weightChart'));
+            // console.log('Canvas bodyCompositionChart:', document.getElementById('bodyCompositionChart'));
+            // console.log('Canvas measurementsChart:', document.getElementById('measurementsChart'));
 
             // График веса
             this.createWeightChart(labels, sortedMeasurements);
@@ -437,22 +440,22 @@ function athletesApp() {
             // График объемов
             this.createMeasurementsChart(labels, sortedMeasurements);
             
-            console.log('=== ГРАФИКИ СОЗДАНЫ ===');
+            // console.log('=== ГРАФИКИ СОЗДАНЫ ===');
         },
 
         // Создание графика веса
         createWeightChart(labels, measurements) {
-            console.log('=== СОЗДАНИЕ ГРАФИКА ВЕСА ===');
+            // console.log('=== СОЗДАНИЕ ГРАФИКА ВЕСА ===');
             const ctx = document.getElementById('weightChart');
             if (!ctx) {
                 console.error('Canvas элемент weightChart не найден');
                 return;
             }
-            console.log('Canvas элемент найден:', ctx);
+            // console.log('Canvas элемент найден:', ctx);
 
             const weightData = measurements.map(m => m.weight);
-            console.log('Данные веса:', weightData);
-            console.log('Метки:', labels);
+            // console.log('Данные веса:', weightData);
+            // console.log('Метки:', labels);
 
             // Уничтожаем предыдущий график если есть
             if (window.weightChart && typeof window.weightChart.destroy === 'function') {
@@ -513,7 +516,7 @@ function athletesApp() {
                     }
                 }
             });
-            console.log('График веса создан успешно');
+            // console.log('График веса создан успешно');
             } catch (error) {
                 console.error('Ошибка создания графика веса:', error);
             }
@@ -725,8 +728,8 @@ function athletesApp() {
                 const result = await response.json();
                 
                 if (response.ok) {
-                    console.log('Загруженные измерения:', result.measurements);
-                    console.log('Актуальные данные спортсмена с сервера:', result.athlete);
+                    // console.log('Загруженные измерения:', result.measurements);
+                    // console.log('Актуальные данные спортсмена с сервера:', result.athlete);
                     this.measurements = result.measurements;
                     
                     // Инициализируем графики после загрузки измерений
@@ -737,13 +740,13 @@ function athletesApp() {
                     // Обновляем данные спортсмена актуальными данными с сервера
                     if (result.athlete) {
                         this.currentAthlete = { ...this.currentAthlete, ...result.athlete };
-                        console.log('Обновлен currentAthlete актуальными данными:', this.currentAthlete);
+                        // console.log('Обновлен currentAthlete актуальными данными:', this.currentAthlete);
                         
                         // Обновляем спортсмена в общем списке
                         const athleteIndex = this.athletes.findIndex(a => a.id === this.currentAthlete.id);
                         if (athleteIndex !== -1) {
                             this.athletes[athleteIndex] = { ...this.athletes[athleteIndex], ...result.athlete };
-                            console.log('Обновлен спортсмен в списке актуальными данными:', this.athletes[athleteIndex]);
+                            // console.log('Обновлен спортсмен в списке актуальными данными:', this.athletes[athleteIndex]);
                         }
                     }
                 } else {
@@ -779,6 +782,314 @@ function athletesApp() {
             this.measurementBloodPressureDiastolic = '';
             this.measurementNotes = '';
         },
+        
+        showAddNutritionPlan() {
+            this.currentView = 'addNutrition';
+            this.nutritionMonth = new Date().getMonth() + 1;
+            this.nutritionYear = new Date().getFullYear();
+            this.nutritionTitle = '';
+            this.nutritionDescription = '';
+        },
+        
+        getDaysInMonth(month, year) {
+            return new Date(year, month, 0).getDate();
+        },
+        
+        async saveNutritionPlanForm() {
+            try {
+                const nutritionData = {
+                    athlete_id: this.currentAthlete.id,
+                    month: this.nutritionMonth,
+                    year: this.nutritionYear,
+                    title: this.nutritionTitle,
+                    description: this.nutritionDescription,
+                    days: []
+                };
+                
+                // Собираем данные по дням - только заполненные
+                const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const proteins = document.querySelector(`input[name="proteins_${day}"]`)?.value;
+                    const fats = document.querySelector(`input[name="fats_${day}"]`)?.value;
+                    const carbs = document.querySelector(`input[name="carbs_${day}"]`)?.value;
+                    const notes = document.querySelector(`input[name="notes_${day}"]`)?.value;
+                    
+                    // Добавляем день только если есть хотя бы одно заполненное поле
+                    if (proteins || fats || carbs || notes) {
+                        nutritionData.days.push({
+                            date: `${this.nutritionYear}-${String(this.nutritionMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+                            proteins: parseFloat(proteins) || 0,
+                            fats: parseFloat(fats) || 0,
+                            carbs: parseFloat(carbs) || 0,
+                            notes: notes || ''
+                        });
+                    }
+                }
+                
+                // Если нет заполненных дней, создаем план без дней
+                if (nutritionData.days.length === 0) {
+                    console.log('Нет заполненных дней, создаем пустой план');
+                }
+                
+                const response = await fetch('/trainer/nutrition-plans', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(nutritionData)
+                });
+                
+                if (response.ok) {
+                    this.currentView = 'view';
+                    this.activeTab = 'nutrition';
+                    this.loadNutritionPlans(); // Перезагружаем список планов
+                } else {
+                    const error = await response.json();
+                    console.error('Ошибка сервера:', error);
+                    alert(error.error || 'Ошибка при создании плана питания');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                console.error('Данные:', nutritionData);
+                alert('Ошибка при создании плана питания: ' + error.message);
+            }
+        },
+        
+        // Быстрое заполнение колонки
+        fillColumn(column) {
+            const columnNames = {
+                'proteins': 'белки (г)',
+                'fats': 'жиры (г)', 
+                'carbs': 'углеводы (г)'
+            };
+            
+            const value = prompt(`Введите значение для ${columnNames[column]}:`, '');
+            if (value === null || value === '') return;
+            
+            const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
+            for (let day = 1; day <= daysInMonth; day++) {
+                const input = document.querySelector(`input[name="${column}_${day}"]`);
+                if (input) {
+                    input.value = value;
+                    this.calculateCalories(day);
+                }
+            }
+        },
+        
+        // Заполнение всех колонок сразу
+        fillAllColumns() {
+            const proteins = prompt('Белки (г):', '');
+            if (proteins === null) return;
+            
+            const fats = prompt('Жиры (г):', '');
+            if (fats === null) return;
+            
+            const carbs = prompt('Углеводы (г):', '');
+            if (carbs === null) return;
+            
+            const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
+            for (let day = 1; day <= daysInMonth; day++) {
+                if (proteins !== '') {
+                    const proteinsInput = document.querySelector(`input[name="proteins_${day}"]`);
+                    if (proteinsInput) proteinsInput.value = proteins;
+                }
+                if (fats !== '') {
+                    const fatsInput = document.querySelector(`input[name="fats_${day}"]`);
+                    if (fatsInput) fatsInput.value = fats;
+                }
+                if (carbs !== '') {
+                    const carbsInput = document.querySelector(`input[name="carbs_${day}"]`);
+                    if (carbsInput) carbsInput.value = carbs;
+                }
+                this.calculateCalories(day);
+            }
+        },
+        
+        // Очистка всех полей
+        clearAll() {
+            if (!confirm('Очистить все поля?')) return;
+            
+            const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
+            for (let day = 1; day <= daysInMonth; day++) {
+                document.querySelector(`input[name="proteins_${day}"]`).value = '';
+                document.querySelector(`input[name="fats_${day}"]`).value = '';
+                document.querySelector(`input[name="carbs_${day}"]`).value = '';
+                document.querySelector(`input[name="notes_${day}"]`).value = '';
+                document.querySelector(`input[name="calories_${day}"]`).value = '';
+            }
+        },
+        
+        // Расчет калорий для конкретного дня
+        calculateCalories(day) {
+            const proteins = parseFloat(document.querySelector(`input[name="proteins_${day}"]`)?.value) || 0;
+            const fats = parseFloat(document.querySelector(`input[name="fats_${day}"]`)?.value) || 0;
+            const carbs = parseFloat(document.querySelector(`input[name="carbs_${day}"]`)?.value) || 0;
+            
+            const calories = (proteins * 4) + (fats * 9) + (carbs * 4);
+            const caloriesInput = document.querySelector(`input[name="calories_${day}"]`);
+            if (caloriesInput) {
+                // Убираем лишние нули в конце
+                caloriesInput.value = parseFloat(calories.toFixed(1));
+            }
+        },
+        
+        // Выделение ячейки (для будущих функций)
+        selectCell(element) {
+            if (!element || !element.classList) return;
+            
+            // Убираем выделение с других ячеек
+            document.querySelectorAll('.excel-cell').forEach(cell => {
+                if (cell.classList) {
+                    cell.classList.remove('ring-2', 'ring-blue-500');
+                }
+            });
+            
+            // Выделяем текущую ячейку
+            element.classList.add('ring-2', 'ring-blue-500');
+        },
+        
+        // Переменные для Excel-стиля
+        dragStartValue: null,
+        dragStartColumn: null,
+        dragStartDay: null,
+        isDragging: false,
+        
+        // Переменные для модального окна
+        quickFillModalVisible: false,
+        quickFillData: {
+            proteins: 120,
+            fats: 50,
+            carbs: 200,
+            startDay: 1,
+            endDay: 31
+        },
+        
+        // Переменные для планов питания
+        nutritionPlans: [],
+        loadingNutritionPlans: false,
+        detailedNutritionPlan: null,
+        
+        // Загрузить планы питания
+        async loadNutritionPlans() {
+            if (!this.currentAthlete) return;
+            
+            this.loadingNutritionPlans = true;
+            this.detailedNutritionPlan = null; // Закрываем модальное окно "Подробнее" при загрузке
+            try {
+                const response = await fetch(`/trainer/nutrition-plans?athlete_id=${this.currentAthlete.id}`, {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                if (response.ok) {
+                    this.nutritionPlans = await response.json();
+                } else {
+                    console.error('Ошибка загрузки планов питания');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+            } finally {
+                this.loadingNutritionPlans = false;
+            }
+        },
+        
+        // Редактировать план питания
+        editNutritionPlan(plan) {
+            this.detailedNutritionPlan = null; // Закрываем модальное окно "Подробнее"
+            this.currentView = 'addNutrition';
+            this.nutritionMonth = plan.month;
+            this.nutritionYear = plan.year;
+            this.nutritionTitle = plan.title || '';
+            this.nutritionDescription = plan.description || '';
+            
+            // Заполняем данные по дням
+            this.$nextTick(() => {
+                if (plan.nutrition_days) {
+                    plan.nutrition_days.forEach(day => {
+                        const dayNumber = new Date(day.date).getDate();
+                        const proteinsInput = document.querySelector(`input[name="proteins_${dayNumber}"]`);
+                        const fatsInput = document.querySelector(`input[name="fats_${dayNumber}"]`);
+                        const carbsInput = document.querySelector(`input[name="carbs_${dayNumber}"]`);
+                        const notesInput = document.querySelector(`input[name="notes_${dayNumber}"]`);
+                        
+                        if (proteinsInput) proteinsInput.value = day.proteins ? parseFloat(day.proteins) : '';
+                        if (fatsInput) fatsInput.value = day.fats ? parseFloat(day.fats) : '';
+                        if (carbsInput) carbsInput.value = day.carbs ? parseFloat(day.carbs) : '';
+                        if (notesInput) notesInput.value = day.notes || '';
+                        
+                        this.calculateCalories(dayNumber);
+                    });
+                }
+            });
+        },
+        
+        // Удалить план питания
+        async deleteNutritionPlan(planId) {
+            if (!confirm('Вы уверены, что хотите удалить этот план питания?')) return;
+            
+            try {
+                const response = await fetch(`/trainer/nutrition-plans/${planId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                if (response.ok) {
+                    this.loadNutritionPlans(); // Перезагружаем список
+                } else {
+                    alert('Ошибка при удалении плана питания');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert('Ошибка при удалении плана питания');
+            }
+        },
+        
+        // Показать детальный просмотр плана
+        showDetailedNutritionPlan(plan) {
+            this.detailedNutritionPlan = plan;
+        },
+        
+        // Закрыть детальный просмотр
+        closeDetailedNutritionPlan() {
+            this.detailedNutritionPlan = null;
+        },
+        
+        // Показать модальное окно быстрого заполнения
+        showQuickFillModal() {
+            this.quickFillData.endDay = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
+            this.quickFillModalVisible = true;
+        },
+        
+        // Применить быстрое заполнение
+        applyQuickFill() {
+            const { proteins, fats, carbs, startDay, endDay } = this.quickFillData;
+            const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
+            
+            if (startDay < 1 || endDay > daysInMonth || startDay > endDay) {
+                alert('Неверные дни!');
+                return;
+            }
+            
+            // Заполняем все ячейки
+            for (let day = startDay; day <= endDay; day++) {
+                const proteinsInput = document.querySelector(`input[name="proteins_${day}"]`);
+                const fatsInput = document.querySelector(`input[name="fats_${day}"]`);
+                const carbsInput = document.querySelector(`input[name="carbs_${day}"]`);
+                
+                if (proteinsInput) proteinsInput.value = proteins;
+                if (fatsInput) fatsInput.value = fats;
+                if (carbsInput) carbsInput.value = carbs;
+                
+                this.calculateCalories(day);
+            }
+            
+            this.quickFillModalVisible = false;
+        },
+        
         
         showAddPayment() {
             this.currentView = 'addPayment';
@@ -1109,8 +1420,8 @@ function athletesApp() {
                     password: this.formPassword || null
                 };
                 
-                console.log('Отправляем данные:', requestData);
-                console.log('URL:', `/trainer/athletes/${this.currentAthlete.id}`);
+                // console.log('Отправляем данные:', requestData);
+                // console.log('URL:', `/trainer/athletes/${this.currentAthlete.id}`);
                 
                 // Отправляем AJAX запрос
                 const response = await fetch(`/trainer/athletes/${this.currentAthlete.id}`, {
@@ -1123,11 +1434,11 @@ function athletesApp() {
                     body: JSON.stringify(requestData)
                 });
                 
-                console.log('Статус ответа:', response.status);
-                console.log('Заголовки ответа:', response.headers);
+                // console.log('Статус ответа:', response.status);
+                // console.log('Заголовки ответа:', response.headers);
                 
                 const responseText = await response.text();
-                console.log('Ответ сервера:', responseText);
+                // console.log('Ответ сервера:', responseText);
                 
                 if (response.ok) {
                     const responseData = JSON.parse(responseText);
@@ -1228,8 +1539,8 @@ function athletesApp() {
                 const result = await response.json();
                 
                 // Отладочная информация
-                console.log('Ответ сервера:', result);
-                console.log('Данные измерения:', result.measurement);
+                // console.log('Ответ сервера:', result);
+                // console.log('Данные измерения:', result.measurement);
                 
                 if (response.ok) {
                     if (isEdit) {
@@ -1246,11 +1557,11 @@ function athletesApp() {
                     // Обновляем вес и рост в профиле спортсмена
                     if (result.measurement.weight) {
                         this.currentAthlete.weight = result.measurement.weight;
-                        console.log('Обновлен вес в профиле:', this.currentAthlete.weight);
+                        // console.log('Обновлен вес в профиле:', this.currentAthlete.weight);
                     }
                     if (result.measurement.height) {
                         this.currentAthlete.height = result.measurement.height;
-                        console.log('Обновлен рост в профиле:', this.currentAthlete.height);
+                        // console.log('Обновлен рост в профиле:', this.currentAthlete.height);
                     }
                     
                     // Обновляем спортсмена в общем списке
@@ -1258,7 +1569,7 @@ function athletesApp() {
                     if (athleteIndex !== -1) {
                         this.athletes[athleteIndex].weight = this.currentAthlete.weight;
                         this.athletes[athleteIndex].height = this.currentAthlete.height;
-                        console.log('Обновлен спортсмен в списке:', this.athletes[athleteIndex]);
+                        // console.log('Обновлен спортсмен в списке:', this.athletes[athleteIndex]);
                     }
                     
                     // Показываем уведомление об успехе
@@ -1317,9 +1628,9 @@ function athletesApp() {
                     : `/api/athletes/${this.currentAthlete.id}/payments`;
                 const method = isEdit ? 'PUT' : 'POST';
                 
-                console.log('Sending request to:', url);
-                console.log('Method:', method);
-                console.log('Data:', paymentData);
+                // console.log('Sending request to:', url);
+                // console.log('Method:', method);
+                // console.log('Data:', paymentData);
                 
                 const response = await fetch(url, {
                     method: method,
@@ -1331,8 +1642,8 @@ function athletesApp() {
                     body: JSON.stringify(paymentData)
                 });
                 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
+                // console.log('Response status:', response.status);
+                // console.log('Response headers:', response.headers);
                 
                 let result;
                 try {
@@ -2304,7 +2615,7 @@ function athletesApp() {
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Измерения
                             </button>
-                            <button @click="activeTab = 'nutrition'" 
+                            <button @click="activeTab = 'nutrition'; loadNutritionPlans()" 
                                     :class="activeTab === 'nutrition' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
                                 Питание
@@ -2772,12 +3083,93 @@ function athletesApp() {
                             </div>
                         </div>
                 
-                        <div x-show="activeTab === 'nutrition'" class="text-center py-12 text-gray-500">
-                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">Питание</h3>
-                            <p class="mb-4">Здесь будет информация о питании и диете</p>
+                        <div x-show="activeTab === 'nutrition'" class="p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900">Планы питания</h3>
+                                <button @click="showAddNutritionPlan()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Расписать питание
+                                </button>
+                            </div>
+                            
+                            <!-- Статистика питания -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                <div class="bg-red-50 rounded-lg p-4 text-center">
+                                    <div class="text-2xl font-bold text-red-600">0</div>
+                                    <div class="text-sm text-red-800">Калорий сегодня</div>
+                                </div>
+                                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                    <div class="text-2xl font-bold text-blue-600">0</div>
+                                    <div class="text-sm text-blue-800">Белков (г)</div>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                                    <div class="text-2xl font-bold text-yellow-600">0</div>
+                                    <div class="text-sm text-yellow-800">Углеводов (г)</div>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-4 text-center">
+                                    <div class="text-2xl font-bold text-green-600">0</div>
+                                    <div class="text-sm text-green-800">Жиров (г)</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Планы питания -->
+                            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-md font-semibold text-gray-900 mb-4">Планы питания</h4>
+                                
+                                <!-- Загрузка -->
+                                <div x-show="loadingNutritionPlans" class="text-center py-8">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                    <p class="mt-2 text-gray-500">Загрузка планов питания...</p>
+                                </div>
+                                
+                                <!-- Список планов -->
+                                <div x-show="!loadingNutritionPlans && nutritionPlans.length > 0" class="space-y-4">
+                                    <template x-for="plan in nutritionPlans" :key="plan.id">
+                                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                            <div class="nutrition-plan-card">
+                                                <div class="nutrition-plan-title">
+                                                    <h5 class="text-lg font-medium text-gray-900" x-text="plan.title || `План питания на ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} г. (${plan.nutrition_days ? plan.nutrition_days.length : 0} дней)`"></h5>
+                                                </div>
+                                                <div class="nutrition-plan-buttons">
+                                                    <button @click="editNutritionPlan(plan)" 
+                                                            class="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                                                            title="Редактировать план">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="showDetailedNutritionPlan(plan)" 
+                                                            class="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                                            title="Подробнее">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="deleteNutritionPlan(plan.id)" 
+                                                            class="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                                                            title="Удалить план">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                
+                                <!-- Пустое состояние -->
+                                <div x-show="!loadingNutritionPlans && nutritionPlans.length === 0" class="text-center py-8 text-gray-500">
+                                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                        <p>Нет планов питания</p>
+                                        <p class="text-sm">Создайте первый план питания для этого спортсмена</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3317,9 +3709,380 @@ function athletesApp() {
             </form>
         </div>
     </div>
+
+    <!-- ДОБАВЛЕНИЕ ПЛАНА ПИТАНИЯ -->
+    <div x-show="currentView === 'addNutrition'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">Создать план питания</h3>
+            <button @click="currentView = 'view'; activeTab = 'nutrition'" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                Назад
+            </button>
+        </div>
+        
+        <div x-show="currentAthlete">
+            <form @submit.prevent="saveNutritionPlanForm">
+                <!-- Основная информация -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Основная информация</h4>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Месяц</label>
+                            <select x-model="nutritionMonth" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="1">Январь</option>
+                                <option value="2">Февраль</option>
+                                <option value="3">Март</option>
+                                <option value="4">Апрель</option>
+                                <option value="5">Май</option>
+                                <option value="6">Июнь</option>
+                                <option value="7">Июль</option>
+                                <option value="8">Август</option>
+                                <option value="9">Сентябрь</option>
+                                <option value="10">Октябрь</option>
+                                <option value="11">Ноябрь</option>
+                                <option value="12">Декабрь</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Год</label>
+                            <select x-model="nutritionYear" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <template x-for="year in [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2]" :key="year">
+                                    <option :value="year" :selected="year === new Date().getFullYear()" x-text="year"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Дополнительная информация -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Дополнительная информация</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Название плана (необязательно)</label>
+                            <input type="text" x-model="nutritionTitle" placeholder="Например: План питания на январь" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Описание (необязательно)</label>
+                            <textarea x-model="nutritionDescription" rows="3" placeholder="Комментарии тренера..."
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таблица Excel для заполнения питания по дням -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-lg font-semibold text-gray-900">План питания по дням</h4>
+                        <div class="flex gap-2">
+                            <button type="button" @click="clearAll()" class="px-3 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200">
+                                🗑️ Очистить всё
+                            </button>
+                            <button type="button" @click="showQuickFillModal()" class="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
+                                🚀 Быстрое заполнение
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Подсказки -->
+                    <div class="mb-4 text-sm text-gray-600">
+                        <p>💡 <strong>Совет:</strong> Калории рассчитываются автоматически (белки × 4 + жиры × 9 + углеводы × 4)</p>
+                        <p>📝 Заполняйте только те дни, для которых нужно составить план питания</p>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">День</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
+                                        Белки (г)
+                                        <button type="button" @click="fillColumn('proteins')" class="ml-1 text-blue-600 hover:text-blue-800" title="Быстрое заполнение">⚡</button>
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
+                                        Жиры (г)
+                                        <button type="button" @click="fillColumn('fats')" class="ml-1 text-blue-600 hover:text-blue-800" title="Быстрое заполнение">⚡</button>
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
+                                        Углеводы (г)
+                                        <button type="button" @click="fillColumn('carbs')" class="ml-1 text-blue-600 hover:text-blue-800" title="Быстрое заполнение">⚡</button>
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Калории</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Заметки</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-300">
+                                <template x-for="day in 31" :key="day">
+                                    <tr x-show="day <= getDaysInMonth(nutritionMonth, nutritionYear)">
+                                        <td class="px-3 py-2 text-sm font-medium text-gray-900 border-r border-gray-300" x-text="day"></td>
+                                        <td class="px-3 py-2 border-r border-gray-300">
+                                            <input type="number" step="0.1" :name="'proteins_' + day" 
+                                                   class="w-full px-2 py-1 text-sm border-0 focus:ring-2 focus:ring-indigo-500 focus:outline-none excel-cell" 
+                                                   style="-moz-appearance: textfield;" 
+                                                   placeholder="0.0" @input="calculateCalories(day)" @focus="selectCell(this)">
+                                        </td>
+                                        <td class="px-3 py-2 border-r border-gray-300">
+                                            <input type="number" step="0.1" :name="'fats_' + day" 
+                                                   class="w-full px-2 py-1 text-sm border-0 focus:ring-2 focus:ring-indigo-500 focus:outline-none excel-cell" 
+                                                   style="-moz-appearance: textfield;" 
+                                                   placeholder="0.0" @input="calculateCalories(day)" @focus="selectCell(this)">
+                                        </td>
+                                        <td class="px-3 py-2 border-r border-gray-300">
+                                            <input type="number" step="0.1" :name="'carbs_' + day" 
+                                                   class="w-full px-2 py-1 text-sm border-0 focus:ring-2 focus:ring-indigo-500 focus:outline-none excel-cell" 
+                                                   style="-moz-appearance: textfield;" 
+                                                   placeholder="0.0" @input="calculateCalories(day)" @focus="selectCell(this)">
+                                        </td>
+                                        <td class="px-3 py-2 border-r border-gray-300">
+                                            <input type="number" step="0.1" :name="'calories_' + day" 
+                                                   class="w-full px-2 py-1 text-sm border-0 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-gray-50 calories-field" 
+                                                   placeholder="0.0" readonly>
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            <input type="text" :name="'notes_' + day" 
+                                                   class="w-full px-2 py-1 text-sm border-0 focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
+                                                   placeholder="Заметки...">
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <style>
+                        /* Убираем стрелочки у number полей */
+                        input[type="number"]::-webkit-outer-spin-button,
+                        input[type="number"]::-webkit-inner-spin-button {
+                            -webkit-appearance: none;
+                            margin: 0;
+                        }
+                        
+                        /* Убираем стрелочки у поля калорий */
+                        .calories-field::-webkit-outer-spin-button,
+                        .calories-field::-webkit-inner-spin-button {
+                            -webkit-appearance: none;
+                            margin: 0;
+                        }
+                        
+                        .calories-field {
+                            -moz-appearance: textfield;
+                        }
+                        
+                        /* Улучшаем редактирование ячеек */
+                        .excel-cell {
+                            user-select: text;
+                            cursor: text;
+                        }
+                        
+                        .excel-cell:focus {
+                            user-select: all;
+                        }
+                    </style>
+                </div>
+                
+                
+                <!-- Модальное окно быстрого заполнения -->
+                <div x-show="quickFillModalVisible && currentView === 'addNutrition'" x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important;">
+                    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">🚀 Быстрое заполнение</h3>
+                            <button type="button" @click.prevent="quickFillModalVisible = false" class="text-gray-400 hover:text-gray-600">
+                                ✕
+                            </button>
+                        </div>
+                        
+                        <div>
+                            <div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Белки (г)</label>
+                                    <input type="number" step="0.1" x-model="quickFillData.proteins" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="120" required>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Жиры (г)</label>
+                                    <input type="number" step="0.1" x-model="quickFillData.fats" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="50" required>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Углеводы (г)</label>
+                                    <input type="number" step="0.1" x-model="quickFillData.carbs" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                           placeholder="200" required>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Начальный день</label>
+                                        <input type="number" min="1" x-model="quickFillData.startDay" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               required>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Конечный день</label>
+                                        <input type="number" min="1" x-model="quickFillData.endDay" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               required>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-blue-50 p-3 rounded-md mb-4">
+                                    <p class="text-sm text-blue-700">
+                                        <strong>Калории:</strong> <span x-text="(quickFillData.proteins * 4 + quickFillData.fats * 9 + quickFillData.carbs * 4).toFixed(1)"></span> ккал
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3 mt-6">
+                                <button type="button" @click.prevent="quickFillModalVisible = false" 
+                                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                                    Отмена
+                                </button>
+                                <button type="button" @click="applyQuickFill()"
+                                        class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                                    Применить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Кнопки -->
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" @click="currentView = 'view'; activeTab = 'nutrition'" 
+                            class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                        Отмена
+                    </button>
+                    <button type="submit" 
+                            class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Модальное окно детального просмотра плана питания -->
+    <div x-show="detailedNutritionPlan" x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important;">
+        <div class="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[85vh] overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `План питания на ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${detailedNutritionPlan.year} г.`) : ''"></h3>
+                <button @click="closeDetailedNutritionPlan()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+                <template x-if="detailedNutritionPlan">
+                    <div>
+                        <!-- Описание плана -->
+                        <div class="mb-6" x-show="detailedNutritionPlan.description">
+                            <h4 class="text-lg font-medium text-gray-900 mb-2">Описание</h4>
+                            <p class="text-gray-600" x-text="detailedNutritionPlan.description"></p>
+                        </div>
+                        
+                        <!-- Статистика -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-red-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-red-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
+                                <div class="text-sm text-red-800">Общие калории</div>
+                            </div>
+                            <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
+                                <div class="text-sm text-blue-800">Общие белки (г)</div>
+                            </div>
+                            <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-yellow-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
+                                <div class="text-sm text-yellow-800">Общие углеводы (г)</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-green-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
+                                <div class="text-sm text-green-800">Общие жиры (г)</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Таблица дней -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">День</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Белки (г)</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Жиры (г)</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Углеводы (г)</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Калории</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Заметки</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-300">
+                                    <template x-for="day in (detailedNutritionPlan.nutrition_days || [])" :key="day.id">
+                                        <tr>
+                                            <td class="px-3 py-2 text-sm font-medium text-gray-900" x-text="new Date(day.date).getDate()"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.proteins || 0).toFixed(1)"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1)"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1)"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.calories || 0).toFixed(1)"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Пустое состояние для дней -->
+                        <div x-show="!detailedNutritionPlan.nutrition_days || detailedNutritionPlan.nutrition_days.length === 0" class="text-center py-8 text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p>Нет данных по дням</p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
+/* Карточки планов питания */
+.nutrition-plan-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nutrition-plan-title {
+    flex: 1;
+}
+
+.nutrition-plan-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 640px) {
+    .nutrition-plan-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .nutrition-plan-title {
+        margin-bottom: 12px;
+    }
+    
+    .nutrition-plan-buttons {
+        align-self: flex-end;
+    }
+}
+
 /* Кнопки в профиле спортсмена */
 .profile-buttons {
     display: flex;
@@ -3409,5 +4172,177 @@ function athletesApp() {
     }
 }
 </style>
+
+<!-- Модальное окно для создания плана питания -->
+<div id="nutrition-plan-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <!-- Заголовок модального окна -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900" id="nutrition-modal-title">Создать план питания</h3>
+                <button onclick="closeNutritionPlanModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Содержимое модального окна -->
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div id="nutrition-plan-content">
+                    <!-- Содержимое будет загружено через JavaScript -->
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+let currentNutritionPlan = null;
+
+function openNutritionPlanModal() {
+    currentNutritionPlan = null;
+    document.getElementById('nutrition-modal-title').textContent = 'Создать план питания';
+    showCreatePlanForm();
+    document.getElementById('nutrition-plan-modal').classList.remove('hidden');
+}
+
+function closeNutritionPlanModal() {
+    document.getElementById('nutrition-plan-modal').classList.add('hidden');
+    currentNutritionPlan = null;
+}
+
+function showCreatePlanForm() {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    
+    const content = `
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Месяц</label>
+                    <select id="plan-month" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="1" ${currentMonth === 1 ? 'selected' : ''}>Январь</option>
+                        <option value="2" ${currentMonth === 2 ? 'selected' : ''}>Февраль</option>
+                        <option value="3" ${currentMonth === 3 ? 'selected' : ''}>Март</option>
+                        <option value="4" ${currentMonth === 4 ? 'selected' : ''}>Апрель</option>
+                        <option value="5" ${currentMonth === 5 ? 'selected' : ''}>Май</option>
+                        <option value="6" ${currentMonth === 6 ? 'selected' : ''}>Июнь</option>
+                        <option value="7" ${currentMonth === 7 ? 'selected' : ''}>Июль</option>
+                        <option value="8" ${currentMonth === 8 ? 'selected' : ''}>Август</option>
+                        <option value="9" ${currentMonth === 9 ? 'selected' : ''}>Сентябрь</option>
+                        <option value="10" ${currentMonth === 10 ? 'selected' : ''}>Октябрь</option>
+                        <option value="11" ${currentMonth === 11 ? 'selected' : ''}>Ноябрь</option>
+                        <option value="12" ${currentMonth === 12 ? 'selected' : ''}>Декабрь</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Год</label>
+                    <select id="plan-year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        ${generateYearOptions(currentYear)}
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Название плана (необязательно)</label>
+                <input type="text" id="plan-title" placeholder="Например: План питания на январь" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Описание (необязательно)</label>
+                <textarea id="plan-description" rows="3" placeholder="Комментарии тренера..."
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+            </div>
+        </div>
+    `;
+    document.getElementById('nutrition-plan-content').innerHTML = content;
+}
+
+function generateYearOptions(currentYear) {
+    let options = '';
+    for (let year = currentYear - 1; year <= currentYear + 2; year++) {
+        options += `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`;
+    }
+    return options;
+}
+
+async function saveNutritionPlan_DISABLED() {
+    const month = document.getElementById('plan-month').value;
+    const year = document.getElementById('plan-year').value;
+    const title = document.getElementById('plan-title').value;
+    const description = document.getElementById('plan-description').value;
+    
+    if (!month || !year) {
+        alert('Пожалуйста, выберите месяц и год');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/trainer/nutrition-plans', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                athlete_id: window.currentAthleteId,
+                month: parseInt(month),
+                year: parseInt(year),
+                title: title,
+                description: description
+            })
+        });
+        
+        if (response.ok) {
+            closeNutritionPlanModal();
+            loadNutritionPlans();
+            alert('План питания создан!');
+        } else {
+            const error = await response.json();
+            alert(error.error || 'Ошибка при создании плана');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при создании плана');
+    }
+}
+
+async function loadNutritionPlans() {
+    // Заглушка - здесь будет загрузка планов питания
+    console.log('Загружаем планы питания для спортсмена:', window.currentAthleteId);
+}
+
+// Добавляем переменную для текущего ID спортсмена
+window.currentAthleteId = null;
+
+// Обновляем currentAthleteId при выборе спортсмена
+document.addEventListener('DOMContentLoaded', function() {
+    // Находим Alpine.js компонент и следим за изменениями currentAthlete
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' || mutation.type === 'attributes') {
+                // Ищем Alpine.js элемент
+                const alpineElement = document.querySelector('[x-data*="athletesApp"]');
+                if (alpineElement && window.Alpine) {
+                    const data = window.Alpine.$data(alpineElement);
+                    if (data && data.currentAthlete && data.currentAthlete.id) {
+                        window.currentAthleteId = data.currentAthlete.id;
+                    }
+                }
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+    });
+});
+</script>
 
 @endsection
