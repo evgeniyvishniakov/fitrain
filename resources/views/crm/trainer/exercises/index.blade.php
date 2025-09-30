@@ -652,7 +652,7 @@ function exerciseApp() {
 <div x-data="exerciseApp()" x-init="init()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
                 .filters-row {
@@ -902,9 +902,15 @@ function exerciseApp() {
 
     <!-- Форма создания/редактирования -->
     <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? 'Создать упражнение' : 'Редактировать упражнение'"></h2>
-            <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
+        <div class="mb-6 flex justify-between items-start">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? 'Создать упражнение' : 'Редактировать упражнение'"></h2>
+                <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
+            </div>
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                Назад к списку
+            </button>
         </div>
         
         <form @submit.prevent="saveExercise()" class="space-y-6">
@@ -1231,9 +1237,15 @@ function exerciseApp() {
 
     <!-- Форма добавления пользовательского видео -->
     <div x-show="currentView === 'add-video'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Добавить видео к упражнению</h2>
-            <p class="mt-2 text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
+        <div class="mb-6 flex justify-between items-start">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Добавить видео к упражнению</h2>
+                <p class="mt-2 text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
+            </div>
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                Назад к списку
+            </button>
         </div>
         
         <form @submit.prevent="saveUserVideo()" class="space-y-6">
