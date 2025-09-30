@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Crm\Trainer;
 use App\Http\Controllers\Crm\Shared\BaseController;
 use App\Models\Trainer\Exercise;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ExerciseController extends BaseController
 {
@@ -99,10 +100,48 @@ class ExerciseController extends BaseController
     public function destroy($id)
     {
         $exercise = Exercise::findOrFail($id);
-        $exercise->update(['is_active' => false]);
-
-        // Обновляем все шаблоны тренировок, удаляя это упражнение
-        $this->removeExerciseFromTemplates($id);
+        
+        // Проверяем использование упражнения в тренировках
+        $workoutUsageCount = \DB::table('workout_exercise')
+            ->where('exercise_id', $id)
+            ->count();
+            
+        // Проверяем использование упражнения в шаблонах тренировок (включая неактивные)
+        $templates = \App\Models\Trainer\WorkoutTemplate::all();
+        $templateUsageCount = 0;
+        
+        foreach ($templates as $template) {
+            if ($template->exercises && is_array($template->exercises)) {
+                foreach ($template->exercises as $exercise) {
+                    $exerciseId = $exercise['id'] ?? $exercise['exercise_id'] ?? null;
+                    if ($exerciseId == $id) {
+                        $templateUsageCount++;
+                        break; // Нашли одно использование в этом шаблоне
+                    }
+                }
+            }
+        }
+        
+        // Если упражнение используется, запрещаем удаление
+        if ($workoutUsageCount > 0 || $templateUsageCount > 0) {
+            $message = 'Нельзя удалить упражнение, которое используется в ';
+            
+            if ($workoutUsageCount > 0 && $templateUsageCount > 0) {
+                $message .= "тренировках ({$workoutUsageCount}) и шаблонах ({$templateUsageCount})";
+            } elseif ($workoutUsageCount > 0) {
+                $message .= "тренировках ({$workoutUsageCount})";
+            } else {
+                $message .= "шаблонах ({$templateUsageCount})";
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => $message
+            ], 400);
+        }
+        
+        // Если не используется, удаляем
+        $exercise->delete();
 
         return response()->json([
             'success' => true,
@@ -110,27 +149,6 @@ class ExerciseController extends BaseController
         ]);
     }
 
-    /**
-     * Удаляет упражнение из всех шаблонов тренировок
-     */
-    private function removeExerciseFromTemplates($exerciseId)
-    {
-        $templates = \App\Models\Trainer\WorkoutTemplate::where('is_active', true)->get();
-        
-        foreach ($templates as $template) {
-            if (is_array($template->exercises)) {
-                $updatedExercises = array_filter($template->exercises, function($exercise) use ($exerciseId) {
-                    $exerciseIdFromTemplate = $exercise['id'] ?? $exercise['exercise_id'] ?? null;
-                    return $exerciseIdFromTemplate != $exerciseId;
-                });
-                
-                // Обновляем шаблон только если что-то изменилось
-                if (count($updatedExercises) !== count($template->exercises)) {
-                    $template->update(['exercises' => array_values($updatedExercises)]);
-                }
-            }
-        }
-    }
 
     public function api()
     {

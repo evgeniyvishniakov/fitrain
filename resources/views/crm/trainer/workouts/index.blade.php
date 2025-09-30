@@ -739,6 +739,65 @@ function workoutApp() {
             };
             return labels[status] || status;
         },
+
+        // Обновление статуса тренировки
+        async updateWorkoutStatus(workoutId, newStatus) {
+            try {
+                const response = await fetch(`/workouts/${workoutId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                });
+
+                // Проверяем, что ответ успешный
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Проверяем, что ответ JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Не JSON ответ:', text);
+                    throw new Error('Сервер вернул не JSON ответ');
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Обновляем статус в текущей тренировке
+                    if (this.currentWorkout && this.currentWorkout.id === workoutId) {
+                        this.currentWorkout.status = newStatus;
+                    }
+                    
+                    // Обновляем статус в списке тренировок
+                    const workoutInList = this.workouts.find(w => w.id === workoutId);
+                    if (workoutInList) {
+                        workoutInList.status = newStatus;
+                    }
+                    
+                    // Показываем уведомление
+                    const statusLabels = {
+                        'planned': 'Запланирована',
+                        'completed': 'Завершена',
+                        'cancelled': 'Отменена'
+                    };
+                    
+                    showSuccess('Статус обновлен!', `Тренировка теперь: ${statusLabels[newStatus]}`);
+                } else {
+                    showError('Ошибка', result.message || 'Не удалось обновить статус тренировки');
+                }
+            } catch (error) {
+                console.error('Ошибка обновления статуса:', error);
+                showError('Ошибка соединения', `Ошибка: ${error.message}`);
+            }
+        },
         
         // Сбор данных упражнений
         collectExerciseData() {
@@ -2268,14 +2327,49 @@ function workoutApp() {
             <!-- Заголовок и статус -->
             <div class="workout-title-section">
                 <h4 class="text-2xl font-bold text-gray-900" x-text="currentWorkout?.title"></h4>
-                <span class="px-3 py-1 rounded-full text-sm font-semibold"
-                      :class="{
-                          'bg-green-100 text-green-800': currentWorkout?.status === 'completed',
-                          'bg-red-100 text-red-800': currentWorkout?.status === 'cancelled',
-                          'bg-blue-100 text-blue-800': currentWorkout?.status === 'planned'
-                      }"
-                      x-text="getStatusLabel(currentWorkout?.status)">
-                </span>
+                
+                <!-- Выпадающий список статуса -->
+                <div class="relative" x-data="{ statusDropdownOpen: false }">
+                    <button @click="statusDropdownOpen = !statusDropdownOpen" 
+                            class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border hover:bg-gray-50 transition-colors"
+                            :style="{
+                                'background-color': currentWorkout?.status === 'completed' ? '#dcfce7' : 
+                                                  currentWorkout?.status === 'cancelled' ? '#fef2f2' : '#dbeafe',
+                                'color': currentWorkout?.status === 'completed' ? '#166534' : 
+                                       currentWorkout?.status === 'cancelled' ? '#991b1b' : '#1e40af',
+                                'border-color': currentWorkout?.status === 'completed' ? '#bbf7d0' : 
+                                              currentWorkout?.status === 'cancelled' ? '#fecaca' : '#bfdbfe'
+                            }">
+                        <span x-text="getStatusLabel(currentWorkout?.status)"></span>
+                        <svg class="w-4 h-4 transition-transform" :class="statusDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Выпадающий список -->
+                    <div x-show="statusDropdownOpen" 
+                         @click.away="statusDropdownOpen = false"
+                         x-transition
+                         class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                        <div class="py-1">
+                            <button @click="updateWorkoutStatus(currentWorkout.id, 'planned'); statusDropdownOpen = false"
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
+                                    :class="currentWorkout?.status === 'planned' ? 'bg-blue-100 text-blue-800' : 'text-gray-700'">
+                                📅 Запланирована
+                            </button>
+                            <button @click="updateWorkoutStatus(currentWorkout.id, 'completed'); statusDropdownOpen = false"
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-green-50 transition-colors"
+                                    :class="currentWorkout?.status === 'completed' ? 'bg-green-100 text-green-800' : 'text-gray-700'">
+                                ✅ Завершена
+                            </button>
+                            <button @click="updateWorkoutStatus(currentWorkout.id, 'cancelled'); statusDropdownOpen = false"
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-red-50 transition-colors"
+                                    :class="currentWorkout?.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'text-gray-700'">
+                                ❌ Отменена
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Описание -->

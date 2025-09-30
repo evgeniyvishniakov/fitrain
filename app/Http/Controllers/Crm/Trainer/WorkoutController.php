@@ -299,6 +299,49 @@ class WorkoutController extends BaseController
     }
 
     /**
+     * Обновить только статус тренировки
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        if (!auth()->user()->hasRole('trainer')) {
+            abort(403, 'Доступ запрещен');
+        }
+        
+        $workout = Workout::findOrFail($id);
+        
+        if ($workout->trainer_id !== auth()->id()) {
+            abort(403, 'Доступ запрещен');
+        }
+        
+        $request->validate([
+            'status' => 'required|in:planned,completed,cancelled'
+        ]);
+        
+        $oldStatus = $workout->status;
+        $workout->update([
+            'status' => $request->status,
+            'updated_at' => now()
+        ]);
+
+        // Обрабатываем изменение статуса
+        if ($oldStatus !== $request->status) {
+            if ($request->status === 'completed' && !$workout->is_counted) {
+                // Статус изменился на "завершена" - списываем тренировку
+                $this->countWorkout($workout);
+            } elseif ($oldStatus === 'completed' && $request->status !== 'completed' && $workout->is_counted) {
+                // Статус изменился с "завершена" на другой - возвращаем тренировку
+                $this->uncountWorkout($workout);
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Статус тренировки обновлен',
+            'workout' => $workout
+        ]);
+    }
+
+    /**
      * Засчитать тренировку (списать у спортсмена)
      */
     private function countWorkout(Workout $workout)

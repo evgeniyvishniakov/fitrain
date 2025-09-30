@@ -59,6 +59,7 @@ Route::middleware(["auth"])->group(function () {
         // Тренировки только для тренеров (управление)
         Route::post("/workouts", [WorkoutController::class, "store"])->name("crm.workouts.store");
         Route::put("/workouts/{id}", [WorkoutController::class, "update"])->name("crm.workouts.update");
+        Route::patch("/workouts/{id}/status", [WorkoutController::class, "updateStatus"])->name("crm.workouts.update-status");
         Route::delete("/workouts/{id}", [WorkoutController::class, "destroy"])->name("crm.workouts.destroy");
         
         // Подписка тренера
@@ -130,6 +131,9 @@ Route::middleware(["auth"])->group(function () {
         // Прогресс упражнений
         Route::patch("/athlete/exercise-progress", [AthleteController::class, "updateExerciseProgress"])->name("crm.athlete.exercise-progress.update");
         Route::get("/athlete/exercise-progress", [AthleteController::class, "getExerciseProgress"])->name("crm.athlete.exercise-progress.get");
+        
+        // Обновление статуса тренировки спортсменом
+        Route::patch("/athlete/workouts/{workoutId}/status", [AthleteController::class, "updateWorkoutStatus"])->name("crm.athlete.workout.status.update");
         
     });
     

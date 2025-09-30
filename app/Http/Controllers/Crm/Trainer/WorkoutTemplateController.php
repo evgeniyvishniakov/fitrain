@@ -129,11 +129,11 @@ class WorkoutTemplateController extends BaseController
     public function destroy($id)
     {
         $template = WorkoutTemplate::findOrFail($id);
-        $template->update(['is_active' => false]);
+        $template->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Шаблон тренировки удален'
+            'message' => 'Шаблон тренировки удален из базы данных'
         ]);
     }
 

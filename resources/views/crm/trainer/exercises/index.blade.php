@@ -8,13 +8,13 @@
 function exerciseApp() {
     return {
         currentView: 'list', // list, create, edit, view
-        exercises: @json(\App\Models\Trainer\Exercise::active()->orderBy('name')->get()),
+        exercises: @json(\App\Models\Trainer\Exercise::active()->orderBy('created_at', 'desc')->get()),
         currentExercise: null,
         search: '',
         category: '',
         equipment: '',
         currentPage: 1,
-        itemsPerPage: 4,
+        itemsPerPage: 10,
         
         // Поля формы
         formName: '',
@@ -251,15 +251,9 @@ function exerciseApp() {
                 
                 const result = await response.json();
                 
-                if (response.ok) {
+                if (result.success) {
                     // Показываем уведомление об успехе
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'success',
-                            title: 'Упражнение удалено',
-                            message: 'Упражнение успешно удалено из базы'
-                        }
-                    }));
+                    showSuccess(result.message || 'Упражнение успешно удалено из каталога');
                     
                     // Удаляем из списка
                     this.exercises = this.exercises.filter(e => e.id !== id);
@@ -269,25 +263,13 @@ function exerciseApp() {
                         this.currentPage--;
                     }
                 } else {
-                    // Показываем уведомление об ошибке
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'error',
-                            title: 'Ошибка удаления',
-                            message: result.message || 'Произошла ошибка при удалении упражнения'
-                        }
-                    }));
+                    // Показываем уведомление об ошибке (упражнение используется)
+                    showError(result.message || 'Упражнение используется в тренировках или шаблонах');
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
                 // Показываем уведомление об ошибке
-                window.dispatchEvent(new CustomEvent('show-notification', {
-                    detail: {
-                        type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при удалении упражнения'
-                    }
-                }));
+                showError('Произошла ошибка при удалении упражнения');
             }
         },
         
@@ -394,6 +376,7 @@ function exerciseApp() {
                         <option value="Ноги">Ноги</option>
                         <option value="Плечи">Плечи</option>
                         <option value="Руки">Руки</option>
+                        <option value="Пресс">Пресс</option>
                         <option value="Кардио">Кардио</option>
                         <option value="Гибкость">Гибкость</option>
                     </select>
@@ -410,6 +393,8 @@ function exerciseApp() {
                         <option value="Тренажеры">Тренажеры</option>
                         <option value="Скакалка">Скакалка</option>
                         <option value="Турник">Турник</option>
+                        <option value="Брусья">Брусья</option>
+                        <option value="Скамейка">Скамейка</option>
                     </select>
                 </div>
                 
@@ -447,16 +432,15 @@ function exerciseApp() {
 
     <!-- Список упражнений -->
     <div x-show="currentView === 'list'" class="space-y-6">
-        <div x-show="paginatedExercises.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div x-show="paginatedExercises.length > 0" style="display: grid; gap: 24px;" class="exercise-grid">
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
                     <!-- Заголовок -->
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">
                                 <span x-text="exercise.name"></span>
                             </h3>
-                            <p class="text-gray-600 mb-4" x-text="exercise.description || 'Без описания'"></p>
                             
                             <!-- Теги -->
                             <div class="flex flex-wrap gap-2 mb-4">
@@ -466,7 +450,7 @@ function exerciseApp() {
                             
                             <!-- Группы мышц -->
                             <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && exercise.muscle_groups.length > 0">
-                                <span x-text="'Группы мышц: ' + exercise.muscle_groups.join(', ')"></span>
+                                <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="exercise.muscle_groups.join(', ')"></span>
                             </div>
                         </div>
                     </div>
@@ -604,6 +588,7 @@ function exerciseApp() {
                             <option value="Ноги">Ноги</option>
                             <option value="Плечи">Плечи</option>
                             <option value="Руки">Руки</option>
+                            <option value="Пресс">Пресс</option>
                             <option value="Кардио">Кардио</option>
                             <option value="Гибкость">Гибкость</option>
                         </select>
@@ -622,6 +607,8 @@ function exerciseApp() {
                             <option value="Тренажеры">Тренажеры</option>
                             <option value="Скакалка">Скакалка</option>
                             <option value="Турник">Турник</option>
+                            <option value="Брусья">Брусья</option>
+                            <option value="Скамейка">Скамейка</option>
                         </select>
                     </div>
                     
@@ -940,6 +927,18 @@ function exerciseApp() {
 </div>
 
 <style>
+.exercise-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 1024px) {
+    .exercise-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
 .field-card {
     @apply p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 hover:shadow-md;
 }

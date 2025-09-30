@@ -470,20 +470,28 @@ class AthleteController extends BaseController
 
 
             foreach ($request->exercises as $exerciseData) {
-                $progress = ExerciseProgress::updateOrCreate(
-                    [
-                        'workout_id' => $request->workout_id,
-                        'exercise_id' => $exerciseData['exercise_id'],
-                        'athlete_id' => $athlete->id
-                    ],
-                    [
-                        'status' => $exerciseData['status'] ?? 'not_done',
-                        'athlete_comment' => $exerciseData['athlete_comment'] ?? null,
-                        'sets_data' => $exerciseData['sets_data'] ?? null,
-                        'completed_at' => ($exerciseData['status'] ?? 'not_done') === 'completed' ? now() : null
-                    ]
-                );
-                
+                // Если статус null, удаляем запись из базы данных
+                if ($exerciseData['status'] === null) {
+                    ExerciseProgress::where('workout_id', $request->workout_id)
+                        ->where('exercise_id', $exerciseData['exercise_id'])
+                        ->where('athlete_id', $athlete->id)
+                        ->delete();
+                } else {
+                    // Иначе создаем или обновляем запись
+                    $progress = ExerciseProgress::updateOrCreate(
+                        [
+                            'workout_id' => $request->workout_id,
+                            'exercise_id' => $exerciseData['exercise_id'],
+                            'athlete_id' => $athlete->id
+                        ],
+                        [
+                            'status' => $exerciseData['status'] ?? 'not_done',
+                            'athlete_comment' => $exerciseData['athlete_comment'] ?? null,
+                            'sets_data' => $exerciseData['sets_data'] ?? null,
+                            'completed_at' => ($exerciseData['status'] ?? 'not_done') === 'completed' ? now() : null
+                        ]
+                    );
+                }
             }
             
             return response()->json([
@@ -522,6 +530,46 @@ class AthleteController extends BaseController
                 'progress' => $progress
             ]);
         } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Обновить статус тренировки спортсменом
+     */
+    public function updateWorkoutStatus(Request $request, $workoutId)
+    {
+        try {
+            $athlete = auth()->user();
+            
+            $request->validate([
+                'status' => 'required|in:planned,completed,cancelled'
+            ]);
+
+            // Проверяем, что тренировка принадлежит спортсмену
+            $workout = $athlete->workouts()->findOrFail($workoutId);
+            
+            // Обновляем статус тренировки
+            $workout->update([
+                'status' => $request->status,
+                'updated_at' => now()
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Статус тренировки обновлен',
+                'workout' => $workout
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating workout status', [
+                'error' => $e->getMessage(),
+                'athlete_id' => auth()->user()->id ?? null,
+                'workout_id' => $workoutId
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка: ' . $e->getMessage()

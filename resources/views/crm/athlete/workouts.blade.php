@@ -108,23 +108,33 @@
 
                 // Управление статусом упражнений
                 setExerciseStatus(exerciseId, status) {
-                    this.exerciseStatuses[exerciseId] = status;
-                    this.lastChangedExercise = { id: exerciseId, status: status };
-                    
-                    if (status === 'partial') {
-                        // Инициализируем данные по подходам для частичного выполнения
-                        const exercise = this.currentWorkout?.exercises?.find(ex => (ex.exercise_id == exerciseId) || (ex.id == exerciseId));
-                        if (exercise) {
-                            const totalSets = exercise.sets || exercise.pivot?.sets || 3;
-                            this.initSetsData(exerciseId, totalSets);
-                            // Автоматически разворачиваем поля при выборе "Частично"
-                            this.exerciseSetsExpanded[exerciseId] = true;
-                        }
-                    } else {
-                        // Если статус не "частично", очищаем комментарий и данные по подходам
+                    // Если нажимаем на уже выбранный статус - снимаем его
+                    if (this.exerciseStatuses[exerciseId] === status) {
+                        // Помечаем как удаленный статус
+                        this.exerciseStatuses[exerciseId] = null;
                         delete this.exerciseComments[exerciseId];
                         delete this.exerciseSetsData[exerciseId];
                         delete this.exerciseSetsExpanded[exerciseId];
+                        this.lastChangedExercise = { id: exerciseId, status: null };
+                    } else {
+                        this.exerciseStatuses[exerciseId] = status;
+                        this.lastChangedExercise = { id: exerciseId, status: status };
+                        
+                        if (status === 'partial') {
+                            // Инициализируем данные по подходам для частичного выполнения
+                            const exercise = this.currentWorkout?.exercises?.find(ex => (ex.exercise_id == exerciseId) || (ex.id == exerciseId));
+                            if (exercise) {
+                                const totalSets = exercise.sets || exercise.pivot?.sets || 3;
+                                this.initSetsData(exerciseId, totalSets);
+                                // Автоматически разворачиваем поля при выборе "Частично"
+                                this.exerciseSetsExpanded[exerciseId] = true;
+                            }
+                        } else {
+                            // Если статус не "частично", очищаем комментарий и данные по подходам
+                            delete this.exerciseComments[exerciseId];
+                            delete this.exerciseSetsData[exerciseId];
+                            delete this.exerciseSetsExpanded[exerciseId];
+                        }
                     }
                     
                     // Немедленно обновляем данные в списке
@@ -135,7 +145,7 @@
                 },
 
                 getExerciseStatus(exerciseId) {
-                    return this.exerciseStatuses[exerciseId] || null;
+                    return this.exerciseStatuses[exerciseId] !== undefined ? this.exerciseStatuses[exerciseId] : null;
                 },
 
                 // Инициализация данных по подходам для упражнения
@@ -216,12 +226,14 @@
                     
                     try {
                         // Собираем все упражнения с изменениями
-                        const exercises = Object.keys(this.exerciseStatuses).map(exerciseId => ({
-                            exercise_id: parseInt(exerciseId),
-                            status: this.exerciseStatuses[exerciseId],
-                            athlete_comment: this.exerciseComments[exerciseId] || null,
-                            sets_data: this.exerciseSetsData[exerciseId] || null
-                        }));
+                        const exercises = Object.keys(this.exerciseStatuses)
+                            .filter(exerciseId => this.exerciseStatuses[exerciseId] !== undefined)
+                            .map(exerciseId => ({
+                                exercise_id: parseInt(exerciseId),
+                                status: this.exerciseStatuses[exerciseId],
+                                athlete_comment: this.exerciseComments[exerciseId] || null,
+                                sets_data: this.exerciseSetsData[exerciseId] || null
+                            }));
 
                         // Показываем индикатор загрузки
                         showInfo('Сохранение...', 'Сохраняем ваш прогресс...', 2000);
@@ -271,6 +283,9 @@
                                 } else if (status === 'not_done') {
                                     title = 'Статус обновлен!';
                                     message = 'Упражнение отмечено как не выполнено';
+                                } else if (status === null) {
+                                    title = 'Статус снят!';
+                                    message = 'Статус упражнения сброшен';
                                 }
                                 
                                 // Сбрасываем последнее измененное упражнение
@@ -497,6 +512,51 @@
                             modal.remove();
                         }
                     });
+                },
+
+                // Обновление статуса тренировки
+                async updateWorkoutStatus(workoutId, newStatus) {
+                    try {
+                        const response = await fetch(`/athlete/workouts/${workoutId}/status`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({
+                                status: newStatus
+                            })
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // Обновляем статус в текущей тренировке
+                            if (this.currentWorkout && this.currentWorkout.id === workoutId) {
+                                this.currentWorkout.status = newStatus;
+                            }
+                            
+                            // Обновляем статус в списке тренировок
+                            const workoutInList = this.workouts.find(w => w.id === workoutId);
+                            if (workoutInList) {
+                                workoutInList.status = newStatus;
+                            }
+                            
+                            // Показываем уведомление
+                            const statusLabels = {
+                                'planned': 'Запланирована',
+                                'completed': 'Завершена',
+                                'cancelled': 'Отменена'
+                            };
+                            
+                            showSuccess('Статус обновлен!', `Тренировка теперь: ${statusLabels[newStatus]}`);
+                        } else {
+                            showError('Ошибка', result.message || 'Не удалось обновить статус тренировки');
+                        }
+                    } catch (error) {
+                        console.error('Ошибка обновления статуса:', error);
+                        showError('Ошибка соединения', 'Проверьте подключение к интернету и попробуйте еще раз.');
+                    }
                 }
             }
         }
@@ -785,17 +845,49 @@
             <!-- Заголовок и статус -->
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
                 <h4 style="font-size: 24px; font-weight: 700; color: #111827; margin: 0;" x-text="currentWorkout?.title"></h4>
-                <span style="padding: 6px 12px; border-radius: 9999px; font-size: 14px; font-weight: 600;"
-                      :style="{
-                          'background-color': currentWorkout?.status === 'completed' ? '#dcfce7' : 
-                                            currentWorkout?.status === 'cancelled' ? '#fef2f2' : 
-                                            currentWorkout?.status === 'planned' ? '#dbeafe' : '#fef3c7',
-                          'color': currentWorkout?.status === 'completed' ? '#166534' : 
-                                 currentWorkout?.status === 'cancelled' ? '#991b1b' : 
-                                 currentWorkout?.status === 'planned' ? '#1e40af' : '#92400e'
-                      }"
-                      x-text="getStatusLabel(currentWorkout?.status)">
-                </span>
+                
+                <!-- Выпадающий список статуса -->
+                <div class="relative" x-data="{ statusDropdownOpen: false }">
+                    <button @click="statusDropdownOpen = !statusDropdownOpen" 
+                            class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border hover:bg-gray-50 transition-colors"
+                            :style="{
+                                'background-color': currentWorkout?.status === 'completed' ? '#dcfce7' : 
+                                                  currentWorkout?.status === 'cancelled' ? '#fef2f2' : '#dbeafe',
+                                'color': currentWorkout?.status === 'completed' ? '#166534' : 
+                                       currentWorkout?.status === 'cancelled' ? '#991b1b' : '#1e40af',
+                                'border-color': currentWorkout?.status === 'completed' ? '#bbf7d0' : 
+                                              currentWorkout?.status === 'cancelled' ? '#fecaca' : '#bfdbfe'
+                            }">
+                        <span x-text="getStatusLabel(currentWorkout?.status)"></span>
+                        <svg class="w-4 h-4 transition-transform" :class="statusDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    
+                    <!-- Выпадающий список -->
+                    <div x-show="statusDropdownOpen" 
+                         @click.away="statusDropdownOpen = false"
+                         x-transition
+                         class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                        <div class="py-1">
+                            <button @click="updateWorkoutStatus(currentWorkout.id, 'planned'); statusDropdownOpen = false"
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
+                                    :class="currentWorkout?.status === 'planned' ? 'bg-blue-100 text-blue-800' : 'text-gray-700'">
+                                📅 Запланирована
+                            </button>
+                            <button @click="updateWorkoutStatus(currentWorkout.id, 'completed'); statusDropdownOpen = false"
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-green-50 transition-colors"
+                                    :class="currentWorkout?.status === 'completed' ? 'bg-green-100 text-green-800' : 'text-gray-700'">
+                                ✅ Завершена
+                            </button>
+                            <button @click="updateWorkoutStatus(currentWorkout.id, 'cancelled'); statusDropdownOpen = false"
+                                    class="w-full px-4 py-2 text-left text-sm hover:bg-red-50 transition-colors"
+                                    :class="currentWorkout?.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'text-gray-700'">
+                                ❌ Отменена
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Описание -->
