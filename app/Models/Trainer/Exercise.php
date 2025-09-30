@@ -21,6 +21,7 @@ class Exercise extends Model
         'video_url',
         'is_active',
         'is_system',
+        'trainer_id',
         'fields_config'
     ];
 
@@ -139,5 +140,11 @@ class Exercise extends Model
         }
         
         return $fields;
+    }
+
+    // Связи
+    public function trainer()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'trainer_id');
     }
 }

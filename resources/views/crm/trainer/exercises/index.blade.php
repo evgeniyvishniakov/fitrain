@@ -8,11 +8,12 @@
 function exerciseApp() {
     return {
         currentView: 'list', // list, create, edit, view, add-video
-        exercises: @json(\App\Models\Trainer\Exercise::active()->orderBy('created_at', 'desc')->get()),
+        exercises: @json($allExercises),
         currentExercise: null,
         search: '',
         category: '',
         equipment: '',
+        exerciseType: '',
         currentPage: 1,
         itemsPerPage: 10,
         
@@ -108,6 +109,14 @@ function exerciseApp() {
             
             if (this.equipment) {
                 filtered = filtered.filter(e => e.equipment === this.equipment);
+            }
+            
+            if (this.exerciseType) {
+                if (this.exerciseType === 'system') {
+                    filtered = filtered.filter(e => e.is_system === true);
+                } else if (this.exerciseType === 'user') {
+                    filtered = filtered.filter(e => e.is_system === false);
+                }
             }
             
             return filtered;
@@ -299,29 +308,119 @@ function exerciseApp() {
             }
         },
         
-        // Методы для работы с видео
-        isYouTubeUrl(url) {
-            if (!url) return false;
-            return url.includes('youtube.com') || url.includes('youtu.be');
-        },
         
-        // Модальное окно для видео
-        videoModal: {
-            isOpen: false,
-            url: '',
-            title: ''
-        },
         
-        openVideoModal(url, title) {
-            this.videoModal.isOpen = true;
-            this.videoModal.url = url;
-            this.videoModal.title = title;
-        },
-        
-        closeVideoModal() {
-            this.videoModal.isOpen = false;
-            this.videoModal.url = '';
-            this.videoModal.title = '';
+        // Простой метод для открытия модального окна (как в тренировках)
+        openSimpleModal(url, title) {
+            // Создаем модальное окно
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            // Создаем контент
+            const content = document.createElement('div');
+            content.style.cssText = `
+                position: relative;
+                background: white;
+                border-radius: 12px;
+                padding: 20px;
+                width: 80%;
+                max-width: 800px;
+                max-height: 80%;
+                overflow: hidden;
+            `;
+            
+            // Создаем заголовок
+            const header = document.createElement('div');
+            header.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 10px;
+            `;
+            header.innerHTML = `
+                <h3 style="margin: 0; font-size: 18px; font-weight: bold;">${title}</h3>
+                <button style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+            `;
+            
+            // Добавляем обработчик клика на кнопку закрытия
+            const closeButton = header.querySelector('button');
+            closeButton.addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+            
+            // Добавляем обработчик клика на фон для закрытия
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+            
+            // Создаем контент видео
+            const videoContent = document.createElement('div');
+            
+            // Проверяем, YouTube ли это
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                let videoId = '';
+                if (url.includes('youtube.com/watch?v=')) {
+                    videoId = url.split('v=')[1].split('&')[0];
+                } else if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0];
+                }
+                
+                if (videoId) {
+                    videoContent.innerHTML = `
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe src="https://www.youtube.com/embed/${videoId}" 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                    `;
+                } else {
+                    videoContent.innerHTML = `
+                        <div style="text-align: center;">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer" 
+                               style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
+                                <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                Открыть видео
+                            </a>
+                        </div>
+                    `;
+                }
+            } else {
+                videoContent.innerHTML = `
+                    <div style="text-align: center;">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" 
+                           style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
+                            <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            Открыть видео
+                        </a>
+                    </div>
+                `;
+            }
+            
+            // Собираем модальное окно
+            content.appendChild(header);
+            content.appendChild(videoContent);
+            modal.appendChild(content);
+            document.body.appendChild(modal);
         },
         
         // Проверяем, есть ли видео у упражнения (системное или пользовательское)
@@ -589,7 +688,7 @@ function exerciseApp() {
                         min-width: 200px !important;
                     }
                     .filters-row .filter-container {
-                        width: 200px !important;
+                        width: 150px !important;
                     }
                     .filters-row .buttons-container {
                         display: flex !important;
@@ -628,15 +727,25 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="equipment" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все оборудование</option>
+                        <option value="">Весь инвентарь</option>
                         <option value="Штанга">Штанга</option>
                         <option value="Гантели">Гантели</option>
                         <option value="Собственный вес">Собственный вес</option>
-                        <option value="Тренажеры">Тренажеры</option>
+                        <option value="Тренажер">Тренажер</option>
                         <option value="Скакалка">Скакалка</option>
                         <option value="Турник">Турник</option>
                         <option value="Брусья">Брусья</option>
                         <option value="Скамейка">Скамейка</option>
+                    </select>
+                </div>
+                
+                <!-- Фильтр типа упражнений -->
+                <div class="filter-container">
+                    <select x-model="exerciseType" 
+                            class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
+                        <option value="">Все упражнения</option>
+                        <option value="system">Системные</option>
+                        <option value="user">Пользовательские</option>
                     </select>
                 </div>
                 
@@ -682,10 +791,10 @@ function exerciseApp() {
                         <div class="flex-1">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-xl font-semibold text-gray-900">
-                                    <span x-text="exercise.name"></span>
-                                </h3>
+                                <span x-text="exercise.name"></span>
+                            </h3>
                                 <button x-show="hasVideo(exercise)" 
-                                        @click="openVideoModal(getVideoUrl(exercise), getVideoTitle(exercise))"
+                                        @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
                                         class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
                                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -697,13 +806,18 @@ function exerciseApp() {
                             <!-- Теги -->
                             <div class="flex flex-wrap gap-2 mb-4 justify-between">
                                 <div class="flex flex-wrap gap-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="exercise.category"></span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="exercise.equipment"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
                                 </div>
                                 <span x-show="exercise.is_system" 
                                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
                                       title="Системное упражнение нельзя редактировать или удалять">
                                     Системное
+                                </span>
+                                <span x-show="!exercise.is_system" 
+                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                      title="Пользовательское упражнение можно редактировать и удалять">
+                                    Пользовательское
                                 </span>
                             </div>
                             
@@ -720,10 +834,10 @@ function exerciseApp() {
                             Просмотр
                         </button>
                         @if(auth()->user()->hasRole('trainer'))
-                            <button x-show="!exercise.is_system" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                            <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                                 Редактировать
                             </button>
-                            <button x-show="!exercise.is_system" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                            <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                                 Удалить
                             </button>
                             <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
@@ -866,7 +980,7 @@ function exerciseApp() {
                             <option value="Штанга">Штанга</option>
                             <option value="Гантели">Гантели</option>
                             <option value="Собственный вес">Собственный вес</option>
-                            <option value="Тренажеры">Тренажеры</option>
+                            <option value="Тренажер">Тренажер</option>
                             <option value="Скакалка">Скакалка</option>
                             <option value="Турник">Турник</option>
                             <option value="Брусья">Брусья</option>
@@ -1167,7 +1281,7 @@ function exerciseApp() {
             <!-- Кнопки -->
             <div class="flex justify-end space-x-4">
                 <button type="button" 
-                        @click="showView(currentExercise.id)" 
+                        @click="showList()" 
                         class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
                     Отмена
                 </button>
@@ -1270,14 +1384,14 @@ function exerciseApp() {
                         <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                         </svg>
-                    </div>
+    </div>
                     <h4 class="text-lg font-medium text-gray-900 mb-2">Нет пользовательского видео</h4>
                     <p class="text-gray-600 mb-4">Добавьте своё видео с правильной техникой выполнения этого упражнения</p>
                     <button @click="showAddVideo(currentExercise.id)" 
                             class="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 transition-colors">
                         Добавить видео
                     </button>
-                </div>
+</div>
                 
                 <div x-show="currentUserVideo" class="bg-purple-50 rounded-lg p-4 border border-purple-200">
                     <div class="mb-4">
@@ -1286,13 +1400,13 @@ function exerciseApp() {
                     </div>
                     
                     <div x-show="currentUserVideo && currentUserVideo.video_url && isYouTubeUrl(currentUserVideo.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                        <iframe :src="getYouTubeEmbedUrl(currentUserVideo.video_url)" 
+                        <iframe x-show="currentUserVideo && currentUserVideo.video_url" :src="currentUserVideo && currentUserVideo.video_url ? getYouTubeEmbedUrl(currentUserVideo.video_url) : ''" 
                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
                                 allowfullscreen>
                         </iframe>
                     </div>
                     <div x-show="currentUserVideo && currentUserVideo.video_url && !isYouTubeUrl(currentUserVideo.video_url)" class="text-center">
-                        <a :href="currentUserVideo.video_url" 
+                        <a x-show="currentUserVideo && currentUserVideo.video_url" :href="currentUserVideo && currentUserVideo.video_url ? currentUserVideo.video_url : '#'" 
                            target="_blank" 
                            rel="noopener noreferrer"
                            class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
@@ -1308,45 +1422,6 @@ function exerciseApp() {
     </div>
 </div>
 
-<!-- Модальное окно для видео -->
-<div x-show="videoModal.isOpen" 
-     x-cloak
-     style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-    
-    <!-- Фон для закрытия -->
-    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" @click="closeVideoModal()"></div>
-    
-    <!-- Модальное окно -->
-    <div style="position: relative; background: white; border-radius: 12px; padding: 20px; max-width: 90%; max-height: 90%; overflow: hidden;">
-        
-        <!-- Заголовок -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-            <h3 style="margin: 0; font-size: 18px; font-weight: bold;" x-text="videoModal.title"></h3>
-            <button @click="closeVideoModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
-        </div>
-        
-        <!-- Контент -->
-        <div>
-            <div x-show="isYouTubeUrl(videoModal.url)" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                <iframe :src="getYouTubeEmbedUrl(videoModal.url)" 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                        allowfullscreen>
-                </iframe>
-            </div>
-            <div x-show="!isYouTubeUrl(videoModal.url)" style="text-align: center;">
-                <a :href="videoModal.url" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
-                    <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                    </svg>
-                    Открыть видео
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
 
 <style>
 .exercise-grid {

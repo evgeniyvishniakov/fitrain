@@ -12,7 +12,11 @@ class ExerciseController extends BaseController
 {
     public function index(Request $request)
     {
-        $query = Exercise::active();
+        // Показываем системные упражнения + свои пользовательские
+        $query = Exercise::active()->where(function($q) {
+            $q->where('is_system', true) // Системные упражнения видны всем
+              ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
+        });
 
         // Фильтрация
         if ($request->filled('search')) {
@@ -27,10 +31,15 @@ class ExerciseController extends BaseController
             $query->byEquipment($request->equipment);
         }
 
-
         $exercises = $query->paginate(12);
+        
+        // Для JavaScript нужны все упражнения без пагинации
+        $allExercises = Exercise::active()->where(function($q) {
+            $q->where('is_system', true) // Системные упражнения видны всем
+              ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
+        })->orderBy('created_at', 'desc')->get();
 
-        return view('crm.trainer.exercises.index', compact('exercises'));
+        return view('crm.trainer.exercises.index', compact('exercises', 'allExercises'));
     }
 
     public function create()
@@ -52,7 +61,9 @@ class ExerciseController extends BaseController
             'fields_config' => 'nullable|array'
         ]);
 
-        $exercise = Exercise::create($request->all());
+        $data = $request->all();
+        $data['trainer_id'] = auth()->id(); // Привязываем к текущему тренеру
+        $exercise = Exercise::create($data);
 
         return response()->json([
             'success' => true,
@@ -77,11 +88,18 @@ class ExerciseController extends BaseController
     {
         $exercise = Exercise::findOrFail($id);
 
-        // Проверяем, является ли упражнение системным
+        // Проверяем права на редактирование
         if ($exercise->is_system) {
             return response()->json([
                 'success' => false,
                 'message' => 'Нельзя редактировать системные упражнения'
+            ], 403);
+        }
+
+        if ($exercise->trainer_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Нельзя редактировать чужие упражнения'
             ], 403);
         }
 
@@ -110,11 +128,18 @@ class ExerciseController extends BaseController
     {
         $exercise = Exercise::findOrFail($id);
         
-        // Проверяем, является ли упражнение системным
+        // Проверяем права на удаление
         if ($exercise->is_system) {
             return response()->json([
                 'success' => false,
                 'message' => 'Нельзя удалять системные упражнения'
+            ], 403);
+        }
+
+        if ($exercise->trainer_id !== auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Нельзя удалять чужие упражнения'
             ], 403);
         }
         
@@ -169,7 +194,11 @@ class ExerciseController extends BaseController
 
     public function api()
     {
-        $exercises = Exercise::active()->get();
+        // Показываем системные упражнения + свои пользовательские
+        $exercises = Exercise::active()->where(function($q) {
+            $q->where('is_system', true) // Системные упражнения видны всем
+              ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
+        })->get();
 
         return response()->json([
             'success' => true,

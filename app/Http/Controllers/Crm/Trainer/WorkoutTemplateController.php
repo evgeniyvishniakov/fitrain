@@ -38,7 +38,11 @@ class WorkoutTemplateController extends BaseController
 
     public function create()
     {
-        $exercises = Exercise::active()->orderBy('name')->get();
+        // Показываем системные упражнения + свои пользовательские
+        $exercises = Exercise::active()->where(function($q) {
+            $q->where('is_system', true) // Системные упражнения видны всем
+              ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
+        })->orderBy('name')->get();
         return view('crm.trainer.workout-templates.create', compact('exercises'));
     }
 
@@ -86,7 +90,11 @@ class WorkoutTemplateController extends BaseController
     public function edit($id)
     {
         $template = WorkoutTemplate::findOrFail($id);
-        $exercises = Exercise::active()->orderBy('name')->get();
+        // Показываем системные упражнения + свои пользовательские
+        $exercises = Exercise::active()->where(function($q) {
+            $q->where('is_system', true) // Системные упражнения видны всем
+              ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
+        })->orderBy('name')->get();
         // Добавляем валидные упражнения в шаблон
         $template->valid_exercises = $template->valid_exercises;
         return view('crm.trainer.workout-templates.edit', compact('template', 'exercises'));
@@ -149,8 +157,11 @@ class WorkoutTemplateController extends BaseController
         $category = $request->input('category');
         $difficulty = $request->input('difficulty');
 
-        // Получаем упражнения
-        $exercises = Exercise::active()->get();
+        // Получаем упражнения (системные + свои пользовательские)
+        $exercises = Exercise::active()->where(function($q) {
+            $q->where('is_system', true) // Системные упражнения видны всем
+              ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
+        })->get();
         if ($exercises->isEmpty()) {
             return response()->json([
                 'success' => false,
