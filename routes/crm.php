@@ -78,6 +78,13 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/exercises/api", [ExerciseController::class, "api"])->name("crm.exercises.api");
         Route::get("/exercises/create", [ExerciseController::class, "create"])->name("crm.exercises.create");
         Route::post("/exercises", [ExerciseController::class, "store"])->name("crm.exercises.store");
+        
+        // Пользовательские видео к системным упражнениям (должны быть ДО /exercises/{id})
+        Route::get("/exercises/user-videos", [ExerciseController::class, "getAllUserVideos"])->name("crm.exercises.user-videos.all");
+        Route::post("/exercises/{id}/user-video", [ExerciseController::class, "storeUserVideo"])->name("crm.exercises.user-video.store");
+        Route::get("/exercises/{id}/user-video", [ExerciseController::class, "getUserVideo"])->name("crm.exercises.user-video.get");
+        Route::delete("/exercises/{id}/user-video", [ExerciseController::class, "deleteUserVideo"])->name("crm.exercises.user-video.delete");
+        
         Route::get("/exercises/{id}", [ExerciseController::class, "show"])->name("crm.exercises.show");
         Route::get("/exercises/{id}/edit", [ExerciseController::class, "edit"])->name("crm.exercises.edit");
         Route::put("/exercises/{id}", [ExerciseController::class, "update"])->name("crm.exercises.update");

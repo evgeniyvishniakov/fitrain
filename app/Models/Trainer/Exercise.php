@@ -20,12 +20,14 @@ class Exercise extends Model
         'image_url',
         'video_url',
         'is_active',
+        'is_system',
         'fields_config'
     ];
 
     protected $casts = [
         'muscle_groups' => 'array',
         'is_active' => 'boolean',
+        'is_system' => 'boolean',
         'fields_config' => 'array'
     ];
 
@@ -75,6 +77,16 @@ class Exercise extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeSystem($query)
+    {
+        return $query->where('is_system', true);
+    }
+
+    public function scopeUser($query)
+    {
+        return $query->where('is_system', false);
     }
 
     public function scopeByCategory($query, $category)

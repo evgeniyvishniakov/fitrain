@@ -45,3 +45,4 @@ class NutritionController extends Controller
         }
     }
 }
+

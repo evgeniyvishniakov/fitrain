@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Crm\Trainer;
 
 use App\Http\Controllers\Crm\Shared\BaseController;
 use App\Models\Trainer\Exercise;
+use App\Models\UserExerciseVideo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -76,6 +77,14 @@ class ExerciseController extends BaseController
     {
         $exercise = Exercise::findOrFail($id);
 
+        // Проверяем, является ли упражнение системным
+        if ($exercise->is_system) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Нельзя редактировать системные упражнения'
+            ], 403);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -100,6 +109,14 @@ class ExerciseController extends BaseController
     public function destroy($id)
     {
         $exercise = Exercise::findOrFail($id);
+        
+        // Проверяем, является ли упражнение системным
+        if ($exercise->is_system) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Нельзя удалять системные упражнения'
+            ], 403);
+        }
         
         // Проверяем использование упражнения в тренировках
         $workoutUsageCount = \DB::table('workout_exercise')
@@ -157,6 +174,101 @@ class ExerciseController extends BaseController
         return response()->json([
             'success' => true,
             'exercises' => $exercises
+        ]);
+    }
+
+    // Методы для работы с пользовательскими видео к системным упражнениям
+    
+    public function storeUserVideo(Request $request, $exerciseId)
+    {
+        $exercise = Exercise::findOrFail($exerciseId);
+        
+        // Проверяем, что упражнение системное
+        if (!$exercise->is_system) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Можно добавлять видео только к системным упражнениям'
+            ], 400);
+        }
+
+        $request->validate([
+            'video_url' => 'required|url',
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string'
+        ]);
+
+        // Проверяем, есть ли уже видео от этого пользователя для этого упражнения
+        $existingVideo = UserExerciseVideo::where('user_id', auth()->id())
+            ->where('exercise_id', $exerciseId)
+            ->first();
+
+        if ($existingVideo) {
+            // Обновляем существующее видео
+            $existingVideo->update($request->only(['video_url', 'title', 'description']));
+            $video = $existingVideo;
+            $message = 'Видео обновлено';
+        } else {
+            // Создаем новое видео
+            $video = UserExerciseVideo::create([
+                'user_id' => auth()->id(),
+                'exercise_id' => $exerciseId,
+                'video_url' => $request->video_url,
+                'title' => $request->title,
+                'description' => $request->description
+            ]);
+            $message = 'Видео добавлено';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'video' => $video
+        ]);
+    }
+
+    public function getUserVideo($exerciseId)
+    {
+        $video = UserExerciseVideo::where('user_id', auth()->id())
+            ->where('exercise_id', $exerciseId)
+            ->where('is_active', true)
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'video' => $video
+        ]);
+    }
+
+    public function deleteUserVideo($exerciseId)
+    {
+        $video = UserExerciseVideo::where('user_id', auth()->id())
+            ->where('exercise_id', $exerciseId)
+            ->first();
+
+        if (!$video) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Видео не найдено'
+            ], 404);
+        }
+
+        $video->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Видео удалено'
+        ]);
+    }
+
+    public function getAllUserVideos()
+    {
+        $videos = UserExerciseVideo::where('user_id', auth()->id())
+            ->where('is_active', true)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'videos' => $videos
         ]);
     }
 }

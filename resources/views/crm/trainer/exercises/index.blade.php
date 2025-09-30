@@ -7,7 +7,7 @@
 // SPA функциональность для упражнений
 function exerciseApp() {
     return {
-        currentView: 'list', // list, create, edit, view
+        currentView: 'list', // list, create, edit, view, add-video
         exercises: @json(\App\Models\Trainer\Exercise::active()->orderBy('created_at', 'desc')->get()),
         currentExercise: null,
         search: '',
@@ -15,6 +15,13 @@ function exerciseApp() {
         equipment: '',
         currentPage: 1,
         itemsPerPage: 10,
+        
+        // Поля для пользовательского видео
+        userVideoUrl: '',
+        userVideoTitle: '',
+        userVideoDescription: '',
+        currentUserVideo: null,
+        userVideos: {}, // Кэш пользовательских видео для всех упражнений
         
         // Поля формы
         formName: '',
@@ -61,6 +68,25 @@ function exerciseApp() {
         showView(exerciseId) {
             this.currentView = 'view';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            
+            // Загружаем пользовательское видео, если упражнение системное
+            if (this.currentExercise && this.currentExercise.is_system) {
+                this.loadUserVideo(exerciseId);
+            } else {
+                this.currentUserVideo = null;
+            }
+        },
+        
+        showAddVideo(exerciseId) {
+            this.currentView = 'add-video';
+            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            this.userVideoUrl = '';
+            this.userVideoTitle = '';
+            this.userVideoDescription = '';
+            this.currentUserVideo = null;
+            
+            // Загружаем существующее видео, если есть
+            this.loadUserVideo(exerciseId);
         },
         
         // Фильтрация
@@ -279,6 +305,50 @@ function exerciseApp() {
             return url.includes('youtube.com') || url.includes('youtu.be');
         },
         
+        // Модальное окно для видео
+        videoModal: {
+            isOpen: false,
+            url: '',
+            title: ''
+        },
+        
+        openVideoModal(url, title) {
+            this.videoModal.isOpen = true;
+            this.videoModal.url = url;
+            this.videoModal.title = title;
+        },
+        
+        closeVideoModal() {
+            this.videoModal.isOpen = false;
+            this.videoModal.url = '';
+            this.videoModal.title = '';
+        },
+        
+        // Проверяем, есть ли видео у упражнения (системное или пользовательское)
+        hasVideo(exercise) {
+            const hasSystemVideo = !!exercise.video_url;
+            const hasUserVideo = !!this.userVideos[exercise.id];
+            const hasAnyVideo = hasSystemVideo || hasUserVideo;
+            
+            return hasAnyVideo;
+        },
+        
+        // Получаем URL видео (приоритет пользовательскому)
+        getVideoUrl(exercise) {
+            return this.userVideos[exercise.id]?.video_url || exercise.video_url;
+        },
+        
+        // Получаем название видео
+        getVideoTitle(exercise) {
+            return this.userVideos[exercise.id]?.title || exercise.name;
+        },
+        
+        // Инициализация
+        init() {
+            // Загружаем пользовательские видео при инициализации
+            this.loadAllUserVideos();
+        },
+        
         getYouTubeEmbedUrl(url) {
             if (!url) return '';
             
@@ -298,6 +368,178 @@ function exerciseApp() {
             }
             
             return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+        },
+        
+        // Методы для работы с пользовательскими видео
+        async loadAllUserVideos() {
+            try {
+                const response = await fetch('/exercises/user-videos', {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    return;
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    return;
+                }
+                
+                if (result.success && result.videos) {
+                    this.userVideos = {};
+                    result.videos.forEach(video => {
+                        this.userVideos[video.exercise_id] = video;
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки пользовательских видео:', error);
+            }
+        },
+        
+        async loadUserVideo(exerciseId) {
+            try {
+                const response = await fetch(`/exercises/${exerciseId}/user-video`, {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.video) {
+                    this.currentUserVideo = result.video;
+                    this.userVideoUrl = result.video.video_url;
+                    this.userVideoTitle = result.video.title || '';
+                    this.userVideoDescription = result.video.description || '';
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки видео:', error);
+            }
+        },
+        
+        async saveUserVideo() {
+            try {
+                const videoData = {
+                    video_url: this.userVideoUrl,
+                    title: this.userVideoTitle,
+                    description: this.userVideoDescription
+                };
+                
+                const response = await fetch(`/exercises/${this.currentExercise.id}/user-video`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(videoData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Видео сохранено',
+                            message: result.message
+                        }
+                    }));
+                    
+                    // Обновляем текущее видео
+                    this.currentUserVideo = result.video;
+                    
+                    // Переключаемся на просмотр
+                    this.showView(this.currentExercise.id);
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка сохранения',
+                            message: result.message || 'Произошла ошибка при сохранении видео'
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при сохранении видео'
+                    }
+                }));
+            }
+        },
+        
+        async deleteUserVideo() {
+            try {
+                const response = await fetch(`/exercises/${this.currentExercise.id}/user-video`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Видео удалено',
+                            message: result.message
+                        }
+                    }));
+                    
+                    // Очищаем поля
+                    this.currentUserVideo = null;
+                    this.userVideoUrl = '';
+                    this.userVideoTitle = '';
+                    this.userVideoDescription = '';
+                    
+                    // Переключаемся на просмотр
+                    this.showView(this.currentExercise.id);
+                } else {
+                    // Показываем уведомление об ошибке
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка удаления',
+                            message: result.message || 'Произошла ошибка при удалении видео'
+                        }
+                    }));
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Показываем уведомление об ошибке
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при удалении видео'
+                    }
+                }));
+            }
         }
     }
 }
@@ -308,7 +550,7 @@ function exerciseApp() {
 @endsection
 
 @section("content")
-<div x-data="exerciseApp()" x-cloak class="space-y-6">
+<div x-data="exerciseApp()" x-init="init()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -438,14 +680,31 @@ function exerciseApp() {
                     <!-- Заголовок -->
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-gray-900 mb-4">
-                                <span x-text="exercise.name"></span>
-                            </h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-semibold text-gray-900">
+                                    <span x-text="exercise.name"></span>
+                                </h3>
+                                <button x-show="hasVideo(exercise)" 
+                                        @click="openVideoModal(getVideoUrl(exercise), getVideoTitle(exercise))"
+                                        class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
+                                    Видео
+                                </button>
+                            </div>
                             
                             <!-- Теги -->
-                            <div class="flex flex-wrap gap-2 mb-4">
+                            <div class="flex flex-wrap gap-2 mb-4 justify-between">
+                                <div class="flex flex-wrap gap-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="exercise.category"></span>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="exercise.equipment"></span>
+                                </div>
+                                <span x-show="exercise.is_system" 
+                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
+                                      title="Системное упражнение нельзя редактировать или удалять">
+                                    Системное
+                                </span>
                             </div>
                             
                             <!-- Группы мышц -->
@@ -461,11 +720,14 @@ function exerciseApp() {
                             Просмотр
                         </button>
                         @if(auth()->user()->hasRole('trainer'))
-                            <button @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                            <button x-show="!exercise.is_system" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                                 Редактировать
                             </button>
-                            <button @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                            <button x-show="!exercise.is_system" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                                 Удалить
+                            </button>
+                            <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                                Добавить видео
                             </button>
                         @endif
                     </div>
@@ -853,6 +1115,76 @@ function exerciseApp() {
         </form>
     </div>
 
+    <!-- Форма добавления пользовательского видео -->
+    <div x-show="currentView === 'add-video'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Добавить видео к упражнению</h2>
+            <p class="mt-2 text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
+        </div>
+        
+        <form @submit.prevent="saveUserVideo()" class="space-y-6">
+            <div class="space-y-6">
+                <!-- URL видео -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ссылка на видео *</label>
+                    <input type="url" 
+                           x-model="userVideoUrl" 
+                           required
+                           placeholder="https://youtube.com/watch?v=..."
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                </div>
+                
+                <!-- Название видео -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название видео</label>
+                    <input type="text" 
+                           x-model="userVideoTitle" 
+                           placeholder="Например: Правильная техника выполнения"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                </div>
+                
+                <!-- Описание видео -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Описание видео</label>
+                    <textarea x-model="userVideoDescription" 
+                              rows="3"
+                              placeholder="Дополнительные заметки о видео..."
+                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
+                </div>
+                
+                <!-- Предпросмотр видео -->
+                <div x-show="userVideoUrl && isYouTubeUrl(userVideoUrl)" class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Предпросмотр видео</h3>
+                    <div class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <iframe :src="getYouTubeEmbedUrl(userVideoUrl)" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Кнопки -->
+            <div class="flex justify-end space-x-4">
+                <button type="button" 
+                        @click="showView(currentExercise.id)" 
+                        class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                    Отмена
+                </button>
+                <button x-show="currentUserVideo" 
+                        type="button" 
+                        @click="deleteUserVideo()" 
+                        class="px-6 py-3 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                    Удалить видео
+                </button>
+                <button type="submit" 
+                        class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    <span x-text="currentUserVideo ? 'Обновить видео' : 'Сохранить видео'"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Просмотр упражнения -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6">
@@ -899,9 +1231,9 @@ function exerciseApp() {
                 </div>
             </div>
             
-            <!-- Видео -->
+            <!-- Системное видео -->
             <div x-show="currentExercise?.video_url" class="mt-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Видео упражнения</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Системное видео упражнения</h3>
                 <div class="bg-gray-50 rounded-lg p-4">
                     <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                         <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
@@ -921,6 +1253,96 @@ function exerciseApp() {
                         </a>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Пользовательское видео -->
+            <div x-show="currentExercise?.is_system" class="mt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Моё видео к упражнению</h3>
+                    <button @click="showAddVideo(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                        <span x-text="currentUserVideo ? 'Изменить видео' : 'Добавить видео'"></span>
+                    </button>
+        </div>
+                
+                <div x-show="!currentUserVideo" class="bg-gray-50 rounded-lg p-8 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h4 class="text-lg font-medium text-gray-900 mb-2">Нет пользовательского видео</h4>
+                    <p class="text-gray-600 mb-4">Добавьте своё видео с правильной техникой выполнения этого упражнения</p>
+                    <button @click="showAddVideo(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 transition-colors">
+                        Добавить видео
+                    </button>
+                </div>
+                
+                <div x-show="currentUserVideo" class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <div class="mb-4">
+                        <h4 class="text-lg font-semibold text-purple-900" x-text="currentUserVideo?.title || 'Моё видео'"></h4>
+                        <p x-show="currentUserVideo?.description" class="text-purple-700 mt-1" x-text="currentUserVideo?.description"></p>
+                    </div>
+                    
+                    <div x-show="currentUserVideo && currentUserVideo.video_url && isYouTubeUrl(currentUserVideo.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <iframe :src="getYouTubeEmbedUrl(currentUserVideo.video_url)" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div x-show="currentUserVideo && currentUserVideo.video_url && !isYouTubeUrl(currentUserVideo.video_url)" class="text-center">
+                        <a :href="currentUserVideo.video_url" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            Открыть видео
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для видео -->
+<div x-show="videoModal.isOpen" 
+     x-cloak
+     style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    
+    <!-- Фон для закрытия -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" @click="closeVideoModal()"></div>
+    
+    <!-- Модальное окно -->
+    <div style="position: relative; background: white; border-radius: 12px; padding: 20px; max-width: 90%; max-height: 90%; overflow: hidden;">
+        
+        <!-- Заголовок -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: bold;" x-text="videoModal.title"></h3>
+            <button @click="closeVideoModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        
+        <!-- Контент -->
+        <div>
+            <div x-show="isYouTubeUrl(videoModal.url)" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                <iframe :src="getYouTubeEmbedUrl(videoModal.url)" 
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                        allowfullscreen>
+                </iframe>
+            </div>
+            <div x-show="!isYouTubeUrl(videoModal.url)" style="text-align: center;">
+                <a :href="videoModal.url" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
+                    <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    Открыть видео
+                </a>
             </div>
         </div>
     </div>
