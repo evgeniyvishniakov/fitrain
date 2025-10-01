@@ -1659,7 +1659,7 @@ function workoutApp() {
     
 
     <!-- Фильтры и поиск -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
                 .filters-row {
@@ -2153,7 +2153,7 @@ function workoutApp() {
             </h3>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                Назад к списку
             </button>
         </div>
         
@@ -2319,7 +2319,7 @@ function workoutApp() {
             <h3 class="text-xl font-semibold text-gray-900">Просмотр тренировки</h3>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                Назад к списку
             </button>
         </div>
         
