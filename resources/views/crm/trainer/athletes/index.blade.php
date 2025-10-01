@@ -2128,7 +2128,7 @@ function athletesApp() {
 <div x-data="athletesApp()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
                 .filters-row {
