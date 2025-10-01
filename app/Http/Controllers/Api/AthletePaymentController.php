@@ -12,6 +12,39 @@ use Illuminate\Support\Facades\Validator;
 class AthletePaymentController extends Controller
 {
     /**
+     * Извлекает количество тренировок из описания платежа
+     */
+    private function extractSessionsFromDescription($description)
+    {
+        if (empty($description)) {
+            return 0;
+        }
+        
+        // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок"
+        // Учитываем все окончания: тренировка, тренировки, тренировок
+        if (preg_match('/(\d+)\s+(?:тренировка|тренировки|тренировок)/ui', $description, $matches)) {
+            return (int)$matches[1];
+        }
+        
+        // Вариант с "тренирки"
+        if (preg_match('/(\d+)\s*тренирки/ui', $description, $matches)) {
+            return (int)$matches[1];
+        }
+        
+        // Разовая тренировка
+        if (preg_match('/Разовая\s*тренировка/ui', $description)) {
+            return 1;
+        }
+        
+        // Безлимит
+        if (preg_match('/Безлимит/ui', $description)) {
+            return 30;
+        }
+        
+        return 0;
+    }
+    
+    /**
      * Создать платеж для спортсмена
      */
     public function store(Request $request, $athleteId)
@@ -90,10 +123,18 @@ class AthletePaymentController extends Controller
             // Пересчитываем общую сумму из истории платежей
             $totalPaid = array_sum(array_column($paymentHistory, 'amount'));
             
+            // Пересчитываем общее количество тренировок из истории платежей
+            $totalSessionsFromHistory = 0;
+            foreach ($paymentHistory as $payment) {
+                $description = $payment['description'] ?? '';
+                $sessions = $this->extractSessionsFromDescription($description);
+                $totalSessionsFromHistory += $sessions;
+            }
+            
             // Обновляем данные спортсмена
             $athlete->update([
                 'package_type' => $packageTypeLabel,
-                'total_sessions' => $data['total_sessions'],
+                'total_sessions' => $totalSessionsFromHistory ?: $data['total_sessions'],
                 'used_sessions' => $data['used_sessions'],
                 'package_price' => $data['package_price'],
                 'purchase_date' => $data['purchase_date'],
@@ -200,10 +241,18 @@ class AthletePaymentController extends Controller
             // Пересчитываем общую сумму из истории платежей
             $totalPaid = array_sum(array_column($paymentHistory, 'amount'));
             
+            // Пересчитываем общее количество тренировок из истории платежей
+            $totalSessionsFromHistory = 0;
+            foreach ($paymentHistory as $payment) {
+                $description = $payment['description'] ?? '';
+                $sessions = $this->extractSessionsFromDescription($description);
+                $totalSessionsFromHistory += $sessions;
+            }
+            
             // Обновляем данные спортсмена
             $athlete->update([
                 'package_type' => $packageTypeLabel,
-                'total_sessions' => $data['total_sessions'],
+                'total_sessions' => $totalSessionsFromHistory ?: $data['total_sessions'],
                 'used_sessions' => $data['used_sessions'],
                 'package_price' => $data['package_price'],
                 'purchase_date' => $data['purchase_date'],
@@ -234,11 +283,6 @@ class AthletePaymentController extends Controller
      */
     public function destroy($athleteId, $paymentId)
     {
-        // Проверяем, что запрос ожидает JSON
-        if (!request()->expectsJson()) {
-            return response()->json(['error' => 'Expected JSON request'], 400);
-        }
-
         try {
             $athlete = User::findOrFail($athleteId);
             
@@ -250,21 +294,61 @@ class AthletePaymentController extends Controller
                 ], 403);
             }
 
-            // Очищаем финансовые данные
-            $athlete->update([
-                'package_type' => null,
-                'total_sessions' => 0,
-                'used_sessions' => 0,
-                'package_price' => 0,
-                'purchase_date' => null,
-                'expires_date' => null,
-                'payment_method' => null,
-                'payment_description' => null,
-            ]);
+            // Удаляем конкретный платеж из истории
+            $paymentHistory = $athlete->payment_history ?? [];
+            $paymentIdInt = (int)$paymentId;
+            
+            $paymentHistory = array_values(array_filter($paymentHistory, function($payment) use ($paymentIdInt) {
+                return (int)($payment['id'] ?? 0) !== $paymentIdInt;
+            }));
+            
+            // Пересчитываем данные из оставшейся истории
+            if (count($paymentHistory) > 0) {
+                // Пересчитываем общую сумму
+                $totalPaid = array_sum(array_column($paymentHistory, 'amount'));
+                
+                // Пересчитываем общее количество тренировок
+                $totalSessionsFromHistory = 0;
+                foreach ($paymentHistory as $payment) {
+                    $description = $payment['description'] ?? '';
+                    $sessions = $this->extractSessionsFromDescription($description);
+                    $totalSessionsFromHistory += $sessions;
+                }
+                
+                // Получаем последний платеж (последний элемент массива)
+                $lastPaymentDate = null;
+                if (!empty($paymentHistory)) {
+                    $lastPayment = $paymentHistory[count($paymentHistory) - 1];
+                    $lastPaymentDate = $lastPayment['date'] ?? null;
+                }
+                
+                $athlete->update([
+                    'payment_history' => $paymentHistory,
+                    'total_sessions' => $totalSessionsFromHistory,
+                    'total_paid' => $totalPaid,
+                    'last_payment_date' => $lastPaymentDate,
+                ]);
+            } else {
+                // Если платежей не осталось, обнуляем финансовые данные
+                $athlete->update([
+                    'package_type' => null,
+                    'total_sessions' => 0,
+                    'used_sessions' => 0,
+                    'package_price' => 0,
+                    'purchase_date' => null,
+                    'expires_date' => null,
+                    'payment_method' => null,
+                    'payment_description' => null,
+                    'payment_history' => [],
+                    'total_paid' => 0,
+                    'last_payment_date' => null,
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Платеж успешно удален'
+                'message' => 'Платеж успешно удален',
+                'data' => $athlete->fresh()
             ]);
 
         } catch (\Exception $e) {

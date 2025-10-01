@@ -23,7 +23,8 @@ class TrainerController extends BaseController
         // Универсальное регулярное выражение для всех вариантов написания
         
         // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок"
-        if (preg_match('/(\d+)\s*тренировок?/ui', $description, $matches)) {
+        // Учитываем все окончания: тренировка, тренировки, тренировок
+        if (preg_match('/(\d+)\s+(?:тренировка|тренировки|тренировок)/ui', $description, $matches)) {
             $sessions = (int)$matches[1];
             \Log::info("Extracted {$sessions} sessions from: '{$description}' (тренировок)");
             return $sessions;

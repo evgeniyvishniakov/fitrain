@@ -1652,6 +1652,37 @@ function athletesApp() {
             }
         },
         
+        // Извлечение количества тренировок из описания платежа
+        extractSessionsFromDescription(description) {
+            if (!description) {
+                return 0;
+            }
+            
+            // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок"
+            const mainMatch = description.match(/(\d+)\s+(?:тренировка|тренировки|тренировок)/i);
+            if (mainMatch) {
+                return parseInt(mainMatch[1]);
+            }
+            
+            // Вариант с "тренирки"
+            const tMatch = description.match(/(\d+)\s*тренирки/i);
+            if (tMatch) {
+                return parseInt(tMatch[1]);
+            }
+            
+            // Разовая тренировка
+            if (/Разовая\s*тренировка/i.test(description)) {
+                return 1;
+            }
+            
+            // Безлимит
+            if (/Безлимит/i.test(description)) {
+                return 30;
+            }
+            
+            return 0;
+        },
+        
         // Сохранение платежа
         async savePayment() {
             try {
@@ -1705,20 +1736,30 @@ function athletesApp() {
                     if (result.data) {
                         this.currentAthlete = result.data;
                         
+                        // Пересчитываем total_sessions из payment_history для гарантии правильности
+                        const paymentHistory = this.currentAthlete.payment_history || [];
+                        let totalSessionsFromHistory = 0;
+                        
+                        paymentHistory.forEach(payment => {
+                            const description = payment.description || '';
+                            const sessions = this.extractSessionsFromDescription(description);
+                            totalSessionsFromHistory += sessions;
+                        });
+                        
                         // Обновляем финансовые данные для отображения
                         this.currentAthlete.finance = {
                             id: this.currentAthlete.id,
                             package_type: this.currentAthlete.package_type,
-                            total_sessions: this.currentAthlete.total_sessions,
+                            total_sessions: totalSessionsFromHistory || this.currentAthlete.total_sessions,
                             used_sessions: this.currentAthlete.used_sessions,
-                            remaining_sessions: this.currentAthlete.total_sessions - this.currentAthlete.used_sessions,
+                            remaining_sessions: (totalSessionsFromHistory || this.currentAthlete.total_sessions) - this.currentAthlete.used_sessions,
                             package_price: this.currentAthlete.package_price,
                             purchase_date: this.currentAthlete.purchase_date,
                             expires_date: this.currentAthlete.expires_date,
                             status: this.currentAthlete.package_type ? 'active' : 'inactive',
                             total_paid: this.currentAthlete.total_paid,
                             last_payment_date: this.currentAthlete.last_payment_date,
-                            payment_history: this.currentAthlete.payment_history || []
+                            payment_history: paymentHistory
                         };
                     }
                     
@@ -1818,6 +1859,7 @@ function athletesApp() {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 });
@@ -1825,15 +1867,48 @@ function athletesApp() {
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Удаляем платеж из данных спортсмена
-                    this.currentAthlete.finance = null;
+                    // Обновляем данные спортсмена из ответа сервера
+                    if (result.data) {
+                        this.currentAthlete = result.data;
+                        
+                        // Пересчитываем total_sessions из payment_history
+                        const paymentHistory = this.currentAthlete.payment_history || [];
+                        let totalSessionsFromHistory = 0;
+                        
+                        paymentHistory.forEach(payment => {
+                            const description = payment.description || '';
+                            const sessions = this.extractSessionsFromDescription(description);
+                            totalSessionsFromHistory += sessions;
+                        });
+                        
+                        // Обновляем финансовые данные для отображения
+                        if (paymentHistory.length > 0) {
+                            this.currentAthlete.finance = {
+                                id: this.currentAthlete.id,
+                                package_type: this.currentAthlete.package_type,
+                                total_sessions: totalSessionsFromHistory || this.currentAthlete.total_sessions,
+                                used_sessions: this.currentAthlete.used_sessions,
+                                remaining_sessions: (totalSessionsFromHistory || this.currentAthlete.total_sessions) - this.currentAthlete.used_sessions,
+                                package_price: this.currentAthlete.package_price,
+                                purchase_date: this.currentAthlete.purchase_date,
+                                expires_date: this.currentAthlete.expires_date,
+                                status: this.currentAthlete.package_type ? 'active' : 'inactive',
+                                total_paid: this.currentAthlete.total_paid,
+                                last_payment_date: this.currentAthlete.last_payment_date,
+                                payment_history: paymentHistory
+                            };
+                        } else {
+                            // Если платежей не осталось, обнуляем финансовые данные
+                            this.currentAthlete.finance = null;
+                        }
+                    }
                     
                     // Показываем уведомление об успехе
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Пакет удален',
-                            message: 'Пакет успешно удален'
+                            title: 'Платеж удален',
+                            message: 'Платеж успешно удален'
                         }
                     }));
                 } else {
@@ -1842,7 +1917,7 @@ function athletesApp() {
                         detail: {
                             type: 'error',
                             title: 'Ошибка удаления',
-                            message: result.message || 'Произошла ошибка при удалении пакета'
+                            message: result.message || 'Произошла ошибка при удалении платежа'
                         }
                     }));
                 }
@@ -2126,32 +2201,32 @@ function athletesApp() {
                         Добавить спортсмена
                     </button>
                 </div>
-                </div>
             </div>
             
-        <!-- Активные фильтры -->
-        <div x-show="search || sportLevel" class="mt-4 pt-4 border-t border-gray-100">
-            <div class="flex flex-wrap gap-2">
-                <span class="text-sm text-gray-500">Активные фильтры:</span>
-                
-                <span x-show="search" 
-                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Поиск: "<span x-text="search"></span>"
-                    <button @click="search = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
-                </span>
-                
-                <span x-show="sportLevel" 
-                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                    Уровень: <span x-text="getSportLevelLabel(sportLevel)"></span>
-                    <button @click="sportLevel = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
-                </span>
-            </div>
+            <!-- Активные фильтры -->
+            <div x-show="search || sportLevel" class="mt-4 pt-4 border-t border-gray-100">
+                <div class="flex flex-wrap gap-2">
+                    <span class="text-sm text-gray-500">Активные фильтры:</span>
+                    
+                    <span x-show="search" 
+                          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        Поиск: "<span x-text="search"></span>"
+                        <button @click="search = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
+                    </span>
+                    
+                    <span x-show="sportLevel" 
+                          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        Уровень: <span x-text="getSportLevelLabel(sportLevel)"></span>
+                        <button @click="sportLevel = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
+                    </span>
                 </div>
             </div>
-            
+        </div>
+    </div>
+    
     <!-- СПИСОК СПОРТСМЕНОВ -->
-            <div x-show="currentView === 'list'" class="space-y-4">
-                    <template x-for="athlete in paginatedAthletes" :key="athlete.id">
+    <div x-show="currentView === 'list'" class="space-y-4">
+        <template x-for="athlete in paginatedAthletes" :key="athlete.id">
             <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
                 <!-- Уровень индикатор -->
                 <div class="absolute top-0 left-0 w-full h-1" 
@@ -2553,35 +2628,12 @@ function athletesApp() {
         <div x-show="currentAthlete">
             <!-- Заголовок карточки -->
             <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <button @click="showList()" 
-                                class="text-gray-500 hover:text-gray-700 mr-4">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                            </svg>
-                        </button>
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-900">Профиль спортсмена</h1>
-                        </div>
-                    </div>
-                    <!-- Кнопки действий -->
-                    <div class="profile-buttons">
-                        <button @click="showEdit(currentAthlete.id)" 
-                                class="profile-btn profile-btn-edit">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                            Редактировать
-                        </button>
-                        <button @click="deleteAthlete(currentAthlete.id)" 
-                                class="profile-btn profile-btn-delete">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Удалить
-                        </button>
-                    </div>
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Профиль спортсмена</h1>
+                    <button @click="showList()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+                        Назад к списку
+                    </button>
                 </div>
 
                 <!-- Карточка спортсмена с вкладками -->
@@ -3135,26 +3187,6 @@ function athletesApp() {
                                 </button>
                             </div>
                             
-                            <!-- Статистика питания -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                                <div class="bg-red-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-red-600">0</div>
-                                    <div class="text-sm text-red-800">Калорий сегодня</div>
-                                </div>
-                                <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-blue-600">0</div>
-                                    <div class="text-sm text-blue-800">Белков (г)</div>
-                                </div>
-                                <div class="bg-yellow-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-yellow-600">0</div>
-                                    <div class="text-sm text-yellow-800">Углеводов (г)</div>
-                                </div>
-                                <div class="bg-green-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-green-600">0</div>
-                                    <div class="text-sm text-green-800">Жиров (г)</div>
-                                </div>
-                            </div>
-                            
                             <!-- Планы питания -->
                             <div class="bg-white border border-gray-200 rounded-lg p-6">
                                 <h4 class="text-md font-semibold text-gray-900 mb-4">Планы питания</h4>
@@ -3219,6 +3251,26 @@ function athletesApp() {
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Кнопки действий внизу справа -->
+            <div class="p-6 border-t border-gray-200">
+                <div class="flex justify-end gap-3">
+                    <button @click="showEdit(currentAthlete.id)" 
+                            class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Редактировать
+                    </button>
+                    <button @click="deleteAthlete(currentAthlete.id)" 
+                            class="px-4 py-2 text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 flex items-center transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Удалить
+                    </button>
                 </div>
             </div>
         </div>
