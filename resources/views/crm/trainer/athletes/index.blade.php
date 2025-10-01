@@ -117,6 +117,50 @@
         margin-bottom: 0 !important;
     }
 }
+
+/* Стили для grid измерений */
+.measurements-grid {
+    display: grid !important;
+    grid-template-columns: repeat(1, 1fr) !important;
+    gap: 1.5rem !important;
+}
+
+@media (min-width: 768px) {
+    .measurements-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (min-width: 1280px) {
+    .measurements-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* Стили для пагинации */
+.pagination-container {
+    text-align: center !important;
+    width: 100% !important;
+    margin-top: 2rem !important;
+}
+
+.pagination-nav {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+.pagination-wrapper {
+    width: 100% !important;
+    display: block !important;
+    margin-top: 2rem !important;
+}
+
+.pagination-wrapper .pagination-container {
+    margin: 0 auto !important;
+    display: table !important;
+}
 </style>
 
 <script>
@@ -135,6 +179,8 @@ function athletesApp() {
         sportLevel: '',
         currentPage: 1,
         itemsPerPage: 12,
+        measurementsCurrentPage: 1,
+        measurementsItemsPerPage: 6,
         
         
         // Поля формы
@@ -737,6 +783,7 @@ function athletesApp() {
                     // console.log('Загруженные измерения:', result.measurements);
                     // console.log('Актуальные данные спортсмена с сервера:', result.athlete);
                     this.measurements = result.measurements;
+                    this.measurementsCurrentPage = 1;
                     
                     // Инициализируем графики после загрузки измерений
                     this.$nextTick(() => {
@@ -1292,6 +1339,58 @@ function athletesApp() {
         nextPage() {
             if (this.currentPage < this.totalPages) {
                 this.currentPage++;
+            }
+        },
+        
+        // Пагинация для измерений
+        get measurementsTotalPages() {
+            return Math.ceil(this.measurements.length / this.measurementsItemsPerPage);
+        },
+        
+        get paginatedMeasurements() {
+            const start = (this.measurementsCurrentPage - 1) * this.measurementsItemsPerPage;
+            const end = start + this.measurementsItemsPerPage;
+            return this.measurements.slice(start, end);
+        },
+        
+        get measurementsVisiblePages() {
+            const pages = [];
+            const total = this.measurementsTotalPages;
+            const current = this.measurementsCurrentPage;
+            
+            if (total <= 5) {
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                let start = Math.max(1, current - 2);
+                let end = Math.min(total, start + 4);
+                
+                if (end - start < 4) {
+                    start = Math.max(1, end - 4);
+                }
+                
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+            }
+            
+            return pages;
+        },
+        
+        goToMeasurementsPage(page) {
+            this.measurementsCurrentPage = page;
+        },
+        
+        measurementsPreviousPage() {
+            if (this.measurementsCurrentPage > 1) {
+                this.measurementsCurrentPage--;
+            }
+        },
+        
+        measurementsNextPage() {
+            if (this.measurementsCurrentPage < this.measurementsTotalPages) {
+                this.measurementsCurrentPage++;
             }
         },
         
@@ -2904,7 +3003,9 @@ function athletesApp() {
 
                         <div x-show="activeTab === 'measurements'" class="space-y-6">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">Измерения тела</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">
+                                    Измерения тела (<span x-text="measurements.length"></span>)
+                                </h3>
                                 <button @click="showAddMeasurement()" 
                                         class="px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center text-xs md:text-base">
                                     <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2916,97 +3017,161 @@ function athletesApp() {
                             
                             <!-- История измерений -->
                             <div x-show="measurements.length > 0" class="space-y-4">
-                                <div class="text-sm text-gray-600 mb-4">
-                                    Всего измерений: <span x-text="measurements.length"></span>
-                                </div>
                                 
-                                <div class="space-y-3">
-                                    <template x-for="measurement in measurements" :key="measurement.id">
-                                        <div class="bg-white rounded-lg p-4 border-2 border-gray-300 shadow-md hover:shadow-lg transition-shadow">
-                                            <div class="flex items-center justify-between mb-3">
-                                                <h4 class="font-semibold text-gray-900" x-text="new Date(measurement.measurement_date).toLocaleDateString('ru-RU')"></h4>
-                                                <div class="flex items-center space-x-2">
-                                                    <div class="flex space-x-1">
+                                <div class="measurements-grid">
+                                    <template x-for="measurement in paginatedMeasurements" :key="measurement.id">
+                                        <div class="card hover:shadow-lg transition-shadow duration-200">
+                                            <div class="card-header">
+                                                <div class="flex items-center justify-between">
+                                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('ru-RU')"></h4>
+                                                    <div class="flex space-x-2">
                                                         <button @click="editMeasurement(measurement)" 
-                                                                class="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                                                class="text-indigo-600 hover:text-indigo-800" 
                                                                 title="Редактировать">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                </button>
+                                                            </svg>
+                                                        </button>
                                                         <button @click="deleteMeasurement(measurement.id)" 
-                                                                class="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                                class="text-red-600 hover:text-red-800" 
                                                                 title="Удалить">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                            </svg>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                            
-                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                                <div x-show="measurement.weight" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Вес</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.weight, ' кг')"></span>
+                                            <div class="card-body">
+                                                <!-- Основные параметры -->
+                                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                                                        <div class="text-xl font-bold text-blue-600" x-text="measurement.weight || '—'"></div>
+                                                        <div class="text-xs text-blue-800">Вес (кг)</div>
+                                                    </div>
+                                                    <div class="text-center p-3 rounded-lg" x-show="measurement.weight && measurement.height" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).bg">
+                                                        <div class="text-xl font-bold" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color" x-text="formatNumber(measurement.weight / Math.pow(measurement.height/100, 2), '')"></div>
+                                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">ИМТ</div>
+                                                    </div>
                                                 </div>
-                                                <div x-show="measurement.height" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Рост</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.height, ' см')"></span>
+                                                
+                                                <!-- Дополнительные параметры -->
+                                                <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-500">% жира:</span>
+                                                        <span class="font-medium" x-text="measurement.body_fat_percentage ? formatNumber(measurement.body_fat_percentage, '%') : '—'"></span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-500">Мышцы:</span>
+                                                        <span class="font-medium" x-text="measurement.muscle_mass ? formatNumber(measurement.muscle_mass, ' кг') : '—'"></span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-500">Вода:</span>
+                                                        <span class="font-medium" x-text="measurement.water_percentage ? formatNumber(measurement.water_percentage, '%') : '—'"></span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-500">Пульс:</span>
+                                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' уд/мин' : '—'"></span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-500">Давление:</span>
+                                                        <span class="font-medium" x-text="measurement.blood_pressure_systolic && measurement.blood_pressure_diastolic ? Math.round(parseFloat(measurement.blood_pressure_systolic)) + '/' + Math.round(parseFloat(measurement.blood_pressure_diastolic)) : '—'"></span>
+                                                    </div>
                                                 </div>
-                                                <div x-show="measurement.body_fat_percentage" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">% жира</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.body_fat_percentage, '%')"></span>
-                                                </div>
-                                                <div x-show="measurement.muscle_mass" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Мышцы</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.muscle_mass, ' кг')"></span>
-                                                </div>
-                                                <div x-show="measurement.chest" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Грудь</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.chest, ' см')"></span>
-                                                </div>
-                                                <div x-show="measurement.waist" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Талия</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.waist, ' см')"></span>
-                                                </div>
-                                                <div x-show="measurement.hips" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Бедра</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.hips, ' см')"></span>
-                                                </div>
-                                                <div x-show="measurement.bicep" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Бицепс</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.bicep, ' см')"></span>
-                                                </div>
-                                                <div x-show="measurement.thigh" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Бедро</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.thigh, ' см')"></span>
-                                                </div>
-                                                <div x-show="measurement.neck" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Шея</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.neck, ' см')"></span>
-                                                </div>
-                                                <div x-show="measurement.resting_heart_rate" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Пульс</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.resting_heart_rate, ' уд/мин')"></span>
-                                                </div>
-                                                <div x-show="measurement.blood_pressure_systolic" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">Давление</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.blood_pressure_systolic) + '/' + formatNumber(measurement.blood_pressure_diastolic)"></span>
-                                                </div>
-                                                <div x-show="measurement.water_percentage" class="flex flex-col bg-white border border-gray-300 p-3 rounded-lg shadow-sm">
-                                                    <span class="text-gray-600 text-xs uppercase tracking-wide">% воды</span>
-                                                    <span class="font-semibold text-gray-900 text-lg" x-text="formatNumber(measurement.water_percentage, '%')"></span>
-                                                </div>
+                                                
+                                                <!-- Объемы тела -->
+                                                <template x-if="measurement.chest || measurement.waist || measurement.hips || measurement.bicep || measurement.thigh || measurement.neck">
+                                                    <div class="mt-4 pt-4 border-t border-gray-200">
+                                                        <h5 class="text-sm font-medium text-gray-700 mb-2">Объемы тела (см)</h5>
+                                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                                            <template x-if="measurement.chest">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-500">Грудь:</span>
+                                                                    <span class="font-medium" x-text="formatNumber(measurement.chest, '')"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="measurement.waist">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-500">Талия:</span>
+                                                                    <span class="font-medium" x-text="formatNumber(measurement.waist, '')"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="measurement.hips">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-500">Бедра:</span>
+                                                                    <span class="font-medium" x-text="formatNumber(measurement.hips, '')"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="measurement.bicep">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-500">Бицепс:</span>
+                                                                    <span class="font-medium" x-text="formatNumber(measurement.bicep, '')"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="measurement.thigh">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-500">Бедро:</span>
+                                                                    <span class="font-medium" x-text="formatNumber(measurement.thigh, '')"></span>
+                                                                </div>
+                                                            </template>
+                                                            <template x-if="measurement.neck">
+                                                                <div class="flex justify-between">
+                                                                    <span class="text-gray-500">Шея:</span>
+                                                                    <span class="font-medium" x-text="formatNumber(measurement.neck, '')"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                
+                                                <!-- Комментарии -->
+                                                <template x-if="measurement.notes">
+                                                    <div class="mt-4 pt-4 border-t border-gray-200">
+                                                        <h5 class="text-sm font-medium text-gray-700 mb-1">Комментарии</h5>
+                                                        <p class="text-sm text-gray-600" x-text="measurement.notes"></p>
+                                                    </div>
+                                                </template>
                                             </div>
-                                            
-                                            <div x-show="measurement.notes" class="mt-3 pt-3 border-t border-gray-200">
-                                                <p class="text-sm text-gray-600" x-text="measurement.notes"></p>
-                            </div>
-                        </div>
-                    </template>
+                                        </div>
+                                    </template>
                                 </div>
-                </div>
+                                
+                                <!-- Пагинация -->
+                                <div class="pagination-wrapper" x-show="measurementsTotalPages > 1">
+                                    <div class="pagination-container">
+                                        <div class="pagination-nav">
+                                            <!-- Предыдущая страница -->
+                                            <button @click="measurementsPreviousPage()" 
+                                                    :disabled="measurementsCurrentPage === 1"
+                                                    :class="measurementsCurrentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
+                                                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                                </svg>
+                                            </button>
+                                            
+                                            <!-- Номера страниц -->
+                                            <template x-for="page in measurementsVisiblePages" :key="page">
+                                                <button @click="goToMeasurementsPage(page)" 
+                                                        :class="page === measurementsCurrentPage ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'"
+                                                        class="px-3 py-2 text-sm font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                                    <span x-text="page"></span>
+                                                </button>
+                                            </template>
+                                            
+                                            <!-- Следующая страница -->
+                                            <button @click="measurementsNextPage()" 
+                                                    :disabled="measurementsCurrentPage === measurementsTotalPages"
+                                                    :class="measurementsCurrentPage === measurementsTotalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
+                                                    class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                 
                 <!-- Пустое состояние -->
                             <div x-show="measurements.length === 0" class="text-center py-12 text-gray-500">
@@ -4087,20 +4252,20 @@ function athletesApp() {
                         </div>
                         
                         <!-- Статистика -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div class="bg-red-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-red-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
                                 <div class="text-sm text-red-800">Общие калории</div>
                             </div>
-                            <div class="bg-blue-50 rounded-lg p-4 text-center">
+                            <div class="bg-blue-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-blue-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
                                 <div class="text-sm text-blue-800">Общие белки (г)</div>
                             </div>
-                            <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                            <div class="bg-yellow-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-yellow-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
                                 <div class="text-sm text-yellow-800">Общие углеводы (г)</div>
                             </div>
-                            <div class="bg-green-50 rounded-lg p-4 text-center">
+                            <div class="bg-green-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-green-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
                                 <div class="text-sm text-green-800">Общие жиры (г)</div>
                             </div>
