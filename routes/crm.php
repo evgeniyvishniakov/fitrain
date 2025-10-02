@@ -139,6 +139,10 @@ Route::middleware(["auth"])->group(function () {
         Route::patch("/athlete/exercise-progress", [AthleteController::class, "updateExerciseProgress"])->name("crm.athlete.exercise-progress.update");
         Route::get("/athlete/exercise-progress", [AthleteController::class, "getExerciseProgress"])->name("crm.athlete.exercise-progress.get");
         
+        // Упражнения для спортсмена (только просмотр)
+        Route::get("/athlete/exercises", [AthleteController::class, "exercises"])->name("crm.athlete.exercises");
+        Route::get("/athlete/exercises/from-workouts", [AthleteController::class, "getExercisesFromWorkouts"])->name("crm.athlete.exercises.from-workouts");
+        
         // Обновление статуса тренировки спортсменом
         Route::patch("/athlete/workouts/{workoutId}/status", [AthleteController::class, "updateWorkoutStatus"])->name("crm.athlete.workout.status.update");
         

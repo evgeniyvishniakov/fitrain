@@ -581,6 +581,12 @@
         </svg>
         Тренировки
     </a>
+    <a href="{{ route("crm.athlete.exercises") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        Упражнения
+    </a>
     <a href="{{ route("crm.athlete.progress") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -620,6 +626,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
         Тренировки
+    </a>
+    <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+        Упражнения
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -686,8 +698,8 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">В процессе</div>
-                <div class="stat-value">{{ $inProgressCount ?? 0 }}</div>
+                <div class="stat-label">Осталось тренировок</div>
+                <div class="stat-value">{{ $remainingCount ?? 0 }}</div>
             </div>
         </div>
 
@@ -828,17 +840,10 @@
 
     <!-- Просмотр тренировки -->
     <div x-show="currentView === 'view'" x-cloak x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h3 class="workout-view-title text-xl font-semibold text-gray-900">Просмотр<span class="hidden-mobile"> тренировки</span></h3>
-                <div x-show="lastSaved" class="text-sm text-green-600 mt-1">
-                    💾 Последнее сохранение: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
-                </div>
+        <div class="mb-6">
+            <div x-show="lastSaved" class="text-sm text-green-600 mb-4">
+                💾 Последнее сохранение: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
             </div>
-            <button @click="showList()" 
-                    class="back-button px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                ← Назад<span class="hidden-mobile"> к списку</span>
-            </button>
         </div>
         
         <div x-show="currentWorkout" class="space-y-6">
@@ -933,27 +938,35 @@
                 <div class="space-y-4">
                     <template x-for="(exercise, index) in (currentWorkout?.exercises || [])" :key="`view-exercise-${index}`">
                         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
-                                    <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
-                                    <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
-                                    
+                            <div class="mb-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
+                                        <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
+                                        <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
+                                    </div>
+                                    <!-- Ссылка на видео упражнения - только на десктопе -->
+                                    <div x-show="exercise.video_url" class="exercise-video-link hidden md:block">
+                                        <button @click="openSimpleModal(exercise.video_url, exercise.name)"
+                                                class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                            </svg>
+                                            Видео
+                                        </button>
+                                    </div>
                                 </div>
-                                <!-- Ссылка на видео упражнения -->
-                                <div x-show="exercise.video_url" class="exercise-video-link">
+                                <!-- Ссылка на видео упражнения - показывается только на мобилке -->
+                                <div x-show="exercise.video_url" class="exercise-video-link-mobile mt-2 md:hidden">
                                     <button @click="openSimpleModal(exercise.video_url, exercise.name)"
-                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                        </svg>
-                                        Видео
+                                            class="inline-flex items-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm rounded-lg transition-colors cursor-pointer">
+                                        📹 Видео упражнения
                                     </button>
                                 </div>
                             </div>
                             
                             <!-- Параметры упражнения -->
-                            <div class="exercise-params-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                            <div class="exercise-params-grid grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
                                 <!-- Подходы -->
                                 <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('sets')" 
                                      class="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-4">
@@ -1116,17 +1129,14 @@
                                         <div class="space-y-3">
                                             <template x-for="(set, setIndex) in getSetsData(exercise.exercise_id || exercise.id)" :key="`set-${exercise.exercise_id || exercise.id}-${setIndex}`">
                                                 <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-lg p-4">
-                                                    <div class="flex items-center justify-between mb-3">
-                                                        <div class="flex items-center">
-                                                            <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                                            </svg>
-                                                            <span class="text-sm font-semibold text-yellow-800">Подход <span x-text="setIndex + 1"></span></span>
-                                                        </div>
-                                                        <span class="text-xs text-yellow-600">из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
+                                                    <div class="flex items-center mb-3">
+                                                        <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                                        </svg>
+                                                        <span class="text-sm font-semibold text-yellow-800">Подход <span x-text="setIndex + 1"></span> из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
                                                     </div>
                                                     
-                                                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                                    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 w-full">
                                                         <!-- Повторения -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
                                                              class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
@@ -1359,13 +1369,15 @@
     
     .exercise-params-grid {
         grid-template-columns: 1fr 1fr !important;
-        gap: 12px !important;
+        gap: 8px !important;
+        width: 100% !important;
     }
     
     /* Адаптация для полей подходов на мобильных */
-    .grid.grid-cols-3 {
-        grid-template-columns: 1fr !important;
+    .grid.grid-cols-2 {
+        grid-template-columns: 1fr 1fr !important;
         gap: 8px !important;
+        width: 100% !important;
     }
     
     .exercise-status-buttons {
@@ -1389,7 +1401,7 @@
     }
 }
 
-/* Десктопная версия остается как есть */
+/* Десктопная версия */
 @media (min-width: 641px) {
     .workout-header {
         flex-direction: row !important;
@@ -1408,6 +1420,86 @@
     
     .duration-field {
         display: flex !important;
+    }
+    
+    .exercise-params-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+        gap: 16px !important;
+        width: 100% !important;
+    }
+    
+    /* Поля подходов на десктопе */
+    .grid.grid-cols-1 {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+}
+
+/* Стили для статистических карточек */
+.stats-container {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem !important;
+}
+
+.stat-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 1.5rem !important;
+    background: white !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.stat-icon {
+    margin-bottom: 0.75rem !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+.stat-content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+@media (min-width: 768px) {
+    .stat-card {
+        flex-direction: row !important;
+        align-items: center !important;
+        text-align: left !important;
+    }
+    
+    .stat-icon {
+        margin-bottom: 0 !important;
+        margin-right: 1rem !important;
+    }
+    
+    .stat-content {
+        align-items: flex-start !important;
+    }
+}
+
+.stat-label {
+    font-size: 0.875rem !important;
+    color: #6b7280 !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.stat-value {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+}
+
+@media (min-width: 768px) {
+    .stats-container {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 1.5rem !important;
     }
 }
 </style>

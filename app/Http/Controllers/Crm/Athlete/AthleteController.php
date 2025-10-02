@@ -6,6 +6,7 @@ use App\Http\Controllers\Crm\Shared\BaseController;
 use App\Models\Athlete\Athlete;
 use App\Models\Athlete\ExerciseProgress;
 use App\Models\Trainer\Workout;
+use App\Models\Trainer\Exercise;
 use App\Models\Trainer\Progress;
 use App\Models\Trainer\Nutrition;
 use Illuminate\Http\Request;
@@ -203,6 +204,7 @@ class AthleteController extends BaseController
             $completedCount = $athlete->workouts()->where('status', 'completed')->count();
             $inProgressCount = $athlete->workouts()->where('status', 'in_progress')->count();
             $plannedCount = $athlete->workouts()->where('status', 'planned')->count();
+            $remainingCount = $athlete->total_sessions - $athlete->used_sessions;
             
         } catch (\Exception $e) {
             // Если есть ошибки, используем пустые данные
@@ -211,9 +213,10 @@ class AthleteController extends BaseController
             $completedCount = 0;
             $inProgressCount = 0;
             $plannedCount = 0;
+            $remainingCount = 0;
         }
         
-        return view('crm.athlete.workouts', compact('workouts', 'workoutsCount', 'completedCount', 'inProgressCount', 'plannedCount'));
+        return view('crm.athlete.workouts', compact('workouts', 'workoutsCount', 'completedCount', 'inProgressCount', 'plannedCount', 'remainingCount'));
     }
     
     public function nutrition()
@@ -594,5 +597,44 @@ class AthleteController extends BaseController
         ]));
 
         return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
+    }
+
+    /**
+     * Страница упражнений для спортсмена
+     */
+    public function exercises()
+    {
+        return view('crm.athlete.exercises');
+    }
+
+    /**
+     * Получить упражнения из тренировок спортсмена (API)
+     */
+    public function getExercisesFromWorkouts()
+    {
+        try {
+            $athlete = auth()->user();
+            
+            // Получаем все упражнения из тренировок спортсмена через промежуточную таблицу
+            $exercises = Exercise::whereHas('workouts', function($query) use ($athlete) {
+                $query->where('athlete_id', $athlete->id);
+            })
+            ->with(['creator'])
+            ->get()
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
+            
+            return response()->json([
+                'success' => true,
+                'exercises' => $exercises
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Ошибка загрузки упражнений спортсмена: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

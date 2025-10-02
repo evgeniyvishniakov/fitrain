@@ -147,4 +147,16 @@ class Exercise extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'trainer_id');
     }
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'trainer_id');
+    }
+
+    public function workouts()
+    {
+        return $this->belongsToMany(\App\Models\Trainer\Workout::class, 'workout_exercise', 'exercise_id', 'workout_id')
+                    ->withPivot(['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'])
+                    ->withTimestamps();
+    }
 }
