@@ -147,18 +147,63 @@ class AthleteController extends BaseController
     {
         $athlete = auth()->user();
         
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $athlete->id,
-            'phone' => 'nullable|string|max:20',
-            'age' => 'nullable|integer|min:1|max:120',
-            'weight' => 'nullable|numeric|min:0',
-            'height' => 'nullable|numeric|min:0',
-        ]);
-        
-        $athlete->update($request->all());
-        
-        return redirect()->route('crm.athlete.profile')->with('success', 'Профиль обновлен');
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $athlete->id,
+                'phone' => 'nullable|string|max:20',
+                'age' => 'nullable|integer|min:1|max:120',
+                'height' => 'nullable|numeric|min:50|max:250',
+                'birth_date' => 'nullable|date|before:today',
+                'gender' => 'nullable|in:male,female',
+                'sport_level' => 'nullable|in:beginner,intermediate,advanced',
+                'goals' => 'nullable|array',
+                'goals.*' => 'in:weight_loss,muscle_gain,muscle_tone,endurance,strength,flexibility',
+            ]);
+            
+            $data = $request->all();
+            
+            // Обработка целей
+            if (isset($data['goals'])) {
+                $data['goals'] = array_values(array_filter($data['goals']));
+            } else {
+                $data['goals'] = [];
+            }
+            
+            $athlete->update($data);
+            
+            // Если это AJAX запрос, возвращаем JSON
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Профиль успешно обновлен'
+                ]);
+            }
+            
+            return redirect()->route('crm.athlete.settings')->with('success', 'Профиль успешно обновлен');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Если это AJAX запрос, возвращаем JSON с ошибками валидации
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ошибка валидации',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            throw $e;
+        } catch (\Exception $e) {
+            // Если это AJAX запрос, возвращаем JSON с ошибкой
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Произошла ошибка при сохранении профиля'
+                ], 500);
+            }
+            
+            throw $e;
+        }
     }
     
     public function workouts()

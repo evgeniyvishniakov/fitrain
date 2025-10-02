@@ -33,16 +33,9 @@ class AdminMiddleware
 
         // Проверяем, что у пользователя есть роль админа
         if (!$user->hasRole('admin')) {
-            // Если пользователь не админ, перенаправляем его в соответствующую панель
-            if ($user->hasRole('trainer')) {
-                return redirect()->route('crm.dashboard');
-            } elseif ($user->hasRole('athlete')) {
-                return redirect()->route('athlete.dashboard');
-            } else {
-                Auth::logout();
-                return redirect()->route('admin.login')
-                    ->withErrors(['email' => 'У вас нет прав доступа к админ панели.']);
-            }
+            Auth::logout();
+            return redirect()->route('admin.login')
+                ->withErrors(['email' => 'У вас нет прав доступа к админ панели. Обратитесь к администратору.']);
         }
 
         return $next($request);

@@ -40,19 +40,9 @@ class LoginController extends BaseController
             // Проверяем, что у пользователя есть роль админа
             if (!$user->hasRole('admin')) {
                 Auth::logout();
-                
-                // Перенаправляем в соответствующую панель
-                if ($user->hasRole('trainer')) {
-                    return redirect()->route('crm.dashboard')
-                        ->with('info', 'Вы перенаправлены в панель тренера.');
-                } elseif ($user->hasRole('athlete')) {
-                    return redirect()->route('athlete.dashboard')
-                        ->with('info', 'Вы перенаправлены в панель спортсмена.');
-                } else {
-                    return back()->withErrors([
-                        'email' => 'У вас нет прав доступа к админ панели.',
-                    ]);
-                }
+                return back()->withErrors([
+                    'email' => 'У вас нет прав доступа к админ панели. Обратитесь к администратору.',
+                ]);
             }
 
             $request->session()->regenerate();

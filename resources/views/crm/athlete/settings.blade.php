@@ -141,147 +141,465 @@
     </a>
 @endsection
 
+<script>
+// Функциональность для настроек спортсмена
+function athleteSettingsApp() {
+    return {
+        isEditing: false,
+        isSaving: false,
+        
+        // Переключение режима редактирования
+        toggleEdit() {
+            this.isEditing = !this.isEditing;
+        },
+        
+        // Сохранение профиля через AJAX
+        async saveProfile(event) {
+            if (this.isSaving) return;
+            
+            this.isSaving = true;
+            
+            try {
+                const formData = new FormData(event.target);
+                
+                const response = await fetch('{{ route("crm.athlete.profile.update") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Профиль обновлен!', 'Ваши данные успешно сохранены');
+                    this.isEditing = false;
+                    // Обновляем данные на странице без перезагрузки
+                    this.updateProfileData(formData);
+                } else {
+                    showError('Ошибка', result.message || 'Не удалось сохранить профиль');
+                }
+            } catch (error) {
+                console.error('Ошибка при сохранении:', error);
+                showError('Ошибка', 'Произошла ошибка при сохранении профиля');
+            } finally {
+                this.isSaving = false;
+            }
+        },
+        
+        // Обновление данных профиля на странице
+        updateProfileData(formData) {
+            // Обновляем поля в режиме просмотра
+            const nameValue = formData.get('name');
+            const emailValue = formData.get('email');
+            const phoneValue = formData.get('phone');
+            const ageValue = formData.get('age');
+            const genderValue = formData.get('gender');
+            const heightValue = formData.get('height');
+            const birthDateValue = formData.get('birth_date');
+            const sportLevelValue = formData.get('sport_level');
+            const goalsValues = formData.getAll('goals[]');
+            
+            // Обновляем отображаемые значения
+            this.updateDisplayValue('name', nameValue);
+            this.updateDisplayValue('email', emailValue);
+            this.updateDisplayValue('phone', phoneValue || 'Не указан');
+            this.updateDisplayValue('age', ageValue ? ageValue + ' лет' : 'Не указан');
+            this.updateDisplayValue('gender', this.getGenderText(genderValue));
+            this.updateDisplayValue('height', heightValue ? heightValue + ' см' : 'Не указан');
+            this.updateDisplayValue('birth_date', birthDateValue ? this.formatDate(birthDateValue) : 'Не указана');
+            this.updateDisplayValue('sport_level', this.getSportLevelText(sportLevelValue));
+            this.updateDisplayValue('goals', this.getGoalsText(goalsValues));
+        },
+        
+        // Вспомогательные функции для обновления отображения
+        updateDisplayValue(fieldName, value) {
+            const elements = document.querySelectorAll(`[data-field="${fieldName}"]`);
+            elements.forEach(el => {
+                if (el.tagName === 'DIV') {
+                    el.textContent = value;
+                }
+            });
+        },
+        
+        getGenderText(gender) {
+            const genderMap = {
+                'male': 'Мужской',
+                'female': 'Женский'
+            };
+            return genderMap[gender] || 'Не указан';
+        },
+        
+        getSportLevelText(level) {
+            const levelMap = {
+                'beginner': 'Начинающий',
+                'intermediate': 'Средний',
+                'advanced': 'Продвинутый'
+            };
+            return levelMap[level] || 'Не указан';
+        },
+        
+        getGoalsText(goals) {
+            if (!goals || goals.length === 0) return 'Не указаны';
+            
+            const goalMap = {
+                'weight_loss': 'Похудение',
+                'muscle_gain': 'Набор мышечной массы',
+                'muscle_tone': 'Тонизация мышц',
+                'endurance': 'Выносливость',
+                'strength': 'Сила',
+                'flexibility': 'Гибкость'
+            };
+            
+            return goals.map(goal => goalMap[goal] || goal).join(', ');
+        },
+        
+        formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU');
+        }
+    }
+}
+</script>
+
 @section("content")
-<div class="space-y-6">
-    <!-- Заголовок -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Настройки</h1>
-                <p class="text-gray-600 mt-1">Управление вашим профилем и настройками</p>
-            </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-            </div>
-        </div>
+@if(session('success'))
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6">
+        {{ session('success') }}
     </div>
+@endif
 
-    <!-- Основная информация -->
+<div x-data="athleteSettingsApp()" x-cloak class="space-y-6">
+
+    <!-- Профиль спортсмена -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Основная информация</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">Профиль спортсмена</h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Имя</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    {{ $athlete->name }}
+        <!-- Режим просмотра -->
+        <div x-show="!isEditing">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Имя</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="name">
+                        {{ $athlete->name }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="email">
+                        {{ $athlete->email }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="phone">
+                        {{ $athlete->phone ?? 'Не указан' }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Возраст</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="age">
+                        {{ $athlete->age ?? 'Не указан' }} лет
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="gender">
+                        @if($athlete->gender === 'male')
+                            Мужской
+                        @elseif($athlete->gender === 'female')
+                            Женский
+                        @else
+                            Не указан
+                        @endif
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Рост</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="height">
+                        {{ $athlete->height ? $athlete->height . ' см' : 'Не указан' }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="birth_date">
+                        {{ $athlete->birth_date ? $athlete->birth_date->format('d.m.Y') : 'Не указана' }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Уровень подготовки</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="sport_level">
+                        @if($athlete->sport_level === 'beginner')
+                            Начинающий
+                        @elseif($athlete->sport_level === 'intermediate')
+                            Средний
+                        @elseif($athlete->sport_level === 'advanced')
+                            Продвинутый
+                        @else
+                            Не указан
+                        @endif
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Цели</label>
+                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="goals">
+                        @if($athlete->goals && count($athlete->goals) > 0)
+                            {{ implode(', ', array_map(function($goal) {
+                                return match($goal) {
+                                    'weight_loss' => 'Похудение',
+                                    'muscle_gain' => 'Набор мышечной массы',
+                                    'muscle_tone' => 'Тонизация мышц',
+                                    'endurance' => 'Выносливость',
+                                    'strength' => 'Сила',
+                                    'flexibility' => 'Гибкость',
+                                    default => $goal
+                                };
+                            }, $athlete->goals)) }}
+                        @else
+                            Не указаны
+                        @endif
+                    </div>
                 </div>
             </div>
             
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    {{ $athlete->email }}
-                </div>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    {{ $athlete->phone ?? 'Не указан' }}
-                </div>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Возраст</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    {{ $athlete->age ?? 'Не указан' }} лет
-                </div>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    @if($athlete->gender === 'male')
-                        Мужской
-                    @elseif($athlete->gender === 'female')
-                        Женский
-                    @else
-                        Не указан
-                    @endif
-                </div>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Уровень подготовки</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    @if($athlete->sport_level === 'beginner')
-                        Начинающий
-                    @elseif($athlete->sport_level === 'intermediate')
-                        Средний
-                    @elseif($athlete->sport_level === 'advanced')
-                        Продвинутый
-                    @else
-                        Не указан
-                    @endif
-                </div>
+            <!-- Кнопка редактирования -->
+            <div class="mt-6 flex justify-end">
+                <button @click="toggleEdit()" 
+                        x-text="isEditing ? 'Отмена' : 'Редактировать профиль'"
+                        :class="isEditing ? 'bg-gray-600 hover:bg-gray-700' : 'bg-blue-600 hover:bg-blue-700'"
+                        class="px-4 py-2 text-white rounded-lg transition-colors">
+                </button>
             </div>
         </div>
-        
-        <div class="mt-6">
-            <a href="{{ route('crm.athlete.profile') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-                Редактировать профиль
-            </a>
-        </div>
-    </div>
 
-    <!-- Физические параметры -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Физические параметры</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Рост</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    {{ $athlete->height ? $athlete->height . ' см' : 'Не указан' }}
+        <!-- Режим редактирования -->
+        <div x-show="isEditing">
+            <form @submit.prevent="saveProfile" class="space-y-6">
+                @csrf
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+                    <!-- Имя -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               value="{{ old('name', $athlete->name) }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('name') border-red-500 @enderror"
+                               required>
+                        @error('name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input type="email" 
+                               id="email" 
+                               name="email" 
+                               value="{{ old('email', $athlete->email) }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('email') border-red-500 @enderror"
+                               required>
+                        @error('email')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Телефон -->
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                        <input type="tel" 
+                               id="phone" 
+                               name="phone" 
+                               value="{{ old('phone', $athlete->phone) }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('phone') border-red-500 @enderror"
+                               placeholder="+7 (999) 123-45-67">
+                        @error('phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Возраст -->
+                    <div>
+                        <label for="age" class="block text-sm font-medium text-gray-700 mb-2">Возраст</label>
+                        <input type="number" 
+                               id="age" 
+                               name="age" 
+                               value="{{ old('age', $athlete->age) }}"
+                               min="1" 
+                               max="120"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('age') border-red-500 @enderror"
+                               placeholder="25">
+                        @error('age')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Пол -->
+                    <div>
+                        <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
+                        <select id="gender" 
+                                name="gender"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('gender') border-red-500 @enderror">
+                            <option value="">Выберите пол</option>
+                            <option value="male" {{ old('gender', $athlete->gender) === 'male' ? 'selected' : '' }}>Мужской</option>
+                            <option value="female" {{ old('gender', $athlete->gender) === 'female' ? 'selected' : '' }}>Женский</option>
+                        </select>
+                        @error('gender')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Рост -->
+                    <div>
+                        <label for="height" class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
+                        <input type="number" 
+                               id="height" 
+                               name="height" 
+                               value="{{ old('height', $athlete->height) }}"
+                               min="50" 
+                               max="250"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('height') border-red-500 @enderror"
+                               placeholder="175">
+                        @error('height')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Дата рождения -->
+                    <div>
+                        <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
+                        <input type="date" 
+                               id="birth_date" 
+                               name="birth_date" 
+                               value="{{ old('birth_date', $athlete->birth_date ? $athlete->birth_date->format('Y-m-d') : '') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('birth_date') border-red-500 @enderror">
+                        @error('birth_date')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    
+                    <!-- Уровень подготовки -->
+                    <div>
+                        <label for="sport_level" class="block text-sm font-medium text-gray-700 mb-2">Уровень подготовки</label>
+                        <select id="sport_level" 
+                                name="sport_level"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('sport_level') border-red-500 @enderror">
+                            <option value="">Выберите уровень</option>
+                            <option value="beginner" {{ old('sport_level', $athlete->sport_level) === 'beginner' ? 'selected' : '' }}>Начинающий</option>
+                            <option value="intermediate" {{ old('sport_level', $athlete->sport_level) === 'intermediate' ? 'selected' : '' }}>Средний</option>
+                            <option value="advanced" {{ old('sport_level', $athlete->sport_level) === 'advanced' ? 'selected' : '' }}>Продвинутый</option>
+                        </select>
+                        @error('sport_level')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Вес</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    {{ $athlete->weight ? $athlete->weight . ' кг' : 'Не указан' }}
+                
+                <!-- Цели -->
+                <div style="grid-column: 1 / -1;">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Цели тренировок</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        @php
+                            $goals = old('goals', $athlete->goals ?? []);
+                        @endphp
+                        
+                        <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
+                            <input type="checkbox" 
+                                   name="goals[]" 
+                                   value="weight_loss" 
+                                   {{ in_array('weight_loss', $goals) ? 'checked' : '' }}
+                                   style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Похудение</span>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
+                            <input type="checkbox" 
+                                   name="goals[]" 
+                                   value="muscle_gain" 
+                                   {{ in_array('muscle_gain', $goals) ? 'checked' : '' }}
+                                   style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Набор мышечной массы</span>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
+                            <input type="checkbox" 
+                                   name="goals[]" 
+                                   value="muscle_tone" 
+                                   {{ in_array('muscle_tone', $goals) ? 'checked' : '' }}
+                                   style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Тонизация мышц</span>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
+                            <input type="checkbox" 
+                                   name="goals[]" 
+                                   value="endurance" 
+                                   {{ in_array('endurance', $goals) ? 'checked' : '' }}
+                                   style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Выносливость</span>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
+                            <input type="checkbox" 
+                                   name="goals[]" 
+                                   value="strength" 
+                                   {{ in_array('strength', $goals) ? 'checked' : '' }}
+                                   style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Сила</span>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
+                            <input type="checkbox" 
+                                   name="goals[]" 
+                                   value="flexibility" 
+                                   {{ in_array('flexibility', $goals) ? 'checked' : '' }}
+                                   style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Гибкость</span>
+                        </label>
+                    </div>
+                    @error('goals')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    {{ $athlete->birth_date ? $athlete->birth_date->format('d.m.Y') : 'Не указана' }}
+                
+                <!-- Кнопки -->
+                <div class="flex justify-end space-x-4">
+                    <button type="button" @click="toggleEdit()" 
+                            :disabled="isSaving"
+                            class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Отмена
+                    </button>
+                    <button type="submit" 
+                            :disabled="isSaving"
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span x-show="!isSaving">Сохранить изменения</span>
+                        <span x-show="isSaving" class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Сохранение...
+                        </span>
+                    </button>
                 </div>
-            </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Цели</label>
-                <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900">
-                    @if($athlete->goals && count($athlete->goals) > 0)
-                        {{ implode(', ', array_map(function($goal) {
-                            return match($goal) {
-                                'weight_loss' => 'Похудение',
-                                'muscle_gain' => 'Набор мышечной массы',
-                                'muscle_tone' => 'Тонизация мышц',
-                                'endurance' => 'Выносливость',
-                                'strength' => 'Сила',
-                                'flexibility' => 'Гибкость',
-                                default => $goal
-                            };
-                        }, $athlete->goals)) }}
-                    @else
-                        Не указаны
-                    @endif
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
     <!-- Настройки языка и валюты -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div x-show="!isEditing" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Язык и валюта</h2>
         
         <form method="POST" action="{{ route('crm.athlete.settings.update') }}" class="space-y-6">
@@ -344,25 +662,6 @@
                 </div>
             </div>
 
-            <!-- Часовой пояс -->
-            <div class="space-y-4">
-                <h3 class="text-base font-medium text-gray-900">
-                    <i class="fas fa-clock mr-2"></i>Часовой пояс
-                </h3>
-                <div class="max-w-md">
-                    <select name="timezone" 
-                            class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="Europe/Moscow" {{ $athlete->timezone === 'Europe/Moscow' ? 'selected' : '' }}>Москва (UTC+3)</option>
-                        <option value="Europe/London" {{ $athlete->timezone === 'Europe/London' ? 'selected' : '' }}>Лондон (UTC+0)</option>
-                        <option value="Europe/Berlin" {{ $athlete->timezone === 'Europe/Berlin' ? 'selected' : '' }}>Берлин (UTC+1)</option>
-                        <option value="Europe/Paris" {{ $athlete->timezone === 'Europe/Paris' ? 'selected' : '' }}>Париж (UTC+1)</option>
-                        <option value="America/New_York" {{ $athlete->timezone === 'America/New_York' ? 'selected' : '' }}>Нью-Йорк (UTC-5)</option>
-                        <option value="America/Los_Angeles" {{ $athlete->timezone === 'America/Los_Angeles' ? 'selected' : '' }}>Лос-Анджелес (UTC-8)</option>
-                        <option value="Asia/Tokyo" {{ $athlete->timezone === 'Asia/Tokyo' ? 'selected' : '' }}>Токио (UTC+9)</option>
-                        <option value="Asia/Shanghai" {{ $athlete->timezone === 'Asia/Shanghai' ? 'selected' : '' }}>Шанхай (UTC+8)</option>
-                    </select>
-                </div>
-            </div>
 
             <div class="flex justify-end">
                 <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
@@ -372,53 +671,6 @@
         </form>
     </div>
 
-    <!-- Статус аккаунта -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Статус аккаунта</h2>
-        
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-sm font-medium text-gray-700">Статус</p>
-                <p class="text-sm text-gray-600">
-                    @if($athlete->is_active)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Активен
-                        </span>
-                    @else
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Неактивен
-                        </span>
-                    @endif
-                </p>
-            </div>
-            
-            <div>
-                <p class="text-sm font-medium text-gray-700">Дата регистрации</p>
-                <p class="text-sm text-gray-600">{{ $athlete->created_at->format('d.m.Y H:i') }}</p>
-            </div>
-        </div>
-    </div>
 
-    <!-- Действия -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Действия</h2>
-        
-        <div class="space-y-4">
-            <a href="{{ route('crm.athlete.profile') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                </svg>
-                Редактировать профиль
-            </a>
-            
-            <a href="{{ route('crm.athlete.dashboard') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors ml-4">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"/>
-                </svg>
-                Вернуться в дашборд
-            </a>
-        </div>
-    </div>
 </div>
 @endsection
