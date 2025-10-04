@@ -197,6 +197,30 @@
                     return this.exerciseSetsExpanded[exerciseId] || false;
                 },
 
+                // Получить класс рамки для поля в развернутых подходах
+                getSetFieldBorderClass(exercise, set, fieldName) {
+                    const plannedValue = parseFloat(exercise[fieldName] || exercise.pivot?.[fieldName]) || 0;
+                    const actualValue = parseFloat(set[fieldName]) || 0;
+                    
+                    // Если поле не заполнено
+                    if (actualValue === 0) {
+                        return 'border-red-500 border-2';
+                    }
+                    
+                    // Если запланированное значение равно 0 или не задано, не показываем красную рамку
+                    if (plannedValue === 0) {
+                        return '';
+                    }
+                    
+                    // Если заполнено, но меньше запланированного
+                    if (actualValue < plannedValue) {
+                        return 'border-red-500 border-2';
+                    }
+                    
+                    // Если заполнено полностью или больше
+                    return '';
+                },
+
                 // Управление сворачиванием/разворачиванием упражнений в карточках
                 toggleExercisesExpanded(workoutId) {
                     this.exercisesExpanded[workoutId] = !this.exercisesExpanded[workoutId];
@@ -943,10 +967,10 @@
                                     <div class="flex items-center space-x-3">
                                         <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
                                         <span class="text-sm font-medium text-gray-900" x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
-                                        <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
+                                        <span class="text-xs text-gray-500" x-text="(exercise.category || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (exercise.equipment || '')"></span>
                                     </div>
                                     <!-- Ссылка на видео упражнения - только на десктопе -->
-                                    <div x-show="exercise.video_url" class="exercise-video-link hidden md:block">
+                                    <div x-show="exercise.video_url" class="exercise-video-link">
                                         <button @click="openSimpleModal(exercise.video_url, exercise.name)"
                                                 class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
@@ -955,13 +979,6 @@
                                             {{ __('common.video') }}
                                         </button>
                                     </div>
-                                </div>
-                                <!-- Ссылка на видео упражнения - показывается только на мобилке -->
-                                <div x-show="exercise.video_url" class="exercise-video-link-mobile mt-2 md:hidden">
-                                    <button @click="openSimpleModal(exercise.video_url, exercise.name)"
-                                            class="inline-flex items-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm rounded-lg transition-colors cursor-pointer">
-                                        📹 {{ __('common.video') }} {{ __('common.exercise') }}
-                                    </button>
                                 </div>
                             </div>
                             
@@ -1136,10 +1153,11 @@
                                                         <span class="text-sm font-semibold text-yellow-800">Подход <span x-text="setIndex + 1"></span> из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
                                                     </div>
                                                     
-                                                    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 w-full">
+                                                    <div class="flex gap-6 w-full">
                                                         <!-- Повторения -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
-                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
+                                                             class="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
                                                                     <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1152,14 +1170,18 @@
                                                                     x-model="set.reps"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
                                                                     placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none"
-                                                                    min="0">
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none no-spinner"
+                                                                    min="0"
+                                                                    style="-moz-appearance: textfield;"
+                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
+                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
                                                             </div>
                                                         </div>
                                                         
                                                         <!-- Вес -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
-                                                             class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3">
+                                                             class="flex-1 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'weight')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
                                                                     <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1173,14 +1195,18 @@
                                                                     x-model="set.weight"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'weight', $event.target.value)"
                                                                     placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none"
-                                                                    min="0">
+                                                                    class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none no-spinner"
+                                                                    min="0"
+                                                                    style="-moz-appearance: textfield;"
+                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
+                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
                                                             </div>
                                                         </div>
                                                         
                                                         <!-- Отдых -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
-                                                             class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3">
+                                                             class="flex-1 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'rest')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
                                                                     <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1194,14 +1220,18 @@
                                                                     x-model="set.rest"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
                                                                     placeholder="1.0"
-                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none"
-                                                                    min="0">
+                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none no-spinner"
+                                                                    min="0"
+                                                                    style="-moz-appearance: textfield;"
+                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
+                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
                                                             </div>
                                                         </div>
                                                         
                                                         <!-- Время -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('time')" 
-                                                             class="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-3">
+                                                             class="flex-1 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'time')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
                                                                     <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1214,8 +1244,11 @@
                                                                     x-model="set.time"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'time', $event.target.value)"
                                                                     placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-blue-900 bg-transparent border-none outline-none"
-                                                                    min="0">
+                                                                    class="w-full text-center text-lg font-bold text-blue-900 bg-transparent border-none outline-none no-spinner"
+                                                                    min="0"
+                                                                    style="-moz-appearance: textfield;"
+                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
+                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
                                                             </div>
                                                         </div>
                                                         
@@ -1254,8 +1287,11 @@
                                                                     x-model="set.distance"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'distance', $event.target.value)"
                                                                     placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none"
-                                                                    min="0">
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none no-spinner"
+                                                                    min="0"
+                                                                    style="-moz-appearance: textfield;"
+                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
+                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1295,6 +1331,53 @@
 </div>
 
 <style>
+/* Стили для скрытия стрелок в полях ввода */
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinner {
+    -moz-appearance: textfield;
+}
+
+.no-spinner:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.no-spinner:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.no-spinner:hover {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Агрессивное скрытие всех возможных рамок */
+input[type="number"].no-spinner {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+input[type="number"].no-spinner:focus,
+input[type="number"].no-spinner:active,
+input[type="number"].no-spinner:hover {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
 
 /* Мобильная адаптация для карточек тренировок */
 @media (max-width: 640px) {
