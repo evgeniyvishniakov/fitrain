@@ -603,7 +603,6 @@ function workoutApp() {
                 
                 // Если все еще нет упражнений для сохранения, не отправляем запрос
                 if (exercises.length === 0) {
-                    console.log('Нет упражнений для сохранения');
                     return;
                 }
 
@@ -628,8 +627,7 @@ function workoutApp() {
                 const text = await response.text();
                 
                 if (!response.ok) {
-                    console.error(`HTTP error! status: ${response.status}`, text);
-                    throw new Error(`HTTP error! status: ${response.status}. Response: ${text}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 // Проверяем, не HTML ли это (например, страница входа)
@@ -641,8 +639,6 @@ function workoutApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    console.error('Response text:', text);
                     throw new Error('Получен некорректный ответ от сервера');
                 }
                 
@@ -2123,10 +2119,8 @@ function workoutApp() {
                         
                         <!-- Упражнения -->
                         <div x-show="(workout.exercises || []).length > 0" class="mt-3">
-                            <div class="mb-2">
+                            <div class="flex flex-wrap gap-1 items-center">
                                 <div class="text-xs font-medium text-gray-500">Упражнения:</div>
-                            </div>
-                            <div class="flex flex-wrap gap-1">
                                 <!-- Отображаем все упражнения через Alpine.js -->
                                 <template x-for="(exercise, index) in (workout.exercises || [])" :key="`exercise-${workout.id}-${index}`">
                                     <span x-show="index < 3 || isExercisesExpanded(workout.id)"
@@ -2138,7 +2132,7 @@ function workoutApp() {
                                               'bg-gray-100 text-gray-600': !getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id)
                                           }"
                                           :title="exercise.progress?.athlete_comment ? 'Комментарий: ' + exercise.progress.athlete_comment : ''"
-                                          x-text="(exercise.name || 'Без названия') + (exercise.category ? ' (' + exercise.category + (exercise.equipment ? ' • ' + exercise.equipment : '') + ')' : '')">
+                                          x-text="exercise.name || 'Без названия'">
                                     </span>
                                 </template>
                                 

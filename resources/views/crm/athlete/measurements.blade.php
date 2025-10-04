@@ -492,7 +492,7 @@
                 </button>
             </div>
             
-            <form id="measurementForm" method="POST">
+            <form id="measurementForm" method="POST" onsubmit="submitMeasurementForm(); return false;">
                 @csrf
                 <div id="formMethod" style="display: none;"></div>
                 
@@ -618,6 +618,35 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div id="deleteConfirmationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Подтверждение удаления</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500">
+                    Вы уверены, что хотите удалить это измерение? Это действие нельзя отменить.
+                </p>
+            </div>
+            <div class="flex justify-center space-x-3 mt-4">
+                <button onclick="closeDeleteConfirmationModal()" 
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    Отмена
+                </button>
+                <button onclick="confirmDeleteMeasurement()" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                    Удалить
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -782,121 +811,264 @@ function editMeasurement(measurementId) {
     if (formMethod) formMethod.innerHTML = '<input type="hidden" name="_method" value="PUT">';
     
     // Загружаем данные измерения
-    fetch(`/athlete/measurements/${measurementId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const measurement = data.measurement;
-                
-                // Получаем элементы формы
-                const measurementDate = document.getElementById('measurement_date');
-                const weight = document.getElementById('weight');
-                const height = document.getElementById('height');
-                const bodyFatPercentage = document.getElementById('body_fat_percentage');
-                const muscleMass = document.getElementById('muscle_mass');
-                const waterPercentage = document.getElementById('water_percentage');
-                const restingHeartRate = document.getElementById('resting_heart_rate');
-                const systolicPressure = document.getElementById('blood_pressure_systolic');
-                const diastolicPressure = document.getElementById('blood_pressure_diastolic');
-                const chest = document.getElementById('chest');
-                const waist = document.getElementById('waist');
-                const hips = document.getElementById('hips');
-                const bicep = document.getElementById('bicep');
-                const thigh = document.getElementById('thigh');
-                const neck = document.getElementById('neck');
-                const notes = document.getElementById('notes');
-                
-                // Заполняем форму данными
-                if (measurementDate) {
-                    // Создаем объект Date и корректируем на часовой пояс
-                    const date = new Date(measurement.measurement_date);
-                    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
-                    measurementDate.value = localDate.toISOString().split('T')[0];
-                }
-                if (weight) weight.value = measurement.weight || '';
-                if (height) height.value = {{ auth()->user()->height ?? 'null' }};
-                if (bodyFatPercentage) bodyFatPercentage.value = measurement.body_fat_percentage || '';
-                if (muscleMass) muscleMass.value = measurement.muscle_mass || '';
-                if (waterPercentage) waterPercentage.value = measurement.water_percentage || '';
-                if (restingHeartRate) restingHeartRate.value = measurement.resting_heart_rate || '';
-                if (systolicPressure) systolicPressure.value = measurement.blood_pressure_systolic || '';
-                if (diastolicPressure) diastolicPressure.value = measurement.blood_pressure_diastolic || '';
-                if (chest) chest.value = measurement.chest || '';
-                if (waist) waist.value = measurement.waist || '';
-                if (hips) hips.value = measurement.hips || '';
-                if (bicep) bicep.value = measurement.bicep || '';
-                if (thigh) thigh.value = measurement.thigh || '';
-                if (neck) neck.value = measurement.neck || '';
-                if (notes) notes.value = measurement.notes || '';
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка загрузки данных:', error);
-            alert('Ошибка загрузки данных измерения');
-        });
-    
-    if (modal) modal.classList.remove('hidden');
-}
-
-function deleteMeasurement(measurementId) {
-    if (confirm('Вы уверены, что хотите удалить это измерение?')) {
-        fetch(`/athlete/measurements/${measurementId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Ошибка при удалении измерения');
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-            alert('Ошибка при удалении измерения');
-        });
-    }
-}
-
-function submitMeasurementForm() {
-    const form = document.getElementById('measurementForm');
-    const formData = new FormData(form);
-    
-    let url = form.action;
-    let method = 'POST';
-    
-    if (currentMeasurementId) {
-        // Редактирование существующего измерения
-        url = `{{ url('/athlete/measurements') }}/${currentMeasurementId}`;
-        formData.append('_method', 'PUT');
-    }
-    
-    // Добавляем CSRF токен
-    formData.append('_token', '{{ csrf_token() }}');
-    
-    fetch(url, {
-        method: method,
-        body: formData
+    fetch(`/athlete/measurements/${measurementId}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
-            closeMeasurementModal();
-            // Перезагружаем страницу для обновления данных
-            window.location.reload();
+            const measurement = data.measurement;
+            
+            // Отладочная информация
+            console.log('Полученные данные измерения:', measurement);
+            console.log('Дата измерения:', measurement.measurement_date);
+            
+            // Получаем элементы формы
+            const measurementDate = document.getElementById('measurement_date');
+            const weight = document.getElementById('weight');
+            const height = document.getElementById('height');
+            const bodyFatPercentage = document.getElementById('body_fat_percentage');
+            const muscleMass = document.getElementById('muscle_mass');
+            const waterPercentage = document.getElementById('water_percentage');
+            const restingHeartRate = document.getElementById('resting_heart_rate');
+            const systolicPressure = document.getElementById('blood_pressure_systolic');
+            const diastolicPressure = document.getElementById('blood_pressure_diastolic');
+            const chest = document.getElementById('chest');
+            const waist = document.getElementById('waist');
+            const hips = document.getElementById('hips');
+            const bicep = document.getElementById('bicep');
+            const thigh = document.getElementById('thigh');
+            const neck = document.getElementById('neck');
+            const notes = document.getElementById('notes');
+            
+            // Заполняем форму данными
+            if (measurementDate) {
+                // Правильно обрабатываем дату для input[type="date"]
+                const date = new Date(measurement.measurement_date);
+                // Используем локальную дату без коррекции часового пояса
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const formattedDate = `${year}-${month}-${day}`;
+                
+                console.log('Оригинальная дата:', measurement.measurement_date);
+                console.log('Обработанная дата:', formattedDate);
+                
+                measurementDate.value = formattedDate;
+                console.log('Значение поля даты после установки:', measurementDate.value);
+            }
+            if (weight) weight.value = measurement.weight || '';
+            if (height) height.value = {{ auth()->user()->height ?? 'null' }};
+            if (bodyFatPercentage) bodyFatPercentage.value = measurement.body_fat_percentage || '';
+            if (muscleMass) muscleMass.value = measurement.muscle_mass || '';
+            if (waterPercentage) waterPercentage.value = measurement.water_percentage || '';
+            if (restingHeartRate) restingHeartRate.value = measurement.resting_heart_rate || '';
+            if (systolicPressure) systolicPressure.value = measurement.blood_pressure_systolic || '';
+            if (diastolicPressure) diastolicPressure.value = measurement.blood_pressure_diastolic || '';
+            if (chest) chest.value = measurement.chest || '';
+            if (waist) waist.value = measurement.waist || '';
+            if (hips) hips.value = measurement.hips || '';
+            if (bicep) bicep.value = measurement.bicep || '';
+            if (thigh) thigh.value = measurement.thigh || '';
+            if (neck) neck.value = measurement.neck || '';
+            if (notes) notes.value = measurement.notes || '';
         } else {
-            alert('Ошибка: ' + data.message);
+            // Показываем уведомление об ошибке
+            window.dispatchEvent(new CustomEvent('show-notification', {
+                detail: {
+                    type: 'error',
+                    title: 'Ошибка загрузки',
+                    message: data.message || 'Не удалось загрузить данные измерения'
+                }
+            }));
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('Произошла ошибка при сохранении измерения');
+        console.error('Ошибка загрузки данных:', error);
+        // Показываем уведомление об ошибке
+        window.dispatchEvent(new CustomEvent('show-notification', {
+            detail: {
+                type: 'error',
+                title: 'Ошибка',
+                message: 'Ошибка загрузки данных измерения'
+            }
+        }));
     });
+    
+    if (modal) modal.classList.remove('hidden');
+}
+
+async function deleteMeasurement(measurementId) {
+    // Показываем модальное окно подтверждения
+    showDeleteConfirmationModal(measurementId);
+}
+
+function showDeleteConfirmationModal(measurementId) {
+    const modal = document.getElementById('deleteConfirmationModal');
+    if (!modal) {
+        console.error('Modal element not found');
+        return;
+    }
+    
+    // Сохраняем ID измерения для последующего удаления
+    modal.dataset.measurementId = measurementId;
+    
+    // Показываем модальное окно
+    modal.classList.remove('hidden');
+}
+
+async function confirmDeleteMeasurement() {
+    const modal = document.getElementById('deleteConfirmationModal');
+    const measurementId = modal.dataset.measurementId;
+    
+    console.log('Начинаем удаление измерения с ID:', measurementId);
+    
+    if (!measurementId) {
+        console.error('Measurement ID not found');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/athlete/measurements/${measurementId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            console.log('Измерение успешно удалено на сервере');
+            
+            // Обновляем данные в Alpine.js компоненте без перезагрузки
+            updateMeasurementsInAlpine(null, false, true, measurementId);
+            
+            // Показываем уведомление об успехе
+            window.dispatchEvent(new CustomEvent('show-notification', {
+                detail: {
+                    type: 'success',
+                    title: 'Успех',
+                    message: 'Измерение успешно удалено'
+                }
+            }));
+            
+            // Закрываем модальное окно
+            closeDeleteConfirmationModal();
+        } else {
+            // Показываем уведомление об ошибке
+            window.dispatchEvent(new CustomEvent('show-notification', {
+                detail: {
+                    type: 'error',
+                    title: 'Ошибка удаления',
+                    message: result.message || 'Произошла ошибка при удалении измерения'
+                }
+            }));
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        // Показываем уведомление об ошибке
+        window.dispatchEvent(new CustomEvent('show-notification', {
+            detail: {
+                type: 'error',
+                title: 'Ошибка',
+                message: 'Произошла ошибка при удалении измерения'
+            }
+        }));
+    }
+}
+
+function closeDeleteConfirmationModal() {
+    const modal = document.getElementById('deleteConfirmationModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.dataset.measurementId = '';
+    }
+}
+
+async function submitMeasurementForm() {
+    try {
+        // Собираем данные из формы
+        const measurementData = {
+            measurement_date: document.getElementById('measurement_date').value,
+            weight: document.getElementById('weight').value ? parseFloat(document.getElementById('weight').value) : null,
+            height: document.getElementById('height').value ? parseFloat(document.getElementById('height').value) : null,
+            body_fat_percentage: document.getElementById('body_fat_percentage').value ? parseFloat(document.getElementById('body_fat_percentage').value) : null,
+            muscle_mass: document.getElementById('muscle_mass').value ? parseFloat(document.getElementById('muscle_mass').value) : null,
+            water_percentage: document.getElementById('water_percentage').value ? parseFloat(document.getElementById('water_percentage').value) : null,
+            chest: document.getElementById('chest').value ? parseFloat(document.getElementById('chest').value) : null,
+            waist: document.getElementById('waist').value ? parseFloat(document.getElementById('waist').value) : null,
+            hips: document.getElementById('hips').value ? parseFloat(document.getElementById('hips').value) : null,
+            bicep: document.getElementById('bicep').value ? parseFloat(document.getElementById('bicep').value) : null,
+            thigh: document.getElementById('thigh').value ? parseFloat(document.getElementById('thigh').value) : null,
+            neck: document.getElementById('neck').value ? parseFloat(document.getElementById('neck').value) : null,
+            resting_heart_rate: document.getElementById('resting_heart_rate').value ? parseInt(document.getElementById('resting_heart_rate').value) : null,
+            blood_pressure_systolic: document.getElementById('blood_pressure_systolic').value ? parseInt(document.getElementById('blood_pressure_systolic').value) : null,
+            blood_pressure_diastolic: document.getElementById('blood_pressure_diastolic').value ? parseInt(document.getElementById('blood_pressure_diastolic').value) : null,
+            notes: document.getElementById('notes').value || '',
+        };
+        
+        const isEdit = currentMeasurementId !== null;
+        const url = isEdit 
+            ? `/athlete/measurements/${currentMeasurementId}`
+            : '{{ route("crm.athlete.measurements.store") }}';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(measurementData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // Обновляем данные в Alpine.js компоненте без перезагрузки
+            const measurement = result.measurement;
+            updateMeasurementsInAlpine(measurement, isEdit);
+            
+            // Показываем уведомление об успехе
+            window.dispatchEvent(new CustomEvent('show-notification', {
+                detail: {
+                    type: 'success',
+                    title: 'Успех',
+                    message: isEdit ? 'Измерение успешно обновлено' : 'Измерение успешно сохранено'
+                }
+            }));
+            
+            closeMeasurementModal();
+            // Больше не перезагружаем страницу - данные обновляются в реальном времени!
+        } else {
+            // Показываем уведомление об ошибке
+            window.dispatchEvent(new CustomEvent('show-notification', {
+                detail: {
+                    type: 'error',
+                    title: 'Ошибка сохранения',
+                    message: result.message || 'Произошла ошибка при сохранении измерения'
+                }
+            }));
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        // Показываем уведомление об ошибке
+        window.dispatchEvent(new CustomEvent('show-notification', {
+            detail: {
+                type: 'error',
+                title: 'Ошибка',
+                message: 'Произошла ошибка при сохранении измерения'
+            }
+        }));
+    }
 }
 
 function closeMeasurementModal() {
@@ -938,6 +1110,159 @@ function formatNumber(num, unit = '') {
     return formatted + unit;
 }
 
+// Функция для обновления данных в Alpine.js компоненте
+function updateMeasurementsInAlpine(measurement, isEdit = false, isDelete = false, measurementId = null) {
+    // Находим Alpine.js компонент
+    const alpineComponent = document.querySelector('[x-data*="measurementPagination"]');
+    if (alpineComponent && alpineComponent._x_dataStack && alpineComponent._x_dataStack[0]) {
+        const data = alpineComponent._x_dataStack[0];
+        
+        console.log('Найден Alpine.js компонент:', data);
+        console.log('Текущие измерения:', data.measurements.length);
+        console.log('Операция:', isDelete ? 'удаление' : isEdit ? 'редактирование' : 'добавление');
+        
+        if (isDelete && measurementId) {
+            // Удаляем измерение из массива
+            const index = data.measurements.findIndex(m => m.id == measurementId);
+            console.log('Индекс для удаления:', index);
+            
+            if (index !== -1) {
+                data.measurements.splice(index, 1);
+                console.log('Измерение удалено, осталось:', data.measurements.length);
+                
+                // Обновляем общее количество страниц
+                data.totalPages = Math.ceil(data.measurements.length / data.itemsPerPage);
+                // Если текущая страница больше общего количества, переходим на последнюю
+                if (data.currentPage > data.totalPages) {
+                    data.currentPage = Math.max(1, data.totalPages);
+                }
+                
+                // Принудительно обновляем отображение
+                data.measurements = [...data.measurements];
+            } else {
+                console.error('Измерение с ID', measurementId, 'не найдено для удаления');
+            }
+        } else if (isEdit) {
+            // Обновляем существующее измерение
+            const index = data.measurements.findIndex(m => m.id == measurement.id);
+            if (index !== -1) {
+                data.measurements[index] = measurement;
+                // Принудительно обновляем отображение
+                data.measurements = [...data.measurements];
+            }
+        } else {
+            // Добавляем новое измерение
+            data.measurements.unshift(measurement);
+            // Обновляем общее количество страниц
+            data.totalPages = Math.ceil(data.measurements.length / data.itemsPerPage);
+            // Принудительно обновляем отображение
+            data.measurements = [...data.measurements];
+        }
+        
+        // Обновляем статистические карточки
+        updateStatisticsCards(data.measurements);
+        
+        console.log('Данные Alpine.js обновлены:', data.measurements.length, 'измерений');
+    } else {
+        console.error('Alpine.js компонент не найден или не инициализирован');
+        // Fallback: пытаемся обновить через прямое обращение к DOM
+        console.log('Fallback: обновляем через DOM');
+        updateMeasurementsViaDOM(measurement, isEdit, isDelete, measurementId);
+    }
+}
+
+// Fallback функция для обновления данных через DOM
+function updateMeasurementsViaDOM(measurement, isEdit = false, isDelete = false, measurementId = null) {
+    if (isDelete && measurementId) {
+        // Находим карточку измерения по ID и удаляем её
+        const measurementCards = document.querySelectorAll('[x-for*="measurement"]');
+        let cardToRemove = null;
+        
+        measurementCards.forEach(card => {
+            const cardElement = card.closest('.card');
+            if (cardElement && cardElement.textContent.includes(`id="${measurementId}"`)) {
+                cardToRemove = cardElement;
+            }
+        });
+        
+        if (cardToRemove) {
+            cardToRemove.remove();
+            console.log('Карточка измерения удалена из DOM');
+        } else {
+            console.log('Fallback: перезагружаем страницу');
+            window.location.reload();
+        }
+    } else {
+        // Для добавления/редактирования перезагружаем страницу
+        console.log('Fallback: перезагружаем страницу');
+        window.location.reload();
+    }
+}
+
+// Функция для обновления статистических карточек
+function updateStatisticsCards(measurements) {
+    // Обновляем общее количество измерений
+    const totalMeasurementsElement = document.querySelector('.stat-value');
+    if (totalMeasurementsElement && measurements.length > 0) {
+        // Находим элемент с общим количеством измерений (первая статистическая карточка)
+        const statsContainer = document.querySelector('.stats-container');
+        if (statsContainer) {
+            const totalMeasurementsCard = statsContainer.children[0];
+            const totalMeasurementsValue = totalMeasurementsCard.querySelector('.stat-value');
+            if (totalMeasurementsValue) {
+                totalMeasurementsValue.textContent = measurements.length;
+            }
+        }
+    }
+    
+    // Обновляем последнее измерение
+    if (measurements.length > 0) {
+        const lastMeasurement = measurements[0]; // Первое в массиве - самое новое
+        const lastMeasurementDate = new Date(lastMeasurement.measurement_date);
+        
+        const statsContainer = document.querySelector('.stats-container');
+        if (statsContainer && statsContainer.children[1]) {
+            const lastMeasurementCard = statsContainer.children[1];
+            const lastMeasurementValue = lastMeasurementCard.querySelector('.stat-value');
+            if (lastMeasurementValue) {
+                lastMeasurementValue.textContent = lastMeasurementDate.toLocaleDateString('ru-RU');
+            }
+        }
+        
+        // Обновляем текущий вес
+        if (statsContainer && statsContainer.children[2]) {
+            const currentWeightCard = statsContainer.children[2];
+            const currentWeightValue = currentWeightCard.querySelector('.stat-value');
+            if (currentWeightValue && lastMeasurement.weight) {
+                currentWeightValue.textContent = lastMeasurement.weight + ' кг';
+            }
+        }
+        
+        // Обновляем ИМТ
+        if (statsContainer && statsContainer.children[3]) {
+            const bmiCard = statsContainer.children[3];
+            const bmiValue = bmiCard.querySelector('.stat-value');
+            if (bmiValue && lastMeasurement.weight) {
+                const height = {{ auth()->user()->height ?? 170 }};
+                const bmi = lastMeasurement.weight / ((height/100) ** 2);
+                bmiValue.textContent = bmi.toFixed(1);
+                
+                // Обновляем цвет ИМТ
+                bmiValue.className = 'stat-value';
+                if (bmi < 18.5) {
+                    bmiValue.classList.add('text-blue-600');
+                } else if (bmi < 25) {
+                    bmiValue.classList.add('text-green-600');
+                } else if (bmi < 30) {
+                    bmiValue.classList.add('text-yellow-600');
+                } else {
+                    bmiValue.classList.add('text-red-600');
+                }
+            }
+        }
+    }
+}
+
 // Делаем функции глобальными для доступа из Alpine.js после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
     window.showAddMeasurementModal = showAddMeasurementModal;
@@ -945,6 +1270,12 @@ document.addEventListener('DOMContentLoaded', function() {
     window.deleteMeasurement = deleteMeasurement;
     window.submitMeasurementForm = submitMeasurementForm;
     window.closeMeasurementModal = closeMeasurementModal;
+    window.updateMeasurementsInAlpine = updateMeasurementsInAlpine;
+    window.updateStatisticsCards = updateStatisticsCards;
+    window.showDeleteConfirmationModal = showDeleteConfirmationModal;
+    window.confirmDeleteMeasurement = confirmDeleteMeasurement;
+    window.closeDeleteConfirmationModal = closeDeleteConfirmationModal;
+    window.updateMeasurementsViaDOM = updateMeasurementsViaDOM;
     
 });
 
