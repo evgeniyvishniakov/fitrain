@@ -733,7 +733,7 @@
                         <div class="workout-header flex items-center justify-between mb-4">
                             <div class="workout-title-section flex items-center gap-4">
                                 <h3 class="workout-title text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{{ $workout->title }}</h3>
-                                <div class="workout-meta flex items-center gap-3 text-sm text-gray-600">
+                                <div class="workout-meta flex flex-wrap items-center gap-3 text-sm text-gray-600">
                                     <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -902,7 +902,7 @@
             </div>
             
             <!-- Детали -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;">
                     <div style="margin-bottom: 8px;">
                         <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.date') }}</span>
@@ -1295,6 +1295,7 @@
 </div>
 
 <style>
+
 /* Мобильная адаптация для карточек тренировок */
 @media (max-width: 640px) {
     .workout-card {
@@ -1329,6 +1330,7 @@
     }
     
     .workout-meta {
+        display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
         gap: 12px !important;
@@ -1336,8 +1338,10 @@
         flex-wrap: nowrap !important;
     }
     
-    .workout-meta span {
+    .workout-meta > span {
+        flex-shrink: 0 !important;
         white-space: nowrap !important;
+        display: inline-block !important;
     }
     
     .workout-status {

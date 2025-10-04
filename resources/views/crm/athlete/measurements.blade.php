@@ -336,16 +336,63 @@
                                         <div class="text-xl font-bold text-blue-600" x-text="measurement.weight || '—'"></div>
                                         <div class="text-xs text-blue-800">Вес (кг)</div>
                                     </div>
-                                    <div class="text-center p-3 rounded-lg" x-show="measurement.weight" :class="getBMICategory(measurement.weight / Math.pow({{ auth()->user()->height ?? 170 }}/100, 2)).bg">
-                                        <div class="text-xl font-bold" :class="getBMICategory(measurement.weight / Math.pow({{ auth()->user()->height ?? 170 }}/100, 2)).color" x-text="formatNumber(measurement.weight / Math.pow({{ auth()->user()->height ?? 170 }}/100, 2), '')"></div>
-                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow({{ auth()->user()->height ?? 170 }}/100, 2)).color">ИМТ</div>
+                                    <div class="text-center p-3 rounded-lg" x-show="measurement.weight && measurement.height" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).bg">
+                                        <div class="text-xl font-bold" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color" x-text="formatNumber(measurement.weight / Math.pow(measurement.height/100, 2), '')"></div>
+                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">ИМТ</div>
                                     </div>
                                 </div>
                                 
+                                <!-- Объемы тела -->
+                                <template x-if="measurement.chest || measurement.waist || measurement.hips || measurement.bicep || measurement.thigh || measurement.neck">
+                                    <div class="mt-4 pt-4 pb-4 border-t border-b border-gray-200">
+                                        <h5 class="text-sm font-medium text-gray-700 mb-2">Объемы тела</h5>
+                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <template x-if="measurement.chest">
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-500">Грудь:</span>
+                                                    <span class="font-medium" x-text="formatNumber(measurement.chest, ' см')"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="measurement.waist">
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-500">Талия:</span>
+                                                    <span class="font-medium" x-text="formatNumber(measurement.waist, ' см')"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="measurement.hips">
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-500">Бедра:</span>
+                                                    <span class="font-medium" x-text="formatNumber(measurement.hips, ' см')"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="measurement.bicep">
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-500">Бицепс:</span>
+                                                    <span class="font-medium" x-text="formatNumber(measurement.bicep, ' см')"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="measurement.thigh">
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-500">Бедро:</span>
+                                                    <span class="font-medium" x-text="formatNumber(measurement.thigh, ' см')"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="measurement.neck">
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-500">Шея:</span>
+                                                    <span class="font-medium" x-text="formatNumber(measurement.neck, ' см')"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                                
                                 <!-- Дополнительные параметры -->
-                                <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+                                <div class="mt-4">
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Доп параметры</h5>
+                                    <div class="grid grid-cols-2 gap-2 text-sm mb-4">
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500">% жира:</span>
+                                        <span class="text-gray-500">Жира:</span>
                                         <span class="font-medium" x-text="measurement.body_fat_percentage ? formatNumber(measurement.body_fat_percentage, '%') : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
@@ -364,52 +411,8 @@
                                         <span class="text-gray-500">Давление:</span>
                                         <span class="font-medium" x-text="measurement.blood_pressure_systolic && measurement.blood_pressure_diastolic ? Math.round(parseFloat(measurement.blood_pressure_systolic)) + '/' + Math.round(parseFloat(measurement.blood_pressure_diastolic)) : '—'"></span>
                                     </div>
-                                </div>
-                                
-                                <!-- Объемы тела -->
-                                <template x-if="measurement.chest || measurement.waist || measurement.hips || measurement.bicep || measurement.thigh || measurement.neck">
-                                    <div class="mt-4 pt-4 border-t border-gray-200">
-                                        <h5 class="text-sm font-medium text-gray-700 mb-2">Объемы тела (см)</h5>
-                                        <div class="grid grid-cols-2 gap-2 text-sm">
-                                            <template x-if="measurement.chest">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-500">Грудь:</span>
-                                                    <span class="font-medium" x-text="formatNumber(measurement.chest, '')"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="measurement.waist">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-500">Талия:</span>
-                                                    <span class="font-medium" x-text="formatNumber(measurement.waist, '')"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="measurement.hips">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-500">Бедра:</span>
-                                                    <span class="font-medium" x-text="formatNumber(measurement.hips, '')"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="measurement.bicep">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-500">Бицепс:</span>
-                                                    <span class="font-medium" x-text="formatNumber(measurement.bicep, '')"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="measurement.thigh">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-500">Бедро:</span>
-                                                    <span class="font-medium" x-text="formatNumber(measurement.thigh, '')"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="measurement.neck">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-500">Шея:</span>
-                                                    <span class="font-medium" x-text="formatNumber(measurement.neck, '')"></span>
-                                                </div>
-                                            </template>
-                                        </div>
                                     </div>
-                                </template>
+                                </div>
                                 
                                 <!-- Комментарии -->
                                 <template x-if="measurement.notes">
