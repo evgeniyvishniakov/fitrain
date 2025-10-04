@@ -24,11 +24,36 @@ class CurrencySeeder extends Seeder
                 'is_active' => true,
                 'is_default' => true,
                 'sort_order' => 1
+            ],
+            [
+                'code' => 'USD',
+                'name' => 'US Dollar',
+                'symbol' => '$',
+                'symbol_position' => 'before',
+                'decimal_places' => 2,
+                'exchange_rate' => 0.011,
+                'is_active' => true,
+                'is_default' => false,
+                'sort_order' => 2
+            ],
+            [
+                'code' => 'UAH',
+                'name' => 'Українська гривня',
+                'symbol' => '₴',
+                'symbol_position' => 'after',
+                'decimal_places' => 2,
+                'exchange_rate' => 0.42,
+                'is_active' => true,
+                'is_default' => false,
+                'sort_order' => 3
             ]
         ];
 
         foreach ($currencies as $currencyData) {
-            Currency::create($currencyData);
+            Currency::updateOrCreate(
+                ['code' => $currencyData['code']],
+                $currencyData
+            );
         }
 
         $this->command->info('Создано ' . count($currencies) . ' валют');

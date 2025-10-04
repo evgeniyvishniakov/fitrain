@@ -630,16 +630,22 @@ class AthleteController extends BaseController
      */
     public function updateSettings(Request $request)
     {
+
         $request->validate([
             'language_code' => 'required|string|exists:languages,code',
             'currency_code' => 'required|string|exists:currencies,code',
-            'timezone' => 'required|string|max:50',
         ]);
 
         $athlete = auth()->user();
         $athlete->update($request->only([
-            'language_code', 'currency_code', 'timezone'
+            'language_code', 'currency_code'
         ]));
+
+        // Обновляем локаль в сессии для немедленного применения
+        if ($request->has('language_code')) {
+            session(['locale' => $request->get('language_code')]);
+        }
+
 
         return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
     }

@@ -202,12 +202,45 @@ function exerciseApp() {
                     method: method,
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify(exerciseData)
                 });
                 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка авторизации',
+                            message: 'Требуется повторная авторизация'
+                        }
+                    }));
+                    return;
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка ответа сервера',
+                            message: 'Получен некорректный ответ от сервера'
+                        }
+                    }));
+                    return;
+                }
                 
                 if (response.ok) {
                     // Показываем уведомление об успехе
@@ -280,15 +313,51 @@ function exerciseApp() {
                 const response = await fetch(`/exercises/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     }
                 });
                 
-                const result = await response.json();
+                const text = await response.text();
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка авторизации',
+                            message: 'Требуется повторная авторизация'
+                        }
+                    }));
+                    return;
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка ответа сервера',
+                            message: 'Получен некорректный ответ от сервера'
+                        }
+                    }));
+                    return;
+                }
                 
                 if (result.success) {
                     // Показываем уведомление об успехе
-                    showSuccess(result.message || 'Упражнение успешно удалено из каталога');
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Упражнение удалено',
+                            message: result.message || 'Упражнение успешно удалено из каталога'
+                        }
+                    }));
                     
                     // Удаляем из списка
                     this.exercises = this.exercises.filter(e => e.id !== id);
@@ -299,12 +368,24 @@ function exerciseApp() {
                     }
                 } else {
                     // Показываем уведомление об ошибке (упражнение используется)
-                    showError(result.message || 'Упражнение используется в тренировках или шаблонах');
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка удаления',
+                            message: result.message || 'Упражнение используется в тренировках или шаблонах'
+                        }
+                    }));
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
                 // Показываем уведомление об ошибке
-                showError('Произошла ошибка при удалении упражнения');
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Произошла ошибка при удалении упражнения'
+                    }
+                }));
             }
         },
         
@@ -469,6 +550,12 @@ function exerciseApp() {
             return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
         },
         
+        // Проверка что это YouTube URL
+        isYouTubeUrl(url) {
+            if (!url) return false;
+            return url.includes('youtube.com') || url.includes('youtu.be');
+        },
+        
         // Методы для работы с пользовательскими видео
         async loadAllUserVideos() {
             try {
@@ -515,11 +602,30 @@ function exerciseApp() {
             try {
                 const response = await fetch(`/exercises/${exerciseId}/user-video`, {
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     }
                 });
                 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    return;
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    return;
+                }
                 
                 if (result.success && result.video) {
                     this.currentUserVideo = result.video;
@@ -544,12 +650,45 @@ function exerciseApp() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify(videoData)
                 });
                 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка авторизации',
+                            message: 'Требуется повторная авторизация'
+                        }
+                    }));
+                    return;
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка ответа сервера',
+                            message: 'Получен некорректный ответ от сервера'
+                        }
+                    }));
+                    return;
+                }
                 
                 if (result.success) {
                     // Показываем уведомление об успехе
@@ -594,11 +733,30 @@ function exerciseApp() {
                 const response = await fetch(`/exercises/${this.currentExercise.id}/user-video`, {
                     method: 'DELETE',
                     headers: {
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 });
                 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    return;
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    return;
+                }
                 
                 if (result.success) {
                     // Показываем уведомление об успехе

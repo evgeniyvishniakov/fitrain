@@ -22,11 +22,32 @@ class LanguageSeeder extends Seeder
                 'is_active' => true,
                 'is_default' => true,
                 'sort_order' => 1
+            ],
+            [
+                'code' => 'en',
+                'name' => 'English',
+                'native_name' => 'English',
+                'flag' => '🇺🇸',
+                'is_active' => true,
+                'is_default' => false,
+                'sort_order' => 2
+            ],
+            [
+                'code' => 'ua',
+                'name' => 'Українська',
+                'native_name' => 'Українська',
+                'flag' => '🇺🇦',
+                'is_active' => true,
+                'is_default' => false,
+                'sort_order' => 3
             ]
         ];
 
         foreach ($languages as $languageData) {
-            Language::create($languageData);
+            Language::updateOrCreate(
+                ['code' => $languageData['code']],
+                $languageData
+            );
         }
 
         $this->command->info('Создано ' . count($languages) . ' языков');

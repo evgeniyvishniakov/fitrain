@@ -165,24 +165,37 @@
 <script>
     function setDefault(languageId) {
         if (confirm('Установить этот язык по умолчанию?')) {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfToken) {
+                alert('CSRF токен не найден');
+                return;
+            }
+
             fetch(`/admin/languages/${languageId}/set-default`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                    'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
+                    alert('Язык успешно установлен по умолчанию');
                     location.reload();
                 } else {
-                    alert('Ошибка: ' + data.error);
+                    alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Произошла ошибка');
+                alert('Произошла ошибка: ' + error.message);
             });
         }
     }
@@ -223,6 +236,7 @@
     }
 </script>
 @endsection
+
 
 
 

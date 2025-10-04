@@ -154,8 +154,8 @@ class ExerciseController extends BaseController
         
         foreach ($templates as $template) {
             if ($template->exercises && is_array($template->exercises)) {
-                foreach ($template->exercises as $exercise) {
-                    $exerciseId = $exercise['id'] ?? $exercise['exercise_id'] ?? null;
+                foreach ($template->exercises as $templateExercise) {
+                    $exerciseId = $templateExercise['id'] ?? $templateExercise['exercise_id'] ?? null;
                     if ($exerciseId == $id) {
                         $templateUsageCount++;
                         break; // Нашли одно использование в этом шаблоне

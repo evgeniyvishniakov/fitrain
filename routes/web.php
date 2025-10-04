@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LanguageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,17 @@ Route::get('/admin-panel', function () {
     return redirect()->route('admin.login');
 });
 
+// Админ панель через основной домен (fallback)
+Route::prefix('admin')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\Admin\Auth\LoginController::class, 'showLoginForm'])->name('admin.login.fallback');
+    Route::post('/login', [\App\Http\Controllers\Admin\Auth\LoginController::class, 'login']);
+    Route::post('/logout', [\App\Http\Controllers\Admin\Auth\LoginController::class, 'logout'])->name('admin.logout.fallback');
+    
+    Route::middleware(['auth', 'admin'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('admin.dashboard.fallback');
+    });
+});
+
 // Временные маршруты для тестирования админки
 Route::prefix('admin')->group(function () {
     Route::get('/languages', function () {
@@ -40,4 +52,8 @@ Route::prefix('admin')->group(function () {
         return app(\App\Http\Controllers\Admin\LanguageController::class)->destroy($id);
     });
 });
+
+// Маршруты для переключения языка
+Route::post('/language/switch', [LanguageController::class, 'switch'])->name('language.switch');
+Route::get('/language/current', [LanguageController::class, 'current'])->name('language.current');
 

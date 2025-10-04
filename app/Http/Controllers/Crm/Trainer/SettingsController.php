@@ -99,6 +99,11 @@ class SettingsController extends BaseController
             'language_code', 'currency_code', 'timezone'
         ]));
 
+        // Обновляем локаль в сессии для немедленного применения
+        if ($request->has('language_code')) {
+            session(['locale' => $request->get('language_code')]);
+        }
+
         return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
     }
 

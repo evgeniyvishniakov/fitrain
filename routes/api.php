@@ -21,13 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 // API для упражнений
-Route::get('/exercises', function () {
-    $exercises = \App\Models\Trainer\Exercise::select('id', 'name', 'category', 'equipment', 'fields_config')->get();
-    return response()->json([
-        'success' => true,
-        'exercises' => $exercises
-    ]);
-});
+Route::middleware('web')->get('/exercises', [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, 'api']);
 
 // API для шаблонов тренировок
 Route::get('/workout-templates', function () {

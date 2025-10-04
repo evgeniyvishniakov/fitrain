@@ -1,7 +1,7 @@
 ﻿@extends("crm.layouts.app")
 
-@section("title", "Дашборд спортсмена")
-@section("page-title", "Дашборд")
+@section("title", __('common.dashboard'))
+@section("page-title", __('common.dashboard'))
 
 <script>
 function dashboardCalendar() {
@@ -11,8 +11,25 @@ function dashboardCalendar() {
         
         get currentMonthYear() {
             const date = new Date(this.currentDate);
-            const monthYear = date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
-            return monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+            const monthNames = {
+                'ru': {
+                    0: '{{ __('common.january') }}',
+                    1: '{{ __('common.february') }}',
+                    2: '{{ __('common.march') }}',
+                    3: '{{ __('common.april') }}',
+                    4: '{{ __('common.may') }}',
+                    5: '{{ __('common.june') }}',
+                    6: '{{ __('common.july') }}',
+                    7: '{{ __('common.august') }}',
+                    8: '{{ __('common.september') }}',
+                    9: '{{ __('common.october') }}',
+                    10: '{{ __('common.november') }}',
+                    11: '{{ __('common.december') }}'
+                }
+            };
+            const month = monthNames['ru'][date.getMonth()];
+            const year = date.getFullYear();
+            return `${month} ${year}`;
         },
         
         get calendarDays() {
@@ -123,44 +140,44 @@ function dashboardCalendar() {
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.athlete.workouts") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.athlete.exercises") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        Упражнения
+        {{ __('common.exercises') }}
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        Прогресс
+        {{ __('common.progress') }}
     </a>
     <a href="{{ route("crm.nutrition.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        Дневник питания
+        {{ __('common.nutrition') }}
     </a>
     <a href="{{ route('crm.athlete.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -169,44 +186,44 @@ function dashboardCalendar() {
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        Упражнения
+        {{ __('common.exercises') }}
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        Прогресс
+        {{ __('common.progress') }}
     </a>
     <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        Дневник питания
+        {{ __('common.nutrition') }}
     </a>
     <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -223,7 +240,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Всего тренировок</div>
+                <div class="stat-label">{{ __('common.total_workouts') }}</div>
                 <div class="stat-value">{{ $totalWorkouts ?? 0 }}</div>
             </div>
         </div>
@@ -236,7 +253,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Запланировано</div>
+                <div class="stat-label">{{ __('common.planned') }}</div>
                 <div class="stat-value">{{ $plannedWorkouts ?? 0 }}</div>
             </div>
         </div>
@@ -249,7 +266,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Завершено</div>
+                <div class="stat-label">{{ __('common.completed') }}</div>
                 <div class="stat-value">{{ $completedWorkouts ?? 0 }}</div>
             </div>
         </div>
@@ -265,12 +282,12 @@ function dashboardCalendar() {
                 <div class="stat-label">
                     @if($lastOrNextWorkout)
                         @if($lastOrNextWorkout->status === 'completed')
-                            Последняя тренировка
+                            {{ __('common.last_workout') }}
                         @else
-                            Следующая тренировка
+                            {{ __('common.next_workout') }}
                         @endif
                     @else
-                        Тренировки
+                        {{ __('common.workouts') }}
                     @endif
                 </div>
                 <div class="stat-value">
@@ -290,7 +307,7 @@ function dashboardCalendar() {
         <!-- Календарь -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Календарь</h3>
+                <h3 class="text-base font-semibold text-gray-900">{{ __('common.calendar') }}</h3>
                 <div class="flex items-center space-x-1">
                     <button @click="previousMonth()" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,13 +327,13 @@ function dashboardCalendar() {
             <!-- Компактный календарь -->
             <div class="calendar-grid">
                 <!-- Дни недели -->
-                <div class="calendar-header-cell">П</div>
-                <div class="calendar-header-cell">В</div>
-                <div class="calendar-header-cell">С</div>
-                <div class="calendar-header-cell">Ч</div>
-                <div class="calendar-header-cell">П</div>
-                <div class="calendar-header-cell">С</div>
-                <div class="calendar-header-cell">В</div>
+                <div class="calendar-header-cell">{{ __('common.monday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.tuesday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.wednesday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.thursday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.friday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.saturday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.sunday') }}</div>
                 
                 <!-- Дни месяца (динамические) -->
                 <template x-for="day in calendarDays" :key="day.date">
@@ -354,9 +371,9 @@ function dashboardCalendar() {
         <!-- Ближайшие тренировки -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Ближайшие тренировки</h3>
+                <h3 class="text-base font-semibold text-gray-900">{{ __('common.upcoming_workouts') }}</h3>
                 <a href="{{ route('crm.athlete.workouts') }}" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                    Все
+                    {{ __('common.all') }}
                 </a>
             </div>
             
@@ -382,8 +399,8 @@ function dashboardCalendar() {
                             <span class="px-3 py-1.5 rounded-full text-sm font-semibold ml-3 whitespace-nowrap
                                 {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
                                    ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
-                                {{ $workout->status === 'completed' ? 'Завершена' : 
-                                   ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
+                                {{ $workout->status === 'completed' ? __('common.completed_status') : 
+                                   ($workout->status === 'planned' ? __('common.planned_status') : __('common.cancelled_status')) }}
                             </span>
                         </div>
                     @endforeach
@@ -400,7 +417,7 @@ function dashboardCalendar() {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <p class="text-gray-500 text-xs">Нет тренировок</p>
+                    <p class="text-gray-500 text-xs">{{ __('common.no_workouts') }}</p>
                 </div>
             @endif
         </div>
@@ -416,8 +433,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Текущий вес</div>
-                <div class="stat-value">{{ $currentWeight ? $currentWeight . ' кг' : 'Не указан' }}</div>
+                <div class="stat-label">{{ __('common.current_weight') }}</div>
+                <div class="stat-value">{{ $currentWeight ? $currentWeight . ' ' . __('common.kg') : __('common.weight_not_specified') }}</div>
             </div>
         </div>
 
@@ -430,7 +447,7 @@ function dashboardCalendar() {
             </div>
             <div class="stat-content">
                 <div class="stat-label flex items-center gap-1">
-                    <span>ИМТ</span>
+                    <span>{{ __('common.bmi') }}</span>
                     <!-- Иконка знака вопроса с подсказкой -->
                     <div class="relative group">
                         <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="currentColor" viewBox="0 0 20 20">
@@ -438,12 +455,12 @@ function dashboardCalendar() {
                         </svg>
                         <!-- Всплывающая подсказка -->
                         <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                            <div class="font-semibold mb-2">Индекс массы тела (ИМТ)</div>
+                            <div class="font-semibold mb-2">{{ __('common.bmi_description') }}</div>
                             <div class="space-y-1">
-                                <div class="flex justify-between"><span class="text-blue-300">Менее 18.5:</span> <span>Недостаточный вес</span></div>
-                                <div class="flex justify-between"><span class="text-green-300">18.5 - 24.9:</span> <span>Нормальный вес</span></div>
-                                <div class="flex justify-between"><span class="text-yellow-300">25 - 29.9:</span> <span>Избыточный вес</span></div>
-                                <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span>Ожирение</span></div>
+                                <div class="flex justify-between"><span class="text-blue-300">{{ __('common.less_than_18_5') }}:</span> <span>{{ __('common.underweight') }}</span></div>
+                                <div class="flex justify-between"><span class="text-green-300">{{ __('common.18_5_to_24_9') }}:</span> <span>{{ __('common.normal_weight') }}</span></div>
+                                <div class="flex justify-between"><span class="text-yellow-300">{{ __('common.25_to_29_9') }}:</span> <span>{{ __('common.overweight') }}</span></div>
+                                <div class="flex justify-between"><span class="text-red-300">{{ __('common.30_and_more') }}:</span> <span>{{ __('common.obesity') }}</span></div>
                             </div>
                         </div>
                     </div>
@@ -481,7 +498,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Всего измерений</div>
+                <div class="stat-label">{{ __('common.total_measurements') }}</div>
                 <div class="stat-value">{{ $totalMeasurements }}</div>
             </div>
         </div>
@@ -494,8 +511,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Последнее измерение</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : 'Нет данных' }}</div>
+                <div class="stat-label">{{ __('common.last_measurement') }}</div>
+                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : __('common.no_data') }}</div>
             </div>
         </div>
     </div>
@@ -507,7 +524,7 @@ function dashboardCalendar() {
         <div class="measurement-detail-card">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 h-full">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Последнее измерение</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ __('common.last_measurement_detail') }}</h3>
                     <span class="text-sm text-gray-500">{{ $lastMeasurement->measurement_date->format('d.m.Y') }}</span>
                 </div>
                 
@@ -515,7 +532,7 @@ function dashboardCalendar() {
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="text-center p-3 bg-blue-50 rounded-lg">
                         <div class="text-xl font-bold text-blue-600">{{ $lastMeasurement->weight ?? '—' }}</div>
-                        <div class="text-xs text-blue-800">Вес (кг)</div>
+                        <div class="text-xs text-blue-800">{{ __('common.weight') }} ({{ __('common.kg') }})</div>
                     </div>
                     <div class="text-center p-3 rounded-lg 
                         @if($bmi && $bmiColor === 'blue') bg-blue-50
@@ -537,30 +554,30 @@ function dashboardCalendar() {
                             @elseif($bmi && $bmiColor === 'yellow') text-yellow-600
                             @elseif($bmi && $bmiColor === 'red') text-red-600
                             @else text-gray-600
-                            @endif">ИМТ</div>
+                            @endif">{{ __('common.bmi') }}</div>
                     </div>
                 </div>
                 
                 <!-- Дополнительные параметры -->
                 <div class="grid grid-cols-2 gap-2 text-sm mb-4">
                     <div class="flex justify-between">
-                        <span class="text-gray-500">% жира:</span>
-                        <span class="font-medium">{{ $lastMeasurement->body_fat_percentage ? number_format($lastMeasurement->body_fat_percentage, 1) . '%' : '—' }}</span>
+                        <span class="text-gray-500">{{ __('common.fat_percentage') }}:</span>
+                        <span class="font-medium">{{ $lastMeasurement->body_fat_percentage ? number_format($lastMeasurement->body_fat_percentage, 1) . __('common.percent') : '—' }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Мышцы:</span>
-                        <span class="font-medium">{{ $lastMeasurement->muscle_mass ? number_format($lastMeasurement->muscle_mass, 1) . ' кг' : '—' }}</span>
+                        <span class="text-gray-500">{{ __('common.muscles') }}:</span>
+                        <span class="font-medium">{{ $lastMeasurement->muscle_mass ? number_format($lastMeasurement->muscle_mass, 1) . ' ' . __('common.kg') : '—' }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Вода:</span>
-                        <span class="font-medium">{{ $lastMeasurement->water_percentage ? number_format($lastMeasurement->water_percentage, 1) . '%' : '—' }}</span>
+                        <span class="text-gray-500">{{ __('common.water') }}:</span>
+                        <span class="font-medium">{{ $lastMeasurement->water_percentage ? number_format($lastMeasurement->water_percentage, 1) . __('common.percent') : '—' }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Пульс:</span>
-                        <span class="font-medium">{{ $lastMeasurement->resting_heart_rate ? round($lastMeasurement->resting_heart_rate) . ' уд/мин' : '—' }}</span>
+                        <span class="text-gray-500">{{ __('common.pulse') }}:</span>
+                        <span class="font-medium">{{ $lastMeasurement->resting_heart_rate ? round($lastMeasurement->resting_heart_rate) . ' ' . __('common.bpm') : '—' }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-500">Давление:</span>
+                        <span class="text-gray-500">{{ __('common.pressure') }}:</span>
                         <span class="font-medium">
                             @if($lastMeasurement->blood_pressure_systolic && $lastMeasurement->blood_pressure_diastolic)
                                 {{ round($lastMeasurement->blood_pressure_systolic) }}/{{ round($lastMeasurement->blood_pressure_diastolic) }}
@@ -574,41 +591,41 @@ function dashboardCalendar() {
                 <!-- Объемы тела -->
                 @if($lastMeasurement->chest || $lastMeasurement->waist || $lastMeasurement->hips || $lastMeasurement->bicep || $lastMeasurement->thigh || $lastMeasurement->neck)
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <h5 class="text-sm font-medium text-gray-700 mb-2">Объемы тела (см)</h5>
+                    <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h5>
                     <div class="grid grid-cols-2 gap-2 text-sm">
                         @if($lastMeasurement->chest)
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Грудь:</span>
+                            <span class="text-gray-500">{{ __('common.chest') }}:</span>
                             <span class="font-medium">{{ number_format($lastMeasurement->chest, 1) }}</span>
                         </div>
                         @endif
                         @if($lastMeasurement->waist)
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Талия:</span>
+                            <span class="text-gray-500">{{ __('common.waist') }}:</span>
                             <span class="font-medium">{{ number_format($lastMeasurement->waist, 1) }}</span>
                         </div>
                         @endif
                         @if($lastMeasurement->hips)
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Бедра:</span>
+                            <span class="text-gray-500">{{ __('common.hips') }}:</span>
                             <span class="font-medium">{{ number_format($lastMeasurement->hips, 1) }}</span>
                         </div>
                         @endif
                         @if($lastMeasurement->bicep)
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Бицепс:</span>
+                            <span class="text-gray-500">{{ __('common.bicep') }}:</span>
                             <span class="font-medium">{{ number_format($lastMeasurement->bicep, 1) }}</span>
                         </div>
                         @endif
                         @if($lastMeasurement->thigh)
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Бедро:</span>
+                            <span class="text-gray-500">{{ __('common.thigh') }}:</span>
                             <span class="font-medium">{{ number_format($lastMeasurement->thigh, 1) }}</span>
                         </div>
                         @endif
                         @if($lastMeasurement->neck)
                         <div class="flex justify-between">
-                            <span class="text-gray-500">Шея:</span>
+                            <span class="text-gray-500">{{ __('common.neck') }}:</span>
                             <span class="font-medium">{{ number_format($lastMeasurement->neck, 1) }}</span>
                         </div>
                         @endif
@@ -619,7 +636,7 @@ function dashboardCalendar() {
                 <!-- Комментарии -->
                 @if($lastMeasurement->notes)
                 <div class="mt-4 pt-4 border-t border-gray-200">
-                    <h5 class="text-sm font-medium text-gray-700 mb-1">Комментарии</h5>
+                    <h5 class="text-sm font-medium text-gray-700 mb-1">{{ __('common.comments') }}</h5>
                     <p class="text-sm text-gray-600">{{ $lastMeasurement->notes }}</p>
                 </div>
                 @endif
@@ -629,7 +646,7 @@ function dashboardCalendar() {
         <!-- График веса -->
         <div class="chart-card">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 h-full">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Динамика веса</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.weight_dynamics') }}</h3>
                 <div class="h-80">
                     <canvas id="weightChart"></canvas>
                 </div>
@@ -889,9 +906,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const sortedMeasurements = measurements.sort((a, b) => new Date(a.measurement_date) - new Date(b.measurement_date));
             
             // Подготавливаем данные
+            const monthNames = {
+                0: '{{ __('common.january') }}',
+                1: '{{ __('common.february') }}',
+                2: '{{ __('common.march') }}',
+                3: '{{ __('common.april') }}',
+                4: '{{ __('common.may') }}',
+                5: '{{ __('common.june') }}',
+                6: '{{ __('common.july') }}',
+                7: '{{ __('common.august') }}',
+                8: '{{ __('common.september') }}',
+                9: '{{ __('common.october') }}',
+                10: '{{ __('common.november') }}',
+                11: '{{ __('common.december') }}'
+            };
+            
             const labels = sortedMeasurements.map(m => {
                 const date = new Date(m.measurement_date);
-                return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+                const monthShort = monthNames[date.getMonth()].substring(0, 3);
+                return `${date.getDate()} ${monthShort}`;
             });
             
             const weightData = sortedMeasurements.map(m => m.weight).filter(val => val !== null && val !== undefined);
@@ -901,7 +934,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Вес (кг)',
+                        label: '{{ __('common.weight_kg') }}',
                         data: weightData,
                         borderColor: '#3B82F6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -950,7 +983,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } else {
             // Показываем сообщение, если нет данных
-            ctx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-500">Нет данных для отображения</div>';
+            ctx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-500">{{ __('common.no_data_to_display') }}</div>';
         }
     }
 });

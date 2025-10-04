@@ -1,45 +1,45 @@
 ﻿@extends("crm.layouts.app")
 
-@section("title", "Дашборд тренера")
-@section("page-title", "Дашборд")
+@section("title", __('common.dashboard'))
+@section("page-title", __('common.dashboard'))
 
 @section("sidebar")
     <a href="{{ route("crm.dashboard.main") }}" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.workouts.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.trainer.athletes") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        Клиенты
+        {{ __('common.clients') }}
     </a>
     <a href="{{ route('crm.trainer.subscription') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
         </svg>
-        Подписка
+        {{ __('common.subscription') }}
     </a>
     <a href="{{ route('crm.trainer.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -48,38 +48,38 @@
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.workouts.index") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.trainer.athletes") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        Клиенты
+        {{ __('common.clients') }}
     </a>
     <a href="{{ route('crm.trainer.subscription') }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
         </svg>
-        Подписка
+        {{ __('common.subscription') }}
     </a>
     <a href="{{ route('crm.trainer.settings') }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -96,7 +96,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Спортсмены</div>
+                <div class="stat-label">{{ __('common.athletes') }}</div>
                 <div class="stat-value">{{ $athletes ?? 0 }}</div>
             </div>
         </div>
@@ -108,7 +108,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Тренировки</div>
+                <div class="stat-label">{{ __('common.workouts') }}</div>
                 <div class="stat-value">{{ $workouts ?? 0 }}</div>
             </div>
         </div>
@@ -120,7 +120,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Сегодня</div>
+                <div class="stat-label">{{ __('common.today') }}</div>
                 <div class="stat-value">{{ $todayWorkouts }}</div>
             </div>
         </div>
@@ -132,7 +132,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Завершено</div>
+                <div class="stat-label">{{ __('common.completed') }}</div>
                 <div class="stat-value">{{ $completedThisMonth }}</div>
             </div>
         </div>
@@ -143,7 +143,7 @@
         <!-- Календарь -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Календарь</h3>
+                <h3 class="text-base font-semibold text-gray-900">{{ __('common.calendar') }}</h3>
                 <div class="flex items-center space-x-1">
                     <button @click="previousMonth()" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,13 +162,13 @@
             <!-- Компактный календарь -->
             <div class="calendar-grid">
                 <!-- Дни недели -->
-                <div class="calendar-header-cell">П</div>
-                <div class="calendar-header-cell">В</div>
-                <div class="calendar-header-cell">С</div>
-                <div class="calendar-header-cell">Ч</div>
-                <div class="calendar-header-cell">П</div>
-                <div class="calendar-header-cell">С</div>
-                <div class="calendar-header-cell">В</div>
+                <div class="calendar-header-cell">{{ __('common.monday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.tuesday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.wednesday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.thursday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.friday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.saturday') }}</div>
+                <div class="calendar-header-cell">{{ __('common.sunday') }}</div>
                 
                 <!-- Дни месяца (динамические) -->
                 <template x-for="day in calendarDays" :key="day.date">
@@ -184,7 +184,7 @@
                                 <div class="calendar-workouts">
                                     <div class="calendar-workout-dot calendar-workout-planned"
                                          @click="openWorkoutModal(day)"
-                                         :title="'Нажмите для просмотра тренировок'"
+                                         :title="'{{ __('common.click_to_view_workouts') }}'"
                                          x-text="day.workouts.length">
                                     </div>
                                 </div>
@@ -198,9 +198,9 @@
         <!-- Ближайшие тренировки -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">Ближайшие тренировки</h3>
+                <h3 class="text-base font-semibold text-gray-900">{{ __('common.upcoming_workouts') }}</h3>
                 <a href="{{ route('crm.workouts.index') }}" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                    Все
+                    {{ __('common.all') }}
                 </a>
             </div>
             
@@ -220,7 +220,7 @@
             <div class="space-y-4">
                     @if($todayWorkouts->count() > 0)
                         <div class="workout-day-group">
-                            <h4 class="workout-day-title">Сегодня</h4>
+                            <h4 class="workout-day-title">{{ __('common.today') }}</h4>
                             <div class="space-y-2">
                                 @foreach($todayWorkouts as $workout)
                                     <div class="workout-item">
@@ -241,9 +241,9 @@
                                         <div class="workout-content">
                                             <div class="workout-title">{{ $workout->title }}</div>
                                             <div class="workout-info-row">
-                                                <span class="workout-date">Дата: {{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
-                                                <span class="workout-time">Время: {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : 'Не указано' }}</span>
-                                                <span class="workout-participant">Участник: {{ $workout->athlete ? $workout->athlete->name : 'Не указан' }}</span>
+                                                <span class="workout-date">{{ __('common.date') }}: {{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
+                                                <span class="workout-time">{{ __('common.time') }}: {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : __('common.time_not_specified') }}</span>
+                                                <span class="workout-participant">{{ __('common.participant') }}: {{ $workout->athlete ? $workout->athlete->name : __('common.athlete_not_specified') }}</span>
                                             </div>
                                         </div>
                                         
@@ -251,8 +251,8 @@
                                         <span class="workout-status-badge
                                             {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
                                                ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
-                                            {{ $workout->status === 'completed' ? 'Завершена' : 
-                                               ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
+                                            {{ $workout->status === 'completed' ? __('common.completed_status') : 
+                                               ($workout->status === 'planned' ? __('common.planned_status') : __('common.cancelled_status')) }}
                                         </span>
                                     </div>
                                 @endforeach
@@ -265,7 +265,7 @@
                             @php
                                 $tomorrowDate = $tomorrowWorkouts->first()->date;
                                 $isActuallyTomorrow = $tomorrowDate === $tomorrow;
-                                $dayTitle = $isActuallyTomorrow ? 'Завтра' : \Carbon\Carbon::parse($tomorrowDate)->format('d.m');
+                                $dayTitle = $isActuallyTomorrow ? __('common.tomorrow') : \Carbon\Carbon::parse($tomorrowDate)->format('d.m');
                             @endphp
                             <h4 class="workout-day-title">{{ $dayTitle }}</h4>
                             <div class="space-y-2">
@@ -288,9 +288,9 @@
                                         <div class="workout-content">
                                             <div class="workout-title">{{ $workout->title }}</div>
                                             <div class="workout-info-row">
-                                                <span class="workout-date">Дата: {{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
-                                                <span class="workout-time">Время: {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : 'Не указано' }}</span>
-                                                <span class="workout-participant">Участник: {{ $workout->athlete ? $workout->athlete->name : 'Не указан' }}</span>
+                                                <span class="workout-date">{{ __('common.date') }}: {{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
+                                                <span class="workout-time">{{ __('common.time') }}: {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : __('common.time_not_specified') }}</span>
+                                                <span class="workout-participant">{{ __('common.participant') }}: {{ $workout->athlete ? $workout->athlete->name : __('common.athlete_not_specified') }}</span>
                                             </div>
                                         </div>
                                         
@@ -298,8 +298,8 @@
                                         <span class="workout-status-badge
                                             {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
                                                ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
-                                            {{ $workout->status === 'completed' ? 'Завершена' : 
-                                               ($workout->status === 'planned' ? 'Запланирована' : 'Отменена') }}
+                                            {{ $workout->status === 'completed' ? __('common.completed_status') : 
+                                               ($workout->status === 'planned' ? __('common.planned_status') : __('common.cancelled_status')) }}
                                         </span>
                                     </div>
                                 @endforeach
@@ -314,7 +314,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                         </div>
-                        <p class="text-gray-500 text-xs">Нет тренировок на сегодня и завтра</p>
+                        <p class="text-gray-500 text-xs">{{ __('common.no_workouts_today_tomorrow') }}</p>
                     </div>
                 @endif
             </div>
@@ -325,7 +325,7 @@
     <div id="workoutModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Тренировки</h3>
+                <h3 id="modalTitle">{{ __('common.workouts') }}</h3>
                 <span class="close" onclick="closeModal()">&times;</span>
             </div>
             <div class="modal-body">
@@ -336,7 +336,7 @@
             <div class="modal-footer">
                 <button onclick="closeModal()" 
                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Закрыть
+                    {{ __('common.close') }}
                 </button>
             </div>
         </div>
@@ -360,8 +360,25 @@ function trainerCalendar() {
         
         get currentMonthYear() {
             const date = new Date(this.currentDate);
-            const monthYear = date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
-            return monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+            const monthNames = {
+                'ru': {
+                    0: '{{ __('common.january') }}',
+                    1: '{{ __('common.february') }}',
+                    2: '{{ __('common.march') }}',
+                    3: '{{ __('common.april') }}',
+                    4: '{{ __('common.may') }}',
+                    5: '{{ __('common.june') }}',
+                    6: '{{ __('common.july') }}',
+                    7: '{{ __('common.august') }}',
+                    8: '{{ __('common.september') }}',
+                    9: '{{ __('common.october') }}',
+                    10: '{{ __('common.november') }}',
+                    11: '{{ __('common.december') }}'
+                }
+            };
+            const month = monthNames['ru'][date.getMonth()];
+            const year = date.getFullYear();
+            return `${month} ${year}`;
         },
         
         get calendarDays() {
@@ -480,11 +497,24 @@ function trainerCalendar() {
         
         formatDate(dateString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-            });
+            const monthNames = {
+                0: '{{ __('common.january') }}',
+                1: '{{ __('common.february') }}',
+                2: '{{ __('common.march') }}',
+                3: '{{ __('common.april') }}',
+                4: '{{ __('common.may') }}',
+                5: '{{ __('common.june') }}',
+                6: '{{ __('common.july') }}',
+                7: '{{ __('common.august') }}',
+                8: '{{ __('common.september') }}',
+                9: '{{ __('common.october') }}',
+                10: '{{ __('common.november') }}',
+                11: '{{ __('common.december') }}'
+            };
+            const day = date.getDate();
+            const month = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day} ${month} ${year}`;
         },
         
         // Функция для открытия модального окна из Alpine.js
@@ -505,12 +535,25 @@ window.openWorkoutModal = function(day) {
     
     // Устанавливаем заголовок
     const date = new Date(day.date);
-    const formattedDate = date.toLocaleDateString('ru-RU', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
-    });
-    modalTitle.textContent = 'Тренировки на ' + formattedDate;
+    const monthNames = {
+        0: '{{ __('common.january') }}',
+        1: '{{ __('common.february') }}',
+        2: '{{ __('common.march') }}',
+        3: '{{ __('common.april') }}',
+        4: '{{ __('common.may') }}',
+        5: '{{ __('common.june') }}',
+        6: '{{ __('common.july') }}',
+        7: '{{ __('common.august') }}',
+        8: '{{ __('common.september') }}',
+        9: '{{ __('common.october') }}',
+        10: '{{ __('common.november') }}',
+        11: '{{ __('common.december') }}'
+    };
+    const dayNum = date.getDate();
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    const formattedDate = `${dayNum} ${month} ${year}`;
+    modalTitle.textContent = '{{ __('common.workouts_on') }} ' + formattedDate;
     
     // Очищаем список тренировок
     workoutList.innerHTML = '';
@@ -528,12 +571,12 @@ window.openWorkoutModal = function(day) {
             }[workout.status] || 'bg-gray-100 text-gray-800';
             
             const statusText = {
-                'completed': 'Завершена',
-                'planned': 'Запланирована',
-                'cancelled': 'Отменена'
-            }[workout.status] || 'Неизвестно';
+                'completed': '{{ __('common.completed_status') }}',
+                'planned': '{{ __('common.planned_status') }}',
+                'cancelled': '{{ __('common.cancelled_status') }}'
+            }[workout.status] || '{{ __('common.unknown') }}';
             
-            const time = workout.time ? workout.time.substring(0, 5) : 'Время не указано';
+            const time = workout.time ? workout.time.substring(0, 5) : '{{ __('common.time_not_specified') }}';
             
             workoutDiv.innerHTML = `
                 <div class="workout-row">
@@ -542,7 +585,7 @@ window.openWorkoutModal = function(day) {
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-                        ${workout.athlete_name || 'Спортсмен не указан'}
+                        ${workout.athlete_name || '{{ __('common.athlete_not_specified') }}'}
                     </span>
                     <span class="workout-time">
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -557,7 +600,7 @@ window.openWorkoutModal = function(day) {
             workoutList.appendChild(workoutDiv);
         });
     } else {
-        workoutList.innerHTML = '<div class="text-center py-4 text-gray-500">Нет тренировок на эту дату</div>';
+        workoutList.innerHTML = '<div class="text-center py-4 text-gray-500">{{ __('common.no_workouts_on_date') }}</div>';
     }
     
     // Показываем модальное окно

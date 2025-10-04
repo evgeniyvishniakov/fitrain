@@ -271,38 +271,54 @@ function athleteSettingsApp() {
     </div>
 @endif
 
+@if(session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+        {{ session('error') }}
+    </div>
+@endif
+
+@if($errors->any())
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <div x-data="athleteSettingsApp()" x-cloak class="space-y-6">
 
     <!-- Профиль спортсмена -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-6">Профиль спортсмена</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-6">{{ __('common.profile') }}</h2>
         
         <!-- Режим просмотра -->
         <div x-show="!isEditing">
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Имя</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }}</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="name">
                         {{ $athlete->name }}
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.email') }}</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="email">
                         {{ $athlete->email }}
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.phone') }}</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="phone">
                         {{ $athlete->phone ?? 'Не указан' }}
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Возраст</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.age') }}</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="age">
                         {{ $athlete->age ?? 'Не указан' }} лет
                     </div>
@@ -322,7 +338,7 @@ function athleteSettingsApp() {
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Рост</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.height') }}</label>
                     <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="height">
                         {{ $athlete->height ? $athlete->height . ' см' : 'Не указан' }}
                     </div>
@@ -521,7 +537,7 @@ function athleteSettingsApp() {
                                    value="weight_loss" 
                                    {{ in_array('weight_loss', $goals) ? 'checked' : '' }}
                                    style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
-                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Похудение</span>
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">{{ __('common.weight_loss') }}</span>
                         </label>
                         
                         <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
@@ -530,7 +546,7 @@ function athleteSettingsApp() {
                                    value="muscle_gain" 
                                    {{ in_array('muscle_gain', $goals) ? 'checked' : '' }}
                                    style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
-                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Набор мышечной массы</span>
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">{{ __('common.muscle_gain') }}</span>
                         </label>
                         
                         <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
@@ -539,7 +555,7 @@ function athleteSettingsApp() {
                                    value="muscle_tone" 
                                    {{ in_array('muscle_tone', $goals) ? 'checked' : '' }}
                                    style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
-                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Тонизация мышц</span>
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">{{ __('common.muscle_tone') }}</span>
                         </label>
                         
                         <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
@@ -548,7 +564,7 @@ function athleteSettingsApp() {
                                    value="endurance" 
                                    {{ in_array('endurance', $goals) ? 'checked' : '' }}
                                    style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
-                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Выносливость</span>
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">{{ __('common.endurance') }}</span>
                         </label>
                         
                         <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
@@ -557,7 +573,7 @@ function athleteSettingsApp() {
                                    value="strength" 
                                    {{ in_array('strength', $goals) ? 'checked' : '' }}
                                    style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
-                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Сила</span>
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">{{ __('common.strength') }}</span>
                         </label>
                         
                         <label style="display: flex; align-items: center; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s; hover:border-blue-300 hover:bg-blue-50;">
@@ -566,7 +582,7 @@ function athleteSettingsApp() {
                                    value="flexibility" 
                                    {{ in_array('flexibility', $goals) ? 'checked' : '' }}
                                    style="width: 18px; height: 18px; margin-right: 12px; accent-color: #3b82f6;">
-                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Гибкость</span>
+                            <span style="font-size: 14px; color: #374151; font-weight: 500;">{{ __('common.flexibility') }}</span>
                         </label>
                     </div>
                     @error('goals')
@@ -600,23 +616,27 @@ function athleteSettingsApp() {
 
     <!-- Настройки языка и валюты -->
     <div x-show="!isEditing" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Язык и валюта</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.language') }} и {{ __('common.currency') }}</h2>
         
-        <form method="POST" action="{{ route('crm.athlete.settings.update') }}" class="space-y-6">
-            @csrf
-            @method('PUT')
+        
+        <div class="space-y-6">
+            
+            
+            <!-- Скрытые поля для значений -->
+            <input type="hidden" id="language_code_hidden" name="language_code" value="{{ $athlete->language_code ?? 'ru' }}">
+            <input type="hidden" id="currency_code_hidden" name="currency_code" value="{{ $athlete->currency_code ?? 'RUB' }}">
             
             <!-- Язык -->
             <div class="space-y-4">
                 <h3 class="text-base font-medium text-gray-900">
-                    <i class="fas fa-language mr-2"></i>Язык интерфейса
+                    <i class="fas fa-language mr-2"></i>{{ __('common.language') }} интерфейса
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
                     @foreach(\App\Models\Language::getActive() as $language)
-                        <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ $athlete->language_code === $language->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
-                            <input type="radio" name="language_code" value="{{ $language->code }}" 
-                                   {{ $athlete->language_code === $language->code ? 'checked' : '' }}
-                                   class="sr-only">
+                        <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ ($athlete->language_code ?? 'ru') === $language->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}" onclick="updateLanguageCode('{{ $language->code }}')" style="flex: 1; min-width: 200px; max-width: 300px;">
+                            <input type="radio" name="language_radio" value="{{ $language->code }}" 
+                                   {{ ($athlete->language_code ?? 'ru') === $language->code ? 'checked' : '' }}
+                                   class="sr-only" onchange="updateLanguageCode('{{ $language->code }}')">
                             <div class="flex items-center space-x-3">
                                 <span class="text-2xl">{{ $language->flag }}</span>
                                 <div>
@@ -624,7 +644,7 @@ function athleteSettingsApp() {
                                     <div class="text-sm text-gray-500">{{ $language->native_name }}</div>
                                 </div>
                             </div>
-                            @if($athlete->language_code === $language->code)
+                            @if(($athlete->language_code ?? 'ru') === $language->code)
                                 <div class="absolute top-2 right-2">
                                     <i class="fas fa-check-circle text-blue-500"></i>
                                 </div>
@@ -637,14 +657,14 @@ function athleteSettingsApp() {
             <!-- Валюта -->
             <div class="space-y-4">
                 <h3 class="text-base font-medium text-gray-900">
-                    <i class="fas fa-dollar-sign mr-2"></i>Валюта
+                    <i class="fas fa-dollar-sign mr-2"></i>{{ __('common.currency') }}
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
                     @foreach(\App\Models\Currency::getActive() as $currency)
-                        <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ $athlete->currency_code === $currency->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}">
-                            <input type="radio" name="currency_code" value="{{ $currency->code }}" 
-                                   {{ $athlete->currency_code === $currency->code ? 'checked' : '' }}
-                                   class="sr-only">
+                        <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ ($athlete->currency_code ?? 'RUB') === $currency->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}" onclick="updateCurrencyCode('{{ $currency->code }}')" style="flex: 1; min-width: 200px; max-width: 300px;">
+                            <input type="radio" name="currency_radio" value="{{ $currency->code }}" 
+                                   {{ ($athlete->currency_code ?? 'RUB') === $currency->code ? 'checked' : '' }}
+                                   class="sr-only" onchange="updateCurrencyCode('{{ $currency->code }}')">
                             <div class="flex items-center space-x-3">
                                 <span class="text-lg font-medium">{{ $currency->symbol }}</span>
                                 <div>
@@ -652,7 +672,7 @@ function athleteSettingsApp() {
                                     <div class="text-sm text-gray-500">{{ $currency->code }}</div>
                                 </div>
                             </div>
-                            @if($athlete->currency_code === $currency->code)
+                            @if(($athlete->currency_code ?? 'RUB') === $currency->code)
                                 <div class="absolute top-2 right-2">
                                     <i class="fas fa-check-circle text-blue-500"></i>
                                 </div>
@@ -662,14 +682,83 @@ function athleteSettingsApp() {
                 </div>
             </div>
 
-
-            <div class="flex justify-end">
-                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fas fa-save mr-2"></i>Сохранить настройки
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
+
+    <script>
+        function updateLanguageCode(code) {
+            document.getElementById('language_code_hidden').value = code;
+            // Обновляем визуальное состояние
+            document.querySelectorAll('label[onclick*="updateLanguageCode"]').forEach(label => {
+                label.classList.remove('border-blue-500', 'bg-blue-50');
+                label.classList.add('border-gray-200');
+            });
+            event.target.closest('label').classList.remove('border-gray-200');
+            event.target.closest('label').classList.add('border-blue-500', 'bg-blue-50');
+            
+            // Автоматически сохраняем настройки
+            saveSettings('language');
+        }
+
+        function updateCurrencyCode(code) {
+            document.getElementById('currency_code_hidden').value = code;
+            // Обновляем визуальное состояние
+            document.querySelectorAll('label[onclick*="updateCurrencyCode"]').forEach(label => {
+                label.classList.remove('border-blue-500', 'bg-blue-50');
+                label.classList.add('border-gray-200');
+            });
+            event.target.closest('label').classList.remove('border-gray-200');
+            event.target.closest('label').classList.add('border-blue-500', 'bg-blue-50');
+            
+            // Автоматически сохраняем настройки
+            saveSettings('currency');
+        }
+
+        async function saveSettings(type) {
+            const languageCode = document.getElementById('language_code_hidden').value;
+            const currencyCode = document.getElementById('currency_code_hidden').value;
+            
+            
+            try {
+                const formData = new FormData();
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                formData.append('_method', 'PUT');
+                formData.append('language_code', languageCode);
+                formData.append('currency_code', currencyCode);
+                
+                const response = await fetch('{{ route("crm.athlete.settings.update") }}', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    
+                    // Показываем соответствующее уведомление
+                    if (type === 'language') {
+                        showSuccess('Язык обновлен', 'Язык интерфейса успешно изменен');
+                        // Перезагружаем страницу только при смене языка
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else if (type === 'currency') {
+                        showSuccess('Валюта обновлена', 'Валюта успешно изменена');
+                        // При смене валюты не перезагружаем страницу
+                    } else {
+                        showSuccess('Настройки сохранены', 'Настройки успешно обновлены');
+                        // Перезагружаем страницу через небольшую задержку
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    }
+                } else {
+                    showError('Ошибка сохранения', 'Не удалось сохранить настройки');
+                }
+            } catch (error) {
+                showError('Ошибка сохранения', 'Произошла ошибка при сохранении настроек');
+            }
+        }
+
+    </script>
 
 
 </div>

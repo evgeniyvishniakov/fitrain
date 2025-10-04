@@ -2926,11 +2926,22 @@ function closeTemplateModal() {
 // Загрузка упражнений
 async function loadExercises() {
     try {
-        const response = await fetch('/api/exercises');
+        const response = await fetch('/api/exercises', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         if (data.success) {
             exercises = data.exercises;
             renderExercises();
+        } else {
+            console.error('API вернул ошибку:', data);
         }
     } catch (error) {
         console.error('Ошибка загрузки упражнений:', error);
@@ -2964,18 +2975,20 @@ function renderExercises() {
         return;
     }
     
-    container.innerHTML = exercises.map(exercise => `
-        <div data-exercise-id="${exercise.id}" 
-             data-exercise-name="${exercise.name}" 
-             data-exercise-category="${exercise.category}" 
-             data-exercise-equipment="${exercise.equipment}"
-             style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s;" 
-             onclick="toggleExercise(this, ${exercise.id}, '${exercise.name}', '${exercise.category}', '${exercise.equipment}')">
-            <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${exercise.name}</h4>
-            <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exercise.category}</p>
-            <p style="font-size: 14px; color: #9ca3af;">${exercise.equipment}</p>
-        </div>
-    `).join('');
+    container.innerHTML = exercises.map(exercise => {
+        return `
+            <div data-exercise-id="${exercise.id}" 
+                 data-exercise-name="${exercise.name}" 
+                 data-exercise-category="${exercise.category}" 
+                 data-exercise-equipment="${exercise.equipment}"
+                 style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s;" 
+                 onclick="toggleExercise(this, ${exercise.id}, '${exercise.name}', '${exercise.category}', '${exercise.equipment}')">
+                <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${exercise.name}</h4>
+                <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exercise.category}</p>
+                <p style="font-size: 14px; color: #9ca3af;">${exercise.equipment}</p>
+            </div>
+        `;
+    }).join('');
     
     // Применяем фильтрацию после рендеринга
     filterExercises();
@@ -3131,17 +3144,21 @@ function filterTemplates() {
 // Добавление выбранных упражнений
 function addSelectedExercises() {
     const selectedElements = document.querySelectorAll('#exerciseModal [data-selected="true"]');
+    
     const newExercises = Array.from(selectedElements).map(el => {
         // Находим полные данные упражнения из загруженного массива
         const exerciseId = parseInt(el.dataset.exerciseId);
         const fullExercise = exercises.find(ex => ex.id === exerciseId);
         
+        // Используем данные из data-атрибутов как fallback
+        const category = fullExercise ? fullExercise.category : el.dataset.exerciseCategory;
+        const equipment = fullExercise ? fullExercise.equipment : el.dataset.exerciseEquipment;
         
         return {
             id: exerciseId,
             name: el.dataset.exerciseName,
-            category: el.dataset.exerciseCategory,
-            equipment: el.dataset.exerciseEquipment,
+            category: category || 'Не указано',
+            equipment: equipment || 'Не указано',
             fields_config: fullExercise ? fullExercise.fields_config : ['sets', 'reps', 'weight', 'rest']
         };
     });
@@ -3182,11 +3199,25 @@ function getCurrentExercisesFromForm() {
             }
         });
         
+        // Извлекаем категорию и оборудование из DOM
+        const categoryEquipmentSpan = element.querySelector('.text-gray-600');
+        let category = '';
+        let equipment = '';
+        
+        if (categoryEquipmentSpan) {
+            const text = categoryEquipmentSpan.textContent;
+            const match = text.match(/\(([^•]+)•([^)]+)\)/);
+            if (match) {
+                category = match[1].trim();
+                equipment = match[2].trim();
+            }
+        }
+        
         const exerciseData = {
             id: parseInt(exerciseId),
             name: exerciseName,
-            category: '',
-            equipment: '',
+            category: category,
+            equipment: equipment,
             fields_config: visibleFields.length > 0 ? visibleFields : ['sets', 'reps', 'weight', 'rest']
         };
         
@@ -3472,7 +3503,7 @@ function displaySelectedExercises(exercises) {
                             <div class="flex-1">
                             <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
                             <span class="font-medium text-gray-900">${exercise.name}</span>
-                            <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
+                            <span class="text-sm text-gray-600">(${exercise.category || 'Не указано'} • ${exercise.equipment || 'Не указано'})</span>
                         </div>
                         </div>
                         <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800 ml-2" onmousedown="event.stopPropagation()">
@@ -3533,6 +3564,18 @@ function removeExercise(exerciseId) {
         // Если упражнений не осталось, показываем пустое состояние
         document.getElementById('selectedExercisesContainer').style.display = 'none';
         document.getElementById('emptyExercisesState').style.display = 'block';
+    } else {
+        // Пересчитываем индексы для оставшихся упражнений
+        remainingElements.forEach((element, index) => {
+            // Обновляем data-exercise-index
+            element.setAttribute('data-exercise-index', index);
+            
+            // Обновляем отображаемый номер
+            const numberSpan = element.querySelector('.text-indigo-600');
+            if (numberSpan) {
+                numberSpan.textContent = `${index + 1}.`;
+            }
+        });
     }
 }
 
@@ -3544,11 +3587,15 @@ function addSelectedTemplate() {
             // Находим полные данные упражнения из загруженного массива
             const fullExercise = exercises.find(ex => ex.id === exercise.id);
             
+            // Используем данные из полного упражнения или из шаблона как fallback
+            const category = fullExercise ? fullExercise.category : (exercise.category || 'Не указано');
+            const equipment = fullExercise ? fullExercise.equipment : (exercise.equipment || 'Не указано');
+            
             return {
                 id: exercise.id,
                 name: exercise.name,
-                category: exercise.category,
-                equipment: exercise.equipment,
+                category: category,
+                equipment: equipment,
                 fields_config: fullExercise ? fullExercise.fields_config : ['sets', 'reps', 'weight', 'rest']
             };
         });

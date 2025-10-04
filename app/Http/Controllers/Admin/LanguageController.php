@@ -125,13 +125,20 @@ class LanguageController extends BaseController
      */
     public function setDefault($id)
     {
-        $language = Language::findOrFail($id);
-        $language->setAsDefault();
+        try {
+            $language = Language::findOrFail($id);
+            $language->setAsDefault();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Язык установлен по умолчанию'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Язык установлен по умолчанию'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

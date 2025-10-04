@@ -1,7 +1,7 @@
 @extends("crm.layouts.app")
 
-@section("title", "Тренировки спортсмена")
-@section("page-title", "Тренировки")
+@section("title", __('common.athlete_workouts'))
+@section("page-title", __('common.workouts'))
 
 <script>
         // Функциональность для просмотра тренировок
@@ -236,7 +236,7 @@
                             }));
 
                         // Показываем индикатор загрузки
-                        showInfo('Сохранение...', 'Сохраняем ваш прогресс...', 2000);
+                        showInfo('{{ __('common.saving') }}...', '{{ __('common.saving') }} {{ __('common.workout_progress') }}...', 2000);
 
                         const response = await fetch('/athlete/exercise-progress', {
                             method: 'PATCH',
@@ -376,12 +376,12 @@
                 // Вспомогательные методы
                 getStatusLabel(status) {
                     const labels = {
-                        'completed': 'Завершена',
-                        'cancelled': 'Отменена',
-                        'planned': 'Запланирована',
-                        'in_progress': 'В процессе'
+                        'completed': '{{ __('common.completed_status') }}',
+                        'cancelled': '{{ __('common.cancelled_status') }}',
+                        'planned': '{{ __('common.planned_status') }}',
+                        'in_progress': '{{ __('common.in_progress_status') }}'
                     };
-                    return labels[status] || 'Неизвестно';
+                    return labels[status] || '{{ __('common.unknown') }}';
                 },
                 
                 // Методы для работы с видео модальным окном
@@ -492,7 +492,7 @@
                         videoContainer.innerHTML = `
                             <div style="text-align: center;">
                                 <a href="${url}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none;">
-                                    Открыть видео
+                                    {{ __('common.open_video') }}
                                 </a>
                             </div>
                         `;
@@ -661,7 +661,7 @@
     <div x-show="isLoading" x-cloak class="flex justify-center items-center py-12">
         <div class="flex items-center space-x-3">
             <div class="loading-spinner"></div>
-            <span class="text-gray-600">Загрузка тренировок...</span>
+            <span class="text-gray-600">{{ __('common.loading') }} {{ __('common.workouts') }}...</span>
         </div>
     </div>
 
@@ -674,7 +674,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Всего тренировок</div>
+                <div class="stat-label">{{ __('common.total_workouts') }}</div>
                 <div class="stat-value">{{ $workoutsCount ?? 0 }}</div>
             </div>
         </div>
@@ -686,7 +686,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Завершено</div>
+                <div class="stat-label">{{ __('common.completed') }}</div>
                 <div class="stat-value">{{ $completedCount ?? 0 }}</div>
             </div>
         </div>
@@ -698,7 +698,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Осталось тренировок</div>
+                <div class="stat-label">{{ __('common.remaining_workouts') }}</div>
                 <div class="stat-value">{{ $remainingCount ?? 0 }}</div>
             </div>
         </div>
@@ -710,7 +710,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Запланировано</div>
+                <div class="stat-label">{{ __('common.planned') }}</div>
                 <div class="stat-value">{{ $plannedCount ?? 0 }}</div>
             </div>
         </div>
@@ -765,9 +765,9 @@
                                 @if($workout->status === 'completed') bg-green-100 text-green-800
                                 @elseif($workout->status === 'cancelled') bg-red-100 text-red-800
                                 @else bg-blue-100 text-blue-800 @endif">
-                                @if($workout->status === 'completed') Завершена
-                                @elseif($workout->status === 'cancelled') Отменена
-                                @else Запланирована @endif
+                                @if($workout->status === 'completed') {{ __('common.workout_status_completed') }}
+                                @elseif($workout->status === 'cancelled') {{ __('common.workout_status_cancelled') }}
+                                @else {{ __('common.workout_status_planned') }} @endif
                             </span>
                         </div>
 
@@ -778,7 +778,7 @@
                             <!-- Упражнения -->
                             @if(count($workout->exercises ?? []) > 0)
                                 <div class="mt-3">
-                                    <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
+                                    <div class="text-xs font-medium text-gray-500 mb-2">{{ __('common.exercises') }}:</div>
                                     <div class="flex flex-wrap gap-1">
                                         <!-- Отображаем все упражнения через Alpine.js -->
                                         <template x-for="(exercise, index) in ({{ json_encode($workout->exercises ?? []) }} || [])" :key="`exercise-{{ $workout->id }}-${index}`">
@@ -790,8 +790,8 @@
                                                       'bg-red-100 text-red-700': getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'not_done',
                                                       'bg-gray-100 text-gray-600': getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === null
                                                   }"
-                                                  :title="getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'partial' && workoutProgress[{{ $workout->id }}]?.[exercise.exercise_id || exercise.id]?.athlete_comment ? 'Комментарий: ' + workoutProgress[{{ $workout->id }}][exercise.exercise_id || exercise.id].athlete_comment : ''"
-                                                  x-text="exercise.name || 'Без названия'">
+                                                  :title="getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'partial' && workoutProgress[{{ $workout->id }}]?.[exercise.exercise_id || exercise.id]?.athlete_comment ? '{{ __('common.comments') }}: ' + workoutProgress[{{ $workout->id }}][exercise.exercise_id || exercise.id].athlete_comment : ''"
+                                                  x-text="exercise.name || '{{ __('common.no_title') }}'">
                                             </span>
                                         </template>
                                         
@@ -799,7 +799,7 @@
                                         @if(count($workout->exercises ?? []) > 3)
                                             <button @click="toggleExercisesExpanded({{ $workout->id }})" 
                                                     class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
-                                                <span x-text="isExercisesExpanded({{ $workout->id }}) ? 'Свернуть' : '+{{ count($workout->exercises ?? []) - 3 }} еще'"></span>
+                                                <span x-text="isExercisesExpanded({{ $workout->id }}) ? '{{ __('common.collapse') }}' : '+{{ count($workout->exercises ?? []) - 3 }} {{ __('common.more') }}'"></span>
                                             </button>
                                         @endif
                                     </div>
@@ -813,7 +813,7 @@
                                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M12 15h.01"/>
                                 </svg>
-                                Подробнее
+                                {{ __('common.view_details') }}
                             </button>
                         </div>
                     </div>
@@ -832,8 +832,8 @@
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Нет тренировок</h3>
-                <p class="mt-1 text-sm text-gray-500">Ваш тренер пока не назначил тренировки.</p>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">{{ __('common.no_workouts') }}</h3>
+                <p class="mt-1 text-sm text-gray-500">{{ __('common.no_workouts_assigned') }}</p>
             </div>
         @endif
     </div>
@@ -842,7 +842,7 @@
     <div x-show="currentView === 'view'" x-cloak x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6">
             <div x-show="lastSaved" class="text-sm text-green-600 mb-4">
-                💾 Последнее сохранение: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
+                💾 {{ __('common.last_saved') }}: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
             </div>
         </div>
         
@@ -878,17 +878,17 @@
                             <button @click="updateWorkoutStatus(currentWorkout.id, 'planned'); statusDropdownOpen = false"
                                     class="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 transition-colors"
                                     :class="currentWorkout?.status === 'planned' ? 'bg-blue-100 text-blue-800' : 'text-gray-700'">
-                                📅 Запланирована
+                                📅 {{ __('common.workout_status_planned') }}
                             </button>
                             <button @click="updateWorkoutStatus(currentWorkout.id, 'completed'); statusDropdownOpen = false"
                                     class="w-full px-4 py-2 text-left text-sm hover:bg-green-50 transition-colors"
                                     :class="currentWorkout?.status === 'completed' ? 'bg-green-100 text-green-800' : 'text-gray-700'">
-                                ✅ Завершена
+                                ✅ {{ __('common.workout_status_completed') }}
                             </button>
                             <button @click="updateWorkoutStatus(currentWorkout.id, 'cancelled'); statusDropdownOpen = false"
                                     class="w-full px-4 py-2 text-left text-sm hover:bg-red-50 transition-colors"
                                     :class="currentWorkout?.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'text-gray-700'">
-                                ❌ Отменена
+                                ❌ {{ __('common.workout_status_cancelled') }}
                             </button>
                         </div>
                     </div>
@@ -897,7 +897,7 @@
             
             <!-- Описание -->
             <div class="prose max-w-none" x-show="currentWorkout?.description">
-                <h5 class="text-lg font-semibold text-gray-900 mb-3">Описание</h5>
+                <h5 class="text-lg font-semibold text-gray-900 mb-3">{{ __('common.description') }}</h5>
                 <p class="text-gray-600 whitespace-pre-line" x-text="currentWorkout?.description"></p>
             </div>
             
@@ -905,36 +905,36 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;">
                     <div style="margin-bottom: 8px;">
-                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">Дата</span>
+                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.date') }}</span>
                     </div>
                     <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('ru-RU') : ''"></p>
                 </div>
                 
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;" x-show="currentWorkout?.time">
                     <div style="margin-bottom: 8px;">
-                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">Время</span>
+                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.time') }}</span>
                     </div>
                     <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout?.time ? currentWorkout.time.substring(0, 5) : ''"></p>
                 </div>
                 
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;" x-show="currentWorkout?.duration">
                     <div style="margin-bottom: 8px;">
-                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">Продолжительность</span>
+                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.duration') }}</span>
                     </div>
-                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout?.duration + ' мин'"></p>
+                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout?.duration + ' {{ __('common.min') }}'"></p>
                 </div>
                 
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;">
                     <div style="margin-bottom: 8px;">
-                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">Тренер</span>
+                        <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.trainer') }}</span>
                     </div>
-                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout?.trainer?.name || 'Неизвестно'"></p>
+                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout?.trainer?.name || '{{ __('common.unknown') }}'"></p>
                 </div>
             </div>
             
             <!-- Упражнения -->
             <div x-show="(currentWorkout?.exercises || []).length > 0" class="pt-6 border-t border-gray-200">
-                <h5 class="text-lg font-semibold text-gray-900 mb-4">Упражнения</h5>
+                <h5 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.exercises') }}</h5>
                 <div class="space-y-4">
                     <template x-for="(exercise, index) in (currentWorkout?.exercises || [])" :key="`view-exercise-${index}`">
                         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
@@ -942,7 +942,7 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-3">
                                         <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
-                                        <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
+                                        <span class="text-sm font-medium text-gray-900" x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
                                         <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
                                     </div>
                                     <!-- Ссылка на видео упражнения - только на десктопе -->
@@ -952,7 +952,7 @@
                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                                             </svg>
-                                            Видео
+                                            {{ __('common.video') }}
                                         </button>
                                     </div>
                                 </div>
@@ -960,7 +960,7 @@
                                 <div x-show="exercise.video_url" class="exercise-video-link-mobile mt-2 md:hidden">
                                     <button @click="openSimpleModal(exercise.video_url, exercise.name)"
                                             class="inline-flex items-center px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm rounded-lg transition-colors cursor-pointer">
-                                        📹 Видео упражнения
+                                        📹 {{ __('common.video') }} {{ __('common.exercise') }}
                                     </button>
                                 </div>
                             </div>
@@ -975,7 +975,7 @@
                                             <svg class="w-4 h-4 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-indigo-800">Подходы</span>
+                                            <span class="text-sm font-semibold text-indigo-800">{{ __('common.sets') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-indigo-900" x-text="exercise.sets || exercise.pivot?.sets || 0"></div>
                                     </div>
@@ -989,7 +989,7 @@
                                             <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-green-800">Повторения</span>
+                                            <span class="text-sm font-semibold text-green-800">{{ __('common.reps') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-green-900" x-text="exercise.reps || exercise.pivot?.reps || 0"></div>
                                     </div>
@@ -1003,7 +1003,7 @@
                                             <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-purple-800">Вес (кг)</span>
+                                            <span class="text-sm font-semibold text-purple-800">{{ __('common.weight') }} ({{ __('common.kg') }})</span>
                                         </div>
                                         <div class="text-2xl font-bold text-purple-900" x-text="exercise.weight || exercise.pivot?.weight || 0"></div>
                                     </div>
@@ -1017,7 +1017,7 @@
                                             <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-orange-800">Отдых (мин)</span>
+                                            <span class="text-sm font-semibold text-orange-800">{{ __('common.rest') }} ({{ __('common.min') }})</span>
                                         </div>
                                         <div class="text-2xl font-bold text-orange-900" x-text="exercise.rest || exercise.pivot?.rest || 1.0"></div>
                                     </div>
@@ -1031,7 +1031,7 @@
                                             <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-blue-800">Время (сек)</span>
+                                            <span class="text-sm font-semibold text-blue-800">{{ __('common.time_seconds') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-blue-900" x-text="exercise.time || exercise.pivot?.time || 0"></div>
                                     </div>
@@ -1045,7 +1045,7 @@
                                             <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-purple-800">Темп/Скорость</span>
+                                            <span class="text-sm font-semibold text-purple-800">{{ __('common.tempo_speed') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-purple-900" x-text="exercise.tempo || exercise.pivot?.tempo || ''"></div>
                                     </div>
@@ -1060,7 +1060,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-green-800">Дистанция (м)</span>
+                                            <span class="text-sm font-semibold text-green-800">{{ __('common.distance_meters') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-green-900" x-text="exercise.distance || exercise.pivot?.distance || 0"></div>
                                     </div>
@@ -1070,22 +1070,22 @@
                             <!-- Статус выполнения упражнения -->
                             <div class="mt-4 pt-4 border-t border-gray-200">
                                 <div class="exercise-status-section flex items-center justify-between mb-3">
-                                    <span class="text-sm font-medium text-gray-700">Статус выполнения:</span>
+                                    <span class="text-sm font-medium text-gray-700">{{ __('common.exercise_status_label') }}:</span>
                                     <div class="exercise-status-buttons flex space-x-2">
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'completed')" 
                                                 :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ✅ Выполнено
+                                            ✅ {{ __('common.exercise_status_completed') }}
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'partial')" 
                                                 :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ⚠️ Частично
+                                            ⚠️ {{ __('common.exercise_status_partial') }}
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'not_done')" 
                                                 :class="getExerciseStatus(exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ❌ Не выполнено
+                                            ❌ {{ __('common.exercise_status_not_done') }}
                                         </button>
                                     </div>
                                 </div>
@@ -1145,7 +1145,7 @@
                                                                     <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-green-800">Повторения</span>
+                                                                    <span class="text-xs font-semibold text-green-800">{{ __('common.reps') }}</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
@@ -1165,7 +1165,7 @@
                                                                     <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-purple-800">Вес (кг)</span>
+                                                                    <span class="text-xs font-semibold text-purple-800">{{ __('common.weight') }} ({{ __('common.kg') }})</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
@@ -1186,7 +1186,7 @@
                                                                     <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-orange-800">Отдых (мин)</span>
+                                                                    <span class="text-xs font-semibold text-orange-800">{{ __('common.rest') }} ({{ __('common.min') }})</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
@@ -1279,7 +1279,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
                                         </svg>
                                         <div>
-                                            <div class="text-sm font-semibold text-gray-800 mb-1">Комментарий тренера:</div>
+                                            <div class="text-sm font-semibold text-gray-800 mb-1">{{ __('common.trainer_comment') }}:</div>
                                             <div class="text-sm text-gray-700" x-text="exercise.notes || exercise.pivot?.notes || ''"></div>
                                         </div>
                                     </div>
