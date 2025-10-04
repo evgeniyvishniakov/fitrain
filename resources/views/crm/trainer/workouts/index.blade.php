@@ -2054,7 +2054,7 @@ function workoutApp() {
                                               'bg-gray-100 text-gray-600': !getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id)
                                           }"
                                           :title="exercise.progress?.athlete_comment ? 'Комментарий: ' + exercise.progress.athlete_comment : ''"
-                                          x-text="exercise.name || 'Без названия'">
+                                          x-text="(exercise.name || 'Без названия') + (exercise.category ? ' (' + exercise.category + (exercise.equipment ? ' • ' + exercise.equipment : '') + ')' : '')">
                                     </span>
                                 </template>
                                 
@@ -2209,7 +2209,7 @@ function workoutApp() {
                                 <input type="time" 
                                        x-model="formTime"
                                        id="timeInput"
-                                       step="3600"
+                                       step="60"
                                        class="block w-full px-3 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2419,19 +2419,7 @@ function workoutApp() {
                                 <div class="flex items-center space-x-3">
                                     <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
                                     <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
-                                    <span class="text-xs text-gray-500" x-text="exercise.category || ''"></span>
-                                    <!-- Индикатор статуса -->
-                                    <span class="inline-block px-2 py-1 text-xs rounded-full font-medium"
-                                          :class="{
-                                              'bg-green-100 text-green-800': currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed',
-                                              'bg-yellow-100 text-yellow-800': currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial',
-                                              'bg-red-100 text-red-800': currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done',
-                                              'bg-gray-100 text-gray-600': !currentWorkout || !getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id)
-                                          }"
-                                          x-text="currentWorkout ? (getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? '✅ Выполнено' : 
-                                                  getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? '⚠️ Частично' : 
-                                                  getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? '❌ Не выполнено' : '⏳ Без статуса') : '⏳ Без статуса'">
-                                    </span>
+                                    <span class="text-xs text-gray-500" x-text="(exercise.category || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (exercise.equipment || '')"></span>
                                 </div>
                                 <!-- Ссылка на видео упражнения -->
                                 <div x-show="exercise.video_url" class="exercise-video-link">
