@@ -529,6 +529,43 @@ function workoutApp() {
             return this.exercisesExpanded[workoutId] || false;
         },
         
+        // Проверка, заполнено ли поле упражнения
+        isFieldFilled(exercise, fieldName) {
+            const value = exercise[fieldName] || exercise.pivot?.[fieldName];
+            return value !== null && value !== undefined && value !== '' && value !== 0;
+        },
+        
+        // Форматирование числа без лишних нулей
+        formatNumber(value) {
+            if (!value || value === 0) return '0';
+            const num = parseFloat(value);
+            return num % 1 === 0 ? num.toString() : num.toString();
+        },
+        
+        // Получить класс рамки для поля в развернутых подходах
+        getSetFieldBorderClass(exercise, set, fieldName) {
+            const plannedValue = parseFloat(exercise[fieldName] || exercise.pivot?.[fieldName]) || 0;
+            const actualValue = parseFloat(set[fieldName]) || 0;
+            
+            // Если поле не заполнено
+            if (actualValue === 0) {
+                return 'border-red-500 border-2';
+            }
+            
+            // Если запланированное значение равно 0 или не задано, не показываем красную рамку
+            if (plannedValue === 0) {
+                return '';
+            }
+            
+            // Если заполнено, но меньше запланированного
+            if (actualValue < plannedValue) {
+                return 'border-red-500 border-2';
+            }
+            
+            // Если заполнено полностью или больше
+            return '';
+        },
+        
         // Автосохранение
         autoSave() {
             if (this.saveTimeout) {
@@ -546,29 +583,68 @@ function workoutApp() {
             
             try {
                 // Собираем все упражнения с изменениями
-                const exercises = Object.keys(this.exerciseStatuses).map(exerciseId => ({
+                let exercises = Object.keys(this.exerciseStatuses).map(exerciseId => ({
                     exercise_id: parseInt(exerciseId),
                     status: this.exerciseStatuses[exerciseId],
                     athlete_comment: this.exerciseComments[exerciseId] || null,
                     sets_data: this.exerciseSetsData[exerciseId] || null
                 }));
+                
+                // Если нет упражнений в exerciseStatuses, но есть данные в exerciseSetsData, 
+                // значит пользователь редактирует поля в частично выполненных упражнениях
+                if (exercises.length === 0 && Object.keys(this.exerciseSetsData).length > 0) {
+                    exercises = Object.keys(this.exerciseSetsData).map(exerciseId => ({
+                        exercise_id: parseInt(exerciseId),
+                        status: 'partial', // Устанавливаем статус "частично"
+                        athlete_comment: this.exerciseComments[exerciseId] || null,
+                        sets_data: this.exerciseSetsData[exerciseId] || null
+                    }));
+                }
+                
+                // Если все еще нет упражнений для сохранения, не отправляем запрос
+                if (exercises.length === 0) {
+                    console.log('Нет упражнений для сохранения');
+                    return;
+                }
 
                 // Показываем индикатор загрузки
                 showInfo('Сохранение...', 'Сохраняем прогресс...', 2000);
+
+                const requestData = {
+                    workout_id: this.currentWorkout.id,
+                    exercises: exercises
+                };
 
                 const response = await fetch('/trainer/exercise-progress', {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        workout_id: this.currentWorkout.id,
-                        exercises: exercises
-                    })
+                    body: JSON.stringify(requestData)
                 });
 
-                const result = await response.json();
+                const text = await response.text();
+                
+                if (!response.ok) {
+                    console.error(`HTTP error! status: ${response.status}`, text);
+                    throw new Error(`HTTP error! status: ${response.status}. Response: ${text}`);
+                }
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    throw new Error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    console.error('Response text:', text);
+                    throw new Error('Получен некорректный ответ от сервера');
+                }
                 
                 if (result.success) {
                     // Записываем время последнего сохранения
@@ -1714,6 +1790,14 @@ function workoutApp() {
                     }
                 }
                 
+                /* Убираем только рамку при фокусе для полей в развернутых подходах */
+                .sets-fields-grid input[type="number"]:focus {
+                    outline: none !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    background: transparent !important;
+                }
+                
                 /* Поля подходов - колонка на мобилке, 3 колонки на десктопе */
                 .sets-fields-grid {
                     display: grid !important;
@@ -2446,7 +2530,7 @@ function workoutApp() {
                                             </svg>
                                             <span class="text-sm font-semibold text-indigo-800">Подходы</span>
                                         </div>
-                                        <div class="text-2xl font-bold text-indigo-900" x-text="exercise.sets || exercise.pivot?.sets || 0"></div>
+                                        <div class="text-2xl font-bold text-indigo-900" x-text="formatNumber(exercise.sets || exercise.pivot?.sets || 0)"></div>
                                     </div>
                                 </div>
                                 
@@ -2460,7 +2544,7 @@ function workoutApp() {
                                             </svg>
                                             <span class="text-sm font-semibold text-green-800">Повторения</span>
                                         </div>
-                                        <div class="text-2xl font-bold text-green-900" x-text="exercise.reps || exercise.pivot?.reps || 0"></div>
+                                        <div class="text-2xl font-bold text-green-900" x-text="formatNumber(exercise.reps || exercise.pivot?.reps || 0)"></div>
                                     </div>
                                 </div>
                                 
@@ -2474,7 +2558,7 @@ function workoutApp() {
                                             </svg>
                                             <span class="text-sm font-semibold text-orange-800">Вес (кг)</span>
                                         </div>
-                                        <div class="text-2xl font-bold text-orange-900" x-text="exercise.weight || exercise.pivot?.weight || 0"></div>
+                                        <div class="text-2xl font-bold text-orange-900" x-text="formatNumber(exercise.weight || exercise.pivot?.weight || 0)"></div>
                                     </div>
                                 </div>
                                 
@@ -2488,7 +2572,7 @@ function workoutApp() {
                                             </svg>
                                             <span class="text-sm font-semibold text-purple-800">Отдых (мин)</span>
                                         </div>
-                                        <div class="text-2xl font-bold text-purple-900" x-text="exercise.rest || exercise.pivot?.rest || 0"></div>
+                                        <div class="text-2xl font-bold text-purple-900" x-text="formatNumber(exercise.rest || exercise.pivot?.rest || 0)"></div>
                                     </div>
                                 </div>
                                 
@@ -2634,7 +2718,8 @@ function workoutApp() {
                                                     <div class="sets-fields-grid">
                                                         <!-- Повторения -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
-                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3">
+                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
                                                                     <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2647,14 +2732,15 @@ function workoutApp() {
                                                                     x-model="set.reps"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
                                                                     placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none"
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none"
                                                                     min="0">
                                                             </div>
                                                         </div>
                                                         
                                                         <!-- Вес -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
-                                                             class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3">
+                                                             class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'weight')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
                                                                     <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2668,14 +2754,15 @@ function workoutApp() {
                                                                     x-model="set.weight"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'weight', $event.target.value)"
                                                                     placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none"
+                                                                    class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none"
                                                                     min="0">
                                                             </div>
                                                         </div>
                                                         
                                                         <!-- Отдых -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
-                                                             class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3">
+                                                             class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'rest')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
                                                                     <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2689,7 +2776,7 @@ function workoutApp() {
                                                                     x-model="set.rest"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
                                                                     placeholder="1.0"
-                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none"
+                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none"
                                                                     min="0">
                                                             </div>
                                                         </div>
