@@ -404,7 +404,7 @@ function athletesApp() {
             const sortedMeasurements = [...filteredMeasurements].reverse();
             const labels = sortedMeasurements.map(m => {
                 const date = new Date(m.measurement_date);
-                return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+                return date.toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', { month: 'short', day: 'numeric' });
             });
             
             this.createMeasurementsChart(labels, sortedMeasurements);
@@ -472,7 +472,7 @@ function athletesApp() {
             const sortedMeasurements = [...filteredMeasurements].reverse(); // Сортируем по дате
             const labels = sortedMeasurements.map(m => {
                 const date = new Date(m.measurement_date);
-                return date.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' });
+                return date.toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', { month: 'short', day: 'numeric' });
             });
 
             // console.log('Отсортированные измерения:', sortedMeasurements);
@@ -781,7 +781,6 @@ function athletesApp() {
                 
                 if (response.ok) {
                     // console.log('Загруженные измерения:', result.measurements);
-                    // console.log('Актуальные данные спортсмена с сервера:', result.athlete);
                     this.measurements = result.measurements;
                     this.measurementsCurrentPage = 1;
                     
@@ -793,13 +792,12 @@ function athletesApp() {
                     // Обновляем данные спортсмена актуальными данными с сервера
                     if (result.athlete) {
                         this.currentAthlete = { ...this.currentAthlete, ...result.athlete };
-                        // console.log('Обновлен currentAthlete актуальными данными:', this.currentAthlete);
+                        
                         
                         // Обновляем спортсмена в общем списке
                         const athleteIndex = this.athletes.findIndex(a => a.id === this.currentAthlete.id);
                         if (athleteIndex !== -1) {
                             this.athletes[athleteIndex] = { ...this.athletes[athleteIndex], ...result.athlete };
-                            // console.log('Обновлен спортсмен в списке актуальными данными:', this.athletes[athleteIndex]);
                         }
                     }
                 } else {
@@ -912,9 +910,9 @@ function athletesApp() {
         // Быстрое заполнение колонки
         fillColumn(column) {
             const columnNames = {
-                'proteins': 'белки (г)',
-                'fats': 'жиры (г)', 
-                'carbs': 'углеводы (г)'
+                'proteins': '{{ __('common.proteins_g_header') }}',
+                'fats': '{{ __('common.fats_g_header') }}', 
+                'carbs': '{{ __('common.carbs_g_header') }}'
             };
             
             const value = prompt(`Введите значение для ${columnNames[column]}:`, '');
@@ -932,13 +930,13 @@ function athletesApp() {
         
         // Заполнение всех колонок сразу
         fillAllColumns() {
-            const proteins = prompt('Белки (г):', '');
+            const proteins = prompt('{{ __('common.proteins_g_header') }}:', '');
             if (proteins === null) return;
             
-            const fats = prompt('Жиры (г):', '');
+            const fats = prompt('{{ __('common.fats_g_header') }}:', '');
             if (fats === null) return;
             
-            const carbs = prompt('Углеводы (г):', '');
+            const carbs = prompt('{{ __('common.carbs_g_header') }}:', '');
             if (carbs === null) return;
             
             const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
@@ -961,7 +959,7 @@ function athletesApp() {
         
         // Очистка всех полей
         clearAll() {
-            if (!confirm('Очистить все поля?')) return;
+            if (!confirm('{{ __('common.clear_all_fields_confirm') }}')) return;
             
             const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
             for (let day = 1; day <= daysInMonth; day++) {
@@ -1084,15 +1082,15 @@ function athletesApp() {
         // Удалить план питания
         deleteNutritionPlan(planId) {
             const plan = this.nutritionPlans.find(p => p.id === planId);
-            const planTitle = plan ? (plan.title || `План питания на ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} г.`) : 'план питания';
+            const planTitle = plan ? (plan.title || `{{ __('common.nutrition_plan_on') }} ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} {{ __('common.year_short') }}`) : '{{ __('common.nutrition_plan_default') }}';
             
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
                     title: '{{ __('common.delete') }} {{ __('common.nutrition_plan') }}',
                     message: `Вы уверены, что хотите удалить "${planTitle}"?`,
-                    confirmText: 'Удалить',
-                    cancelText: 'Отмена',
+                    confirmText: '{{ __('common.delete') }}',
+                    cancelText: '{{ __('common.cancel') }}',
                     onConfirm: () => this.performDeleteNutritionPlan(planId)
                 }
             }));
@@ -1110,11 +1108,11 @@ function athletesApp() {
                 if (response.ok) {
                     this.loadNutritionPlans(); // Перезагружаем список
                 } else {
-                    alert('Ошибка при удалении плана питания');
+                    alert('{{ __('common.delete_nutrition_plan_error') }}');
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
-                alert('Ошибка при удалении плана питания');
+                alert('{{ __('common.delete_nutrition_plan_error') }}');
             }
         },
         
@@ -1162,7 +1160,7 @@ function athletesApp() {
             const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
             
             if (startDay < 1 || endDay > daysInMonth || startDay > endDay) {
-                alert('Неверные дни!');
+                alert('{{ __('common.invalid_days_error') }}');
                 return;
             }
             
@@ -1200,12 +1198,12 @@ function athletesApp() {
         // Функция для отображения типов пакетов
         getPackageTypeLabel(type) {
             const labels = {
-                'single': 'Разовая тренировка',
-                '4_sessions': '4 тренировки',
-                '8_sessions': '8 тренировок',
-                '12_sessions': '12 тренировок',
-                'unlimited': 'Безлимит (месяц)',
-                'custom': 'Произвольное количество'
+                'single': '{{ __('common.single_workout') }}',
+                '4_sessions': '{{ __('common.4_workouts') }}',
+                '8_sessions': '{{ __('common.8_workouts') }}',
+                '12_sessions': '{{ __('common.12_workouts') }}',
+                'unlimited': '{{ __('common.unlimited_month') }}',
+                'custom': '{{ __('common.custom_amount') }}'
             };
             return labels[type] || type;
         },
@@ -1406,6 +1404,17 @@ function athletesApp() {
             };
             return labels[level] || level;
         },
+
+        // Метки способов оплаты
+        getPaymentMethodText(method) {
+            const labels = {
+                'cash': '{{ __('common.cash') }}',
+                'card': '{{ __('common.bank_card') }}',
+                'transfer': '{{ __('common.bank_transfer') }}',
+                'other': '{{ __('common.other') }}'
+            };
+            return labels[method] || method;
+        },
         
         // Сохранение
         async saveAthlete() {
@@ -1441,10 +1450,10 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: this.currentAthlete && this.currentAthlete.id ? 'Спортсмен обновлен' : 'Спортсмен добавлен',
+                            title: this.currentAthlete && this.currentAthlete.id ? '{{ __('common.athlete_updated') }}' : '{{ __('common.athlete_added') }}',
                             message: this.currentAthlete && this.currentAthlete.id ? 
-                                'Данные спортсмена успешно обновлены' : 
-                                'Спортсмен успешно добавлен'
+                                '{{ __('common.athlete_data_updated') }}' : 
+                                '{{ __('common.athlete_successfully_added') }}'
                         }
                     }));
                     
@@ -1467,8 +1476,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка сохранения',
-                            message: result.message || 'Произошла ошибка при сохранении спортсмена'
+                            title: '{{ __('common.saving_error') }}',
+                            message: result.message || '{{ __('common.athlete_saving_error') }}'
                         }
                     }));
                 }
@@ -1478,8 +1487,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при сохранении спортсмена'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.athlete_saving_error') }}'
                     }
                 }));
             }
@@ -1521,8 +1530,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Успех',
-                            message: 'Спортсмен успешно создан'
+                            title: '{{ __('common.success') }}',
+                            message: '{{ __('common.athlete_successfully_created') }}'
                         }
                     }));
                     
@@ -1533,8 +1542,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка',
-                            message: result.message || 'Ошибка создания спортсмена'
+                            title: '{{ __('common.error') }}',
+                            message: result.message || '{{ __('common.athlete_creation_error') }}'
                         }
                     }));
                 }
@@ -1543,8 +1552,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Ошибка создания спортсмена'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.athlete_creation_error') }}'
                     }
                 }));
             }
@@ -1620,8 +1629,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Успех',
-                            message: 'Данные спортсмена обновлены'
+                            title: '{{ __('common.success') }}',
+                            message: '{{ __('common.athlete_data_updated_success') }}'
                         }
                     }));
                     
@@ -1629,7 +1638,7 @@ function athletesApp() {
                     this.currentView = 'view';
                     this.activeTab = 'overview';
                 } else {
-                    console.error('Ошибка сервера:', response.status, responseText);
+                    console.error('{{ __('common.server_error_status') }}:', response.status, responseText);
                     throw new Error(`Ошибка сервера: ${response.status} - ${responseText}`);
                 }
             } catch (error) {
@@ -1637,7 +1646,7 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
+                        title: '{{ __('common.error') }}',
                         message: `Не удалось обновить данные спортсмена: ${error.message}`
                     }
                 }));
@@ -1723,8 +1732,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Успех',
-                            message: isEdit ? 'Измерение успешно обновлено' : 'Измерения успешно сохранены'
+                            title: '{{ __('common.success') }}',
+                            message: isEdit ? '{{ __('common.measurement_updated') }}' : '{{ __('common.measurements_saved') }}'
                         }
                     }));
                     
@@ -1736,8 +1745,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка сохранения',
-                            message: result.message || 'Произошла ошибка при сохранении измерения'
+                            title: '{{ __('common.saving_error') }}',
+                            message: result.message || '{{ __('common.measurement_saving_error') }}'
                         }
                     }));
                 }
@@ -1747,8 +1756,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при сохранении измерения'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.measurement_saving_error') }}'
                     }
                 }));
             }
@@ -1849,6 +1858,7 @@ function athletesApp() {
                         });
                         
                         // Обновляем финансовые данные для отображения
+                        console.log('Payment history before finance update:', paymentHistory);
                         this.currentAthlete.finance = {
                             id: this.currentAthlete.id,
                             package_type: this.currentAthlete.package_type,
@@ -1869,8 +1879,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Успех',
-                            message: isEdit ? 'Платеж успешно обновлен' : 'Платеж успешно сохранен'
+                            title: '{{ __('common.success') }}',
+                            message: isEdit ? '{{ __('common.payment_updated') }}' : '{{ __('common.payment_saved') }}'
                         }
                     }));
                     
@@ -1882,8 +1892,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка сохранения',
-                            message: result.message || 'Произошла ошибка при сохранении платежа'
+                            title: '{{ __('common.saving_error') }}',
+                            message: result.message || '{{ __('common.payment_saving_error') }}'
                         }
                     }));
                 }
@@ -1893,8 +1903,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при сохранении платежа'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.payment_saving_error') }}'
                     }
                 }));
             }
@@ -1911,7 +1921,7 @@ function athletesApp() {
                 package_price: payment.package_price || 0,
                 purchase_date: payment.purchase_date || '',
                 expires_date: payment.expires_date || '',
-                payment_method: payment.payment_method || 'Наличные',
+                payment_method: payment.payment_method || '{{ __('common.cash') }}',
                 description: payment.description || ''
             };
         },
@@ -1929,13 +1939,13 @@ function athletesApp() {
             
             this.paymentData = {
                 id: payment.id, // ID конкретного платежа!
-                package_type: this.currentAthlete.finance.package_type || '',
-                total_sessions: this.currentAthlete.finance.total_sessions || 0,
-                used_sessions: this.currentAthlete.finance.used_sessions || 0,
+                package_type: this.currentAthlete?.finance?.package_type || '',
+                total_sessions: this.currentAthlete?.finance?.total_sessions || 0,
+                used_sessions: this.currentAthlete?.finance?.used_sessions || 0,
                 package_price: payment.amount || 0,
                 purchase_date: formatDateForInput(payment.date),
-                expires_date: formatDateForInput(this.currentAthlete.finance.expires_date),
-                payment_method: payment.payment_method || 'Наличные',
+                expires_date: formatDateForInput(this.currentAthlete?.finance?.expires_date),
+                payment_method: payment.payment_method || '{{ __('common.cash') }}',
                 description: payment.description || ''
             };
         },
@@ -1945,10 +1955,10 @@ function athletesApp() {
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: 'Удалить пакет',
-                    message: 'Вы уверены, что хотите удалить этот пакет?',
-                    confirmText: 'Удалить',
-                    cancelText: 'Отмена',
+                    title: '{{ __('common.delete_package_title') }}',
+                    message: '{{ __('common.delete_package_confirm') }}',
+                    confirmText: '{{ __('common.delete') }}',
+                    cancelText: '{{ __('common.cancel') }}',
                     onConfirm: () => this.performDeletePayment(paymentId)
                 }
             }));
@@ -1984,6 +1994,7 @@ function athletesApp() {
                         });
                         
                         // Обновляем финансовые данные для отображения
+                        console.log('Payment history before finance update (delete):', paymentHistory);
                         if (paymentHistory.length > 0) {
                             this.currentAthlete.finance = {
                                 id: this.currentAthlete.id,
@@ -2009,8 +2020,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Платеж удален',
-                            message: 'Платеж успешно удален'
+                            title: '{{ __('common.payment_deleted') }}',
+                            message: '{{ __('common.payment_successfully_deleted') }}'
                         }
                     }));
                 } else {
@@ -2018,8 +2029,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка удаления',
-                            message: result.message || 'Произошла ошибка при удалении платежа'
+                            title: '{{ __('common.delete_error') }}',
+                            message: result.message || '{{ __('common.payment_delete_error') }}'
                         }
                     }));
                 }
@@ -2029,8 +2040,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при удалении пакета'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.delete_package_error') }}'
                     }
                 }));
             }
@@ -2041,10 +2052,10 @@ function athletesApp() {
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: 'Удалить измерение',
-                    message: 'Вы уверены, что хотите удалить это измерение?',
-                    confirmText: 'Удалить',
-                    cancelText: 'Отмена',
+                    title: '{{ __('common.delete_measurement_title') }}',
+                    message: '{{ __('common.delete_measurement_confirm') }}',
+                    confirmText: '{{ __('common.delete') }}',
+                    cancelText: '{{ __('common.cancel') }}',
                     onConfirm: () => this.performDeleteMeasurement(measurementId)
                 }
             }));
@@ -2069,8 +2080,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Измерение удалено',
-                            message: 'Измерение успешно удалено'
+                            title: '{{ __('common.measurement_deleted') }}',
+                            message: '{{ __('common.measurement_successfully_deleted') }}'
                         }
                     }));
                 } else {
@@ -2078,8 +2089,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка удаления',
-                            message: result.message || 'Произошла ошибка при удалении измерения'
+                            title: '{{ __('common.delete_error') }}',
+                            message: result.message || '{{ __('common.measurement_delete_error') }}'
                         }
                     }));
                 }
@@ -2089,8 +2100,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при удалении измерения'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.measurement_delete_error') }}'
                     }
                 }));
             }
@@ -2099,15 +2110,15 @@ function athletesApp() {
         // Удаление
         deleteAthlete(id) {
             const athlete = this.athletes.find(a => a.id === id);
-            const athleteName = athlete ? athlete.name : 'спортсмена';
+            const athleteName = athlete ? athlete.name : '{{ __('common.athlete_name_default') }}';
             
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: 'Удалить спортсмена',
+                    title: '{{ __('common.delete_athlete_title') }}',
                     message: `Вы уверены, что хотите удалить спортсмена "${athleteName}"?`,
-                    confirmText: 'Удалить',
-                    cancelText: 'Отмена',
+                    confirmText: '{{ __('common.delete') }}',
+                    cancelText: '{{ __('common.cancel') }}',
                     onConfirm: () => this.performDelete(id)
                 }
             }));
@@ -2130,8 +2141,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Спортсмен удален',
-                            message: result.message || 'Спортсмен успешно удален'
+                            title: '{{ __('common.athlete_deleted') }}',
+                            message: result.message || '{{ __('common.athlete_successfully_deleted') }}'
                         }
                     }));
                     
@@ -2153,8 +2164,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка удаления',
-                            message: result.message || 'Произошла ошибка при удалении спортсмена'
+                            title: '{{ __('common.delete_error') }}',
+                            message: result.message || '{{ __('common.athlete_delete_error') }}'
                         }
                     }));
                 }
@@ -2164,8 +2175,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при удалении спортсмена'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.athlete_delete_error') }}'
                     }
                 }));
             }
@@ -2191,7 +2202,7 @@ function athletesApp() {
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.exercises.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2281,7 +2292,7 @@ function athletesApp() {
                 <div class="search-container">
                     <input type="text" 
                            x-model="search" 
-                           placeholder="Поиск спортсменов..." 
+                           placeholder="{{ __('common.search_athletes') }}" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
@@ -2289,10 +2300,10 @@ function athletesApp() {
                 <div class="status-container">
                     <select x-model="sportLevel" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все уровни</option>
-                        <option value="beginner">Новичок</option>
+                        <option value="">{{ __('common.all_levels') }}</option>
+                        <option value="beginner">{{ __('common.novice') }}</option>
                         <option value="intermediate">{{ __('common.amateur') }}</option>
-                        <option value="advanced">Профи</option>
+                        <option value="advanced">{{ __('common.pro') }}</option>
                     </select>
                 </div>
                 
@@ -2308,7 +2319,7 @@ function athletesApp() {
             <!-- Активные фильтры -->
             <div x-show="search || sportLevel" class="mt-4 pt-4 border-t border-gray-100">
                 <div class="flex flex-wrap gap-2">
-                    <span class="text-sm text-gray-500">Активные фильтры:</span>
+                    <span class="text-sm text-gray-500">{{ __('common.active_filters') }}:</span>
                     
                     <span x-show="search" 
                           class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -2318,7 +2329,7 @@ function athletesApp() {
                     
                     <span x-show="sportLevel" 
                           class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                        Уровень: <span x-text="getSportLevelLabel(sportLevel)"></span>
+                        {{ __('common.level') }}: <span x-text="getSportLevelLabel(sportLevel)"></span>
                         <button @click="sportLevel = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
                     </span>
                 </div>
@@ -2514,49 +2525,49 @@ function athletesApp() {
             <form @submit.prevent="savePayment" class="space-y-6">
                 <!-- Информация о пакете -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Информация о пакете</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.package_info') }}</h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Тип пакета</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.package_type') }}</label>
                             <select x-model="paymentData.package_type" 
                                     @change="updateSessionsByPackageType()"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Выберите тип пакета</option>
-                                <option value="single">Разовая тренировка</option>
-                                <option value="4_sessions">4 тренировки</option>
-                                <option value="8_sessions">8 тренировок</option>
-                                <option value="12_sessions">12 тренировок</option>
-                                <option value="unlimited">Безлимит (месяц)</option>
-                                <option value="custom">Произвольное количество</option>
+                                <option value="">{{ __('common.select_package_type') }}</option>
+                                <option value="single">{{ __('common.single_workout') }}</option>
+                                <option value="4_sessions">{{ __('common.4_workouts') }}</option>
+                                <option value="8_sessions">{{ __('common.8_workouts') }}</option>
+                                <option value="12_sessions">{{ __('common.12_workouts') }}</option>
+                                <option value="unlimited">{{ __('common.unlimited_month') }}</option>
+                                <option value="custom">{{ __('common.custom_amount') }}</option>
                             </select>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Количество тренировок</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.workouts_count_label') }}</label>
                             <input type="number" x-model="paymentData.total_sessions" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0"
                                    :disabled="paymentData.package_type && paymentData.package_type !== 'custom'">
                             <p class="text-xs text-gray-500 mt-1" x-show="paymentData.package_type && paymentData.package_type !== 'custom'">
-                                Автоматически заполняется по типу пакета
+                                {{ __('common.auto_filled_by_package_type') }}
                             </p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Стоимость (₴)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.cost_uah') }}</label>
                             <input type="number" x-model="paymentData.package_price" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Способ оплаты</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.payment_method') }}</label>
                             <select x-model="paymentData.payment_method" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="cash">Наличные</option>
-                                <option value="card">Банковская карта</option>
-                                <option value="transfer">Банковский перевод</option>
-                                <option value="other">Другое</option>
+                                <option value="cash">{{ __('common.cash') }}</option>
+                                <option value="card">{{ __('common.bank_card') }}</option>
+                                <option value="transfer">{{ __('common.bank_transfer') }}</option>
+                                <option value="other">{{ __('common.other') }}</option>
                             </select>
                         </div>
                     </div>
@@ -2564,32 +2575,32 @@ function athletesApp() {
 
                 <!-- Даты -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Даты</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.dates') }}</h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата покупки</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.purchase_date') }}</label>
                             <input type="date" x-model="paymentData.purchase_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Срок действия (необязательно)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.validity_period') }}</label>
                             <input type="date" x-model="paymentData.expires_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="text-xs text-gray-500 mt-1">Оставьте пустым, если пакет действует пока не закончатся тренировки</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ __('common.validity_period_help') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Дополнительная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Дополнительная информация</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.additional_info') }}</h4>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
                             <textarea x-model="paymentData.description" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                      placeholder="Дополнительная информация о платеже..."></textarea>
+                                      placeholder="{{ __('common.payment_additional_info') }}"></textarea>
                         </div>
                     </div>
                 </div>
@@ -2623,56 +2634,56 @@ function athletesApp() {
             <form @submit.prevent="savePayment" class="space-y-6">
                 <!-- Информация о пакете -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Информация о пакете</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.package_info') }}</h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Тип пакета</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.package_type') }}</label>
                             <select x-model="paymentData.package_type" 
                                     @change="updateSessionsByPackageType()"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Выберите тип пакета</option>
-                                <option value="single">Разовая тренировка</option>
-                                <option value="4_sessions">4 тренировки</option>
-                                <option value="8_sessions">8 тренировок</option>
-                                <option value="12_sessions">12 тренировок</option>
-                                <option value="unlimited">Безлимит (месяц)</option>
-                                <option value="custom">Произвольное количество</option>
+                                <option value="">{{ __('common.select_package_type') }}</option>
+                                <option value="single">{{ __('common.single_workout') }}</option>
+                                <option value="4_sessions">{{ __('common.4_workouts') }}</option>
+                                <option value="8_sessions">{{ __('common.8_workouts') }}</option>
+                                <option value="12_sessions">{{ __('common.12_workouts') }}</option>
+                                <option value="unlimited">{{ __('common.unlimited_month') }}</option>
+                                <option value="custom">{{ __('common.custom_amount') }}</option>
                             </select>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Количество тренировок</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.workouts_count_label') }}</label>
                             <input type="number" x-model="paymentData.total_sessions" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0"
                                    :disabled="paymentData.package_type && paymentData.package_type !== 'custom'">
                             <p class="text-xs text-gray-500 mt-1" x-show="paymentData.package_type && paymentData.package_type !== 'custom'">
-                                Автоматически заполняется по типу пакета
+                                {{ __('common.auto_filled_by_package_type') }}
                             </p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Использовано тренировок</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.used_workouts') }}</label>
                             <input type="number" x-model="paymentData.used_sessions" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Стоимость (₴)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.cost_uah') }}</label>
                             <input type="number" x-model="paymentData.package_price" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Способ оплаты</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.payment_method') }}</label>
                             <select x-model="paymentData.payment_method" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="cash">Наличные</option>
-                                <option value="card">Банковская карта</option>
-                                <option value="transfer">Банковский перевод</option>
-                                <option value="other">Другое</option>
+                                <option value="cash">{{ __('common.cash') }}</option>
+                                <option value="card">{{ __('common.bank_card') }}</option>
+                                <option value="transfer">{{ __('common.bank_transfer') }}</option>
+                                <option value="other">{{ __('common.other') }}</option>
                             </select>
                         </div>
                     </div>
@@ -2680,32 +2691,32 @@ function athletesApp() {
 
                 <!-- Даты -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Даты</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.dates') }}</h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата покупки</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.purchase_date') }}</label>
                             <input type="date" x-model="paymentData.purchase_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Срок действия (необязательно)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.validity_period') }}</label>
                             <input type="date" x-model="paymentData.expires_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="text-xs text-gray-500 mt-1">Оставьте пустым, если пакет действует пока не закончатся тренировки</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ __('common.validity_period_help') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Дополнительная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Дополнительная информация</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.additional_info') }}</h4>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
                             <textarea x-model="paymentData.description" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                      placeholder="Дополнительная информация о платеже..."></textarea>
+                                      placeholder="{{ __('common.payment_additional_info') }}"></textarea>
                         </div>
                     </div>
                 </div>
@@ -2731,7 +2742,7 @@ function athletesApp() {
             <!-- Заголовок карточки -->
             <div class="p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900">Профиль спортсмена</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ __('common.athlete_profile') }}</h1>
                     <button @click="showList()" 
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
                         {{ __('common.back') }} к списку
@@ -2755,16 +2766,16 @@ function athletesApp() {
                                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentAthlete?.name"></h2>
                                 <div class="athlete-profile-data text-sm text-gray-500 mt-2">
                                     <div class="athlete-profile-item">
-                                        <span class="athlete-profile-label">Возраст:</span>
+                                        <span class="athlete-profile-label">{{ __('common.age') }}:</span>
                                         <span class="athlete-profile-value" x-text="currentAthlete?.age || '—'"></span>
                                     </div>
                                     <div class="athlete-profile-item">
-                                        <span class="athlete-profile-label">Вес:</span>
+                                        <span class="athlete-profile-label">{{ __('common.weight') }}:</span>
                                         <span class="athlete-profile-value" x-show="!loadingAthleteData" x-text="getCurrentWeight()"></span>
                                         <span class="athlete-profile-value animate-pulse bg-gray-200 rounded" x-show="loadingAthleteData" style="width: 60px; height: 16px;"></span>
                                     </div>
                                     <div class="athlete-profile-item">
-                                        <span class="athlete-profile-label">Рост:</span>
+                                        <span class="athlete-profile-label">{{ __('common.height') }}:</span>
                                         <span class="athlete-profile-value" x-show="!loadingAthleteData" x-text="getCurrentHeight()"></span>
                                         <span class="athlete-profile-value animate-pulse bg-gray-200 rounded" x-show="loadingAthleteData" style="width: 60px; height: 16px;"></span>
                                     </div>
@@ -2785,15 +2796,15 @@ function athletesApp() {
                                         </svg>
                                         <!-- Всплывающая подсказка -->
                                         <div class="absolute bottom-full right-0 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                                            <div class="font-semibold mb-2">Индекс массы тела (ИМТ)</div>
+                                            <div class="font-semibold mb-2">{{ __('common.bmi_index') }}</div>
                                             <div class="space-y-1">
-                                                <div class="flex justify-between"><span class="text-blue-300">Менее 18.5:</span> <span>Недостаточный вес</span></div>
-                                                <div class="flex justify-between"><span class="text-green-300">18.5 - 24.9:</span> <span>Нормальный вес</span></div>
-                                                <div class="flex justify-between"><span class="text-yellow-300">25 - 29.9:</span> <span>Избыточный вес</span></div>
-                                                <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span>Ожирение</span></div>
+                                                <div class="flex justify-between"><span class="text-blue-300">Менее 18.5:</span> <span>{{ __('common.bmi_categories.underweight') }}</span></div>
+                                                <div class="flex justify-between"><span class="text-green-300">18.5 - 24.9:</span> <span>{{ __('common.bmi_categories.normal') }}</span></div>
+                                                <div class="flex justify-between"><span class="text-yellow-300">25 - 29.9:</span> <span>{{ __('common.bmi_categories.overweight') }}</span></div>
+                                                <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span>{{ __('common.bmi_categories.obese') }}</span></div>
                                             </div>
                                             <div class="mt-2 pt-2 border-t border-gray-700 text-gray-300">
-                                                <div x-text="(measurements.length > 0 && measurements[0].weight && measurements[0].height) ? 'Ваш ИМТ: ' + formatNumber(measurements[0].weight / Math.pow(measurements[0].height/100, 2)) + ' (' + getBMICategory(measurements[0].weight / Math.pow(measurements[0].height/100, 2)).text + ')' : (currentAthlete?.weight && currentAthlete?.height ? 'Ваш ИМТ: ' + formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) + ' (' + getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).text + ')' : 'ИМТ не рассчитан')"></div>
+                                                <div x-text="(measurements.length > 0 && measurements[0].weight && measurements[0].height) ? '{{ __('common.your_bmi_calculated') }}: ' + formatNumber(measurements[0].weight / Math.pow(measurements[0].height/100, 2)) + ' (' + getBMICategory(measurements[0].weight / Math.pow(measurements[0].height/100, 2)).text + ')' : (currentAthlete?.weight && currentAthlete?.height ? '{{ __('common.your_bmi_calculated') }}: ' + formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) + ' (' + getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).text + ')' : '{{ __('common.bmi_not_calculated') }}')"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -2808,42 +2819,42 @@ function athletesApp() {
                             <button @click="activeTab = 'overview'" 
                                     :class="activeTab === 'overview' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Обзор
+                                {{ __('common.overview') }}
                                 </button>
                             <button @click="activeTab = 'workouts'" 
                                     :class="activeTab === 'workouts' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Тренировки
+                                {{ __('common.workouts') }}
                             </button>
                             <button @click="activeTab = 'progress'; $nextTick(() => updateCharts())" 
                                     :class="activeTab === 'progress' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Прогресс
+                                {{ __('common.progress') }}
                             </button>
                             <button @click="activeTab = 'measurements'" 
                                     :class="activeTab === 'measurements' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Измерения
+                                {{ __('common.measurements') }}
                             </button>
                             <button @click="activeTab = 'nutrition'; loadNutritionPlans()" 
                                     :class="activeTab === 'nutrition' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Питание
+                                {{ __('common.nutrition') }}
                             </button>
                             <button @click="activeTab = 'medical'" 
                                     :class="activeTab === 'medical' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Медицинские данные
+                                {{ __('common.medical_data') }}
                             </button>
                             <button @click="activeTab = 'finance'" 
                                     :class="activeTab === 'finance' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Финансы
+                                {{ __('common.finance') }}
                             </button>
                             <button @click="activeTab = 'general'" 
                                     :class="activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                Общие
+                                {{ __('common.general') }}
                             </button>
                         </nav>
                     </div>
@@ -2855,11 +2866,11 @@ function athletesApp() {
                             <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
                                 <div class="bg-green-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-green-600" x-text="currentAthlete?.progress?.length || 0"></div>
-                                    <div class="text-sm text-green-800">Записей измерений</div>
+                                    <div class="text-sm text-green-800">{{ __('common.measurement_records_label') }}</div>
                                 </div>
                                 <div class="bg-blue-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.finance?.used_sessions || 0"></div>
-                                    <div class="text-sm text-blue-800">Тренировок</div>
+                                    <div class="text-sm text-blue-800">{{ __('common.workouts') }}</div>
                                 </div>
                                 <div class="bg-orange-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-orange-600" x-text="currentAthlete?.finance?.remaining_sessions || 0"></div>
@@ -2876,62 +2887,64 @@ function athletesApp() {
                         <div x-show="activeTab === 'finance'" class="space-y-6">
                             <!-- Заголовок с кнопкой добавления -->
                             <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">Финансовые данные</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.financial_data') }}</h3>
                                 <button @click="showAddPayment()" 
                                         class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    Добавить платеж
+                                    {{ __('common.add_payment') }}
                                 </button>
                             </div>
 
 
                             <!-- Общая статистика -->
                             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-900 mb-4">Общая статистика</h4>
+                                <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.general_statistics') }}</h4>
                                 <div class="flex flex-wrap items-center justify-between gap-4">
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.finance?.total_paid) || 0).toFixed(2)">0.00</div>
-                                        <div class="text-sm text-gray-500">Всего оплачено (₴)</div>
+                                        <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.total_paid) || 0).toFixed(2)">0.00</div>
+                                        <div class="text-sm text-gray-500">{{ __('common.total_paid') }}</div>
                                     </div>
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.finance?.payment_history?.length || 0">0</div>
-                                        <div class="text-sm text-gray-500">Количество платежей</div>
+                                        <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.payment_history?.length || 0">0</div>
+                                        <div class="text-sm text-gray-500">{{ __('common.payments_count') }}</div>
                                     </div>
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.finance?.last_payment_date ? new Date(currentAthlete.finance.last_payment_date).toLocaleDateString('ru-RU') : '—'">—</div>
-                                        <div class="text-sm text-gray-500">Последний платеж</div>
+                                        <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.last_payment_date ? new Date(currentAthlete.last_payment_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : '—'">—</div>
+                                        <div class="text-sm text-gray-500">{{ __('common.last_payment') }}</div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- История платежей -->
                             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-900 mb-4">История платежей</h4>
+                                <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.payment_history') }}</h4>
                                 <div class="space-y-3">
-                                    <template x-for="payment in currentAthlete?.finance?.payment_history || []" :key="payment.id">
+                                    <!-- Debug info -->
+                                    <div class="text-xs text-gray-400" x-text="'Payment history length: ' + (currentAthlete?.payment_history?.length || 0)"></div>
+                                    <template x-for="(payment, index) in (currentAthlete?.payment_history || [])" :key="payment.id || index">
                                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                             <div class="flex-1">
-                                                <div class="font-medium text-gray-900" x-text="payment.description">Пакет 12 тренировок</div>
-                                                <div class="text-sm text-gray-500" x-text="new Date(payment.date).toLocaleDateString('ru-RU')">15.01.2024</div>
+                                                <div class="font-medium text-gray-900" x-text="payment.description">{{ __('common.package') }} 12 {{ __('common.workouts') }}</div>
+                                                <div class="text-sm text-gray-500" x-text="new Date(payment.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}')">15.01.2024</div>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <div class="text-right">
                                                     <div class="font-semibold text-green-600" x-text="payment.amount + ' ₴'">12,000 ₴</div>
-                                                    <div class="text-sm text-gray-500" x-text="payment.payment_method">Карта</div>
+                                                    <div class="text-sm text-gray-500" x-text="getPaymentMethodText(payment.payment_method)">Карта</div>
                                                 </div>
                                                 <div class="flex space-x-1">
                                                     <button @click="editPaymentFromHistory(payment)" 
                                                             class="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                                            title="Редактировать платеж">
+                                                            title="{{ __('common.edit_payment') }}">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                         </svg>
                                                     </button>
                                                     <button @click="deletePayment(payment.id)" 
                                                             class="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                                            title="Удалить платеж">
+                                                            title="{{ __('common.delete_payment') }}">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                         </svg>
@@ -2942,11 +2955,11 @@ function athletesApp() {
                                     </template>
                                     
                                     <!-- Пустое состояние -->
-                                    <div x-show="!currentAthlete?.finance?.payment_history?.length" class="text-center py-8 text-gray-500">
+                                    <div x-show="!currentAthlete?.payment_history?.length" class="text-center py-8 text-gray-500">
                                         <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                                         </svg>
-                                        <p>Нет записей о платежах</p>
+                                        <p>{{ __('common.no_payment_records') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -2956,34 +2969,34 @@ function athletesApp() {
                         <div x-show="activeTab === 'general'" class="space-y-6">
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div class="lg:col-span-2">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Личная информация</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.personal_info') }}</h3>
                                     <div class="package-info-grid">
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">Полное имя</label>
+                                            <label class="text-sm font-medium text-gray-500">{{ __('common.full_name') }}</label>
                                             <div class="text-gray-900 font-medium" x-text="currentAthlete?.name"></div>
                                         </div>
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">Телефон</label>
+                                            <label class="text-sm font-medium text-gray-500">{{ __('common.phone') }}</label>
                                             <div class="text-gray-900" x-text="currentAthlete?.phone || '—'"></div>
                                         </div>
                                         <div>
                                             <label class="text-sm font-medium text-gray-500">Возраст</label>
-                                            <div class="text-gray-900 font-semibold" x-text="(currentAthlete?.age || '—') + ' лет'"></div>
+                                            <div class="text-gray-900 font-semibold" x-text="(currentAthlete?.age || '—') + ' {{ __('common.age_years') }}'"></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Спортивная информация</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.sports_info') }}</h3>
                                     <div class="space-y-4">
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">Спортивный уровень</label>
+                                            <label class="text-sm font-medium text-gray-500">{{ __('common.sport_level') }}</label>
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" 
-                                                      x-text="currentAthlete?.sport_level || 'Не указан'"></span>
+                                                      x-text="currentAthlete?.sport_level || '{{ __('common.not_specified') }}'"></span>
                                             </div>
                                         </div>
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">Статус</label>
+                                            <label class="text-sm font-medium text-gray-500">{{ __('common.status') }}</label>
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                                       :class="currentAthlete?.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
@@ -3001,13 +3014,13 @@ function athletesApp() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Медицинские данные</h3>
-                            <p class="mb-4">Здесь будут отображаться медицинские данные спортсмена</p>
+                            <p class="mb-4">{{ __('common.medical_data_placeholder') }}</p>
                         </div>
 
                         <div x-show="activeTab === 'measurements'" class="space-y-6">
                             <div class="flex items-center justify-between">
                                 <h3 class="text-lg font-semibold text-gray-900">
-                                    Измерения тела (<span x-text="measurements.length"></span>)
+                                    {{ __('common.body_measurements') }} (<span x-text="measurements.length"></span>)
                                 </h3>
                                 <button @click="showAddMeasurement()" 
                                         class="px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center text-xs md:text-base">
@@ -3026,18 +3039,18 @@ function athletesApp() {
                                         <div class="card hover:shadow-lg transition-shadow duration-200">
                                             <div class="card-header">
                                                 <div class="flex items-center justify-between">
-                                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('ru-RU')"></h4>
+                                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}')"></h4>
                                                     <div class="flex space-x-2">
                                                         <button @click="editMeasurement(measurement)" 
                                                                 class="text-indigo-600 hover:text-indigo-800" 
-                                                                title="Редактировать">
+                                                                title="{{ __('common.edit') }}">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                             </svg>
                                                         </button>
                                                         <button @click="deleteMeasurement(measurement.id)" 
                                                                 class="text-red-600 hover:text-red-800" 
-                                                                title="Удалить">
+                                                                title="{{ __('common.delete') }}">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                             </svg>
@@ -3061,41 +3074,41 @@ function athletesApp() {
                                                 <!-- Объемы тела -->
                                                 <template x-if="measurement.chest || measurement.waist || measurement.hips || measurement.bicep || measurement.thigh || measurement.neck">
                                                     <div class="mt-4 pt-4 pb-4 border-t border-b border-gray-200">
-                                                        <h5 class="text-sm font-medium text-gray-700 mb-2">Объемы тела</h5>
+                                                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes_label') }}</h5>
                                                         <div class="grid grid-cols-2 gap-2 text-sm">
                                                             <template x-if="measurement.chest">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">Грудь:</span>
+                                                                    <span class="text-gray-500">{{ __('common.chest_label') }}:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.chest, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.waist">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">Талия:</span>
+                                                                    <span class="text-gray-500">{{ __('common.waist_label') }}:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.waist, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.hips">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">Бедра:</span>
+                                                                    <span class="text-gray-500">{{ __('common.hips_label') }}:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.hips, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.bicep">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">Бицепс:</span>
+                                                                    <span class="text-gray-500">{{ __('common.bicep_label') }}:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.bicep, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.thigh">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">Бедро:</span>
+                                                                    <span class="text-gray-500">{{ __('common.thigh_label') }}:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.thigh, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.neck">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">Шея:</span>
+                                                                    <span class="text-gray-500">{{ __('common.neck_label') }}:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.neck, ' см')"></span>
                                                                 </div>
                                                             </template>
@@ -3103,28 +3116,28 @@ function athletesApp() {
                                                     </div>
                                                 </template>
                                                 
-                                                <!-- Дополнительные параметры -->
+                                                <!-- {{ __('common.additional_params_label') }} -->
                                                 <div class="mt-4">
-                                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Доп параметры</h5>
+                                                    <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_params_label') }}</h5>
                                                     <div class="grid grid-cols-2 gap-2 text-sm mb-4">
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">Жира:</span>
+                                                        <span class="text-gray-500">{{ __('common.body_fat_label') }}:</span>
                                                         <span class="font-medium" x-text="measurement.body_fat_percentage ? formatNumber(measurement.body_fat_percentage, '%') : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">Мышцы:</span>
+                                                        <span class="text-gray-500">{{ __('common.muscle_mass_label') }}:</span>
                                                         <span class="font-medium" x-text="measurement.muscle_mass ? formatNumber(measurement.muscle_mass, ' кг') : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">Вода:</span>
+                                                        <span class="text-gray-500">{{ __('common.water_percentage_label') }}:</span>
                                                         <span class="font-medium" x-text="measurement.water_percentage ? formatNumber(measurement.water_percentage, '%') : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">Пульс:</span>
+                                                        <span class="text-gray-500">{{ __('common.resting_heart_rate_label') }}:</span>
                                                         <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' {{ __('common.bpm') }}' : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">Давление:</span>
+                                                        <span class="text-gray-500">{{ __('common.blood_pressure_label') }}:</span>
                                                         <span class="font-medium" x-text="measurement.blood_pressure_systolic && measurement.blood_pressure_diastolic ? Math.round(parseFloat(measurement.blood_pressure_systolic)) + '/' + Math.round(parseFloat(measurement.blood_pressure_diastolic)) : '—'"></span>
                                                     </div>
                                                     </div>
@@ -3133,7 +3146,7 @@ function athletesApp() {
                                                 <!-- Комментарии -->
                                                 <template x-if="measurement.notes">
                                                     <div class="mt-4 pt-4 border-t border-gray-200">
-                                                        <h5 class="text-sm font-medium text-gray-700 mb-1">Комментарии</h5>
+                                                        <h5 class="text-sm font-medium text-gray-700 mb-1">{{ __('common.comments_label') }}</h5>
                                                         <p class="text-sm text-gray-600" x-text="measurement.notes"></p>
                                                     </div>
                                                 </template>
@@ -3184,25 +3197,25 @@ function athletesApp() {
                                 <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">Нет измерений</h3>
-                                <p class="mb-4">Добавьте первое измерение для отслеживания прогресса</p>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.no_measurements') }}</h3>
+                                <p class="mb-4">{{ __('common.add_first_measurement') }}</p>
                             </div>
                         </div>
 
                         <div x-show="activeTab === 'progress'" class="space-y-6">
                             <!-- Заголовок с фильтром периодов -->
                             <div class="progress-header flex items-center justify-between mb-6">
-                                <h3 class="text-lg font-semibold text-gray-900">Прогресс спортсмена</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.athlete_progress') }}</h3>
                                 <div class="progress-controls flex items-center gap-4">
-                                    <span class="text-sm font-medium text-gray-700">Период:</span>
+                                    <span class="text-sm font-medium text-gray-700">{{ __('common.period') }}:</span>
                                     <select x-model="selectedPeriod" @change="updatePeriodFilter()" class="progress-select px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                        <option value="all">Все данные</option>
-                                        <option value="1">Последний месяц</option>
-                                        <option value="3">Последние 3 месяца</option>
-                                        <option value="6">Последние 6 месяцев</option>
-                                        <option value="12">Последний год</option>
+                                        <option value="all">{{ __('common.all_data') }}</option>
+                                        <option value="1">{{ __('common.last_month') }}</option>
+                                        <option value="3">{{ __('common.last_3_months') }}</option>
+                                        <option value="6">{{ __('common.last_6_months') }}</option>
+                                        <option value="12">{{ __('common.last_year') }}</option>
                                     </select>
-                                    <span class="progress-count text-sm text-gray-500" x-text="getFilteredMeasurementsCount() + ' измерений'"></span>
+                                    <span class="progress-count text-sm text-gray-500" x-text="getFilteredMeasurementsCount() + ' {{ __('common.measurements_count') }}'"></span>
                                 </div>
                             </div>
 
@@ -3211,10 +3224,10 @@ function athletesApp() {
                                 <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                 </svg>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">Нет измерений</h3>
-                                <p class="mb-4">Добавьте измерения для отслеживания прогресса</p>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.no_measurements') }}</h3>
+                                <p class="mb-4">{{ __('common.add_measurements_for_progress') }}</p>
                                 <button @click="activeTab = 'measurements'" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                                    Добавить измерение
+                                    {{ __('common.add_measurement') }}
                                 </button>
                             </div>
 
@@ -3222,7 +3235,7 @@ function athletesApp() {
                             <div x-show="measurements.length > 0" class="progress-chart-container space-y-6">
                                 <!-- График веса -->
                                 <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
-                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Динамика веса</h4>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.weight_dynamics') }}</h4>
                                     <div class="chart-container relative" style="height: 400px;">
                                         <canvas id="weightChart"></canvas>
                                     </div>
@@ -3230,7 +3243,7 @@ function athletesApp() {
 
                                 <!-- График процента жира и мышечной массы -->
                                 <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
-                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Состав тела</h4>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
                                     <div class="chart-container relative" style="height: 400px;">
                                         <canvas id="bodyCompositionChart"></canvas>
                                     </div>
@@ -3239,15 +3252,15 @@ function athletesApp() {
                                 <!-- График объемов -->
                                 <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h4 class="text-lg font-semibold text-gray-900">Объемы тела</h4>
+                                        <h4 class="text-lg font-semibold text-gray-900">{{ __('common.body_volumes') }}</h4>
                                         <select x-model="selectedMeasurement" @change="updateMeasurementsChart()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                            <option value="all">Все</option>
-                                            <option value="chest">Грудь</option>
-                                            <option value="waist">Талия</option>
-                                            <option value="hips">Бедра</option>
-                                            <option value="bicep">Бицепс</option>
-                                            <option value="thigh">Бедро</option>
-                                            <option value="neck">Шея</option>
+                                            <option value="all">{{ __('common.all') }}</option>
+                                            <option value="chest">{{ __('common.chest_label') }}</option>
+                                            <option value="waist">{{ __('common.waist_label') }}</option>
+                                            <option value="hips">{{ __('common.hips_label') }}</option>
+                                            <option value="bicep">{{ __('common.bicep_label') }}</option>
+                                            <option value="thigh">{{ __('common.thigh_label') }}</option>
+                                            <option value="neck">{{ __('common.neck_label') }}</option>
                                         </select>
                                     </div>
                                     <div class="chart-container relative" style="height: 400px;">
@@ -3275,8 +3288,8 @@ function athletesApp() {
 
                         <div x-show="activeTab === 'workouts'" class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">Тренировки спортсмена</h3>
-                                <span class="text-sm text-gray-500" x-text="(currentAthlete?.workouts || []).length + ' тренировок'"></span>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.athlete_workouts') }}</h3>
+                                <span class="text-sm text-gray-500" x-text="(currentAthlete?.workouts || []).length + ' {{ __('common.workouts_count') }}'"></span>
                             </div>
                             
                             <!-- Список тренировок -->
@@ -3301,7 +3314,7 @@ function athletesApp() {
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                                             </svg>
-                                                            <span x-text="new Date(workout.date).toLocaleDateString('ru-RU') + (workout.time ? ' в ' + workout.time : '')"></span>
+                                                            <span x-text="new Date(workout.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') + (workout.time ? ' в ' + workout.time : '')"></span>
                                                         </div>
                                                         <div class="workout-info-item">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3336,9 +3349,9 @@ function athletesApp() {
                                                           'bg-red-100 text-red-800': workout.status === 'cancelled'
                                                       }"
                                                       x-text="{
-                                                          'completed': 'Завершена',
-                                                          'planned': 'Запланирована', 
-                                                          'cancelled': 'Отменена'
+                                                          'completed': '{{ __('common.workout_completed') }}',
+                                                          'planned': '{{ __('common.planned') }}', 
+                                                          'cancelled': '{{ __('common.cancelled') }}'
                                                       }[workout.status] || workout.status"></span>
                                             </div>
                                         </div>
@@ -3349,46 +3362,46 @@ function athletesApp() {
                 
                         <div x-show="activeTab === 'nutrition'" class="p-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h3 class="text-lg font-semibold text-gray-900">Планы питания</h3>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.nutrition_plans') }}</h3>
                                 <button @click="showAddNutritionPlan()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    Расписать питание
+                                    {{ __('common.create_nutrition_plan') }}
                                 </button>
                             </div>
                             
                             <!-- Планы питания -->
                             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-900 mb-4">Планы питания</h4>
+                                
                                 
                                 <!-- Загрузка -->
                                 <div x-show="loadingNutritionPlans" class="text-center py-8">
                                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                                    <p class="mt-2 text-gray-500">Загрузка планов питания...</p>
+                                    <p class="mt-2 text-gray-500">{{ __('common.loading_nutrition_plans') }}</p>
                                 </div>
                                 
                                 <!-- Список планов -->
                                 <div x-show="!loadingNutritionPlans && nutritionPlans.length > 0" class="space-y-4">
                                     <template x-for="plan in nutritionPlans" :key="plan.id">
-                                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer" @click="showDetailedNutritionPlan(plan)">
                                             <div class="nutrition-plan-card">
                                                 <div class="nutrition-plan-title">
                                                     <h5 class="text-lg font-medium text-gray-900">
-                                                        <span x-text="plan.title || `План питания на ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} г.`"></span>
-                                                        <span class="text-sm text-gray-600" x-text="`(${plan.nutrition_days ? plan.nutrition_days.length : 0} дней)`"></span>
+                                                        <span x-text="plan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, plan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${plan.year} {{ __('common.year') }}.`"></span>
+                                                        <span class="text-sm text-gray-600" x-text="`(${plan.nutrition_days ? plan.nutrition_days.length : 0} {{ __('common.days') }})`"></span>
                                                     </h5>
                                                 </div>
                                                 <div class="nutrition-plan-buttons">
-                                                    <button @click="editNutritionPlan(plan)" 
+                                                    <button @click.stop="editNutritionPlan(plan)" 
                                                             class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                            title="Редактировать план">
+                                                            title="{{ __('common.edit') }} {{ __('common.nutrition_plan') }}">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                         </svg>
                                                         <span class="mobile-button-text">{{ __('common.edit') }}</span>
                                                     </button>
-                                                    <button @click="showDetailedNutritionPlan(plan)" 
+                                                    <button @click.stop="showDetailedNutritionPlan(plan)" 
                                                             class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
                                                             title="Подробнее">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3397,9 +3410,9 @@ function athletesApp() {
                                                         </svg>
                                                         <span class="mobile-button-text">{{ __('common.details') }}</span>
                                                     </button>
-                                                    <button @click="deleteNutritionPlan(plan.id)" 
+                                                    <button @click.stop="deleteNutritionPlan(plan.id)" 
                                                             class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                                            title="Удалить план">
+                                                            title="{{ __('common.delete') }} {{ __('common.nutrition_plan') }}">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                         </svg>
@@ -3416,8 +3429,8 @@ function athletesApp() {
                                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        <p>Нет планов питания</p>
-                                        <p class="text-sm">Создайте первый план питания для этого спортсмена</p>
+                                        <p>{{ __('common.no_nutrition_plans') }}</p>
+                                        <p class="text-sm">{{ __('common.create_first_nutrition_plan') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -3433,14 +3446,14 @@ function athletesApp() {
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
-                        Редактировать
+                        {{ __('common.edit') }}
                     </button>
                     <button @click="deleteAthlete(currentAthlete.id)" 
                             class="px-4 py-2 text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 flex items-center transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                        Удалить
+                        {{ __('common.delete') }}
                     </button>
                 </div>
             </div>
@@ -3525,7 +3538,7 @@ function athletesApp() {
                         <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
                         <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Выберите уровень</option>
-                            <option value="beginner">Новичок</option>
+                            <option value="beginner">{{ __('common.novice') }}</option>
                             <option value="intermediate">{{ __('common.amateur') }}</option>
                             <option value="advanced">Продвинутый</option>
                             <option value="professional">Профессионал</option>
@@ -3567,7 +3580,7 @@ function athletesApp() {
                 </button>
                 <button type="button" @click="showList()" 
                         class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Отмена
+                    {{ __('common.cancel') }}
                 </button>
             </div>
         </form>
@@ -3651,7 +3664,7 @@ function athletesApp() {
                             <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
                             <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="">Выберите уровень</option>
-                                <option value="beginner">Новичок</option>
+                                <option value="beginner">{{ __('common.novice') }}</option>
                                 <option value="intermediate">{{ __('common.amateur') }}</option>
                                 <option value="advanced">Продвинутый</option>
                                 <option value="professional">Профессионал</option>
@@ -3714,7 +3727,7 @@ function athletesApp() {
             <form @submit.prevent="saveMeasurement" class="space-y-6">
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Основная информация</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
@@ -3736,7 +3749,7 @@ function athletesApp() {
 
                 <!-- Состав тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Состав тела</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
@@ -3758,7 +3771,7 @@ function athletesApp() {
 
                 <!-- Объемы тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Объемы тела (см)</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
@@ -3817,7 +3830,7 @@ function athletesApp() {
 
                 <!-- Заметки -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Заметки</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.notes') }}</h4>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Дополнительная информация</label>
                         <textarea x-model="measurementNotes" rows="3" 
@@ -3829,7 +3842,7 @@ function athletesApp() {
                 <div class="flex space-x-4">
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Сохранить измерение
+                        {{ __('common.save_measurement') }}
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'measurements'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -3843,7 +3856,7 @@ function athletesApp() {
     <!-- РЕДАКТИРОВАНИЕ ИЗМЕРЕНИЙ -->
     <div x-show="currentView === 'editMeasurement'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Редактировать измерение</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.edit') }} {{ __('common.measurement') }}</h3>
             <button @click="currentView = 'view'; activeTab = 'measurements'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 {{ __('common.back') }}
@@ -3854,7 +3867,7 @@ function athletesApp() {
             <form @submit.prevent="saveMeasurement" class="space-y-6">
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Основная информация</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
@@ -3876,7 +3889,7 @@ function athletesApp() {
 
                 <!-- Состав тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Состав тела</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
@@ -3898,7 +3911,7 @@ function athletesApp() {
 
                 <!-- Объемы тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Объемы тела (см)</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
@@ -3957,7 +3970,7 @@ function athletesApp() {
 
                 <!-- Заметки -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Заметки</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.notes') }}</h4>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Дополнительная информация</label>
                         <textarea x-model="measurementNotes" rows="3" 
@@ -3994,10 +4007,10 @@ function athletesApp() {
             <form @submit.prevent="saveNutritionPlanForm">
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Основная информация</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Месяц</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.month') }}</label>
                             <select x-model="nutritionMonth" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="1">Январь</option>
                                 <option value="2">Февраль</option>
@@ -4014,7 +4027,7 @@ function athletesApp() {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Год</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.year') }}</label>
                             <select x-model="nutritionYear" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <template x-for="year in [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2]" :key="year">
                                     <option :value="year" :selected="year === new Date().getFullYear()" x-text="year"></option>
@@ -4026,16 +4039,16 @@ function athletesApp() {
 
                 <!-- Дополнительная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Дополнительная информация</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.additional_info') }}</h4>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Название плана (необязательно)</label>
-                            <input type="text" x-model="nutritionTitle" placeholder="Например: План питания на январь" 
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.plan_title_optional') }}</label>
+                            <input type="text" x-model="nutritionTitle" placeholder="{{ __('common.nutrition_plan_example') }}" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Описание (необязательно)</label>
-                            <textarea x-model="nutritionDescription" rows="3" placeholder="Комментарии тренера..."
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description_optional') }}</label>
+                            <textarea x-model="nutritionDescription" rows="3" placeholder="{{ __('common.trainer_comments') }}"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                         </div>
                     </div>
@@ -4044,13 +4057,13 @@ function athletesApp() {
                 <!-- Таблица Excel для заполнения питания по дням -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-lg font-semibold text-gray-900">План питания по дням</h4>
+                        <h4 class="text-lg font-semibold text-gray-900">{{ __('common.nutrition_plan_by_days') }}</h4>
                         <div class="flex gap-2">
                             <button type="button" @click="clearAll()" class="px-3 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200">
-                                🗑️ Очистить всё
+                                🗑️ {{ __('common.clear_all') }}
                             </button>
                             <button type="button" @click="showQuickFillModal()" class="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
-                                🚀 Быстрое заполнение
+                                🚀 {{ __('common.quick_fill') }}
                             </button>
                         </div>
                     </div>
@@ -4058,7 +4071,7 @@ function athletesApp() {
                     <!-- Подсказки -->
                     <div class="mb-4 text-sm text-gray-600">
                         <p>💡 <strong>{{ __('common.tip') }}:</strong> {{ __('common.calories_calculated') }}</p>
-                        <p>📝 Заполняйте только те дни, для которых нужно составить план питания</p>
+                        <p>📝 {{ __('common.fill_only_days') }}</p>
                     </div>
                     
                     <div class="overflow-x-auto">
@@ -4112,7 +4125,7 @@ function athletesApp() {
                                         <td class="px-3 py-2">
                                             <input type="text" :name="'notes_' + day" 
                                                    class="w-full px-2 py-1 text-sm border-0 focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
-                                                   placeholder="Заметки...">
+                                                   placeholder="{{ __('common.notes_placeholder') }}">
                                         </td>
                                     </tr>
                                 </template>
@@ -4164,21 +4177,21 @@ function athletesApp() {
                         <div>
                             <div>
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Белки (г)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('common.proteins_g') }}</label>
                                     <input type="number" step="0.1" x-model="quickFillData.proteins" 
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                            placeholder="120" required>
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Жиры (г)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('common.fats_g') }}</label>
                                     <input type="number" step="0.1" x-model="quickFillData.fats" 
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                            placeholder="50" required>
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Углеводы (г)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('common.carbs_g') }}</label>
                                     <input type="number" step="0.1" x-model="quickFillData.carbs" 
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                            placeholder="200" required>
@@ -4229,7 +4242,7 @@ function athletesApp() {
                     </button>
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Сохранить
+                        {{ __('common.save') }}
                     </button>
                 </div>
             </form>
@@ -4240,7 +4253,7 @@ function athletesApp() {
     <div x-show="detailedNutritionPlan" x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important;">
         <div class="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[85vh] overflow-hidden">
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `План питания на ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${detailedNutritionPlan.year} г.`) : ''"></h3>
+                <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${detailedNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>
                 <button @click="closeDetailedNutritionPlan()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -4261,19 +4274,19 @@ function athletesApp() {
                         <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
                             <div class="bg-red-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-red-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
-                                <div class="text-sm text-red-800">Общие калории</div>
+                                <div class="text-sm text-red-800">{{ __('common.total_calories') }}</div>
                             </div>
                             <div class="bg-blue-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-blue-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
-                                <div class="text-sm text-blue-800">Общие белки (г)</div>
+                                <div class="text-sm text-blue-800">{{ __('common.total_proteins_g') }}</div>
                             </div>
                             <div class="bg-yellow-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-yellow-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
-                                <div class="text-sm text-yellow-800">Общие углеводы (г)</div>
+                                <div class="text-sm text-yellow-800">{{ __('common.total_carbs_g') }}</div>
                             </div>
                             <div class="bg-green-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-green-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
-                                <div class="text-sm text-green-800">Общие жиры (г)</div>
+                                <div class="text-sm text-green-800">{{ __('common.total_fats_g') }}</div>
                             </div>
                         </div>
                         
@@ -4283,9 +4296,9 @@ function athletesApp() {
                                 <thead class="bg-gray-100">
                                     <tr>
                                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.day') }}</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Белки (г)</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Жиры (г)</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Углеводы (г)</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.proteins_g') }}</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.fats_g') }}</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.carbs_g') }}</th>
                                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
                                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
                                     </tr>
@@ -4685,7 +4698,7 @@ function showCreatePlanForm() {
         <div class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Месяц</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.month') }}</label>
                     <select id="plan-month" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="1" ${currentMonth === 1 ? 'selected' : ''}>Январь</option>
                         <option value="2" ${currentMonth === 2 ? 'selected' : ''}>Февраль</option>
@@ -4702,7 +4715,7 @@ function showCreatePlanForm() {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Год</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.year') }}</label>
                     <select id="plan-year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         ${generateYearOptions(currentYear)}
                     </select>
@@ -4710,14 +4723,14 @@ function showCreatePlanForm() {
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Название плана (необязательно)</label>
-                <input type="text" id="plan-title" placeholder="Например: План питания на январь" 
+                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.plan_title_optional') }}</label>
+                <input type="text" id="plan-title" placeholder="{{ __('common.nutrition_plan_example') }}" 
                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Описание (необязательно)</label>
-                <textarea id="plan-description" rows="3" placeholder="Комментарии тренера..."
+                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description_optional') }}</label>
+                <textarea id="plan-description" rows="3" placeholder="{{ __('common.trainer_comments') }}"
                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
             </div>
         </div>
@@ -4763,7 +4776,7 @@ async function saveNutritionPlan_DISABLED() {
         if (response.ok) {
             closeNutritionPlanModal();
             loadNutritionPlans();
-            alert('План питания создан!');
+            alert('{{ __('common.nutrition_plan_created') }}');
         } else {
             const error = await response.json();
             alert(error.error || 'Ошибка при создании плана');
