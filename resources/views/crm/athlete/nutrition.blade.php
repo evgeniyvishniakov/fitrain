@@ -1,51 +1,51 @@
 @extends('crm.layouts.app')
 
-@section('title', 'Дневник питания')
-@section('page-title', 'Дневник питания')
+@section('title', __('common.nutrition_diary'))
+@section('page-title', __('common.nutrition_diary'))
 
 @section("sidebar")
     <a href="{{ route("crm.dashboard.main") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.athlete.workouts") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.athlete.exercises") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        Упражнения
+        {{ __('common.exercises') }}
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        Прогресс
+        {{ __('common.progress') }}
     </a>
     <a href="{{ route("crm.nutrition.index") }}" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        Дневник питания
+        {{ __('common.nutrition_diary') }}
     </a>
     <a href="{{ route('crm.athlete.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -54,44 +54,44 @@
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        Упражнения
+        {{ __('common.exercises') }}
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        Прогресс
+        {{ __('common.progress') }}
     </a>
     <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link active">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        Дневник питания
+        {{ __('common.nutrition_diary') }}
     </a>
     <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -111,7 +111,7 @@
                         </svg>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-label">Калории сегодня</div>
+                        <div class="stat-label">{{ __('common.calories_today') }}</div>
                         <div class="stat-value" x-text="getTodayCalories()"></div>
                     </div>
                 </div>
@@ -123,7 +123,7 @@
                         </svg>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-label">Белки сегодня (г)</div>
+                        <div class="stat-label">{{ __('common.proteins_today') }} ({{ __('common.g') }})</div>
                         <div class="stat-value" x-text="getTodayProteins()"></div>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
                         </svg>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-label">Углеводы сегодня (г)</div>
+                        <div class="stat-label">{{ __('common.carbs_today') }} ({{ __('common.g') }})</div>
                         <div class="stat-value" x-text="getTodayCarbs()"></div>
                     </div>
                 </div>
@@ -147,7 +147,7 @@
                         </svg>
                     </div>
                     <div class="stat-content">
-                        <div class="stat-label">Жиры сегодня (г)</div>
+                        <div class="stat-label">{{ __('common.fats_today') }} ({{ __('common.g') }})</div>
                         <div class="stat-value" x-text="getTodayFats()"></div>
                     </div>
                 </div>
@@ -155,12 +155,12 @@
             
             <!-- Планы питания -->
             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                <h4 class="text-md font-semibold text-gray-900 mb-4">Планы питания</h4>
+                <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.nutrition_plans') }}</h4>
                 
                 <!-- Индикатор загрузки -->
                 <div x-show="loadingNutritionPlans" class="text-center py-8">
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    <p class="mt-2 text-gray-500">Загрузка планов питания...</p>
+                    <p class="mt-2 text-gray-500">{{ __('common.loading_nutrition_plans') }}...</p>
                 </div>
                 
                 <!-- Пустое состояние -->
@@ -168,8 +168,8 @@
                     <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
                     </svg>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">Нет планов питания</h3>
-                    <p class="text-gray-500">У вас пока нет планов питания</p>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.no_nutrition_plans') }}</h3>
+                    <p class="text-gray-500">{{ __('common.no_nutrition_plans_description') }}</p>
                 </div>
                 
                 <!-- Список планов -->
@@ -179,19 +179,19 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex-1">
                                     <h5 class="text-lg font-medium text-gray-900">
-                                        <span x-text="plan.title || `План питания на ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} г.`"></span>
-                                        <span class="text-sm text-gray-600" x-text="`(${plan.nutrition_days ? plan.nutrition_days.length : 0} дней)`"></span>
+                                        <span x-text="plan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, plan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${plan.year} {{ __('common.year') }}.`"></span>
+                                        <span class="text-sm text-gray-600" x-text="`(${plan.nutrition_days ? plan.nutrition_days.length : 0} {{ __('common.days') }})`"></span>
                                     </h5>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <button @click="showDetailedNutritionPlan(plan)" 
                                             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            title="Подробнее">
+                                            title="{{ __('common.details') }}">
                                         <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
-                                        Подробнее
+                                        {{ __('common.details') }}
                                     </button>
                                 </div>
                             </div>
@@ -207,7 +207,7 @@
 <div x-data="{ detailedNutritionPlan: null }" x-show="detailedNutritionPlan" x-cloak x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; display: none !important;">
     <div class="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[85vh] overflow-hidden">
         <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `План питания на ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${detailedNutritionPlan.year} г.`) : ''"></h3>
+            <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${detailedNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>
             <button @click="detailedNutritionPlan = null" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -220,7 +220,7 @@
                 <div>
                     <!-- Описание плана -->
                     <div class="mb-6" x-show="detailedNutritionPlan.description">
-                        <h4 class="text-lg font-medium text-gray-900 mb-2">Описание</h4>
+                        <h4 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.description') }}</h4>
                         <p class="text-gray-600" x-text="detailedNutritionPlan.description"></p>
                     </div>
                     
@@ -228,19 +228,19 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-red-50 rounded-lg p-4 text-center">
                             <div class="text-2xl font-bold text-red-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
-                            <div class="text-sm text-red-800">Общие калории</div>
+                            <div class="text-sm text-red-800">{{ __('common.total_calories') }}</div>
                         </div>
                         <div class="bg-blue-50 rounded-lg p-4 text-center">
                             <div class="text-2xl font-bold text-blue-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
-                            <div class="text-sm text-blue-800">Общие белки (г)</div>
+                            <div class="text-sm text-blue-800">{{ __('common.total_proteins') }} ({{ __('common.g') }})</div>
                         </div>
                         <div class="bg-yellow-50 rounded-lg p-4 text-center">
                             <div class="text-2xl font-bold text-yellow-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
-                            <div class="text-sm text-yellow-800">Общие углеводы (г)</div>
+                            <div class="text-sm text-yellow-800">{{ __('common.total_carbs') }} ({{ __('common.g') }})</div>
                         </div>
                         <div class="bg-green-50 rounded-lg p-4 text-center">
                             <div class="text-2xl font-bold text-green-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
-                            <div class="text-sm text-green-800">Общие жиры (г)</div>
+                            <div class="text-sm text-green-800">{{ __('common.total_fats') }} ({{ __('common.g') }})</div>
                         </div>
                     </div>
                     
@@ -249,12 +249,12 @@
                         <table class="min-w-full bg-white border border-gray-300 rounded-lg">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">День</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Белки (г)</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Жиры (г)</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Углеводы (г)</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Калории</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Заметки</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.day') }}</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.proteins') }} ({{ __('common.g') }})</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.fats') }} ({{ __('common.g') }})</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.carbs') }} ({{ __('common.g') }})</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-300">
@@ -277,7 +277,7 @@
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <p>Нет данных по дням</p>
+                        <p>{{ __('common.no_day_data') }}</p>
                     </div>
                 </div>
             </template>

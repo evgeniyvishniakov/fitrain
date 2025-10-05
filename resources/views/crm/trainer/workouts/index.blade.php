@@ -1,7 +1,7 @@
 @extends("crm.layouts.app")
 
-@section("title", "Тренировки")
-@section("page-title", "Тренировки")
+@section("title", __('common.workouts'))
+@section("page-title", __('common.workouts'))
 
 <script src="{{ asset('js/notifications.js') }}"></script>
 
@@ -174,7 +174,7 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     }
     
     // Показываем уведомление об успешном изменении порядка
-    showSuccess('Успех!', 'Порядок упражнений изменен');
+    showSuccess('{{ __('common.success') }}!', '{{ __('common.exercise_order_changed') }}');
     
     cleanupDragState();
 }
@@ -475,14 +475,14 @@ function workoutApp() {
             if (!this.exerciseSetsData[exerciseId]) {
                 this.exerciseSetsData[exerciseId] = [];
                 const exercise = this.currentWorkout?.exercises?.find(ex => (ex.exercise_id == exerciseId) || (ex.id == exerciseId));
-                const defaultRest = exercise?.rest || exercise?.pivot?.rest || 1.0; // По умолчанию 1 минута
+                const defaultRest = exercise?.rest || exercise?.pivot?.rest || 1.0; // По умолчанию 1 {{ __('common.min') }}
                 
                 for (let i = 0; i < totalSets; i++) {
                     this.exerciseSetsData[exerciseId].push({
                         set_number: i + 1,
                         reps: '',
                         weight: '',
-                        rest: defaultRest // Автоматически заполняем отдых в минутах
+                        rest: defaultRest // Автоматически заполняем отдых в {{ __('common.minutes') }}
                     });
                 }
             }
@@ -607,7 +607,7 @@ function workoutApp() {
                 }
 
                 // Показываем индикатор загрузки
-                showInfo('Сохранение...', 'Сохраняем прогресс...', 2000);
+                showInfo('{{ __('common.saving') }}', '{{ __('common.saving_progress') }}', 2000);
 
                 const requestData = {
                     workout_id: this.currentWorkout.id,
@@ -632,14 +632,14 @@ function workoutApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    throw new Error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    throw new Error('{{ __('common.received_html_instead_json') }}');
                 }
                 
                 let result;
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    throw new Error('Получен некорректный ответ от сервера');
+                    throw new Error('{{ __('common.invalid_server_response') }}');
                 }
                 
                 if (result.success) {
@@ -654,8 +654,8 @@ function workoutApp() {
                         const { status, id } = this.lastChangedExercise;
                         
                         if (status === 'completed') {
-                            title = 'Прогресс сохранен!';
-                            message = 'Упражнение отмечено как выполнено';
+                            title = '{{ __('common.progress_saved') }}';
+                            message = '{{ __('common.exercise_completed') }}';
                         } else if (status === 'partial') {
                             // Проверяем, есть ли данные по подходам
                             const hasSetsData = this.exerciseSetsData[id] && 
@@ -664,22 +664,22 @@ function workoutApp() {
                                                );
                             
                             if (hasSetsData) {
-                                title = 'Прогресс сохранен!';
-                                message = 'Упражнение сохранено с детализацией';
+                                title = '{{ __('common.progress_saved') }}';
+                                message = '{{ __('common.exercise_saved_with_details') }}';
                             } else {
-                                title = 'Статус обновлен!';
-                                message = 'Упражнение отмечено как частично выполненное';
+                                title = '{{ __('common.status_updated') }}';
+                                message = '{{ __('common.exercise_partially_completed') }}';
                             }
                         } else if (status === 'not_done') {
-                            title = 'Статус обновлен!';
-                            message = 'Упражнение отмечено как не выполнено';
+                            title = '{{ __('common.status_updated') }}';
+                            message = '{{ __('common.exercise_not_completed') }}';
                         }
                         
                         // Сбрасываем последнее измененное упражнение
                         this.lastChangedExercise = null;
                     } else {
                         // Fallback для случая, если lastChangedExercise не установлен
-                        title = 'Статус обновлен!';
+                        title = '{{ __('common.status_updated') }}';
                         message = `Обновлено ${exercises.length} упражнений`;
                     }
                     
@@ -688,11 +688,11 @@ function workoutApp() {
                     // Обновляем данные в списке тренировок
                     this.updateWorkoutProgressInList();
                 } else {
-                    showError('Ошибка сохранения', result.message || 'Не удалось сохранить прогресс. Попробуйте еще раз.');
+                    showError('{{ __('common.saving_error') }}', result.message || '{{ __('common.failed_to_save_progress') }}');
                 }
             } catch (error) {
-                console.error('Ошибка обновления:', error);
-                showError('Ошибка соединения', 'Проверьте подключение к интернету и попробуйте еще раз.');
+                console.error('{{ __('common.update_error') }}:', error);
+                showError('{{ __('common.connection_error') }}', '{{ __('common.check_internet_connection') }}');
             }
         },
         
@@ -805,9 +805,9 @@ function workoutApp() {
         // Вспомогательные методы
         getStatusLabel(status) {
             const labels = {
-                'completed': 'Завершена',
-                'cancelled': 'Отменена',
-                'planned': 'Запланирована'
+                'completed': '{{ __('common.completed') }}',
+                'cancelled': '{{ __('common.cancelled') }}',
+                'planned': '{{ __('common.planned') }}'
             };
             return labels[status] || status;
         },
@@ -836,8 +836,8 @@ function workoutApp() {
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     const text = await response.text();
-                    console.error('Не JSON ответ:', text);
-                    throw new Error('Сервер вернул не JSON ответ');
+                    console.error('{{ __('common.not_json_response') }}:', text);
+                    throw new Error('{{ __('common.server_returned_not_json') }}');
                 }
 
                 const result = await response.json();
@@ -856,18 +856,18 @@ function workoutApp() {
                     
                     // Показываем уведомление
                     const statusLabels = {
-                        'planned': 'Запланирована',
-                        'completed': 'Завершена',
-                        'cancelled': 'Отменена'
+                        'planned': '{{ __('common.planned') }}',
+                        'completed': '{{ __('common.completed') }}',
+                        'cancelled': '{{ __('common.cancelled') }}'
                     };
                     
-                    showSuccess('Статус обновлен!', `Тренировка теперь: ${statusLabels[newStatus]}`);
+                    showSuccess('{{ __('common.status_updated') }}', `{{ __('common.workout') }}: ${statusLabels[newStatus]}`);
                 } else {
-                    showError('Ошибка', result.message || 'Не удалось обновить статус тренировки');
+                    showError('{{ __('common.error') }}', result.message || '{{ __('common.failed_to_update_workout_status') }}');
                 }
             } catch (error) {
-                console.error('Ошибка обновления статуса:', error);
-                showError('Ошибка соединения', `Ошибка: ${error.message}`);
+                console.error('{{ __('common.status_update_error') }}:', error);
+                showError('{{ __('common.connection_error') }}', `{{ __('common.error') }}: ${error.message}`);
             }
         },
         
@@ -948,10 +948,10 @@ function workoutApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: this.currentWorkout && this.currentWorkout.id ? 'Тренировка обновлена' : 'Тренировка создана',
+                            title: this.currentWorkout && this.currentWorkout.id ? '{{ __('common.workout_updated') }}' : '{{ __('common.workout_created') }}',
                             message: this.currentWorkout && this.currentWorkout.id ? 
-                                'Тренировка успешно обновлена' : 
-                                'Тренировка успешно добавлена в календарь'
+                                '{{ __('common.workout_successfully_updated') }}' : 
+                                '{{ __('common.workout_successfully_created') }}'
                         }
                     }));
                     
@@ -1011,19 +1011,19 @@ function workoutApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка сохранения',
-                            message: result.message || 'Произошла ошибка при сохранении тренировки'
+                            title: '{{ __('common.saving_error') }}',
+                            message: result.message || '{{ __('common.error_occurred') }}'
                         }
                     }));
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error('{{ __('common.error') }}:', error);
                 // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при сохранении тренировки'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.error_occurred') }}'
                     }
                 }));
             }
@@ -1032,15 +1032,15 @@ function workoutApp() {
         // Удаление
         deleteWorkout(id) {
             const workout = this.workouts.find(w => w.id === id);
-            const workoutTitle = workout ? workout.title : 'тренировку';
+            const workoutTitle = workout ? workout.title : '{{ __('common.workout') }}';
             
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: 'Удалить тренировку',
-                    message: `Вы уверены, что хотите удалить тренировку "${workoutTitle}"?`,
-                    confirmText: 'Удалить',
-                    cancelText: 'Отмена',
+                    title: '{{ __('common.delete_workout') }}',
+                    message: `{{ __('common.are_you_sure_delete_workout') }} "${workoutTitle}"?`,
+                    confirmText: '{{ __('common.delete') }}',
+                    cancelText: '{{ __('common.cancel') }}',
                     onConfirm: () => this.performDelete(id)
                 }
             }));
@@ -1062,8 +1062,8 @@ function workoutApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: 'Тренировка удалена',
-                            message: 'Тренировка успешно удалена из календаря'
+                            title: '{{ __('common.workout_deleted') }}',
+                            message: '{{ __('common.workout_successfully_deleted') }}'
                         }
                     }));
                     
@@ -1079,19 +1079,19 @@ function workoutApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка удаления',
-                            message: result.message || 'Произошла ошибка при удалении тренировки'
+                            title: '{{ __('common.error_deleting') }}',
+                            message: result.message || '{{ __('common.error_deleting_workout') }}'
                         }
                     }));
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error('{{ __('common.error') }}:', error);
                 // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Произошла ошибка при удалении тренировки'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.error_deleting_workout') }}'
                     }
                 }));
             }
@@ -1145,7 +1145,7 @@ function workoutApp() {
             const emptyState = document.getElementById('emptyExercisesState');
             
             if (!container || !list || !emptyState) {
-                console.error('Не найдены элементы для отображения упражнений');
+                console.error('{{ __('common.elements_not_found_for_exercises') }}');
                 return;
             }
             
@@ -1175,7 +1175,7 @@ function workoutApp() {
                              ondragend="cleanupDragState()">
                             <!-- Заголовок упражнения -->
                             <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center space-x-3 flex-1 cursor-move" title="Перетащите для изменения порядка">
+                                <div class="flex items-center space-x-3 flex-1 cursor-move" title="{{ __('common.drag_to_reorder') }}">
                                     <!-- Drag Handle -->
                                     <div class="text-gray-400 hover:text-gray-600">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1199,7 +1199,7 @@ function workoutApp() {
                                     <button onclick="removeExercise(${exercise.id})" 
                                             onmousedown="event.stopPropagation()" 
                                             class="text-red-500 hover:text-red-700 text-sm">
-                                        Удалить
+                                        {{ __('common.delete') }}
                                     </button>
                                 </div>
                             </div>
@@ -1228,7 +1228,7 @@ function workoutApp() {
         generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
             const fieldConfigs = {
                 'sets': {
-                    label: 'Подходы',
+                    label: '{{ __('common.sets') }}',
                     icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
                     color: 'indigo',
                     type: 'number',
@@ -1237,7 +1237,7 @@ function workoutApp() {
                     value: '3'
                 },
                 'reps': {
-                    label: 'Повторения',
+                    label: '{{ __('common.repetitions') }}',
                     icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
                     color: 'green',
                     type: 'number',
@@ -1246,7 +1246,7 @@ function workoutApp() {
                     value: '10'
                 },
                 'weight': {
-                    label: 'Вес (кг)',
+                    label: '{{ __('common.weight_kg') }}',
                     icon: 'M13 10V3L4 14h7v7l9-11h-7z',
                     color: 'orange',
                     type: 'number',
@@ -1256,7 +1256,7 @@ function workoutApp() {
                     value: '0'
                 },
                 'rest': {
-                    label: 'Отдых (мин)',
+                    label: '{{ __('common.rest') }} ({{ __('common.min') }})',
                     icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
                     color: 'purple',
                     type: 'number',
@@ -1266,7 +1266,7 @@ function workoutApp() {
                     value: '2'
                 },
                 'time': {
-                    label: 'Время (сек)',
+                    label: '{{ __('common.time_sec') }}',
                     icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
                     color: 'blue',
                     type: 'number',
@@ -1276,7 +1276,7 @@ function workoutApp() {
                     value: '0'
                 },
                 'distance': {
-                    label: 'Дистанция (м)',
+                    label: '{{ __('common.distance_m') }}',
                     icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
                     color: 'green',
                     type: 'number',
@@ -1286,7 +1286,7 @@ function workoutApp() {
                     value: '0'
                 },
                 'tempo': {
-                    label: 'Темп/Скорость',
+                    label: '{{ __('common.pace_speed') }}',
                     icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
                     color: 'purple',
                     type: 'text',
@@ -1371,13 +1371,13 @@ function workoutApp() {
                         <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
-                        Примечания
+                        {{ __('common.notes') }}
                     </label>
                     <div class="relative">
                         <input type="text" 
                                name="notes_${exerciseId}" 
                                value="${notesValue}"
-                               placeholder="Дополнительные заметки..."
+                               placeholder="{{ __('common.additional_notes') }}"
                                class="w-full px-4 py-3 text-sm bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-gray-100 focus:border-gray-400 transition-all duration-200 hover:border-gray-300 placeholder-gray-500">
                     </div>
                 </div>
@@ -2011,7 +2011,7 @@ function workoutApp() {
                 <div class="search-container">
                     <input type="text" 
                            x-model="search" 
-                           placeholder="Поиск тренировок..." 
+                           placeholder="{{ __('common.search_workouts') }}" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
@@ -2019,10 +2019,10 @@ function workoutApp() {
                 <div class="status-container">
                     <select x-model="status" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все статусы</option>
-                        <option value="planned">Запланирована</option>
-                        <option value="completed">Завершена</option>
-                        <option value="cancelled">Отменена</option>
+                        <option value="">{{ __('common.all_statuses') }}</option>
+                        <option value="planned">{{ __('common.planned') }}</option>
+                        <option value="completed">{{ __('common.completed') }}</option>
+                        <option value="cancelled">{{ __('common.cancelled') }}</option>
                     </select>
                 </div>
                 
@@ -2031,7 +2031,7 @@ function workoutApp() {
                     @if(auth()->user()->hasRole('trainer'))
                         <button @click="showCreate()" 
                                 class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                            Добавить тренировку
+                            {{ __('common.create') }} {{ __('common.workout') }}
                         </button>
                     @endif
                 </div>
@@ -2041,7 +2041,7 @@ function workoutApp() {
         <!-- Активные фильтры -->
         <div x-show="search || status" class="mt-4 pt-4 border-t border-gray-100">
             <div class="flex flex-wrap gap-2">
-                <span class="text-sm text-gray-500">Активные фильтры:</span>
+                <span class="text-sm text-gray-500">{{ __('common.active_filters') }}</span>
                 
                 <span x-show="search" 
                       class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -2089,16 +2089,16 @@ function workoutApp() {
                         <!-- Информация о дате, времени и участнике -->
                         <div class="flex-1 flex items-center gap-6 text-sm text-gray-600">
                             <span class="flex-shrink-0">
-                                <span class="font-medium text-gray-700">Дата:</span>
+                                <span class='font-medium text-gray-700'>{{ __('common.date') }}:</span>
                                 <span x-text="formatDate(workout.date)" class="text-gray-900 font-semibold"></span>
                             </span>
                             <span class="flex-shrink-0">
-                                <span class="font-medium text-gray-700">Время:</span>
-                                <span x-text="workout.time ? workout.time.substring(0, 5) : 'Не указано'" class="text-gray-900 font-semibold"></span>
+                                <span class='font-medium text-gray-700'>{{ __('common.time') }}:</span>
+                                <span x-text="workout.time ? workout.time.substring(0, 5) : '{{ __('common.not_specified') }}'" class="text-gray-900 font-semibold"></span>
                             </span>
                             <span class="flex-shrink-0">
-                                <span class="font-medium text-gray-700">Участник:</span>
-                                <span x-text="workout.athlete?.name || workout.trainer?.name || 'Не указан'" class="text-gray-900 font-semibold"></span>
+                                <span class="font-medium text-gray-700">{{ __('common.participant') }}</span>
+                                <span x-text="workout.athlete?.name || workout.trainer?.name || '{{ __('common.not_specified') }}'" class="text-gray-900 font-semibold"></span>
                             </span>
                         </div>
                         
@@ -2120,7 +2120,7 @@ function workoutApp() {
                         <!-- Упражнения -->
                         <div x-show="(workout.exercises || []).length > 0" class="mt-3">
                             <div class="flex flex-wrap gap-1 items-center">
-                                <div class="text-xs font-medium text-gray-500">Упражнения:</div>
+                                <div class="text-xs font-medium text-gray-500">{{ __('common.exercises') }}</div>
                                 <!-- Отображаем все упражнения через Alpine.js -->
                                 <template x-for="(exercise, index) in (workout.exercises || [])" :key="`exercise-${workout.id}-${index}`">
                                     <span x-show="index < 3 || isExercisesExpanded(workout.id)"
@@ -2131,8 +2131,8 @@ function workoutApp() {
                                               'bg-red-100 text-red-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'not_done',
                                               'bg-gray-100 text-gray-600': !getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id)
                                           }"
-                                          :title="exercise.progress?.athlete_comment ? 'Комментарий: ' + exercise.progress.athlete_comment : ''"
-                                          x-text="exercise.name || 'Без названия'">
+                                          :title="exercise.progress?.athlete_comment ? '{{ __('common.athlete_comment') }}: ' + exercise.progress.athlete_comment : ''"
+                                          x-text="exercise.name || '{{ __('common.no_title') }}'">
                                     </span>
                                 </template>
                                 
@@ -2140,7 +2140,7 @@ function workoutApp() {
                                 <button x-show="(workout.exercises || []).length > 3" 
                                         @click="toggleExercisesExpanded(workout.id)" 
                                         class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
-                                    <span x-text="isExercisesExpanded(workout.id) ? 'Свернуть' : '+' + ((workout.exercises || []).length - 3) + ' еще'"></span>
+                                    <span x-text="isExercisesExpanded(workout.id) ? '{{ __('common.collapse') }}' : '+' + ((workout.exercises || []).length - 3) + ' {{ __('common.more') }}'"></span>
                                 </button>
                             </div>
                         </div>
@@ -2151,16 +2151,16 @@ function workoutApp() {
                     <div class="flex space-x-2">
                         <button @click="showView(workout.id)" 
                                 class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                            Просмотр
+                            {{ __('common.view') }}
                         </button>
                         @if(auth()->user()->hasRole('trainer'))
                             <button @click="showEdit(workout.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                Редактировать
+                                {{ __('common.edit') }}
                             </button>
                             <button @click="deleteWorkout(workout.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                Удалить
+                                {{ __('common.delete') }}
                             </button>
                         @endif
                     </div>
@@ -2212,12 +2212,12 @@ function workoutApp() {
             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <span class="text-3xl text-gray-400">💪</span>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет тренировок</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">У вас пока нет запланированных тренировок. Создайте первую тренировку для начала работы.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ __('common.no_workouts') }}</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ __('common.no_workouts_description') }}</p>
             @if(auth()->user()->hasRole('trainer'))
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Создать первую тренировку
+                    {{ __('common.create_first_workout') }}
                 </button>
             @endif
         </div>
@@ -2227,11 +2227,11 @@ function workoutApp() {
     <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">
-                <span x-text="currentWorkout?.id ? 'Редактировать тренировку' : 'Создать тренировку'"></span>
+                <span x-text="currentWorkout?.id ? '{{ __('common.edit_workout') }}' : '{{ __('common.create_workout') }}'"></span>
             </h3>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад к списку
+                {{ __('common.back_to_list') }}
             </button>
         </div>
         
@@ -2243,23 +2243,23 @@ function workoutApp() {
                     <div class="workout-title-athlete-row">
                         <div class="workout-title-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Название тренировки *
+                                {{ __('common.workout_title') }} *
                             </label>
                             <input type="text" 
                                    x-model="formTitle"
                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                   placeholder="Например: Силовая тренировка"
+                                   placeholder="{{ __('common.workout_title_placeholder') }}"
                                    required>
                         </div>
 
                         <div class="workout-athlete-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Спортсмен *
+                                {{ __('common.athlete') }} *
                             </label>
                             <select x-model="formAthleteId" 
                                     class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" 
                                     required>
-                                <option value="">Выберите спортсмена</option>
+                                <option value="">{{ __('common.select_athlete') }}</option>
                                 @foreach($athletes ?? [] as $athlete)
                                     <option value="{{ $athlete->id }}">{{ $athlete->name }}</option>
                                 @endforeach
@@ -2271,7 +2271,7 @@ function workoutApp() {
                     <div class="workout-date-duration-row">
                         <div class="workout-date-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Дата тренировки *
+                                {{ __('common.workout_date') }} *
                             </label>
                             <input type="date" 
                                    x-model="formDate"
@@ -2281,7 +2281,7 @@ function workoutApp() {
 
                         <div class="workout-time-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Время тренировки
+                                {{ __('common.workout_time') }}
                             </label>
                             <div class="relative">
                                 <input type="time" 
@@ -2299,12 +2299,12 @@ function workoutApp() {
 
                         <div class="workout-duration-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Продолжительность (минуты)
+                                {{ __('common.duration') }} ({{ __('common.minutes') }})
                             </label>
                             <input type="number" 
                                    x-model="formDuration"
                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                                   placeholder="60"
+                                   placeholder="{{ __('common.workout_duration_placeholder') }}"
                                    min="1">
                         </div>
                     </div>
@@ -2314,23 +2314,23 @@ function workoutApp() {
                 <div class="space-y-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Описание тренировки
+                            {{ __('common.workout_description') }}
                         </label>
                         <textarea x-model="formDescription"
                                   rows="6"
                                   class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
-                                  placeholder="Опишите план тренировки, упражнения, цели..."></textarea>
+                                  placeholder="{{ __('common.workout_description_placeholder') }}"></textarea>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Статус
+                            {{ __('common.status') }}
                         </label>
                         <select x-model="formStatus" 
                                 class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="planned">Запланирована</option>
-                            <option value="completed">Завершена</option>
-                            <option value="cancelled">Отменена</option>
+                            <option value="planned">{{ __('common.planned') }}</option>
+                            <option value="completed">{{ __('common.completed') }}</option>
+                            <option value="cancelled">{{ __('common.cancelled') }}</option>
                         </select>
                     </div>
                 </div>
@@ -2339,7 +2339,7 @@ function workoutApp() {
             <!-- Секция упражнений -->
             <div class="border-t border-gray-200 pt-6 mb-6">
                 <div class="exercise-header-row">
-                    <h3 style="font-size: 1.125rem; font-weight: 500; color: #111827; margin: 0;">Упражнения</h3>
+                    <h3 style="font-size: 1.125rem; font-weight: 500; color: #111827; margin: 0;">{{ __('common.exercises') }}</h3>
                     <div class="exercise-buttons-container">
                         <button type="button" onclick="openExerciseModal()" 
                                 style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: #374151; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;"
@@ -2348,7 +2348,7 @@ function workoutApp() {
                             <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                             </svg>
-                            Добавить упражнение
+                            {{ __('common.add_exercise') }}
                         </button>
                         <button type="button" onclick="openTemplateModal()" 
                                 style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: #374151; background: white; border: 1px solid #d1d5db; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;"
@@ -2357,14 +2357,14 @@ function workoutApp() {
                             <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            Добавить шаблон
+                            {{ __('common.add_template') }}
                         </button>
                     </div>
                 </div>
                 
                 <!-- Выбранные упражнения -->
                 <div id="selectedExercisesContainer" class="space-y-3" style="display: none;">
-                    <h4 class="text-sm font-medium text-gray-700">Выбранные упражнения:</h4>
+                    <h4 class="text-sm font-medium text-gray-700">{{ __('common.selected_exercises') }}</h4>
                     <div id="selectedExercisesList" class="space-y-2">
                         <!-- Здесь будут отображаться выбранные упражнения -->
                     </div>
@@ -2372,7 +2372,7 @@ function workoutApp() {
                 
                 <!-- Пустое состояние -->
                 <div id="emptyExercisesState" class="text-center py-6 text-gray-500 bg-gray-50 rounded-lg">
-                    <p>Добавьте упражнения или выберите шаблон тренировки</p>
+                    <p>{{ __('common.add_exercises_or_template') }}</p>
                 </div>
             </div>
 
@@ -2385,7 +2385,7 @@ function workoutApp() {
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    <span x-text="currentWorkout?.id ? 'Обновить' : 'Создать'"></span>
+                    <span x-text="currentWorkout?.id ? '{{ __('common.update') }}' : '{{ __('common.create') }}'"></span>
                 </button>
             </div>
         </form>
@@ -2394,10 +2394,10 @@ function workoutApp() {
     <!-- ПРОСМОТР ТРЕНИРОВКИ -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Просмотр тренировки</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.view_workout') }}</h3>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад к списку
+                {{ __('common.back_to_list') }}
             </button>
         </div>
         
@@ -2452,7 +2452,7 @@ function workoutApp() {
             
             <!-- Описание -->
             <div class="prose max-w-none" x-show="currentWorkout?.description">
-                <h5 class="text-lg font-semibold text-gray-900 mb-3">Описание</h5>
+                <h5 class="text-lg font-semibold text-gray-900 mb-3">{{ __('common.workout_description') }}</h5>
                 <p class="text-gray-600 whitespace-pre-line" x-text="currentWorkout?.description"></p>
             </div>
             
@@ -2460,43 +2460,43 @@ function workoutApp() {
             <div class="workout-details-grid">
                 <div class="bg-gray-50 rounded-xl p-4">
                     <div class="mb-2">
-                        <span class="text-sm font-medium text-gray-500">Дата</span>
+                        <span class="text-sm font-medium text-gray-500">{{ __('common.date') }}</span>
                     </div>
                     <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('ru-RU') : ''"></p>
                 </div>
                 
                 <div class="bg-gray-50 rounded-xl p-4" x-show="currentWorkout?.time">
                     <div class="mb-2">
-                        <span class="text-sm font-medium text-gray-500">Время</span>
+                        <span class="text-sm font-medium text-gray-500">{{ __('common.time') }}</span>
                     </div>
                     <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.time ? currentWorkout.time.substring(0, 5) : ''"></p>
                 </div>
                 
                 <div class="bg-gray-50 rounded-xl p-4" x-show="currentWorkout?.duration">
                     <div class="mb-2">
-                        <span class="text-sm font-medium text-gray-500">Продолжительность</span>
+                        <span class="text-sm font-medium text-gray-500">{{ __('common.duration') }}</span>
                     </div>
-                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.duration + ' мин'"></p>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.duration + ' {{ __('common.min') }}'"></p>
                 </div>
                 
                 <div class="bg-gray-50 rounded-xl p-4">
                     <div class="mb-2">
-                        <span class="text-sm font-medium text-gray-500">Участник</span>
+                        <span class="text-sm font-medium text-gray-500">{{ __('common.participant') }}</span>
                     </div>
-                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.athlete?.name || currentWorkout?.trainer?.name || 'Неизвестно'"></p>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.athlete?.name || currentWorkout?.trainer?.name || '{{ __('common.unknown') }}'"></p>
                 </div>
             </div>
             
             <!-- Упражнения -->
             <div x-show="(currentWorkout?.exercises || []).length > 0" class="pt-6 border-t border-gray-200">
-                <h5 class="text-lg font-semibold text-gray-900 mb-4">Упражнения</h5>
+                <h5 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.exercises') }}</h5>
                 <div class="space-y-4">
                     <template x-for="(exercise, index) in (currentWorkout?.exercises || [])" :key="`view-exercise-${index}`">
                         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
                             <div class="exercise-header-section">
                                 <div class="flex items-center space-x-3">
                                     <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
-                                    <span class="text-sm font-medium text-gray-900" x-text="exercise.name || 'Без названия'"></span>
+                                    <span class="text-sm font-medium text-gray-900" x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
                                     <span class="text-xs text-gray-500" x-text="(exercise.category || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (exercise.equipment || '')"></span>
                                 </div>
                                 <!-- Ссылка на видео упражнения -->
@@ -2522,7 +2522,7 @@ function workoutApp() {
                                             <svg class="w-4 h-4 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-indigo-800">Подходы</span>
+                                            <span class="text-sm font-semibold text-indigo-800">{{ __('common.sets') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-indigo-900" x-text="formatNumber(exercise.sets || exercise.pivot?.sets || 0)"></div>
                                     </div>
@@ -2536,7 +2536,7 @@ function workoutApp() {
                                             <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-green-800">Повторения</span>
+                                            <span class="text-sm font-semibold text-green-800">{{ __('common.repetitions') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-green-900" x-text="formatNumber(exercise.reps || exercise.pivot?.reps || 0)"></div>
                                     </div>
@@ -2550,7 +2550,7 @@ function workoutApp() {
                                             <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-orange-800">Вес (кг)</span>
+                                            <span class="text-sm font-semibold text-orange-800">{{ __('common.weight_kg') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-orange-900" x-text="formatNumber(exercise.weight || exercise.pivot?.weight || 0)"></div>
                                     </div>
@@ -2564,7 +2564,7 @@ function workoutApp() {
                                             <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-purple-800">Отдых (мин)</span>
+                                            <span class="text-sm font-semibold text-purple-800">{{ __('common.rest') }} ({{ __('common.min') }})</span>
                                         </div>
                                         <div class="text-2xl font-bold text-purple-900" x-text="formatNumber(exercise.rest || exercise.pivot?.rest || 0)"></div>
                                     </div>
@@ -2578,7 +2578,7 @@ function workoutApp() {
                                             <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-blue-800">Время (сек)</span>
+                                            <span class="text-sm font-semibold text-blue-800">{{ __('common.time_sec') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-blue-900" x-text="exercise.time || exercise.pivot?.time || 0"></div>
                                     </div>
@@ -2592,7 +2592,7 @@ function workoutApp() {
                                             <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-green-800">Дистанция (м)</span>
+                                            <span class="text-sm font-semibold text-green-800">{{ __('common.distance_m') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-green-900" x-text="exercise.distance || exercise.pivot?.distance || 0"></div>
                                     </div>
@@ -2606,7 +2606,7 @@ function workoutApp() {
                                             <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                                             </svg>
-                                            <span class="text-sm font-semibold text-purple-800">Темп/Скорость</span>
+                                            <span class="text-sm font-semibold text-purple-800">{{ __('common.pace_speed') }}</span>
                                         </div>
                                         <div class="text-2xl font-bold text-purple-900" x-text="exercise.tempo || exercise.pivot?.tempo || ''"></div>
                                     </div>
@@ -2619,7 +2619,7 @@ function workoutApp() {
                                     <svg class="w-4 h-4 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
-                                    <span class="text-sm font-semibold text-gray-700">Примечания</span>
+                                    <span class="text-sm font-semibold text-gray-700">{{ __('common.notes') }}</span>
                                 </div>
                                 <div class="text-sm text-gray-600 bg-gray-50 rounded-lg p-3" x-text="exercise.notes || exercise.pivot?.notes"></div>
                             </div>
@@ -2630,8 +2630,8 @@ function workoutApp() {
                                     <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                                     </svg>
-                                    <span class="text-sm font-semibold text-yellow-700">Комментарий спортсмена</span>
-                                    <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">Частично выполнено</span>
+                                    <span class="text-sm font-semibold text-yellow-700">{{ __('common.athlete_comment') }}</span>
+                                    <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">{{ __('common.partially_completed') }}</span>
                                 </div>
                                 <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="currentWorkout ? (workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment || '') : ''"></div>
                             </div>
@@ -2640,22 +2640,22 @@ function workoutApp() {
                             <!-- Статус выполнения упражнения (для тренера) -->
                             <div class="mt-4 pt-4 border-t border-gray-200">
                                 <div class="exercise-status-section mb-3">
-                                    <span class="text-sm font-medium text-gray-700 mb-2 block">Статус выполнения:</span>
+                                    <span class="text-sm font-medium text-gray-700 mb-2 block">{{ __('common.execution_status') }}</span>
                                     <div class="exercise-status-buttons flex space-x-2">
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'completed')" 
                                                 :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ✅ Выполнено
+                                            ✅ {{ __('common.completed') }}
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'partial')" 
                                                 :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ⚠️ Частично
+                                            ⚠️ {{ __('common.partially_completed') }}
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'not_done')" 
                                                 :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ❌ Не выполнено
+                                            ❌ {{ __('common.not_completed') }}
                                         </button>
                                     </div>
                                 </div>
@@ -2669,10 +2669,10 @@ function workoutApp() {
                                                 <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                                 </svg>
-                                                <h6 class="text-sm font-semibold text-yellow-800">Детализация по подходам</h6>
+                                                <h6 class="text-sm font-semibold text-yellow-800">{{ __('common.sets_breakdown') }}</h6>
                                             </div>
                                             <div class="flex items-center text-xs text-yellow-700 hover:text-yellow-800 transition-colors">
-                                                <span x-text="isSetsExpanded(exercise.exercise_id || exercise.id) ? 'Свернуть' : 'Развернуть'"></span>
+                                                <span x-text="isSetsExpanded(exercise.exercise_id || exercise.id) ? '{{ __('common.collapse') }}' : '{{ __('common.expand') }}'"></span>
                                                 <svg class="w-4 h-4 ml-1 transition-transform" 
                                                      :class="isSetsExpanded(exercise.exercise_id || exercise.id) ? 'rotate-180' : ''"
                                                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2689,12 +2689,12 @@ function workoutApp() {
                                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                 </svg>
-                                                <span>Поля подходов свернуты. Нажмите для разворачивания.</span>
+                                                <span>{{ __('common.sets_fields_collapsed') }}</span>
                                             </div>
                                         </div>
                                         
                                         <div x-show="isSetsExpanded(exercise.exercise_id || exercise.id)" x-transition>
-                                            <p class="text-xs text-yellow-700 mb-4">Укажите, что именно выполнил спортсмен в каждом подходе:</p>
+                                            <p class="text-xs text-yellow-700 mb-4">{{ __('common.specify_what_athlete_completed') }}</p>
                                         
                                         <div class="space-y-3">
                                             <template x-for="(set, setIndex) in getSetsData(exercise.exercise_id || exercise.id)" :key="`set-${exercise.exercise_id || exercise.id}-${setIndex}`">
@@ -2704,9 +2704,8 @@ function workoutApp() {
                                                             <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                                             </svg>
-                                                            <span class="text-sm font-semibold text-yellow-800">Подход <span x-text="setIndex + 1"></span></span>
+                                                            <span class="text-sm font-semibold text-yellow-800">{{ __('common.set') }} <span x-text="setIndex + 1"></span> {{ __('common.of') }} <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
                                                         </div>
-                                                        <span class="text-xs text-yellow-600">из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
                                                     </div>
                                                     
                                                     <div class="sets-fields-grid">
@@ -2719,7 +2718,7 @@ function workoutApp() {
                                                                     <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-green-800">Повторения</span>
+                                                                    <span class="text-xs font-semibold text-green-800">{{ __('common.repetitions') }}</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
@@ -2740,7 +2739,7 @@ function workoutApp() {
                                                                     <svg class="w-4 h-4 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-purple-800">Вес (кг)</span>
+                                                                    <span class="text-xs font-semibold text-purple-800">{{ __('common.weight_kg') }}</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
@@ -2762,7 +2761,7 @@ function workoutApp() {
                                                                     <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-orange-800">Отдых (мин)</span>
+                                                                    <span class="text-xs font-semibold text-orange-800">{{ __('common.rest') }} ({{ __('common.min') }})</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
@@ -2780,7 +2779,7 @@ function workoutApp() {
                                         </div>
                                         
                                             <div class="text-xs text-yellow-600 mt-3">
-                                                💡 Изменения сохраняются автоматически при вводе
+                                                💡 {{ __('common.changes_save_automatically') }}
                                             </div>
                                         </div>
                                     </div>
@@ -2799,7 +2798,7 @@ function workoutApp() {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                     </div>
-                    <p class="text-gray-500 text-sm">Упражнения не добавлены</p>
+                    <p class="text-gray-500 text-sm">{{ __('common.no_exercises_added') }}</p>
                 </div>
             </div>
             
@@ -2808,12 +2807,12 @@ function workoutApp() {
                 <div class="flex space-x-2 pt-6 border-t border-gray-200">
                     <button @click="showEdit(currentWorkout?.id)" 
                             class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                        Редактировать
+                        {{ __('common.edit') }}
                     </button>
                     
                     <button @click="deleteWorkout(currentWorkout?.id)" 
                             class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                        Удалить
+                        {{ __('common.delete') }}
                     </button>
                 </div>
             @endif
@@ -2826,7 +2825,7 @@ function workoutApp() {
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 80%; max-height: 80%; width: 100%; overflow: hidden;">
         <!-- Заголовок -->
         <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">Выбор упражнений</h3>
+            <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">{{ __('common.exercise_selection') }}</h3>
             <button onclick="closeExerciseModal()" style="color: #6b7280; background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
         </div>
         
@@ -2837,7 +2836,7 @@ function workoutApp() {
                 <!-- Поиск -->
                 <input type="text" 
                        id="exercise-search" 
-                       placeholder="Поиск упражнений..." 
+                       placeholder="{{ __('common.search_exercises') }}" 
                        style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
                        onkeyup="filterExercises()"
                        onfocus="this.style.borderColor = '#4f46e5'"
@@ -2849,14 +2848,14 @@ function workoutApp() {
                         style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
-                    <option value="">Все категории</option>
-                    <option value="Грудь">Грудь</option>
-                    <option value="Спина">Спина</option>
-                    <option value="Ноги">Ноги</option>
-                    <option value="Плечи">Плечи</option>
-                    <option value="Руки">Руки</option>
-                    <option value="Кардио">Кардио</option>
-                    <option value="Гибкость">Гибкость</option>
+                    <option value="">{{ __('common.all_categories') }}</option>
+                    <option value="Грудь">{{ __('common.chest') }}</option>
+                    <option value="Спина">{{ __('common.back') }}</option>
+                    <option value="Ноги">{{ __('common.legs') }}</option>
+                    <option value="Плечи">{{ __('common.shoulders') }}</option>
+                    <option value="Руки">{{ __('common.arms') }}</option>
+                    <option value="Кардио">{{ __('common.cardio') }}</option>
+                    <option value="Гибкость">{{ __('common.flexibility') }}</option>
                 </select>
                 
                 <!-- Фильтр оборудования -->
@@ -2865,32 +2864,32 @@ function workoutApp() {
                         style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
-                    <option value="">Все оборудование</option>
-                    <option value="Штанга">Штанга</option>
-                    <option value="Гантели">Гантели</option>
-                    <option value="Собственный вес">Собственный вес</option>
-                    <option value="Тренажеры">Тренажеры</option>
-                    <option value="Скакалка">Скакалка</option>
-                    <option value="Турник">Турник</option>
+                    <option value="">{{ __('common.all_equipment') }}</option>
+                    <option value="Штанга">{{ __('common.barbell') }}</option>
+                    <option value="Гантели">{{ __('common.dumbbells') }}</option>
+                    <option value="Собственный вес">{{ __('common.body_weight') }}</option>
+                    <option value="Тренажеры">{{ __('common.machines') }}</option>
+                    <option value="Скакалка">{{ __('common.jump_rope') }}</option>
+                    <option value="Турник">{{ __('common.pull_up_bar') }}</option>
                 </select>
             </div>
             
             <div id="exercises-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-                <p style="color: black;">Загрузка упражнений...</p>
+                <p style="color: black;">{{ __('common.loading_exercises') }}</p>
             </div>
             
             <!-- Сообщение о пустых результатах -->
             <div id="no-results" style="display: none; text-align: center; padding: 40px; color: #6b7280;">
                 <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Упражнения не найдены</h3>
-                <p style="font-size: 14px;">Попробуйте изменить параметры поиска</p>
+                <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">{{ __('common.exercises_not_found') }}</h3>
+                <p style="font-size: 14px;">{{ __('common.try_changing_search_params') }}</p>
             </div>
         </div>
         
         <!-- Кнопки -->
         <div style="padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-            <button onclick="closeExerciseModal()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">Отмена</button>
-            <button onclick="addSelectedExercises()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">Готово</button>
+            <button onclick="closeExerciseModal()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">{{ __('common.cancel') }}</button>
+            <button onclick="addSelectedExercises()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">{{ __('common.done') }}</button>
         </div>
     </div>
 </div>
@@ -2900,7 +2899,7 @@ function workoutApp() {
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 80%; max-height: 80%; width: 100%; overflow: hidden;">
         <!-- Заголовок -->
         <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">Выбор шаблона тренировки</h3>
+            <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">{{ __('common.workout_template_selection') }}</h3>
             <button onclick="closeTemplateModal()" style="color: #6b7280; background: none; border: none; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
         </div>
         
@@ -2911,7 +2910,7 @@ function workoutApp() {
                 <!-- Поиск -->
                 <input type="text" 
                        id="template-search" 
-                       placeholder="Поиск шаблонов..." 
+                       placeholder="{{ __('common.search_templates') }}" 
                        style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s;"
                        onkeyup="filterTemplates()"
                        onfocus="this.style.borderColor = '#4f46e5'"
@@ -2924,10 +2923,10 @@ function workoutApp() {
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">Все категории</option>
-                    <option value="strength">Силовая</option>
-                    <option value="cardio">Кардио</option>
-                    <option value="flexibility">Гибкость</option>
-                    <option value="mixed">Смешанная</option>
+                    <option value="strength">{{ __('common.strength') }}</option>
+                    <option value="cardio">{{ __('common.cardio') }}</option>
+                    <option value="flexibility">{{ __('common.flexibility') }}</option>
+                    <option value="mixed">{{ __('common.mixed') }}</option>
                 </select>
                 
                 <!-- Фильтр сложности -->
@@ -2936,29 +2935,29 @@ function workoutApp() {
                         style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
-                    <option value="">Все уровни</option>
-                    <option value="beginner">Начинающий</option>
-                    <option value="intermediate">Средний</option>
-                    <option value="advanced">Продвинутый</option>
+                    <option value="">{{ __('common.all_levels') }}</option>
+                    <option value="beginner">{{ __('common.beginner') }}</option>
+                    <option value="intermediate">{{ __('common.intermediate') }}</option>
+                    <option value="advanced">{{ __('common.advanced') }}</option>
                 </select>
             </div>
             
             <div id="templates-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-                <p style="color: black;">Загрузка шаблонов...</p>
+                <p style="color: black;">{{ __('common.loading_templates') }}</p>
             </div>
             
             <!-- Сообщение о пустых результатах -->
             <div id="no-templates-results" style="display: none; text-align: center; padding: 40px; color: #6b7280;">
                 <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
-                <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">Шаблоны не найдены</h3>
-                <p style="font-size: 14px;">Создайте шаблон тренировки для быстрого планирования</p>
+                <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 8px;">{{ __('common.templates_not_found') }}</h3>
+                <p style="font-size: 14px;">{{ __('common.create_workout_template') }}</p>
             </div>
         </div>
         
         <!-- Кнопки -->
         <div style="padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-            <button onclick="closeTemplateModal()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">Отмена</button>
-            <button onclick="addSelectedTemplate()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">Готово</button>
+            <button onclick="closeTemplateModal()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">{{ __('common.cancel') }}</button>
+            <button onclick="addSelectedTemplate()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">{{ __('common.done') }}</button>
         </div>
     </div>
 </div>
@@ -3040,7 +3039,7 @@ async function loadTemplates() {
 function renderExercises() {
     const container = document.getElementById('exercises-container');
     if (exercises.length === 0) {
-        container.innerHTML = '<p style="color: black;">Упражнения не найдены</p>';
+        container.innerHTML = '<p style="color: black;">{{ __('common.exercises_not_found') }}</p>';
         return;
     }
     
@@ -3067,14 +3066,14 @@ function renderExercises() {
 function renderTemplates() {
     const container = document.getElementById('templates-container');
     if (templates.length === 0) {
-        container.innerHTML = '<p style="color: black;">Шаблоны не найдены</p>';
+        container.innerHTML = '<p style="color: black;">{{ __('common.templates_not_found') }}</p>';
         return;
     }
     
     container.innerHTML = templates.map(template => {
         const exerciseCount = (template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises ? template.exercises.length : 0);
-        const duration = template.estimated_duration ? `${template.estimated_duration} мин` : 'Не указано';
-        const difficulty = template.difficulty_label || template.difficulty || 'Не указано';
+        const duration = template.estimated_duration ? `${template.estimated_duration} {{ __('common.min') }}` : '{{ __('common.not_specified') }}';
+        const difficulty = template.difficulty_label || template.difficulty || '{{ __('common.not_specified') }}';
         const category = template.category || '';
         
         return `
@@ -3086,7 +3085,7 @@ function renderTemplates() {
                  onclick="toggleTemplate(this, ${template.id}, '${template.name}', ${JSON.stringify((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises : (template.exercises || [])).replace(/"/g, '&quot;')})">
                 <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${template.name}</h4>
                 <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exerciseCount} упражнений • ${duration}</p>
-                <p style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">Сложность: ${difficulty}</p>
+                <p style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;">{{ __('common.difficulty') }}: ${difficulty}</p>
                 <p style="font-size: 14px; color: #9ca3af;">${template.description || ''}</p>
             </div>
         `;
@@ -3226,7 +3225,7 @@ function addSelectedExercises() {
         return {
             id: exerciseId,
             name: el.dataset.exerciseName,
-            category: category || 'Не указано',
+            category: category || '{{ __('common.not_specified') }}',
             equipment: equipment || 'Не указано',
             fields_config: fullExercise ? fullExercise.fields_config : ['sets', 'reps', 'weight', 'rest']
         };
@@ -3400,7 +3399,7 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
             value: '0'
         },
         'rest': {
-            label: 'Отдых (мин)',
+            label: '{{ __('common.rest') }} ({{ __('common.min') }})',
             icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
             color: 'purple',
             type: 'number',
@@ -3477,7 +3476,7 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
                 <svg class="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
-                Примечания
+                {{ __('common.notes') }}
             </label>
             <div class="relative">
                 <input type="text" 
@@ -3572,7 +3571,7 @@ function displaySelectedExercises(exercises) {
                             <div class="flex-1">
                             <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
                             <span class="font-medium text-gray-900">${exercise.name}</span>
-                            <span class="text-sm text-gray-600">(${exercise.category || 'Не указано'} • ${exercise.equipment || 'Не указано'})</span>
+                            <span class="text-sm text-gray-600">(${exercise.category || '{{ __('common.not_specified') }}'} • ${exercise.equipment || '{{ __('common.not_specified') }}'})</span>
                         </div>
                         </div>
                         <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800 ml-2" onmousedown="event.stopPropagation()">

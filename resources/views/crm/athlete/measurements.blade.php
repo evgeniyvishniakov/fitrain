@@ -1,51 +1,51 @@
 @extends("crm.layouts.app")
 
-@section("title", "Измерения")
-@section("page-title", "История измерений")
+@section("title", __("common.measurements"))
+@section("page-title", __('common.measurements'))
 
 @section("sidebar")
     <a href="{{ route("crm.dashboard.main") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.athlete.workouts") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.athlete.exercises") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        Упражнения
+        {{ __('common.exercises') }}
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        Прогресс
+        {{ __('common.progress') }}
     </a>
     <a href="{{ route("crm.nutrition.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        Дневник питания
+        {{ __('common.nutrition_diary') }}
     </a>
     <a href="{{ route('crm.athlete.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -54,44 +54,44 @@
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        Упражнения
+        {{ __('common.exercises') }}
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        Прогресс
+        {{ __('common.progress') }}
     </a>
     <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        Дневник питания
+        {{ __('common.nutrition_diary') }}
     </a>
     <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -100,44 +100,44 @@
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Календарь
+        {{ __('common.calendar') }}
     </a>
     <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        Тренировки
+        {{ __('common.workouts') }}
     </a>
     <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        Упражнения
+        {{ __('common.exercises') }}
     </a>
     <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        Прогресс
+        {{ __('common.progress') }}
     </a>
     <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        Дневник питания
+        {{ __('common.nutrition_diary') }}
     </a>
     <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        Настройки
+        {{ __('common.settings') }}
     </a>
 @endsection
 
@@ -216,7 +216,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Всего измерений</div>
+                <div class="stat-label">{{ __('common.total_measurements') }}</div>
                 <div class="stat-value">{{ $totalMeasurements }}</div>
             </div>
         </div>
@@ -228,7 +228,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Последнее измерение</div>
+                <div class="stat-label">{{ __('common.last_measurement') }}</div>
                 <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : '—' }}</div>
             </div>
         </div>
@@ -240,7 +240,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Текущий вес</div>
+                <div class="stat-label">{{ __('common.current_weight') }}</div>
                 <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->weight . ' кг' : '—' }}</div>
             </div>
         </div>
@@ -253,7 +253,7 @@
             </div>
             <div class="stat-content">
                 <div class="stat-label flex items-center gap-1">
-                    <span>ИМТ</span>
+                    <span>{{ __('common.bmi') }}</span>
                     <!-- Иконка знака вопроса с подсказкой -->
                     <div class="relative group">
                         <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="currentColor" viewBox="0 0 20 20">
@@ -261,12 +261,12 @@
                         </svg>
                         <!-- Всплывающая подсказка -->
                         <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                            <div class="font-semibold mb-2">Индекс массы тела (ИМТ)</div>
+                            <div class="font-semibold mb-2">{{ __('common.bmi_tooltip') }}</div>
                             <div class="space-y-1">
-                                <div class="flex justify-between"><span class="text-blue-300">Менее 18.5:</span> <span>Недостаточный вес</span></div>
-                                <div class="flex justify-between"><span class="text-green-300">18.5 - 24.9:</span> <span>Нормальный вес</span></div>
-                                <div class="flex justify-between"><span class="text-yellow-300">25 - 29.9:</span> <span>Избыточный вес</span></div>
-                                <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span>Ожирение</span></div>
+                                <div class="flex justify-between"><span class="text-blue-300">{{ __('common.less_than_18_5') }}:</span> <span>{{ __('common.underweight') }}</span></div>
+                                <div class="flex justify-between"><span class="text-green-300">{{ __('common.18_5_to_24_9') }}:</span> <span>{{ __('common.normal_weight') }}</span></div>
+                                <div class="flex justify-between"><span class="text-yellow-300">{{ __('common.25_to_29_9') }}:</span> <span>{{ __('common.overweight') }}</span></div>
+                                <div class="flex justify-between"><span class="text-red-300">{{ __('common.30_and_more') }}:</span> <span>{{ __('common.obesity') }}</span></div>
                             </div>
                         </div>
                     </div>
@@ -277,13 +277,13 @@
                     if ($lastMeasurement && $lastMeasurement->weight && auth()->user()->height) {
                         $bmi = $lastMeasurement->weight / ((auth()->user()->height/100) ** 2);
                         if ($bmi < 18.5) {
-                            $bmiCategory = ['text' => 'Недостаточный вес', 'color' => 'text-blue-600'];
+                            $bmiCategory = ['text' => __('common.underweight'), 'color' => 'text-blue-600'];
                         } elseif ($bmi < 25) {
-                            $bmiCategory = ['text' => 'Нормальный вес', 'color' => 'text-green-600'];
+                            $bmiCategory = ['text' => __('common.normal_weight'), 'color' => 'text-green-600'];
                         } elseif ($bmi < 30) {
-                            $bmiCategory = ['text' => 'Избыточный вес', 'color' => 'text-yellow-600'];
+                            $bmiCategory = ['text' => __('common.overweight'), 'color' => 'text-yellow-600'];
                         } else {
-                            $bmiCategory = ['text' => 'Ожирение', 'color' => 'text-red-600'];
+                            $bmiCategory = ['text' => __('common.obesity'), 'color' => 'text-red-600'];
                         }
                     }
                 @endphp
@@ -297,12 +297,12 @@
     <div class="space-y-6" x-data="measurementPagination()">
         <!-- Заголовок с кнопкой добавления -->
         <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">История измерений</h3>
+            <h3 class="text-lg font-semibold text-gray-900">{{ __('common.measurement_history') }}</h3>
             <button onclick="showAddMeasurementModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                 </svg>
-                Добавить измерение
+                {{ __('common.add_measurement') }}
             </button>
         </div>
         
@@ -314,14 +314,14 @@
                         <div class="card hover:shadow-lg transition-shadow duration-200">
                             <div class="card-header">
                                 <div class="flex items-center justify-between">
-                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('ru-RU')"></h4>
+                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}')"></h4>
                                     <div class="flex space-x-2">
-                                        <button @click="editMeasurement(measurement.id)" class="text-indigo-600 hover:text-indigo-800" title="Редактировать">
+                                        <button @click="editMeasurement(measurement.id)" class="text-indigo-600 hover:text-indigo-800" title="{{ __('common.edit_measurement') }}">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                             </svg>
                                         </button>
-                                        <button @click="deleteMeasurement(measurement.id)" class="text-red-600 hover:text-red-800" title="Удалить">
+                                        <button @click="deleteMeasurement(measurement.id)" class="text-red-600 hover:text-red-800" title="{{ __('common.delete_measurement') }}">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
@@ -334,52 +334,52 @@
                                 <div class="grid grid-cols-2 gap-4 mb-4">
                                     <div class="text-center p-3 bg-blue-50 rounded-lg">
                                         <div class="text-xl font-bold text-blue-600" x-text="measurement.weight || '—'"></div>
-                                        <div class="text-xs text-blue-800">Вес (кг)</div>
+                                        <div class="text-xs text-blue-800">{{ __('common.weight') }} ({{ __('common.kg') }})</div>
                                     </div>
                                     <div class="text-center p-3 rounded-lg" x-show="measurement.weight && measurement.height" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).bg">
                                         <div class="text-xl font-bold" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color" x-text="formatNumber(measurement.weight / Math.pow(measurement.height/100, 2), '')"></div>
-                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">ИМТ</div>
+                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">{{ __('common.bmi') }}</div>
                                     </div>
                                 </div>
                                 
                                 <!-- Объемы тела -->
                                 <template x-if="measurement.chest || measurement.waist || measurement.hips || measurement.bicep || measurement.thigh || measurement.neck">
                                     <div class="mt-4 pt-4 pb-4 border-t border-b border-gray-200">
-                                        <h5 class="text-sm font-medium text-gray-700 mb-2">Объемы тела</h5>
+                                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes') }}</h5>
                                         <div class="grid grid-cols-2 gap-2 text-sm">
                                             <template x-if="measurement.chest">
                                                 <div class="flex justify-between">
-                                                    <span class="text-gray-500">Грудь:</span>
+                                                    <span class="text-gray-500">{{ __('common.chest') }}:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.chest, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.waist">
                                                 <div class="flex justify-between">
-                                                    <span class="text-gray-500">Талия:</span>
+                                                    <span class='text-gray-500'>{{ __('common.waist') }}:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.waist, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.hips">
                                                 <div class="flex justify-between">
-                                                    <span class="text-gray-500">Бедра:</span>
+                                                    <span class='text-gray-500'>{{ __('common.hips') }}:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.hips, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.bicep">
                                                 <div class="flex justify-between">
-                                                    <span class="text-gray-500">Бицепс:</span>
+                                                    <span class='text-gray-500'>{{ __('common.bicep') }}:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.bicep, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.thigh">
                                                 <div class="flex justify-between">
-                                                    <span class="text-gray-500">Бедро:</span>
+                                                    <span class='text-gray-500'>{{ __('common.thigh') }}:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.thigh, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.neck">
                                                 <div class="flex justify-between">
-                                                    <span class="text-gray-500">Шея:</span>
+                                                    <span class='text-gray-500'>{{ __('common.neck') }}:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.neck, ' см')"></span>
                                                 </div>
                                             </template>
@@ -389,26 +389,26 @@
                                 
                                 <!-- Дополнительные параметры -->
                                 <div class="mt-4">
-                                    <h5 class="text-sm font-medium text-gray-700 mb-2">Доп параметры</h5>
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_parameters') }}</h5>
                                     <div class="grid grid-cols-2 gap-2 text-sm mb-4">
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500">Жира:</span>
+                                        <span class="text-gray-500">{{ __('common.fat_percentage') }}:</span>
                                         <span class="font-medium" x-text="measurement.body_fat_percentage ? formatNumber(measurement.body_fat_percentage, '%') : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500">Мышцы:</span>
+                                        <span class='text-gray-500'>{{ __('common.muscles') }}:</span>
                                         <span class="font-medium" x-text="measurement.muscle_mass ? formatNumber(measurement.muscle_mass, ' кг') : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500">Вода:</span>
+                                        <span class='text-gray-500'>{{ __('common.water') }}:</span>
                                         <span class="font-medium" x-text="measurement.water_percentage ? formatNumber(measurement.water_percentage, '%') : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500">Пульс:</span>
-                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' уд/мин' : '—'"></span>
+                                        <span class='text-gray-500'>{{ __('common.pulse') }}:</span>
+                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' {{ __('common.bpm') }}' : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500">Давление:</span>
+                                        <span class='text-gray-500'>{{ __('common.pressure') }}:</span>
                                         <span class="font-medium" x-text="measurement.blood_pressure_systolic && measurement.blood_pressure_diastolic ? Math.round(parseFloat(measurement.blood_pressure_systolic)) + '/' + Math.round(parseFloat(measurement.blood_pressure_diastolic)) : '—'"></span>
                                     </div>
                                     </div>
@@ -417,7 +417,7 @@
                                 <!-- Комментарии -->
                                 <template x-if="measurement.notes">
                                     <div class="mt-4 pt-4 border-t border-gray-200">
-                                        <h5 class="text-sm font-medium text-gray-700 mb-1">Комментарии</h5>
+                                        <h5 class='text-sm font-medium text-gray-700 mb-1'>{{ __('common.comments') }}</h5>
                                         <p class="text-sm text-gray-600" x-text="measurement.notes"></p>
                                     </div>
                                 </template>
@@ -471,10 +471,10 @@
                     <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">Нет измерений</h3>
-                    <p class="text-gray-500 mb-4">Начните отслеживать свои измерения для анализа прогресса</p>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.no_data') }}</h3>
+                    <p class="text-gray-500 mb-4">{{ __('common.no_data_to_display') }}</p>
                     <button onclick="showAddMeasurementModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-                        Добавить первое измерение
+                        {{ __('common.add_measurement') }}
                     </button>
                 </div>
             </div>
@@ -487,7 +487,7 @@
     <div class="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-lg rounded-md bg-white">
         <div class="mt-3">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Добавить измерение</h3>
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">{{ __('common.create_measurement_title') }}</h3>
                 <button onclick="closeMeasurementModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -502,40 +502,40 @@
                 <!-- Основные параметры -->
                 <div class="grid grid-cols-3 gap-4 mb-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения *</label>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.measurement_date') }} *</label>
                         <input type="date" name="measurement_date" id="measurement_date" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг) *</label>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.weight') }} ({{ __('common.kg') }}) *</label>
                         <input type="number" name="weight" id="weight" step="0.1" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.height') }} ({{ __('common.cm') }})</label>
                         <input type="number" name="height" id="height" step="0.1" readonly
                                value="{{ auth()->user()->height ?? '' }}"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
-                        <p class="text-xs text-gray-500 mt-1">Рост берется из вашего профиля</p>
+                        <p class='text-xs text-gray-500 mt-1'>{{ __('common.height_from_profile') }}</p>
                     </div>
                 </div>
                 
                 <!-- Состав тела -->
                 <div class="mb-6">
-                    <h4 class="text-md font-semibold text-gray-900 mb-4">Состав тела</h4>
+                    <h4 class='text-md font-semibold text-gray-900 mb-4'>{{ __('common.body_composition') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Процент жира (%)</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.water_percentage_pct') }}</label>
                             <input type="number" name="body_fat_percentage" id="body_fat_percentage" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Мышечная масса (кг)</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.muscle_mass_kg') }}</label>
                             <input type="number" name="muscle_mass" id="muscle_mass" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Процент воды (%)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.water_percentage_pct') }}</label>
                             <input type="number" name="water_percentage" id="water_percentage" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -544,20 +544,20 @@
                 
                 <!-- Медицинские показатели -->
                 <div class="mb-6">
-                    <h4 class="text-md font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
+                    <h4 class='text-md font-semibold text-gray-900 mb-4'>{{ __('common.medical_indicators') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Пульс в покое (уд/мин)</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.resting_heart_rate_bpm') }}</label>
                             <input type="number" name="resting_heart_rate" id="resting_heart_rate" step="1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Давление (систолическое)</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.systolic_pressure') }}</label>
                             <input type="number" name="blood_pressure_systolic" id="blood_pressure_systolic" step="1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Давление (диастолическое)</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.diastolic_pressure') }}</label>
                             <input type="number" name="blood_pressure_diastolic" id="blood_pressure_diastolic" step="1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -566,7 +566,7 @@
                 
                 <!-- Объемы тела -->
                 <div class="mb-6">
-                    <h4 class="text-md font-semibold text-gray-900 mb-4">Объемы тела (см)</h4>
+                    <h4 class='text-md font-semibold text-gray-900 mb-4'>{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
@@ -574,27 +574,27 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Талия</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.waist') }}</label>
                             <input type="number" name="waist" id="waist" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бедра</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.hips') }}</label>
                             <input type="number" name="hips" id="hips" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бицепс</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.bicep') }}</label>
                             <input type="number" name="bicep" id="bicep" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бедро</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.thigh') }}</label>
                             <input type="number" name="thigh" id="thigh" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Шея</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.neck') }}</label>
                             <input type="number" name="neck" id="neck" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -603,21 +603,21 @@
                 
                 <!-- Комментарии -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Комментарии</label>
+                    <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.comments') }}</label>
                     <textarea name="notes" id="notes" rows="3"
                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                              placeholder="Добавьте заметки о вашем состоянии, самочувствии или изменениях..."></textarea>
+                              placeholder='{{ __('common.add_notes_placeholder') }}'></textarea>
                 </div>
                 
                 <!-- Кнопки -->
                 <div class="flex justify-end space-x-3">
                     <button type="button" onclick="closeMeasurementModal()"
                             class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
-                        Отмена
+                        {{ __('common.cancel') }}
                     </button>
                     <button type="submit"
                             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                        Сохранить
+                        {{ __('common.save') }}
                     </button>
                 </div>
             </form>
@@ -634,20 +634,20 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                 </svg>
             </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Подтверждение удаления</h3>
+            <h3 class='text-lg font-medium text-gray-900 mb-2'>{{ __('common.confirm_delete') }}</h3>
             <div class="mt-2 px-7 py-3">
                 <p class="text-sm text-gray-500">
-                    Вы уверены, что хотите удалить это измерение? Это действие нельзя отменить.
+                    {{ __('common.confirm_delete_measurement') }}
                 </p>
             </div>
             <div class="flex justify-center space-x-3 mt-4">
                 <button onclick="closeDeleteConfirmationModal()" 
                         class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                    Отмена
+                    {{ __('common.cancel') }}
                 </button>
                 <button onclick="confirmDeleteMeasurement()" 
                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                    Удалить
+                    {{ __('common.delete') }}
                 </button>
             </div>
         </div>
@@ -781,7 +781,7 @@ function showAddMeasurementModal() {
         return;
     }
     
-    if (modalTitle) modalTitle.textContent = 'Добавить измерение';
+    if (modalTitle) modalTitle.textContent = '{{ __('common.create_measurement_title') }}';
     if (measurementForm) measurementForm.action = '{{ route("crm.athlete.measurements.store") }}';
     if (formMethod) formMethod.innerHTML = '';
     if (measurementForm) measurementForm.reset();
@@ -809,7 +809,7 @@ function editMeasurement(measurementId) {
         return;
     }
     
-    if (modalTitle) modalTitle.textContent = 'Редактировать измерение';
+    if (modalTitle) modalTitle.textContent = '{{ __('common.edit_measurement_title') }}';
     if (measurementForm) measurementForm.action = `/athlete/measurements/${measurementId}`;
     if (formMethod) formMethod.innerHTML = '<input type="hidden" name="_method" value="PUT">';
     
@@ -1228,7 +1228,7 @@ function updateStatisticsCards(measurements) {
             const lastMeasurementCard = statsContainer.children[1];
             const lastMeasurementValue = lastMeasurementCard.querySelector('.stat-value');
             if (lastMeasurementValue) {
-                lastMeasurementValue.textContent = lastMeasurementDate.toLocaleDateString('ru-RU');
+                lastMeasurementValue.textContent = lastMeasurementDate.toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}');
             }
         }
         
@@ -1237,7 +1237,7 @@ function updateStatisticsCards(measurements) {
             const currentWeightCard = statsContainer.children[2];
             const currentWeightValue = currentWeightCard.querySelector('.stat-value');
             if (currentWeightValue && lastMeasurement.weight) {
-                currentWeightValue.textContent = lastMeasurement.weight + ' кг';
+                currentWeightValue.textContent = lastMeasurement.weight + ' {{ __('common.kg') }}';
             }
         }
         

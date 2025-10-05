@@ -1,7 +1,7 @@
 @extends("crm.layouts.app")
 
-@section("title", "Шаблоны тренировок")
-@section("page-title", "Шаблоны тренировок")
+@section("title", __('common.workout_templates'))
+@section("page-title", __('common.workout_templates'))
 
 <style>
 [x-cloak] { display: none !important; }
@@ -194,10 +194,10 @@ function templatesApp() {
                 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('Шаблон сохранен:', result);
+                    console.log('{{ __('common.template_saved_console') }}', result);
                     
                     // Показываем уведомление об успехе
-                    this.showSuccessMessage('Шаблон успешно сохранен!');
+                    this.showSuccessMessage('{{ __('common.template_saved') }}');
                     
                     if (method === 'POST' && result.template) {
                         // Если это создание нового шаблона, добавляем его в список
@@ -224,28 +224,28 @@ function templatesApp() {
                 } else {
                     const error = await response.json();
                     console.error('Ошибка сохранения:', error);
-                    this.showErrorMessage('Ошибка при сохранении шаблона');
+                    this.showErrorMessage('{{ __('common.template_saving_error') }}');
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
-                this.showErrorMessage('Произошла ошибка при сохранении');
+                this.showErrorMessage('{{ __('common.template_saving_general_error') }}');
             }
         },
         
         // Удаление
         deleteTemplate(id) {
             const template = this.templates.find(t => t.id === id);
-            const templateName = template ? template.name : 'этот шаблон';
+            const templateName = template ? template.name : '{{ __('common.this_template') }}';
             
             // Показываем модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: 'Удаление шаблона',
-                    message: `Вы уверены, что хотите удалить шаблон "${templateName}"? Это действие нельзя отменить.`,
-                    confirmText: 'Удалить',
-                    cancelText: 'Отмена',
+                    title: '{{ __('common.delete_template_title') }}',
+                    message: `{{ __('common.are_you_sure_delete_template') }} "${templateName}"? {{ __('common.this_action_cannot_be_undone') }}`,
+                    confirmText: '{{ __('common.delete') }}',
+                    cancelText: '{{ __('common.cancel') }}',
                     onConfirm: () => this.performDelete(id),
-                    onCancel: () => console.log('Удаление отменено')
+                    onCancel: () => console.log('{{ __('common.template_deleting_cancelled') }}')
                 }
             }));
         },
@@ -264,7 +264,7 @@ function templatesApp() {
                     this.templates = this.templates.filter(t => t.id !== id);
                     
                     // Показываем уведомление об успехе
-                    this.showSuccessMessage('Шаблон успешно удален');
+                    this.showSuccessMessage('{{ __('common.template_deleted') }}');
                     
                     // Если удалили все шаблоны на текущей странице, переходим на предыдущую
                     if (this.paginatedTemplates.length === 0 && this.currentPage > 1) {
@@ -273,30 +273,30 @@ function templatesApp() {
                 } else {
                     const error = await response.json();
                     console.error('Ошибка удаления:', error);
-                    this.showErrorMessage('Ошибка при удалении шаблона');
+                    this.showErrorMessage('{{ __('common.template_deleting_error') }}');
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
-                this.showErrorMessage('Произошла ошибка при удалении');
+                this.showErrorMessage('{{ __('common.template_deleting_general_error') }}');
             }
         },
         
         // Вспомогательные методы
         getCategoryLabel(category) {
             const categories = {
-                'strength': 'Силовая',
-                'cardio': 'Кардио',
-                'flexibility': 'Гибкость',
-                'mixed': 'Смешанная'
+                'strength': '{{ __('common.strength') }}',
+                'cardio': '{{ __('common.cardio') }}',
+                'flexibility': '{{ __('common.flexibility') }}',
+                'mixed': '{{ __('common.mixed') }}'
             };
             return categories[category] || category;
         },
         
         getDifficultyLabel(difficulty) {
             const difficulties = {
-                'beginner': 'Начинающий',
-                'intermediate': 'Средний',
-                'advanced': 'Продвинутый'
+                'beginner': '{{ __('common.beginner') }}',
+                'intermediate': '{{ __('common.intermediate') }}',
+                'advanced': '{{ __('common.advanced') }}'
             };
             return difficulties[difficulty] || difficulty;
         },
@@ -324,14 +324,14 @@ function templatesApp() {
         
         // Работа с модальным окном упражнений
         async openExerciseModal() {
-            console.log('Открываем модальное окно упражнений...');
+            console.log('{{ __('common.opening_exercise_modal') }}');
             try {
                 const response = await fetch('/exercises/api');
                 const data = await response.json();
-                console.log('Получены упражнения:', data);
+                console.log('{{ __('common.exercises_loaded') }}', data);
                 this.availableExercises = data.exercises || [];
             } catch (error) {
-                console.error('Ошибка загрузки упражнений:', error);
+                console.error('{{ __('common.exercise_loading_error') }}', error);
                 this.availableExercises = [];
             }
             this.showExerciseModal = true;
@@ -386,7 +386,7 @@ function templatesApp() {
             modal.innerHTML = `
                 <div style="background: white; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 80%; max-height: 80%; width: 100%; overflow: hidden;">
                     <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="font-size: 18px; font-weight: 600; color: #111827;">Выбор упражнений</h3>
+                        <h3 style="font-size: 18px; font-weight: 600; color: #111827;">{{ __('common.select_exercises') }}</h3>
                         <button onclick="document.getElementById('js-exercise-modal').remove()" style="color: #6b7280; background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
                     </div>
                     <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
@@ -402,8 +402,8 @@ function templatesApp() {
                         </div>
                     </div>
                     <div style="padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">Отмена</button>
-                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">Готово</button>
+                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">{{ __('common.cancel') }}</button>
+                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">{{ __('common.done') }}</button>
                     </div>
                 </div>
             `;
@@ -452,7 +452,7 @@ function templatesApp() {
             window.dispatchEvent(new CustomEvent('show-notification', {
                 detail: {
                     type: 'success',
-                    title: 'Успешно',
+                    title: '{{ __('common.success') }}',
                     message: message
                 }
             }));
@@ -472,7 +472,7 @@ function templatesApp() {
             window.dispatchEvent(new CustomEvent('show-notification', {
                 detail: {
                     type: 'info',
-                    title: 'Информация',
+                    title: '{{ __('common.information') }}',
                     message: message
                 }
             }));
@@ -482,7 +482,7 @@ function templatesApp() {
             window.dispatchEvent(new CustomEvent('show-notification', {
                 detail: {
                     type: 'warning',
-                    title: 'Внимание',
+                    title: '{{ __('common.warning') }}',
                     message: message
                 }
             }));
@@ -537,7 +537,7 @@ function templatesApp() {
                 const data = await response.json();
                 exercises = data.exercises || [];
             } catch (error) {
-                console.error('Ошибка загрузки упражнений:', error);
+                console.error('{{ __('common.exercise_loading_error') }}', error);
             }
     
     // Создаем модальное окно
@@ -594,7 +594,7 @@ function templatesApp() {
                     <!-- Поиск -->
                     <input type="text" 
                            id="exercise-search" 
-                           placeholder="Поиск упражнений..." 
+                           placeholder="{{ __('common.search_exercises') }}" 
                            style="
                                flex: 1;
                                min-width: 200px;
@@ -624,14 +624,14 @@ function templatesApp() {
                             "
                             onfocus="this.style.borderColor = '#4f46e5'"
                             onblur="this.style.borderColor = '#d1d5db'">
-                        <option value="">Все категории</option>
-                        <option value="Грудь">Грудь</option>
-                        <option value="Спина">Спина</option>
-                        <option value="Ноги">Ноги</option>
-                        <option value="Плечи">Плечи</option>
-                        <option value="Руки">Руки</option>
-                        <option value="Кардио">Кардио</option>
-                        <option value="Гибкость">Гибкость</option>
+                        <option value="">{{ __('common.all_categories') }}</option>
+                        <option value="Грудь">{{ __('common.chest') }}</option>
+                        <option value="Спина">{{ __('common.back') }}</option>
+                        <option value="Ноги">{{ __('common.legs') }}</option>
+                        <option value="Плечи">{{ __('common.shoulders') }}</option>
+                        <option value="Руки">{{ __('common.arms') }}</option>
+                        <option value="Кардио">{{ __('common.cardio') }}</option>
+                        <option value="Гибкость">{{ __('common.flexibility') }}</option>
                     </select>
                     
                     <!-- Фильтр оборудования -->
@@ -649,7 +649,7 @@ function templatesApp() {
                             "
                             onfocus="this.style.borderColor = '#4f46e5'"
                             onblur="this.style.borderColor = '#d1d5db'">
-                        <option value="">Все оборудование</option>
+                        <option value="">{{ __('common.all_equipment') }}</option>
                         <option value="Штанга">Штанга</option>
                         <option value="Гантели">Гантели</option>
                         <option value="Собственный вес">Собственный вес</option>
@@ -697,7 +697,7 @@ function templatesApp() {
                     border: 1px solid #d1d5db;
                     border-radius: 6px;
                     cursor: pointer;
-                ">Отмена</button>
+                ">{{ __('common.cancel') }}</button>
                 <button onclick="saveSelectedExercises()" style="
                     padding: 8px 16px;
                     background: #4f46e5;
@@ -705,7 +705,7 @@ function templatesApp() {
                     border: none;
                     border-radius: 6px;
                     cursor: pointer;
-                ">Готово</button>
+                ">{{ __('common.done') }}</button>
             </div>
         </div>
     `;
@@ -931,7 +931,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 <div class="search-container">
                     <input type="text" 
                            x-model="search" 
-                           placeholder="Поиск шаблонов..." 
+                           placeholder="{{ __('common.search_templates') }}" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
@@ -939,7 +939,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 <div class="filter-container">
                     <select x-model="category" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все категории</option>
+                        <option value="">{{ __('common.all_categories') }}</option>
                         <option value="strength">Силовая</option>
                         <option value="cardio">Кардио</option>
                         <option value="flexibility">Гибкость</option>
@@ -951,10 +951,10 @@ function removeExerciseFromAlpine(exerciseId) {
                 <div class="filter-container">
                     <select x-model="difficulty" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все уровни</option>
-                        <option value="beginner">Начинающий</option>
-                        <option value="intermediate">Средний</option>
-                        <option value="advanced">Продвинутый</option>
+                        <option value="">{{ __('common.all_difficulties') }}</option>
+                        <option value="beginner">{{ __('common.beginner') }}</option>
+                        <option value="intermediate">{{ __('common.intermediate') }}</option>
+                        <option value="advanced">{{ __('common.advanced') }}</option>
                     </select>
                 </div>
                 
@@ -963,7 +963,7 @@ function removeExerciseFromAlpine(exerciseId) {
                     @if(auth()->user()->hasRole('trainer'))
                         <button @click="showCreate()" 
                                 class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                            Добавить шаблон
+                            {{ __('common.add_template') }}
                         </button>
                     @endif
                 </div>
@@ -975,15 +975,15 @@ function removeExerciseFromAlpine(exerciseId) {
             <div class="flex flex-wrap gap-2">
                 <span class="text-sm text-gray-500">Активные фильтры:</span>
                 <span x-show="search" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Поиск: "<span x-text="search"></span>"
+                    {{ __('common.search') }}: "<span x-text="search"></span>"
                     <button @click="search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
                 </span>
                 <span x-show="category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Категория: <span x-text="getCategoryLabel(category)"></span>
+                    {{ __('common.category') }}: <span x-text="getCategoryLabel(category)"></span>
                     <button @click="category = ''" class="ml-1 text-green-600 hover:text-green-800">×</button>
                 </span>
                 <span x-show="difficulty" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    Сложность: <span x-text="getDifficultyLabel(difficulty)"></span>
+                    {{ __('common.difficulty') }}: <span x-text="getDifficultyLabel(difficulty)"></span>
                     <button @click="difficulty = ''" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
                 </span>
             </div>
@@ -1000,15 +1000,15 @@ function removeExerciseFromAlpine(exerciseId) {
                         <div class="flex-1">
                             <h3 class="text-xl font-semibold text-gray-900 mb-2">
                                 <span x-text="template.name"></span>
-                                <span class="text-gray-500 font-normal" x-text="'(' + ((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) + ' упражнений)'"></span>
+                                <span class="text-gray-500 font-normal" x-text="'(' + ((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) + ' {{ __('common.exercises_count') }})'"></span>
                             </h3>
-                            <p class="text-gray-600 mb-4" x-text="template.description || 'Без описания'"></p>
+                            <p class="text-gray-600 mb-4" x-text="template.description || '{{ __('common.no_description') }}'"></p>
                             
                             <!-- Теги -->
                             <div class="flex flex-wrap gap-2 mb-4">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="getCategoryLabel(template.category)"></span>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="getDifficultyLabel(template.difficulty)"></span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" x-text="(template.estimated_duration || 60) + ' мин'"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" x-text="(template.estimated_duration || 60) + ' {{ __('common.min') }}'"></span>
                             </div>
                             
                             <!-- Создатель -->
@@ -1021,14 +1021,14 @@ function removeExerciseFromAlpine(exerciseId) {
                     <!-- Кнопки -->
                     <div class="flex space-x-2">
                         <button @click="showView(template.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                            Просмотр
+                            {{ __('common.view') }}
                         </button>
                         @if(auth()->user()->hasRole('trainer'))
                             <button @click="showEdit(template.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                Редактировать
+                                {{ __('common.edit') }}
                             </button>
                             <button @click="deleteTemplate(template.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                Удалить
+                                {{ __('common.delete') }}
                             </button>
                         @endif
                     </div>
@@ -1046,7 +1046,7 @@ function removeExerciseFromAlpine(exerciseId) {
             @if(auth()->user()->hasRole('trainer'))
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Создать первый шаблон
+                    {{ __('common.create_first_template') }}
                 </button>
             @endif
         </div>
@@ -1091,12 +1091,12 @@ function removeExerciseFromAlpine(exerciseId) {
     <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? 'Создать шаблон' : 'Редактировать шаблон'"></h2>
+                <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '{{ __('common.create_template') }}' : '{{ __('common.edit_template') }}'"></h2>
                 <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новый шаблон тренировки' : 'Внесите изменения в шаблон'"></p>
             </div>
             <button type="button" @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад к списку
+                {{ __('common.back_to_list') }}
             </button>
         </div>
         
@@ -1104,7 +1104,7 @@ function removeExerciseFromAlpine(exerciseId) {
             <div class="space-y-6">
                 <!-- Название -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Название шаблона *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.template_name') }}</label>
                     <input type="text" 
                            x-model="formName" 
                            required
@@ -1137,34 +1137,34 @@ function removeExerciseFromAlpine(exerciseId) {
                     </style>
                     <!-- Категория -->
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.category') }} *</label>
                         <select x-model="formCategory" 
                                 required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">Выберите категорию</option>
-                            <option value="strength">Силовая</option>
-                            <option value="cardio">Кардио</option>
-                            <option value="flexibility">Гибкость</option>
-                            <option value="mixed">Смешанная</option>
+                            <option value="">{{ __('common.select_category') }}</option>
+                            <option value="strength">{{ __('common.strength') }}</option>
+                            <option value="cardio">{{ __('common.cardio') }}</option>
+                            <option value="flexibility">{{ __('common.flexibility') }}</option>
+                            <option value="mixed">{{ __('common.mixed') }}</option>
                         </select>
                     </div>
                     
                     <!-- Сложность -->
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Сложность *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.difficulty') }} *</label>
                         <select x-model="formDifficulty" 
                                 required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">Выберите сложность</option>
-                            <option value="beginner">Начинающий</option>
-                            <option value="intermediate">Средний</option>
-                            <option value="advanced">Продвинутый</option>
+                            <option value="">{{ __('common.select_difficulty') }}</option>
+                            <option value="beginner">{{ __('common.beginner') }}</option>
+                            <option value="intermediate">{{ __('common.intermediate') }}</option>
+                            <option value="advanced">{{ __('common.advanced') }}</option>
                         </select>
                     </div>
                     
                     <!-- Длительность -->
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Длительность (мин) *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.duration') }} ({{ __('common.min') }}) *</label>
                         <input type="number" 
                                x-model="formDuration" 
                                min="15" 
@@ -1176,7 +1176,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 
                 <!-- Описание -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
                     <textarea x-model="formDescription" 
                               rows="4"
                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
@@ -1185,7 +1185,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 <!-- Выбор упражнений -->
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">Упражнения в шаблоне</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ __('common.exercises_in_template') }}</h3>
                         <div class="flex space-x-2">
                             <button type="button"
                                     onclick="openSimpleModal()"
@@ -1193,7 +1193,7 @@ function removeExerciseFromAlpine(exerciseId) {
                                 <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                 </svg>
-                                Добавить упражнения
+                                {{ __('common.add_exercises') }}
                             </button>
                         </div>
                     </div>
@@ -1224,7 +1224,7 @@ function removeExerciseFromAlpine(exerciseId) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
                         <p>Нет упражнений в шаблоне</p>
-                        <p class="text-sm">Нажмите "Добавить упражнения" чтобы выбрать упражнения</p>
+                        <p class="text-sm">{{ __('common.click_add_exercises_to_select') }}</p>
                     </div>
                 </div>
             </div>
@@ -1234,11 +1234,11 @@ function removeExerciseFromAlpine(exerciseId) {
                 <button type="button" 
                         @click="showList()" 
                         class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    Отмена
+                    {{ __('common.cancel') }}
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    <span x-text="currentView === 'create' ? 'Создать' : 'Сохранить'"></span>
+                    <span x-text="currentView === 'create' ? '{{ __('common.create') }}' : '{{ __('common.save') }}'"></span>
                 </button>
             </div>
         </form>
@@ -1254,7 +1254,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 </div>
                 <button @click="showList()" 
                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    Назад к списку
+                    {{ __('common.back_to_list') }}
                 </button>
             </div>
         </div>
@@ -1272,7 +1272,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h3 class="text-sm font-medium text-gray-500 mb-1">Длительность</h3>
-                    <p class="text-lg font-semibold text-gray-900" x-text="(currentTemplate?.estimated_duration || 60) + ' минут'"></p>
+                    <p class="text-lg font-semibold text-gray-900" x-text="(currentTemplate?.estimated_duration || 60) + ' {{ __('common.minutes') }}'"></p>
                 </div>
             </div>
             
@@ -1309,7 +1309,7 @@ function removeExerciseFromAlpine(exerciseId) {
     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <!-- Заголовок -->
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Выбор упражнений</h3>
+            <h3 class="text-lg font-semibold text-gray-900">{{ __('common.select_exercises') }}</h3>
             <button @click="closeExerciseModal()" 
                     class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1325,12 +1325,12 @@ function removeExerciseFromAlpine(exerciseId) {
                 <div class="flex flex-col md:flex-row gap-4">
                     <input type="text" 
                            x-model="exerciseSearch" 
-                           placeholder="Поиск упражнений..." 
+                           placeholder="{{ __('common.search_exercises') }}" 
                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     
                     <select x-model="exerciseCategory" 
                             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">Все категории</option>
+                        <option value="">{{ __('common.all_categories') }}</option>
                         <option value="strength">Силовая</option>
                         <option value="cardio">Кардио</option>
                         <option value="flexibility">Гибкость</option>
@@ -1339,7 +1339,7 @@ function removeExerciseFromAlpine(exerciseId) {
                     
                     <select x-model="exerciseEquipment" 
                             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">Все оборудование</option>
+                        <option value="">{{ __('common.all_equipment') }}</option>
                         <option value="bodyweight">Собственный вес</option>
                         <option value="dumbbells">Гантели</option>
                         <option value="barbell">Штанга</option>
@@ -1387,11 +1387,11 @@ function removeExerciseFromAlpine(exerciseId) {
         <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
             <button @click="closeExerciseModal()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">
-                Отмена
+                {{ __('common.cancel') }}
             </button>
             <button @click="closeExerciseModal()" 
                     class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700">
-                Готово
+                {{ __('common.done') }}
             </button>
         </div>
     </div>

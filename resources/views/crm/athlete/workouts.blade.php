@@ -4,38 +4,38 @@
 @section("page-title", __('common.workouts'))
 
 <script>
-        // Функциональность для просмотра тренировок
+        // Workout viewing functionality
         function athleteWorkoutApp() {
             return {
                 currentView: 'list', // list, view
                 workouts: @json($workouts->items()),
                 currentWorkout: null,
-                exerciseStatuses: {}, // Хранение статусов упражнений
-                exerciseComments: {}, // Хранение комментариев к упражнениям
-                exerciseSetsData: {}, // Хранение данных по подходам
-        exerciseSetsExpanded: {}, // Хранение состояния развернутости полей подходов
-        saveTimeout: null, // Таймер для автосохранения
-        lastSaved: null, // Время последнего сохранения
+                exerciseStatuses: {}, // Store exercise statuses
+                exerciseComments: {}, // Store exercise comments
+                exerciseSetsData: {}, // Store sets data
+        exerciseSetsExpanded: {}, // Store sets fields expansion state
+        saveTimeout: null, // Auto-save timer
+        lastSaved: null, // Last save time
         
-        // Модальное окно для видео
+        // Video modal window
         videoModal: {
             isOpen: false,
             url: '',
             title: ''
         },
-                workoutProgress: {}, // Прогресс для каждой тренировки
-                isLoading: true, // Флаг загрузки
-                lastChangedExercise: null, // Последнее измененное упражнение
-                exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
+                workoutProgress: {}, // Progress for each workout
+                isLoading: true, // Loading flag
+                lastChangedExercise: null, // Last changed exercise
+                exercisesExpanded: {}, // Store exercises expansion state in cards
 
                 // Инициализация
                 init() {
                     this.loadAllWorkoutProgress();
                 },
 
-                // Навигация
+                // Navigation
                 showList() {
-                    // Обновляем данные в списке перед возвратом
+                    // Update data in list before returning
                     if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
                         this.updateWorkoutProgressInList();
                     }
@@ -48,11 +48,11 @@
                     this.currentView = 'view';
                     this.currentWorkout = this.workouts.find(w => w.id === workoutId);
                     
-                // Загружаем сохраненный прогресс при открытии тренировки
+                // Load saved progress when opening workout
                 this.loadExerciseProgress(workoutId);
             },
 
-            // Загрузка прогресса для всех тренировок
+            // Load progress for all workouts
             async loadAllWorkoutProgress() {
                 try {
                     for (let workout of this.workouts) {
@@ -66,7 +66,7 @@
                         if (response.ok) {
                             const responseData = await response.json();
                             
-                            // Проверяем формат ответа
+                            // Check response format
                             const progressData = responseData.success ? responseData.progress : responseData;
                             
                             this.workoutProgress[workout.id] = {};
@@ -81,7 +81,7 @@
                                     };
                                 });
                             } else if (progressData && typeof progressData === 'object') {
-                                // Если данные в формате объекта, преобразуем в массив
+                                // If data is in object format, convert to array
                                 Object.values(progressData).forEach(progress => {
                                     this.workoutProgress[workout.id][progress.exercise_id] = {
                                         status: progress.status,
@@ -94,23 +94,23 @@
                         }
                     }
                 } catch (error) {
-                    console.error('Ошибка загрузки прогресса для всех тренировок:', error);
+                    console.error('Error loading progress for all workouts:', error);
                 } finally {
-                    // Завершаем загрузку
+                    // Finish loading
                     this.isLoading = false;
                 }
             },
 
-            // Получение статуса упражнения для списка тренировок
+            // Get exercise status for workout list
             getExerciseStatusForList(workoutId, exerciseId) {
                 return this.workoutProgress[workoutId]?.[exerciseId]?.status || null;
             },
 
-                // Управление статусом упражнений
+                // Exercise status management
                 setExerciseStatus(exerciseId, status) {
-                    // Если нажимаем на уже выбранный статус - снимаем его
+                    // If clicking on already selected status - remove it
                     if (this.exerciseStatuses[exerciseId] === status) {
-                        // Помечаем как удаленный статус
+                        // Mark as deleted status
                         this.exerciseStatuses[exerciseId] = null;
                         delete this.exerciseComments[exerciseId];
                         delete this.exerciseSetsData[exerciseId];
@@ -121,26 +121,26 @@
                         this.lastChangedExercise = { id: exerciseId, status: status };
                         
                         if (status === 'partial') {
-                            // Инициализируем данные по подходам для частичного выполнения
+                            // Initialize sets data for partial completion
                             const exercise = this.currentWorkout?.exercises?.find(ex => (ex.exercise_id == exerciseId) || (ex.id == exerciseId));
                             if (exercise) {
                                 const totalSets = exercise.sets || exercise.pivot?.sets || 3;
                                 this.initSetsData(exerciseId, totalSets);
-                                // Автоматически разворачиваем поля при выборе "Частично"
+                                // Automatically expand fields when selecting "Partial"
                                 this.exerciseSetsExpanded[exerciseId] = true;
                             }
                         } else {
-                            // Если статус не "частично", очищаем комментарий и данные по подходам
+                            // If status is not "partial", clear comment and sets data
                             delete this.exerciseComments[exerciseId];
                             delete this.exerciseSetsData[exerciseId];
                             delete this.exerciseSetsExpanded[exerciseId];
                         }
                     }
                     
-                    // Немедленно обновляем данные в списке
+                    // Immediately update data in list
                     this.updateWorkoutProgressInList();
                     
-                    // Автосохранение через 2 секунды после изменения
+                    // Auto-save after 2 seconds of change
                     this.autoSave();
                 },
 
@@ -148,30 +148,30 @@
                     return this.exerciseStatuses[exerciseId] !== undefined ? this.exerciseStatuses[exerciseId] : null;
                 },
 
-                // Инициализация данных по подходам для упражнения
+                // Initialize sets data for exercise
                 initSetsData(exerciseId, totalSets) {
                     if (!this.exerciseSetsData[exerciseId]) {
                         this.exerciseSetsData[exerciseId] = [];
                         const exercise = this.currentWorkout?.exercises?.find(ex => (ex.exercise_id == exerciseId) || (ex.id == exerciseId));
-                        const defaultRest = exercise?.rest || exercise?.pivot?.rest || 1.0; // По умолчанию 1 минута
+                        const defaultRest = exercise?.rest || exercise?.pivot?.rest || 1.0; // Default 1 minute
                         
                         for (let i = 0; i < totalSets; i++) {
                             this.exerciseSetsData[exerciseId].push({
                                 set_number: i + 1,
                                 reps: '',
                                 weight: '',
-                                rest: defaultRest // Автоматически заполняем отдых в минутах
+                                rest: defaultRest // Automatically fill rest in minutes
                             });
                         }
                     }
                 },
 
-                // Получение данных по подходам для упражнения
+                // Get sets data for exercise
                 getSetsData(exerciseId) {
                     return this.exerciseSetsData[exerciseId] || [];
                 },
 
-                // Обновление данных по подходу
+                // Update sets data
                 updateSetData(exerciseId, setIndex, field, value) {
                     if (!this.exerciseSetsData[exerciseId]) {
                         this.exerciseSetsData[exerciseId] = [];
@@ -181,59 +181,59 @@
                     }
                     this.exerciseSetsData[exerciseId][setIndex][field] = value;
                     
-                    // Обновляем последнее измененное упражнение для правильного уведомления
+                    // Update last changed exercise for proper notification
                     this.lastChangedExercise = { id: exerciseId, status: 'partial' };
                     
                     this.autoSave();
                 },
 
-                // Управление сворачиванием/разворачиванием полей подходов
+                // Manage sets fields collapse/expand
                 toggleSetsExpanded(exerciseId) {
                     this.exerciseSetsExpanded[exerciseId] = !this.exerciseSetsExpanded[exerciseId];
                 },
 
-                // Проверка, развернуты ли поля подходов
+                // Check if sets fields are expanded
                 isSetsExpanded(exerciseId) {
                     return this.exerciseSetsExpanded[exerciseId] || false;
                 },
 
-                // Получить класс рамки для поля в развернутых подходах
+                // Get border class for field in expanded sets
                 getSetFieldBorderClass(exercise, set, fieldName) {
                     const plannedValue = parseFloat(exercise[fieldName] || exercise.pivot?.[fieldName]) || 0;
                     const actualValue = parseFloat(set[fieldName]) || 0;
                     
-                    // Если поле не заполнено
+                    // If field is not filled
                     if (actualValue === 0) {
                         return 'border-red-500 border-2';
                     }
                     
-                    // Если запланированное значение равно 0 или не задано, не показываем красную рамку
+                    // If planned value is 0 or not set, do not show red border
                     if (plannedValue === 0) {
                         return '';
                     }
                     
-                    // Если заполнено, но меньше запланированного
+                    // If filled, but less than planned
                     if (actualValue < plannedValue) {
                         return 'border-red-500 border-2';
                     }
                     
-                    // Если заполнено полностью или больше
+                    // If filled completely or more
                     return '';
                 },
 
-                // Управление сворачиванием/разворачиванием упражнений в карточках
+                // Manage exercises collapse/expand in cards
                 toggleExercisesExpanded(workoutId) {
                     this.exercisesExpanded[workoutId] = !this.exercisesExpanded[workoutId];
                 },
 
-                // Проверка, развернуты ли упражнения в карточке
+                // Check if exercises are expanded in card
                 isExercisesExpanded(workoutId) {
                     return this.exercisesExpanded[workoutId] || false;
                 },
 
-                // Автосохранение прогресса
+                // Auto-save progress
                 autoSave() {
-                    // Очищаем предыдущий таймер
+                    // Clear previous timer
                     if (this.saveTimeout) {
                         clearTimeout(this.saveTimeout);
                     }
@@ -774,7 +774,7 @@
                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
-                                        <span>{{ $workout->duration }} мин</span>
+                                        <span>{{ $workout->duration }} {{ __('common.min') }}</span>
                                     </div>
                                     <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -931,7 +931,7 @@
                     <div style="margin-bottom: 8px;">
                         <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.date') }}</span>
                     </div>
-                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('ru-RU') : ''"></p>
+                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : ''"></p>
                 </div>
                 
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;" x-show="currentWorkout?.time">
@@ -1116,10 +1116,10 @@
                                                 <svg class="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                                 </svg>
-                                                <h6 class="text-sm font-semibold text-yellow-800">Детализация по подходам</h6>
+                                                <h6 class="text-sm font-semibold text-yellow-800">{{ __('common.sets_breakdown') }}</h6>
                                             </div>
                                             <div class="flex items-center text-xs text-yellow-700 hover:text-yellow-800 transition-colors">
-                                                <span x-text="isSetsExpanded(exercise.exercise_id || exercise.id) ? 'Свернуть' : 'Развернуть'"></span>
+                                                <span x-text="isSetsExpanded(exercise.exercise_id || exercise.id) ? '{{ __('common.collapse') }}' : '{{ __('common.expand') }}'"></span>
                                                 <svg class="w-4 h-4 ml-1 transition-transform" 
                                                      :class="isSetsExpanded(exercise.exercise_id || exercise.id) ? 'rotate-180' : ''"
                                                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1141,7 +1141,7 @@
                                         </div>
                                         
                                         <div x-show="isSetsExpanded(exercise.exercise_id || exercise.id)" x-transition>
-                                            <p class="text-xs text-yellow-700 mb-4">Укажите, что именно вы выполнили в каждом подходе:</p>
+                                            <p class="text-xs text-yellow-700 mb-4">{{ __('common.specify_what_you_completed_in_each_set') }}:</p>
                                         
                                         <div class="space-y-3">
                                             <template x-for="(set, setIndex) in getSetsData(exercise.exercise_id || exercise.id)" :key="`set-${exercise.exercise_id || exercise.id}-${setIndex}`">
@@ -1150,7 +1150,7 @@
                                                         <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                                         </svg>
-                                                        <span class="text-sm font-semibold text-yellow-800">Подход <span x-text="setIndex + 1"></span> из <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
+                                                        <span class="text-sm font-semibold text-yellow-800">{{ __('common.set') }} <span x-text="setIndex + 1"></span> {{ __('common.of') }} <span x-text="exercise.sets || exercise.pivot?.sets || 0"></span></span>
                                                     </div>
                                                     
                                                     <div class="flex gap-6 w-full">
@@ -1300,7 +1300,7 @@
                                         </div>
                                         
                                             <div class="text-xs text-yellow-600 mt-3">
-                                                💡 Изменения сохраняются автоматически при вводе
+                                                💡 {{ __('common.changes_save_automatically') }}
                                             </div>
                                         </div>
                                     </div>

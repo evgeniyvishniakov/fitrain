@@ -1,7 +1,7 @@
 @extends("crm.layouts.app")
 
-@section("title", "Подписка")
-@section("page-title", "Подписка")
+@section("title", __('common.subscription'))
+@section("page-title", __('common.subscription'))
 
 <script>
 // SPA функциональность для подписки

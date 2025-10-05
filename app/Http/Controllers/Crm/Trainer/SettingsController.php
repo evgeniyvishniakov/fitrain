@@ -91,7 +91,7 @@ class SettingsController extends BaseController
         $request->validate([
             'language_code' => 'required|string|exists:languages,code',
             'currency_code' => 'required|string|exists:currencies,code',
-            'timezone' => 'required|string|max:50',
+            'timezone' => 'nullable|string|max:50',
         ]);
 
         $user = Auth::user();
@@ -102,6 +102,14 @@ class SettingsController extends BaseController
         // Обновляем локаль в сессии для немедленного применения
         if ($request->has('language_code')) {
             session(['locale' => $request->get('language_code')]);
+        }
+
+        // Если это AJAX запрос, возвращаем JSON
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Настройки языка и валюты обновлены'
+            ]);
         }
 
         return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');

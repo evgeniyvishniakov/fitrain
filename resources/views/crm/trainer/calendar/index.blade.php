@@ -92,7 +92,8 @@ function calendarApp() {
         
         goToToday() {
             // Используем серверную дату вместо клиентской
-            window.location.href = '{{ route("crm.calendar") }}?date=' + this.serverToday;
+            this.currentDate = this.serverToday;
+            this.loadWorkouts();
         },
         
         // Загрузка тренировок

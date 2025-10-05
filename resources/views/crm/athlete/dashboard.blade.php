@@ -424,23 +424,45 @@ function dashboardCalendar() {
     </div>
 
     <!-- Карточки измерений -->
-    <div class="flex gap-6" x-data="dashboardCalendar()">
-        <!-- Текущий вес -->
-        <div class="stat-card flex-1">
+    <div class="stats-container mb-8">
+        <div class="stat-card">
             <div class="stat-icon stat-icon-blue">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">{{ __('common.total_measurements') }}</div>
+                <div class="stat-value">{{ $totalMeasurements }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green">
+                <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">{{ __('common.last_measurement') }}</div>
+                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : '—' }}</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-purple">
+                <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                 </svg>
             </div>
             <div class="stat-content">
                 <div class="stat-label">{{ __('common.current_weight') }}</div>
-                <div class="stat-value">{{ $currentWeight ? $currentWeight . ' ' . __('common.kg') : __('common.weight_not_specified') }}</div>
+                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->weight . ' ' . __('common.kg') : '—' }}</div>
             </div>
         </div>
 
-        <!-- ИМТ -->
-        <div class="stat-card flex-1">
-            <div class="stat-icon stat-icon-{{ $bmiColor ?? 'gray' }}">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-orange">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
@@ -455,7 +477,7 @@ function dashboardCalendar() {
                         </svg>
                         <!-- Всплывающая подсказка -->
                         <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                            <div class="font-semibold mb-2">{{ __('common.bmi_description') }}</div>
+                            <div class="font-semibold mb-2">{{ __('common.bmi_tooltip') }}</div>
                             <div class="space-y-1">
                                 <div class="flex justify-between"><span class="text-blue-300">{{ __('common.less_than_18_5') }}:</span> <span>{{ __('common.underweight') }}</span></div>
                                 <div class="flex justify-between"><span class="text-green-300">{{ __('common.18_5_to_24_9') }}:</span> <span>{{ __('common.normal_weight') }}</span></div>
@@ -466,53 +488,22 @@ function dashboardCalendar() {
                     </div>
                 </div>
                 @php
-                    $bmiTextColor = 'text-gray-500';
-                    if ($bmi && $bmiCategory) {
-                        if ($bmiColor === 'blue') {
-                            $bmiTextColor = 'text-blue-600';
-                        } elseif ($bmiColor === 'green') {
-                            $bmiTextColor = 'text-green-600';
-                        } elseif ($bmiColor === 'yellow') {
-                            $bmiTextColor = 'text-yellow-600';
-                        } elseif ($bmiColor === 'red') {
-                            $bmiTextColor = 'text-red-600';
+                    $bmi = null;
+                    $bmiCategory = ['text' => '—', 'color' => 'text-gray-500'];
+                    if ($lastMeasurement && $lastMeasurement->weight && auth()->user()->height) {
+                        $bmi = $lastMeasurement->weight / ((auth()->user()->height/100) ** 2);
+                        if ($bmi < 18.5) {
+                            $bmiCategory = ['text' => __('common.underweight'), 'color' => 'text-blue-600'];
+                        } elseif ($bmi < 25) {
+                            $bmiCategory = ['text' => __('common.normal_weight'), 'color' => 'text-green-600'];
+                        } elseif ($bmi < 30) {
+                            $bmiCategory = ['text' => __('common.overweight'), 'color' => 'text-yellow-600'];
+                        } else {
+                            $bmiCategory = ['text' => __('common.obesity'), 'color' => 'text-red-600'];
                         }
                     }
                 @endphp
-                <div class="stat-value {{ $bmiTextColor }}" 
-                     @if($bmi && $bmiColor === 'green') style="color: #059669 !important;" 
-                     @elseif($bmi && $bmiColor === 'blue') style="color: #2563eb !important;" 
-                     @elseif($bmi && $bmiColor === 'yellow') style="color: #d97706 !important;" 
-                     @elseif($bmi && $bmiColor === 'red') style="color: #dc2626 !important;" 
-                     @endif>
-                    {{ $bmi ? number_format($bmi, 1) : '—' }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Всего измерений -->
-        <div class="stat-card flex-1">
-            <div class="stat-icon stat-icon-purple">
-                <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                </svg>
-            </div>
-            <div class="stat-content">
-                <div class="stat-label">{{ __('common.total_measurements') }}</div>
-                <div class="stat-value">{{ $totalMeasurements }}</div>
-            </div>
-        </div>
-
-        <!-- Последнее измерение -->
-        <div class="stat-card flex-1">
-            <div class="stat-icon stat-icon-orange">
-                <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-            </div>
-            <div class="stat-content">
-                <div class="stat-label">{{ __('common.last_measurement') }}</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : __('common.no_data') }}</div>
+                <div class="stat-value {{ $bmiCategory['color'] }}">{{ $bmi ? number_format($bmi, 1) : '—' }}</div>
             </div>
         </div>
     </div>
@@ -522,124 +513,129 @@ function dashboardCalendar() {
     <div class="measurement-chart-row">
         <!-- Карточка последнего измерения -->
         <div class="measurement-detail-card">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 h-full">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">{{ __('common.last_measurement_detail') }}</h3>
-                    <span class="text-sm text-gray-500">{{ $lastMeasurement->measurement_date->format('d.m.Y') }}</span>
-                </div>
-                
-                <!-- Основные параметры -->
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="text-center p-3 bg-blue-50 rounded-lg">
-                        <div class="text-xl font-bold text-blue-600">{{ $lastMeasurement->weight ?? '—' }}</div>
-                        <div class="text-xs text-blue-800">{{ __('common.weight') }} ({{ __('common.kg') }})</div>
-                    </div>
-                    <div class="text-center p-3 rounded-lg 
-                        @if($bmi && $bmiColor === 'blue') bg-blue-50
-                        @elseif($bmi && $bmiColor === 'green') bg-green-50
-                        @elseif($bmi && $bmiColor === 'yellow') bg-yellow-50
-                        @elseif($bmi && $bmiColor === 'red') bg-red-50
-                        @else bg-gray-50
-                        @endif">
-                        <div class="text-xl font-bold 
-                            @if($bmi && $bmiColor === 'blue') text-blue-600
-                            @elseif($bmi && $bmiColor === 'green') text-green-600
-                            @elseif($bmi && $bmiColor === 'yellow') text-yellow-600
-                            @elseif($bmi && $bmiColor === 'red') text-red-600
-                            @else text-gray-600
-                            @endif">{{ $bmi ? number_format($bmi, 1) : '—' }}</div>
-                        <div class="text-xs 
-                            @if($bmi && $bmiColor === 'blue') text-blue-600
-                            @elseif($bmi && $bmiColor === 'green') text-green-600
-                            @elseif($bmi && $bmiColor === 'yellow') text-yellow-600
-                            @elseif($bmi && $bmiColor === 'red') text-red-600
-                            @else text-gray-600
-                            @endif">{{ __('common.bmi') }}</div>
+            <div class="card hover:shadow-lg transition-shadow duration-200 h-full">
+                <div class="card-header">
+                    <div class="flex items-center justify-between">
+                        <h4 class="card-title text-lg">{{ $lastMeasurement->measurement_date->format('d.m.Y') }}</h4>
                     </div>
                 </div>
-                
-                <!-- Дополнительные параметры -->
-                <div class="grid grid-cols-2 gap-2 text-sm mb-4">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">{{ __('common.fat_percentage') }}:</span>
-                        <span class="font-medium">{{ $lastMeasurement->body_fat_percentage ? number_format($lastMeasurement->body_fat_percentage, 1) . __('common.percent') : '—' }}</span>
+                <div class="card-body">
+                    <!-- Основные параметры -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="text-center p-3 bg-blue-50 rounded-lg">
+                            <div class="text-xl font-bold text-blue-600">{{ $lastMeasurement->weight ?? '—' }}</div>
+                            <div class="text-xs text-blue-800">{{ __('common.weight') }} ({{ __('common.kg') }})</div>
+                        </div>
+                        <div class="text-center p-3 rounded-lg" 
+                             @if($bmi && $bmiColor === 'blue') style="background-color: #dbeafe;"
+                             @elseif($bmi && $bmiColor === 'green') style="background-color: #dcfce7;"
+                             @elseif($bmi && $bmiColor === 'yellow') style="background-color: #fef3c7;"
+                             @elseif($bmi && $bmiColor === 'red') style="background-color: #fee2e2;"
+                             @else style="background-color: #f3f4f6;"
+                             @endif>
+                            <div class="text-xl font-bold" 
+                                 @if($bmi && $bmiColor === 'blue') style="color: #2563eb;"
+                                 @elseif($bmi && $bmiColor === 'green') style="color: #059669;"
+                                 @elseif($bmi && $bmiColor === 'yellow') style="color: #d97706;"
+                                 @elseif($bmi && $bmiColor === 'red') style="color: #dc2626;"
+                                 @else style="color: #6b7280;"
+                                 @endif>{{ $bmi ? (fmod($bmi, 1) == 0 ? number_format($bmi, 0) : number_format($bmi, 1)) : '—' }}</div>
+                            <div class="text-xs" 
+                                 @if($bmi && $bmiColor === 'blue') style="color: #2563eb;"
+                                 @elseif($bmi && $bmiColor === 'green') style="color: #059669;"
+                                 @elseif($bmi && $bmiColor === 'yellow') style="color: #d97706;"
+                                 @elseif($bmi && $bmiColor === 'red') style="color: #dc2626;"
+                                 @else style="color: #6b7280;"
+                                 @endif>{{ __('common.bmi') }}</div>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">{{ __('common.muscles') }}:</span>
-                        <span class="font-medium">{{ $lastMeasurement->muscle_mass ? number_format($lastMeasurement->muscle_mass, 1) . ' ' . __('common.kg') : '—' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">{{ __('common.water') }}:</span>
-                        <span class="font-medium">{{ $lastMeasurement->water_percentage ? number_format($lastMeasurement->water_percentage, 1) . __('common.percent') : '—' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">{{ __('common.pulse') }}:</span>
-                        <span class="font-medium">{{ $lastMeasurement->resting_heart_rate ? round($lastMeasurement->resting_heart_rate) . ' ' . __('common.bpm') : '—' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">{{ __('common.pressure') }}:</span>
-                        <span class="font-medium">
-                            @if($lastMeasurement->blood_pressure_systolic && $lastMeasurement->blood_pressure_diastolic)
-                                {{ round($lastMeasurement->blood_pressure_systolic) }}/{{ round($lastMeasurement->blood_pressure_diastolic) }}
-                            @else
-                                —
+                    
+                    <!-- Объемы тела -->
+                    @if($lastMeasurement->chest || $lastMeasurement->waist || $lastMeasurement->hips || $lastMeasurement->bicep || $lastMeasurement->thigh || $lastMeasurement->neck)
+                    <div class="mt-4 pt-4 pb-4 border-t border-b border-gray-200">
+                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes') }}</h5>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            @if($lastMeasurement->chest)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.chest') }}:</span>
+                                <span class="font-medium">{{ fmod($lastMeasurement->chest, 1) == 0 ? number_format($lastMeasurement->chest, 0) : number_format($lastMeasurement->chest, 1) }} см</span>
+                            </div>
                             @endif
-                        </span>
+                            @if($lastMeasurement->waist)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.waist') }}:</span>
+                                <span class="font-medium">{{ fmod($lastMeasurement->waist, 1) == 0 ? number_format($lastMeasurement->waist, 0) : number_format($lastMeasurement->waist, 1) }} см</span>
+                            </div>
+                            @endif
+                            @if($lastMeasurement->hips)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.hips') }}:</span>
+                                <span class="font-medium">{{ fmod($lastMeasurement->hips, 1) == 0 ? number_format($lastMeasurement->hips, 0) : number_format($lastMeasurement->hips, 1) }} см</span>
+                            </div>
+                            @endif
+                            @if($lastMeasurement->bicep)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.bicep') }}:</span>
+                                <span class="font-medium">{{ fmod($lastMeasurement->bicep, 1) == 0 ? number_format($lastMeasurement->bicep, 0) : number_format($lastMeasurement->bicep, 1) }} см</span>
+                            </div>
+                            @endif
+                            @if($lastMeasurement->thigh)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.thigh') }}:</span>
+                                <span class="font-medium">{{ fmod($lastMeasurement->thigh, 1) == 0 ? number_format($lastMeasurement->thigh, 0) : number_format($lastMeasurement->thigh, 1) }} см</span>
+                            </div>
+                            @endif
+                            @if($lastMeasurement->neck)
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.neck') }}:</span>
+                                <span class="font-medium">{{ fmod($lastMeasurement->neck, 1) == 0 ? number_format($lastMeasurement->neck, 0) : number_format($lastMeasurement->neck, 1) }} см</span>
+                            </div>
+                            @endif
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Объемы тела -->
-                @if($lastMeasurement->chest || $lastMeasurement->waist || $lastMeasurement->hips || $lastMeasurement->bicep || $lastMeasurement->thigh || $lastMeasurement->neck)
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h5>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                        @if($lastMeasurement->chest)
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">{{ __('common.chest') }}:</span>
-                            <span class="font-medium">{{ number_format($lastMeasurement->chest, 1) }}</span>
+                    @endif
+                    
+                    <!-- Дополнительные параметры -->
+                    <div class="mt-4">
+                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_parameters') }}</h5>
+                        <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.fat_percentage') }}:</span>
+                                <span class="font-medium">{{ $lastMeasurement->body_fat_percentage ? (fmod($lastMeasurement->body_fat_percentage, 1) == 0 ? number_format($lastMeasurement->body_fat_percentage, 0) : number_format($lastMeasurement->body_fat_percentage, 1)) . '%' : '—' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.muscles') }}:</span>
+                                <span class="font-medium">{{ $lastMeasurement->muscle_mass ? (fmod($lastMeasurement->muscle_mass, 1) == 0 ? number_format($lastMeasurement->muscle_mass, 0) : number_format($lastMeasurement->muscle_mass, 1)) . ' кг' : '—' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.water') }}:</span>
+                                <span class="font-medium">{{ $lastMeasurement->water_percentage ? (fmod($lastMeasurement->water_percentage, 1) == 0 ? number_format($lastMeasurement->water_percentage, 0) : number_format($lastMeasurement->water_percentage, 1)) . '%' : '—' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.pulse') }}:</span>
+                                <span class="font-medium">{{ $lastMeasurement->resting_heart_rate ? round($lastMeasurement->resting_heart_rate) . ' ' . __('common.bpm') : '—' }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">{{ __('common.pressure') }}:</span>
+                                <span class="font-medium">
+                                    @if($lastMeasurement->blood_pressure_systolic && $lastMeasurement->blood_pressure_diastolic)
+                                        {{ round($lastMeasurement->blood_pressure_systolic) }}/{{ round($lastMeasurement->blood_pressure_diastolic) }}
+                                    @else
+                                        —
+                                    @endif
+                                </span>
+                            </div>
                         </div>
-                        @endif
-                        @if($lastMeasurement->waist)
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">{{ __('common.waist') }}:</span>
-                            <span class="font-medium">{{ number_format($lastMeasurement->waist, 1) }}</span>
-                        </div>
-                        @endif
-                        @if($lastMeasurement->hips)
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">{{ __('common.hips') }}:</span>
-                            <span class="font-medium">{{ number_format($lastMeasurement->hips, 1) }}</span>
-                        </div>
-                        @endif
-                        @if($lastMeasurement->bicep)
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">{{ __('common.bicep') }}:</span>
-                            <span class="font-medium">{{ number_format($lastMeasurement->bicep, 1) }}</span>
-                        </div>
-                        @endif
-                        @if($lastMeasurement->thigh)
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">{{ __('common.thigh') }}:</span>
-                            <span class="font-medium">{{ number_format($lastMeasurement->thigh, 1) }}</span>
-                        </div>
-                        @endif
-                        @if($lastMeasurement->neck)
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">{{ __('common.neck') }}:</span>
-                            <span class="font-medium">{{ number_format($lastMeasurement->neck, 1) }}</span>
-                        </div>
-                        @endif
                     </div>
+                    
+                    <!-- Комментарии -->
+                    @if($lastMeasurement->notes)
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <h5 class="text-sm font-medium text-gray-700 mb-1">{{ __('common.comments') }}</h5>
+                        <p class="text-sm text-gray-600">{{ $lastMeasurement->notes }}</p>
+                    </div>
+                    @endif
                 </div>
-                @endif
-                
-                <!-- Комментарии -->
-                @if($lastMeasurement->notes)
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <h5 class="text-sm font-medium text-gray-700 mb-1">{{ __('common.comments') }}</h5>
-                    <p class="text-sm text-gray-600">{{ $lastMeasurement->notes }}</p>
-                </div>
-                @endif
             </div>
         </div>
 
@@ -681,25 +677,16 @@ function dashboardCalendar() {
     }
 }
 
+.stats-container {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1rem !important;
+    margin-bottom: 2rem !important;
+}
+
 @media (max-width: 768px) {
-    .flex.gap-6 {
-        display: grid !important;
+    .stats-container {
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 1rem !important;
-    }
-    
-    .flex.gap-6 .stat-card {
-        flex-direction: column !important;
-        text-align: center !important;
-        padding: 1rem !important;
-    }
-    
-    .flex.gap-6 .stat-content {
-        margin-top: 0.5rem !important;
-    }
-    
-    .flex.gap-6 .stat-icon {
-        margin: 0 auto !important;
     }
 }
 
@@ -751,6 +738,31 @@ function dashboardCalendar() {
     .p-6 {
         padding: 1rem !important;
     }
+}
+
+/* Стили для карточек измерений */
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+}
+
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.card-body {
+    padding: 1.5rem;
 }
 
 /* Стили для темной темы - заголовки черного цвета */

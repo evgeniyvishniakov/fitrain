@@ -1,7 +1,7 @@
 @extends("crm.layouts.app")
 
-@section("title", "Спортсмены")
-@section("page-title", "Спортсмены")
+@section("title", __('common.athletes'))
+@section("page-title", __('common.athletes'))
 
 <style>
 @media (max-width: 767px) {
@@ -228,7 +228,7 @@ function athletesApp() {
             package_price: 0,
             purchase_date: '',
             expires_date: '',
-            payment_method: 'Наличные',
+            payment_method: '{{ __('common.cash') }}',
             description: ''
         },
         
@@ -331,13 +331,13 @@ function athletesApp() {
             if (!bmi || isNaN(bmi)) return { text: '—', color: 'text-gray-500', bg: 'bg-gray-100' };
             
             if (bmi < 18.5) {
-                return { text: 'Недостаточный вес', color: 'text-blue-600', bg: 'bg-blue-100' };
+                return { text: '{{ __('common.underweight') }}', color: 'text-blue-600', bg: 'bg-blue-100' };
             } else if (bmi < 25) {
-                return { text: 'Нормальный вес', color: 'text-green-600', bg: 'bg-green-100' };
+                return { text: '{{ __('common.normal_weight') }}', color: 'text-green-600', bg: 'bg-green-100' };
             } else if (bmi < 30) {
-                return { text: 'Избыточный вес', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+                return { text: '{{ __('common.overweight') }}', color: 'text-yellow-600', bg: 'bg-yellow-100' };
             } else {
-                return { text: 'Ожирение', color: 'text-red-600', bg: 'bg-red-100' };
+                return { text: '{{ __('common.obesity') }}', color: 'text-red-600', bg: 'bg-red-100' };
             }
         },
 
@@ -350,11 +350,11 @@ function athletesApp() {
             const change = lastWeight - firstWeight;
             
             if (change > 0) {
-                return '+' + this.formatNumber(change, ' кг');
+                return '+' + this.formatNumber(change, '{{ __('common.weight_change_kg') }}');
             } else if (change < 0) {
-                return this.formatNumber(change, ' кг');
+                return this.formatNumber(change, '{{ __('common.weight_change_kg') }}');
             } else {
-                return '0 кг';
+                return '{{ __('common.weight_change_zero') }}';
             }
         },
 
@@ -451,7 +451,7 @@ function athletesApp() {
             
             // Проверяем, что Chart.js загружен
             if (typeof Chart === 'undefined') {
-                console.error('Chart.js не загружен');
+                console.error('{{ __('common.chart_js_not_loaded') }}');
                 return;
             }
             // console.log('Chart.js загружен успешно');
@@ -500,7 +500,7 @@ function athletesApp() {
             // console.log('=== СОЗДАНИЕ ГРАФИКА ВЕСА ===');
             const ctx = document.getElementById('weightChart');
             if (!ctx) {
-                console.error('Canvas элемент weightChart не найден');
+                console.error('{{ __('common.weight_canvas_not_found') }}');
                 return;
             }
             // console.log('Canvas элемент найден:', ctx);
@@ -520,7 +520,7 @@ function athletesApp() {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Вес (кг)',
+                        label: '{{ __('common.weight_kg') }}',
                         data: measurements.map(m => m.weight),
                         borderColor: '#3B82F6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -570,7 +570,7 @@ function athletesApp() {
             });
             // console.log('График веса создан успешно');
             } catch (error) {
-                console.error('Ошибка создания графика веса:', error);
+                console.error('{{ __('common.weight_chart_error') }}:', error);
             }
         },
 
@@ -588,14 +588,14 @@ function athletesApp() {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Процент жира',
+                        label: '{{ __('common.body_fat_percentage') }}',
                         data: measurements.map(m => m.body_fat_percentage),
                         borderColor: '#EF4444',
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         borderWidth: 2,
                         yAxisID: 'y'
                     }, {
-                        label: 'Мышечная масса (кг)',
+                        label: '{{ __('common.muscle_mass_kg') }}',
                         data: measurements.map(m => m.muscle_mass),
                         borderColor: '#10B981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -626,7 +626,7 @@ function athletesApp() {
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'Процент жира (%)'
+                                text: '{{ __('common.body_fat_percentage_short') }}'
                             },
                             min: function(context) {
                                 const values = context.chart.data.datasets[0].data;
@@ -643,7 +643,7 @@ function athletesApp() {
                             position: 'right',
                             title: {
                                 display: true,
-                                text: 'Мышечная масса (кг)'
+                                text: '{{ __('common.muscle_mass_kg_short') }}'
                             },
                             grid: {
                                 drawOnChartArea: false,
@@ -678,12 +678,12 @@ function athletesApp() {
 
             // Получаем данные для выбранного измерения
             const measurementConfig = {
-                chest: { label: 'Грудь (см)', color: '#8B5CF6', bgColor: 'rgba(139, 92, 246, 0.1)' },
-                waist: { label: 'Талия (см)', color: '#F59E0B', bgColor: 'rgba(245, 158, 11, 0.1)' },
-                hips: { label: 'Бедра (см)', color: '#EC4899', bgColor: 'rgba(236, 72, 153, 0.1)' },
-                bicep: { label: 'Бицепс (см)', color: '#10B981', bgColor: 'rgba(16, 185, 129, 0.1)' },
-                thigh: { label: 'Бедро (см)', color: '#EF4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
-                neck: { label: 'Шея (см)', color: '#6B7280', bgColor: 'rgba(107, 114, 128, 0.1)' }
+                chest: { label: '{{ __('common.chest_cm') }}', color: '#8B5CF6', bgColor: 'rgba(139, 92, 246, 0.1)' },
+                waist: { label: '{{ __('common.waist_cm') }}', color: '#F59E0B', bgColor: 'rgba(245, 158, 11, 0.1)' },
+                hips: { label: '{{ __('common.hips_cm') }}', color: '#EC4899', bgColor: 'rgba(236, 72, 153, 0.1)' },
+                bicep: { label: '{{ __('common.bicep_cm') }}', color: '#10B981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+                thigh: { label: '{{ __('common.thigh_cm') }}', color: '#EF4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
+                neck: { label: '{{ __('common.neck_cm') }}', color: '#6B7280', bgColor: 'rgba(107, 114, 128, 0.1)' }
             };
 
             let datasets = [];
@@ -803,11 +803,11 @@ function athletesApp() {
                         }
                     }
                 } else {
-                    console.error('Ошибка загрузки измерений:', result.message);
+                    console.error('{{ __('common.measurements_loading_error') }}:', result.message);
                     this.measurements = [];
                 }
             } catch (error) {
-                console.error('Ошибка загрузки измерений:', error);
+                console.error('{{ __('common.measurements_loading_error') }}:', error);
                 this.measurements = [];
             }
         },
@@ -899,13 +899,13 @@ function athletesApp() {
                     this.loadNutritionPlans(); // Перезагружаем список планов
                 } else {
                     const error = await response.json();
-                    console.error('Ошибка сервера:', error);
-                    alert(error.error || 'Ошибка при создании плана питания');
+                    console.error('{{ __('common.server_error') }}:', error);
+                    alert(error.error || '{{ __('common.nutrition_plan_creation_error') }}');
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
                 console.error('Данные:', nutritionData);
-                alert('Ошибка при создании плана питания: ' + error.message);
+                alert('{{ __('common.nutrition_plan_error') }}: ' + error.message);
             }
         },
         
@@ -1089,7 +1089,7 @@ function athletesApp() {
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: 'Удалить план питания',
+                    title: '{{ __('common.delete') }} {{ __('common.nutrition_plan') }}',
                     message: `Вы уверены, что хотите удалить "${planTitle}"?`,
                     confirmText: 'Удалить',
                     cancelText: 'Отмена',
@@ -1192,7 +1192,7 @@ function athletesApp() {
                 package_price: 0,
                 purchase_date: new Date().toISOString().split('T')[0],
                 expires_date: '',
-                payment_method: 'Наличные',
+                payment_method: '{{ __('common.cash') }}',
                 description: ''
             };
         },
@@ -1400,9 +1400,9 @@ function athletesApp() {
         // Метки статусов
         getSportLevelLabel(level) {
             const labels = {
-                'beginner': 'Новичок',
-                'intermediate': 'Любитель', 
-                'advanced': 'Профи'
+                'beginner': '{{ __('common.novice') }}',
+                'intermediate': '{{ __('common.amateur') }}', 
+                'advanced': '{{ __('common.pro') }}'
             };
             return labels[level] || level;
         },
@@ -2179,7 +2179,7 @@ function athletesApp() {
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        Дашборд
+        {{ __('common.dashboard') }}
     </a>
     <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2291,7 +2291,7 @@ function athletesApp() {
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">Все уровни</option>
                         <option value="beginner">Новичок</option>
-                        <option value="intermediate">Любитель</option>
+                        <option value="intermediate">{{ __('common.amateur') }}</option>
                         <option value="advanced">Профи</option>
                     </select>
                 </div>
@@ -2300,7 +2300,7 @@ function athletesApp() {
                 <div class="buttons-container">
                     <button @click="showCreate()" 
                             class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                        Добавить спортсмена
+                        {{ __('common.add_athlete') }}
                     </button>
                 </div>
             </div>
@@ -2355,9 +2355,9 @@ function athletesApp() {
                             <div class="flex-1">
                                 <div class="flex items-center flex-wrap gap-4">
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
-                                    <span x-show="athlete.age" class="text-sm text-gray-500" x-text="'Возраст: ' + athlete.age + ' лет'"></span>
-                                    <span x-show="athlete.current_weight" class="text-sm text-gray-500" x-text="'Вес: ' + formatNumber(athlete.current_weight, ' кг')"></span>
-                                    <span x-show="athlete.current_height" class="text-sm text-gray-500" x-text="'Рост: ' + formatNumber(athlete.current_height, ' см')"></span>
+                                    <span x-show="athlete.age" class="text-sm text-gray-500" x-text="'{{ __('common.age') }}: ' + athlete.age + ' {{ __('common.years') }}'"></span>
+                                    <span x-show="athlete.current_weight" class="text-sm text-gray-500" x-text="'{{ __('common.weight') }}: ' + formatNumber(athlete.current_weight, ' {{ __('common.weight_change_kg') }}')"></span>
+                                    <span x-show="athlete.current_height" class="text-sm text-gray-500" x-text="'{{ __('common.height') }}: ' + formatNumber(athlete.current_height, ' см')"></span>
                                 </div>
                             </div>
                         </div>
@@ -2366,15 +2366,15 @@ function athletesApp() {
                         <div class="flex items-center space-x-2 mx-4">
                             <button @click="showView(athlete.id)" 
                                     class="px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                                Просмотр
+                                {{ __('common.view') }}
                             </button>
                             <button @click="showEdit(athlete.id)" 
                                     class="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                Редактировать
+                                {{ __('common.edit') }}
                             </button>
                             <button @click="deleteAthlete(athlete.id)" 
                                     class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                Удалить
+                                {{ __('common.delete') }}
                             </button>
                         </div>
                         
@@ -2407,9 +2407,9 @@ function athletesApp() {
                                 <div>
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
                                     <div class="flex flex-wrap gap-2 text-sm text-gray-500 mt-1">
-                                        <span x-show="athlete.age" x-text="'Возраст: ' + athlete.age + ' лет'"></span>
-                                        <span x-show="athlete.current_weight" x-text="'Вес: ' + formatNumber(athlete.current_weight, ' кг')"></span>
-                                        <span x-show="athlete.current_height" x-text="'Рост: ' + formatNumber(athlete.current_height, ' см')"></span>
+                                        <span x-show="athlete.age" x-text="'{{ __('common.age') }}: ' + athlete.age + ' {{ __('common.years') }}'"></span>
+                                        <span x-show="athlete.current_weight" x-text="'{{ __('common.weight') }}: ' + formatNumber(athlete.current_weight, ' {{ __('common.weight_change_kg') }}')"></span>
+                                        <span x-show="athlete.current_height" x-text="'{{ __('common.height') }}: ' + formatNumber(athlete.current_height, ' см')"></span>
                                     </div>
                                 </div>
                             </div>
@@ -2431,15 +2431,15 @@ function athletesApp() {
                         <div class="flex space-x-2">
                             <button @click="showView(athlete.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                                Просмотр
+                                {{ __('common.view') }}
                             </button>
                             <button @click="showEdit(athlete.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                Редактировать
+                                {{ __('common.edit') }}
                             </button>
                             <button @click="deleteAthlete(athlete.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                Удалить
+                                {{ __('common.delete') }}
                             </button>
                         </div>
                     </div>
@@ -2491,11 +2491,11 @@ function athletesApp() {
             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <span class="text-3xl text-gray-400">👥</span>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет спортсменов</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">У вас пока нет спортсменов. Добавьте первого спортсмена для начала работы.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ __('common.no_athletes') }}</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ __('common.no_athletes_text') }}</p>
             <button @click="showCreate()" 
                     class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Добавить первого спортсмена
+                {{ __('common.add_first_athlete') }}
             </button>
         </div>
     </div>
@@ -2503,10 +2503,10 @@ function athletesApp() {
     <!-- ДОБАВЛЕНИЕ ПЛАТЕЖА -->
     <div x-show="currentView === 'addPayment'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Добавить платеж</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.add_payment') }}</h3>
             <button @click="currentView = 'view'; activeTab = 'finance'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                {{ __('common.back') }}
             </button>
         </div>
         
@@ -2598,11 +2598,11 @@ function athletesApp() {
                 <div class="flex justify-end gap-4 pt-6 border-t">
                     <button type="button" @click="currentView = 'view'; activeTab = 'finance'" 
                             class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
-                        Отмена
+                        {{ __('common.cancel') }}
                     </button>
                     <button type="submit" 
                             class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
-                        Сохранить платеж
+                        {{ __('common.save_payment') }}
                     </button>
                 </div>
             </form>
@@ -2612,10 +2612,10 @@ function athletesApp() {
     <!-- РЕДАКТИРОВАНИЕ ПЛАТЕЖА -->
     <div x-show="currentView === 'editPayment'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Редактировать платеж</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.edit_payment') }}</h3>
             <button @click="currentView = 'view'; activeTab = 'finance'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                {{ __('common.back') }}
             </button>
         </div>
         
@@ -2714,11 +2714,11 @@ function athletesApp() {
                 <div class="flex justify-end gap-4 pt-6 border-t">
                     <button type="button" @click="currentView = 'view'; activeTab = 'finance'" 
                             class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
-                        Отмена
+                        {{ __('common.cancel') }}
                     </button>
                     <button type="submit" 
                             class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
-                        Сохранить изменения
+                        {{ __('common.save_changes') }}
                     </button>
                 </div>
             </form>
@@ -2734,7 +2734,7 @@ function athletesApp() {
                     <h1 class="text-2xl font-bold text-gray-900">Профиль спортсмена</h1>
                     <button @click="showList()" 
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                        Назад к списку
+                        {{ __('common.back') }} к списку
                     </button>
                 </div>
 
@@ -2863,11 +2863,11 @@ function athletesApp() {
                                 </div>
                                 <div class="bg-orange-50 rounded-lg p-4 text-center">
                                     <div class="text-2xl font-bold text-orange-600" x-text="currentAthlete?.finance?.remaining_sessions || 0"></div>
-                                    <div class="text-sm text-orange-800">Осталось</div>
+                                    <div class="text-sm text-orange-800">{{ __('common.remaining') }}</div>
                                 </div>
                                 <div class="bg-purple-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.is_active ? 'Да' : 'Нет'"></div>
-                                    <div class="text-sm text-purple-800">Активен</div>
+                                    <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.is_active ? '{{ __('common.yes') }}' : '{{ __('common.no') }}'"></div>
+                                    <div class="text-sm text-purple-800">{{ __('common.active') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -2987,7 +2987,7 @@ function athletesApp() {
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                                       :class="currentAthlete?.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                                                      x-text="currentAthlete?.is_active ? 'Активен' : 'Неактивен'"></span>
+                                                      x-text="currentAthlete?.is_active ? '{{ __('common.active') }}' : '{{ __('common.inactive') }}'"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -3050,11 +3050,11 @@ function athletesApp() {
                                                 <div class="grid grid-cols-2 gap-4 mb-4">
                                                     <div class="text-center p-3 bg-blue-50 rounded-lg">
                                                         <div class="text-xl font-bold text-blue-600" x-text="measurement.weight || '—'"></div>
-                                                        <div class="text-xs text-blue-800">Вес (кг)</div>
+                                                        <div class="text-xs text-blue-800">{{ __('common.weight_kg') }}</div>
                                                     </div>
                                                     <div class="text-center p-3 rounded-lg" x-show="measurement.weight && measurement.height" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).bg">
                                                         <div class="text-xl font-bold" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color" x-text="formatNumber(measurement.weight / Math.pow(measurement.height/100, 2), '')"></div>
-                                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">ИМТ</div>
+                                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">{{ __('common.bmi') }}</div>
                                                     </div>
                                                 </div>
                                                 
@@ -3121,7 +3121,7 @@ function athletesApp() {
                                                     </div>
                                                     <div class="flex justify-between">
                                                         <span class="text-gray-500">Пульс:</span>
-                                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' уд/мин' : '—'"></span>
+                                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' {{ __('common.bpm') }}' : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
                                                         <span class="text-gray-500">Давление:</span>
@@ -3307,7 +3307,7 @@ function athletesApp() {
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                             </svg>
-                                                            <span x-text="workout.duration + ' мин'"></span>
+                                                            <span x-text="workout.duration + ' {{ __('common.min') }}'"></span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -3386,7 +3386,7 @@ function athletesApp() {
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                         </svg>
-                                                        <span class="mobile-button-text">Редактировать</span>
+                                                        <span class="mobile-button-text">{{ __('common.edit') }}</span>
                                                     </button>
                                                     <button @click="showDetailedNutritionPlan(plan)" 
                                                             class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
@@ -3395,7 +3395,7 @@ function athletesApp() {
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                         </svg>
-                                                        <span class="mobile-button-text">Подробнее</span>
+                                                        <span class="mobile-button-text">{{ __('common.details') }}</span>
                                                     </button>
                                                     <button @click="deleteNutritionPlan(plan.id)" 
                                                             class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
@@ -3403,7 +3403,7 @@ function athletesApp() {
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                         </svg>
-                                                        <span class="mobile-button-text">Удалить</span>
+                                                        <span class="mobile-button-text">{{ __('common.delete') }}</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -3454,7 +3454,7 @@ function athletesApp() {
             <h3 class="text-xl font-semibold text-gray-900">Добавление спортсмена</h3>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                {{ __('common.back') }}
                     </button>
                 </div>
         
@@ -3526,7 +3526,7 @@ function athletesApp() {
                         <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Выберите уровень</option>
                             <option value="beginner">Новичок</option>
-                            <option value="intermediate">Любитель</option>
+                            <option value="intermediate">{{ __('common.amateur') }}</option>
                             <option value="advanced">Продвинутый</option>
                             <option value="professional">Профессионал</option>
                         </select>
@@ -3579,7 +3579,7 @@ function athletesApp() {
             <h3 class="text-xl font-semibold text-gray-900">Редактирование спортсмена</h3>
             <button @click="currentView = 'view'; activeTab = 'overview'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                {{ __('common.back') }}
                     </button>
                 </div>
         
@@ -3652,7 +3652,7 @@ function athletesApp() {
                             <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="">Выберите уровень</option>
                                 <option value="beginner">Новичок</option>
-                                <option value="intermediate">Любитель</option>
+                                <option value="intermediate">{{ __('common.amateur') }}</option>
                                 <option value="advanced">Продвинутый</option>
                                 <option value="professional">Профессионал</option>
                             </select>
@@ -3689,11 +3689,11 @@ function athletesApp() {
                 <div class="flex justify-end space-x-3">
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Сохранить изменения
+                        {{ __('common.save_changes') }}
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'overview'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Отмена
+                        {{ __('common.cancel') }}
                     </button>
                 </div>
             </form>
@@ -3706,7 +3706,7 @@ function athletesApp() {
             <h3 class="text-xl font-semibold text-gray-900">Добавить измерение</h3>
             <button @click="currentView = 'view'; activeTab = 'measurements'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                {{ __('common.back') }}
             </button>
         </div>
         
@@ -3722,12 +3722,12 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.weight_kg') }}</label>
                             <input type="number" step="0.1" x-model="measurementWeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.height_cm') }}</label>
                             <input type="number" step="0.1" x-model="measurementHeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -3744,7 +3744,7 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Мышечная масса (кг)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.muscle_mass_kg') }}</label>
                             <input type="number" step="0.1" x-model="measurementMuscleMass" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -3798,7 +3798,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Пульс в покое (уд/мин)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.resting_heart_rate') }} ({{ __('common.bpm') }})</label>
                             <input type="number" x-model="measurementHeartRate" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -3833,7 +3833,7 @@ function athletesApp() {
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'measurements'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Отмена
+                        {{ __('common.cancel') }}
                     </button>
                 </div>
             </form>
@@ -3846,7 +3846,7 @@ function athletesApp() {
             <h3 class="text-xl font-semibold text-gray-900">Редактировать измерение</h3>
             <button @click="currentView = 'view'; activeTab = 'measurements'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                {{ __('common.back') }}
             </button>
         </div>
         
@@ -3862,12 +3862,12 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Вес (кг)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.weight_kg') }}</label>
                             <input type="number" step="0.1" x-model="measurementWeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Рост (см)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.height_cm') }}</label>
                             <input type="number" step="0.1" x-model="measurementHeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -3884,7 +3884,7 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Мышечная масса (кг)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.muscle_mass_kg') }}</label>
                             <input type="number" step="0.1" x-model="measurementMuscleMass" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -3938,7 +3938,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Пульс в покое (уд/мин)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.resting_heart_rate') }} ({{ __('common.bpm') }})</label>
                             <input type="number" x-model="measurementHeartRate" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -3969,11 +3969,11 @@ function athletesApp() {
                 <div class="flex space-x-4">
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Сохранить изменения
+                        {{ __('common.save_changes') }}
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'measurements'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Отмена
+                        {{ __('common.cancel') }}
                     </button>
                 </div>
             </form>
@@ -3986,7 +3986,7 @@ function athletesApp() {
             <h3 class="text-xl font-semibold text-gray-900">Создать план питания</h3>
             <button @click="currentView = 'view'; activeTab = 'nutrition'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                Назад
+                {{ __('common.back') }}
             </button>
         </div>
         
@@ -4057,7 +4057,7 @@ function athletesApp() {
                     
                     <!-- Подсказки -->
                     <div class="mb-4 text-sm text-gray-600">
-                        <p>💡 <strong>Совет:</strong> Калории рассчитываются автоматически (белки × 4 + жиры × 9 + углеводы × 4)</p>
+                        <p>💡 <strong>{{ __('common.tip') }}:</strong> {{ __('common.calories_calculated') }}</p>
                         <p>📝 Заполняйте только те дни, для которых нужно составить план питания</p>
                     </div>
                     
@@ -4065,21 +4065,21 @@ function athletesApp() {
                         <table class="min-w-full bg-white border border-gray-300 rounded-lg">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">День</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.day') }}</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                                        Белки (г)
-                                        <button type="button" @click="fillColumn('proteins')" class="ml-1 text-blue-600 hover:text-blue-800" title="Быстрое заполнение">⚡</button>
+                                        {{ __('common.proteins_g_header') }}
+                                        <button type="button" @click="fillColumn('proteins')" class="ml-1 text-blue-600 hover:text-blue-800" title="{{ __('common.quick_fill') }}">⚡</button>
                                     </th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                                        Жиры (г)
-                                        <button type="button" @click="fillColumn('fats')" class="ml-1 text-blue-600 hover:text-blue-800" title="Быстрое заполнение">⚡</button>
+                                        {{ __('common.fats_g_header') }}
+                                        <button type="button" @click="fillColumn('fats')" class="ml-1 text-blue-600 hover:text-blue-800" title="{{ __('common.quick_fill') }}">⚡</button>
                                     </th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                                        Углеводы (г)
-                                        <button type="button" @click="fillColumn('carbs')" class="ml-1 text-blue-600 hover:text-blue-800" title="Быстрое заполнение">⚡</button>
+                                        {{ __('common.carbs_g_header') }}
+                                        <button type="button" @click="fillColumn('carbs')" class="ml-1 text-blue-600 hover:text-blue-800" title="{{ __('common.quick_fill') }}">⚡</button>
                                     </th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Калории</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Заметки</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-300">
@@ -4210,7 +4210,7 @@ function athletesApp() {
                             <div class="flex gap-3 mt-6">
                                 <button type="button" @click.prevent="quickFillModalVisible = false" 
                                         class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-                                    Отмена
+                                    {{ __('common.cancel') }}
                                 </button>
                                 <button type="button" @click="applyQuickFill()"
                                         class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
@@ -4225,7 +4225,7 @@ function athletesApp() {
                 <div class="flex justify-end space-x-4 mt-6">
                     <button type="button" @click="currentView = 'view'; activeTab = 'nutrition'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        Отмена
+                        {{ __('common.cancel') }}
                     </button>
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -4282,12 +4282,12 @@ function athletesApp() {
                             <table class="min-w-full bg-white border border-gray-300 rounded-lg">
                                 <thead class="bg-gray-100">
                                     <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">День</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.day') }}</th>
                                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Белки (г)</th>
                                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Жиры (г)</th>
                                         <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Углеводы (г)</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Калории</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Заметки</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-300">

@@ -501,10 +501,6 @@
                     
                     <!-- Действия -->
                     <div class="flex items-center space-x-4">
-                        <!-- Переключатель языка -->
-                        <div class="relative">
-                            @include('components.language-switcher')
-                        </div>
                         
                         <!-- Переключатель темы -->
                         <button onclick="toggleTheme()" class="header-icon transition-colors">
