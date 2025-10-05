@@ -426,8 +426,39 @@ function workoutApp() {
         
         // Управление статусом упражнений
                 setExerciseStatus(exerciseId, status) {
-                        this.exerciseStatuses[exerciseId] = status;
-                        this.lastChangedExercise = { id: exerciseId, status: status };
+                    // Проверяем текущий статус упражнения
+                    const currentStatus = this.exerciseStatuses[exerciseId] || 
+                                        (this.currentWorkout && this.workoutProgress[this.currentWorkout.id] && 
+                                         this.workoutProgress[this.currentWorkout.id][exerciseId]?.status) || 
+                                        null;
+                    
+                    // Если статус тот же самый, отменяем его (возвращаем к null)
+                    if (currentStatus === status) {
+                        // Очищаем статус
+                        delete this.exerciseStatuses[exerciseId];
+                        this.lastChangedExercise = { id: exerciseId, status: null };
+                        
+                        // Очищаем workoutProgress
+                        if (this.currentWorkout && this.currentWorkout.id && this.workoutProgress[this.currentWorkout.id]) {
+                            delete this.workoutProgress[this.currentWorkout.id][exerciseId];
+                        }
+                        
+                        // Очищаем связанные данные
+                        delete this.exerciseComments[exerciseId];
+                        delete this.exerciseSetsData[exerciseId];
+                        delete this.exerciseSetsExpanded[exerciseId];
+                        
+                        // Обновляем список и автосохранение
+                        this.updateWorkoutProgressInList();
+                        this.autoSave();
+                        
+                        showSuccess('{{ __('common.progress_saved') }}', 'Статус упражнения отменен');
+                        return;
+                    }
+                    
+                    // Устанавливаем новый статус
+                    this.exerciseStatuses[exerciseId] = status;
+                    this.lastChangedExercise = { id: exerciseId, status: status };
             
             // Обновляем workoutProgress для корректной работы в режиме просмотра
             if (this.currentWorkout && this.currentWorkout.id) {
@@ -815,6 +846,33 @@ function workoutApp() {
         // Обновление статуса тренировки
         async updateWorkoutStatus(workoutId, newStatus) {
             try {
+                // Проверяем текущий статус тренировки
+                const currentWorkout = this.currentWorkout && this.currentWorkout.id === workoutId ? this.currentWorkout : 
+                                     this.workouts.find(w => w.id === workoutId);
+                
+                if (!currentWorkout) {
+                    showError('{{ __('common.error') }}', 'Тренировка не найдена');
+                    return;
+                }
+                
+                const oldStatus = currentWorkout.status;
+                
+                // Если статус не изменился, не отправляем запрос
+                if (oldStatus === newStatus) {
+                    // Убираем подсветку (возвращаем к исходному статусу)
+                    if (this.currentWorkout && this.currentWorkout.id === workoutId) {
+                        this.currentWorkout.status = 'planned'; // Возвращаем к планированной
+                    }
+                    
+                    const workoutInList = this.workouts.find(w => w.id === workoutId);
+                    if (workoutInList) {
+                        workoutInList.status = 'planned'; // Возвращаем к планированной
+                    }
+                    
+                    showSuccess('{{ __('common.status_updated') }}', 'Статус отменен');
+                    return;
+                }
+                
                 const response = await fetch(`/workouts/${workoutId}/status`, {
                     method: 'PATCH',
                             headers: {

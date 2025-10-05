@@ -160,7 +160,7 @@ function exerciseApp() {
         },
         
         goToPage(page) {
-            this.currentPage = page;
+                this.currentPage = page;
         },
         
         previousPage() {
@@ -859,15 +859,15 @@ function exerciseApp() {
             <div class="filters-row">
                 <!-- Поиск -->
                 <div class="search-container">
-                    <input type="text" 
-                           x-model="search" 
+                    <input type="text"
+                           x-model="search"
                            placeholder="{{ __('common.search_exercises') }}" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
                 <!-- Фильтр категории -->
                 <div class="filter-container">
-                    <select x-model="category" 
+                    <select x-model="category"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">{{ __('common.all_categories') }}</option>
                         <option value="Грудь">{{ __('common.chest') }}</option>
@@ -883,7 +883,7 @@ function exerciseApp() {
                 
                 <!-- Фильтр оборудования -->
                 <div class="filter-container">
-                    <select x-model="equipment" 
+                    <select x-model="equipment"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">{{ __('common.all_equipment') }}</option>
                         <option value="Штанга">{{ __('common.barbell') }}</option>
@@ -899,7 +899,7 @@ function exerciseApp() {
                 
                 <!-- Фильтр типа упражнений -->
                 <div class="filter-container">
-                    <select x-model="exerciseType" 
+                    <select x-model="exerciseType"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">{{ __('common.all_exercises') }}</option>
                         <option value="system">{{ __('common.system_exercises') }}</option>
@@ -946,7 +946,7 @@ function exerciseApp() {
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
                     <!-- Заголовок -->
                     <div class="flex items-start justify-between mb-4">
-                        <div class="flex-1">
+                            <div class="flex-1">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-xl font-semibold text-gray-900">
                                 <span x-text="exercise.name"></span>
@@ -971,21 +971,21 @@ function exerciseApp() {
                                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
                                       title="Системное упражнение нельзя редактировать или удалять">
                                     Системное
-                                </span>
+                                        </span>
                                 <span x-show="!exercise.is_system" 
                                       class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                       title="Пользовательское упражнение можно редактировать и удалять">
                                     Пользовательское
                                 </span>
-                            </div>
-                            
+                                </div>
+                                
                             <!-- Группы мышц -->
                             <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && exercise.muscle_groups.length > 0">
                                 <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="exercise.muscle_groups.join(', ')"></span>
-                            </div>
+                                    </div>
                         </div>
-                    </div>
-                    
+                            </div>
+                            
                     <!-- Кнопки -->
                     <div class="flex space-x-2">
                         <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
@@ -1027,31 +1027,31 @@ function exerciseApp() {
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div class="flex items-center justify-center">
                     <div class="flex items-center space-x-2">
-                        <button @click="previousPage()" 
-                                :disabled="currentPage === 1"
+            <button @click="previousPage()" 
+                    :disabled="currentPage === 1"
                                 :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
                                 class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
-                        </button>
-                        
-                        <template x-for="page in visiblePages" :key="page">
-                            <button @click="goToPage(page)" 
+            </button>
+            
+            <template x-for="page in visiblePages" :key="page">
+                <button @click="goToPage(page)" 
                                     :class="page === currentPage ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'"
                                     class="px-3 py-2 text-sm font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                                 <span x-text="page"></span>
                             </button>
-                        </template>
-                        
-                        <button @click="nextPage()" 
-                                :disabled="currentPage === totalPages"
+            </template>
+            
+            <button @click="nextPage()" 
+                    :disabled="currentPage === totalPages"
                                 :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
                                 class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
-                        </button>
+            </button>
                     </div>
                 </div>
             </div>
@@ -1159,10 +1159,10 @@ function exerciseApp() {
                                x-model="formMuscleGroupsText" 
                                placeholder="например: грудь, плечи, трицепс"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    </div>
                 </div>
-                
-                <!-- Описание -->
+            </div>
+            
+            <!-- Описание -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
                     <textarea x-model="formDescription" 
@@ -1511,7 +1511,7 @@ function exerciseApp() {
             <div x-show="currentExercise?.instructions">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.execution_instructions') }}</h3>
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
+                <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
                 </div>
             </div>
             
@@ -1546,22 +1546,22 @@ function exerciseApp() {
                     <button @click="showAddVideo(currentExercise.id)" 
                             class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
                         <span x-text="currentUserVideo ? 'Изменить видео' : 'Добавить видео'"></span>
-                    </button>
-        </div>
-                
+                </button>
+</div>
+
                 <div x-show="!currentUserVideo" class="bg-gray-50 rounded-lg p-8 text-center">
                     <div class="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
                         <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                        </svg>
+                </svg>
     </div>
                     <h4 class="text-lg font-medium text-gray-900 mb-2">Нет пользовательского видео</h4>
                     <p class="text-gray-600 mb-4">Добавьте своё видео с правильной техникой выполнения этого упражнения</p>
                     <button @click="showAddVideo(currentExercise.id)" 
                             class="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 transition-colors">
                         Добавить видео
-                    </button>
-</div>
+            </button>
+        </div>
                 
                 <div x-show="currentUserVideo" class="bg-purple-50 rounded-lg p-4 border border-purple-200">
                     <div class="mb-4">
@@ -1572,8 +1572,8 @@ function exerciseApp() {
                     <div x-show="currentUserVideo && currentUserVideo.video_url && isYouTubeUrl(currentUserVideo.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                         <iframe x-show="currentUserVideo && currentUserVideo.video_url" :src="currentUserVideo && currentUserVideo.video_url ? getYouTubeEmbedUrl(currentUserVideo.video_url) : ''" 
                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                allowfullscreen>
-                        </iframe>
+                    allowfullscreen>
+            </iframe>
                     </div>
                     <div x-show="currentUserVideo && currentUserVideo.video_url && !isYouTubeUrl(currentUserVideo.video_url)" class="text-center">
                         <a x-show="currentUserVideo && currentUserVideo.video_url" :href="currentUserVideo && currentUserVideo.video_url ? currentUserVideo.video_url : '#'" 

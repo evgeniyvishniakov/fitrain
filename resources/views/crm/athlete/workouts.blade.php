@@ -541,6 +541,33 @@
                 // Обновление статуса тренировки
                 async updateWorkoutStatus(workoutId, newStatus) {
                     try {
+                        // Проверяем текущий статус тренировки
+                        const currentWorkout = this.currentWorkout && this.currentWorkout.id === workoutId ? this.currentWorkout : 
+                                             this.workouts.find(w => w.id === workoutId);
+                        
+                        if (!currentWorkout) {
+                            showError('Ошибка', 'Тренировка не найдена');
+                            return;
+                        }
+                        
+                        const oldStatus = currentWorkout.status;
+                        
+                        // Если статус не изменился, не отправляем запрос
+                        if (oldStatus === newStatus) {
+                            // Убираем подсветку (возвращаем к исходному статусу)
+                            if (this.currentWorkout && this.currentWorkout.id === workoutId) {
+                                this.currentWorkout.status = 'planned'; // Возвращаем к планированной
+                            }
+                            
+                            const workoutInList = this.workouts.find(w => w.id === workoutId);
+                            if (workoutInList) {
+                                workoutInList.status = 'planned'; // Возвращаем к планированной
+                            }
+                            
+                            showSuccess('Статус обновлен!', 'Статус отменен');
+                            return;
+                        }
+                        
                         const response = await fetch(`/athlete/workouts/${workoutId}/status`, {
                             method: 'PATCH',
                             headers: {
