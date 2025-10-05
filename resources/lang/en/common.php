@@ -1250,4 +1250,11 @@ return [
     'save_payment' => 'Save payment',
     'used_workouts' => 'Used workouts',
     'auto_filled_by_package_type' => 'Auto-filled by package type',
+    
+    // Workout package descriptions
+    '12_workouts' => '12 workouts',
+    '8_workouts' => '8 workouts',
+    'single_workout' => 'Single workout',
+    '4_workouts' => '4 workouts',
+    'unlimited_month' => 'Unlimited (month)',
 ];

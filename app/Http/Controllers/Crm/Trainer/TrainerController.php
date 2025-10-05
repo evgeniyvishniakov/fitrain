@@ -19,37 +19,56 @@ class TrainerController extends BaseController
             return 0;
         }
         
-        // Проверяем разные форматы описаний
-        // Универсальное регулярное выражение для всех вариантов написания
-        
-        // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок"
-        // Учитываем все окончания: тренировка, тренировки, тренировок
+        // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок" (RU)
         if (preg_match('/(\d+)\s+(?:тренировка|тренировки|тренировок)/ui', $description, $matches)) {
-            $sessions = (int)$matches[1];
-            \Log::info("Extracted {$sessions} sessions from: '{$description}' (тренировок)");
-            return $sessions;
+            return (int) $matches[1];
         }
         
         // Вариант с "тренирки": "4 тренирки", "8 тренирки"
         if (preg_match('/(\d+)\s*тренирки/ui', $description, $matches)) {
-            $sessions = (int)$matches[1];
-            \Log::info("Extracted {$sessions} sessions from: '{$description}' (тренирки)");
-            return $sessions;
+            return (int) $matches[1];
         }
         
-        // Разовая тренировка
+        // Украинский вариант: "4 тренування", "8 тренувань", "12 тренувань"
+        if (preg_match('/(\d+)\s+(?:тренування|тренувань)/ui', $description, $matches)) {
+            return (int) $matches[1];
+        }
+        
+        // Английский вариант: "4 workouts", "8 workouts", "12 workouts"
+        if (preg_match('/(\d+)\s+workouts?/ui', $description, $matches)) {
+            return (int) $matches[1];
+        }
+        
+        // Разовая тренировка (RU)
         if (preg_match('/Разовая\s*тренировка/ui', $description)) {
-            \Log::info("Extracted 1 session from: '{$description}' (single)");
             return 1;
         }
         
-        // Безлимит
+        // Разове тренування (UA)
+        if (preg_match('/Разове\s*тренування/ui', $description)) {
+            return 1;
+        }
+        
+        // Single workout (EN)
+        if (preg_match('/Single\s*workout/ui', $description)) {
+            return 1;
+        }
+        
+        // Безлимит (RU)
         if (preg_match('/Безлимит/ui', $description)) {
-            \Log::info("Extracted 30 sessions (unlimited) from: '{$description}'");
             return 30;
         }
         
-        \Log::info("No sessions extracted from: '{$description}'");
+        // Безліміт (UA)
+        if (preg_match('/Безліміт/ui', $description)) {
+            return 30;
+        }
+        
+        // Unlimited (EN)
+        if (preg_match('/Unlimited/ui', $description)) {
+            return 30;
+        }
+        
         return 0;
     }
     
@@ -148,81 +167,72 @@ class TrainerController extends BaseController
     {
         $trainer = auth()->user();
         $athletes = $trainer->athletes()->with(['workouts' => function($query) {
-            $query->latest()->take(1);
+            $query->latest();
         }])->paginate(12);
         
-        // Добавляем финансовые данные для каждого спортсмена
+        // Добавляем финансовые данные для каждого спортсмена из новой таблицы
         $athletes->getCollection()->transform(function ($athlete) {
-            // Суммируем все пакеты из истории платежей
-            $totalSessionsFromHistory = 0;
-            $totalPaidFromHistory = 0;
-            $paymentHistory = $athlete->payment_history ?? [];
+            // Получаем финансовые данные из таблицы trainer_finances
+            $finance = \App\Models\TrainerFinance::where('trainer_id', auth()->id())
+                ->where('athlete_id', $athlete->id)
+                ->first();
             
-            foreach ($paymentHistory as $payment) {
-                // Извлекаем количество тренировок из описания
-                $description = $payment['description'] ?? '';
+            if ($finance) {
+                // Вычисляем общее количество тренировок из истории платежей
+                $totalSessionsFromHistory = 0;
+                $paymentHistory = $finance->payment_history ?? [];
                 
-                // Отладочная информация
-                \Log::info("Raw description from DB: " . json_encode($description, JSON_UNESCAPED_UNICODE));
-                \Log::info("Description length: " . strlen($description));
-                \Log::info("Description bytes: " . bin2hex($description));
-                
-                $sessions = $this->extractSessionsFromDescription($description);
-                $totalSessionsFromHistory += $sessions;
-                
-                // Суммируем все платежи
-                $totalPaidFromHistory += $payment['amount'] ?? 0;
-            }
-            
-            // Если нет истории платежей, используем данные из полей пользователя
-            if (empty($paymentHistory)) {
-                $totalSessionsFromHistory = $athlete->total_sessions;
-                $totalPaidFromHistory = $athlete->total_paid;
-            }
-            
-            // Определяем тип пакета для отображения
-            $packageTypeDisplay = $athlete->package_type;
-            if ($totalSessionsFromHistory > 0) {
-                if ($totalSessionsFromHistory == 1) {
-                    $packageTypeDisplay = 'Разовая тренировка';
-                } elseif ($totalSessionsFromHistory >= 30) {
-                    $packageTypeDisplay = 'Безлимит (месяц)';
-                } else {
-                    $packageTypeDisplay = $totalSessionsFromHistory . ' тренировок';
+                foreach ($paymentHistory as $payment) {
+                    $description = $payment['description'] ?? '';
+                    $sessions = $this->extractSessionsFromDescription($description);
+                    $totalSessionsFromHistory += $sessions;
                 }
+                
+                $totalSessions = $totalSessionsFromHistory ?: $finance->total_sessions;
+                
+                $athlete->finance = [
+                    'id' => $athlete->id,
+                    'package_type' => $finance->package_type,
+                    'total_sessions' => $totalSessions,
+                    'used_sessions' => $finance->used_sessions,
+                    'remaining_sessions' => $totalSessions - $finance->used_sessions,
+                    'package_price' => $finance->package_price,
+                    'purchase_date' => $finance->purchase_date,
+                    'expires_date' => $finance->expires_date,
+                    'status' => $totalSessions > 0 ? 'active' : 'inactive',
+                    'total_paid' => $finance->total_paid,
+                    'last_payment_date' => $finance->last_payment_date,
+                    'payment_history' => $paymentHistory
+                ];
+            } else {
+                // Если нет финансовых данных, создаем пустую структуру
+                $athlete->finance = [
+                    'id' => $athlete->id,
+                    'package_type' => null,
+                    'total_sessions' => 0,
+                    'used_sessions' => 0,
+                    'remaining_sessions' => 0,
+                    'package_price' => 0,
+                    'purchase_date' => null,
+                    'expires_date' => null,
+                    'status' => 'inactive',
+                    'total_paid' => 0,
+                    'last_payment_date' => null,
+                    'payment_history' => []
+                ];
             }
-            
-            // Отладочная информация
-            \Log::info('=== ATHLETE DEBUG INFO ===');
-            \Log::info('Athlete ID: ' . $athlete->id);
-            \Log::info('Athlete Name: ' . $athlete->name);
-            \Log::info('Payment History: ' . json_encode($paymentHistory));
-            \Log::info('Total Sessions From History: ' . $totalSessionsFromHistory);
-            \Log::info('Used Sessions: ' . $athlete->used_sessions);
-            \Log::info('Remaining Sessions: ' . (($totalSessionsFromHistory ?: $athlete->total_sessions) - $athlete->used_sessions));
-            \Log::info('Package Type Display: ' . $packageTypeDisplay);
-            \Log::info('========================');
-            
-            $athlete->finance = [
-                'id' => $athlete->id,
-                'package_type' => $packageTypeDisplay,
-                'total_sessions' => $totalSessionsFromHistory ?: $athlete->total_sessions,
-                'used_sessions' => $athlete->used_sessions,
-                'remaining_sessions' => ($totalSessionsFromHistory ?: $athlete->total_sessions) - $athlete->used_sessions,
-                'package_price' => $totalPaidFromHistory ?: $athlete->package_price,
-                'purchase_date' => $athlete->purchase_date,
-                'expires_date' => $athlete->expires_date,
-                'status' => ($totalSessionsFromHistory ?: $athlete->total_sessions) > 0 ? 'active' : 'inactive',
-                'total_paid' => $totalPaidFromHistory ?: $athlete->total_paid,
-                'last_payment_date' => $athlete->last_payment_date,
-                'payment_history' => $paymentHistory
-            ];
-            
             
             return $athlete;
         });
         
-        return view('crm.trainer.athletes.index', compact('athletes'));
+        $response = response()->view('crm.trainer.athletes.index', compact('athletes'));
+        
+        // Добавляем заголовки для предотвращения кеширования
+        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+        
+        return $response;
     }
     
     public function addAthlete()
@@ -482,6 +492,67 @@ class TrainerController extends BaseController
             ->orderBy('measurement_date', 'desc')
             ->get();
         
+        // Получаем финансовые данные из новой таблицы
+        $finance = \App\Models\TrainerFinance::where('trainer_id', auth()->id())
+            ->where('athlete_id', $athlete->id)
+            ->first();
+            
+        // Если нет записи, создаем пустую
+        if (!$finance) {
+            $finance = \App\Models\TrainerFinance::create([
+                'trainer_id' => auth()->id(),
+                'athlete_id' => $athlete->id,
+                'package_type' => null,
+                'total_sessions' => 0,
+                'used_sessions' => 0,
+                'package_price' => 0,
+                'purchase_date' => null,
+                'expires_date' => null,
+                'payment_method' => null,
+                'payment_description' => null,
+                'total_paid' => 0,
+                'last_payment_date' => null,
+                'payment_history' => []
+            ]);
+        }
+
+        // Пересчитываем финансовые данные из истории платежей
+        $financeData = null;
+        if ($finance) {
+            $totalSessionsFromHistory = 0;
+            $paymentHistory = $finance->payment_history ?? [];
+            
+            foreach ($paymentHistory as $payment) {
+                $description = $payment['description'] ?? '';
+                $sessions = $this->extractSessionsFromDescription($description);
+                $totalSessionsFromHistory += $sessions;
+            }
+            
+            $totalSessions = $totalSessionsFromHistory ?: $finance->total_sessions;
+            
+            
+            $financeData = [
+                'total_paid' => $finance->total_paid,
+                'payment_history' => $paymentHistory,
+                'last_payment_date' => $finance->last_payment_date,
+                'package_type' => $finance->package_type,
+                'total_sessions' => $totalSessions,
+                'used_sessions' => $finance->used_sessions,
+                'remaining_sessions' => $totalSessions - $finance->used_sessions,
+                'package_price' => $finance->package_price,
+                'purchase_date' => $finance->purchase_date,
+                'expires_date' => $finance->expires_date,
+                'payment_method' => $finance->payment_method,
+                'payment_description' => $finance->payment_description,
+            ];
+            
+            // Временная отладка
+            \Log::info('Returning finance data for athlete ' . $athlete->id, [
+                'payment_history_count' => count($paymentHistory),
+                'payment_history' => $paymentHistory
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'measurements' => $measurements,
@@ -502,7 +573,8 @@ class TrainerController extends BaseController
                 'profile_modules' => $athlete->profile_modules,
                 'is_active' => $athlete->is_active,
                 'created_at' => $athlete->created_at,
-                'updated_at' => $athlete->updated_at
+                'updated_at' => $athlete->updated_at,
+                'finance' => $financeData
             ]
         ]);
     }
@@ -658,6 +730,160 @@ class TrainerController extends BaseController
         return response()->json([
             'success' => true,
             'message' => 'Прогресс обновлен'
+        ]);
+    }
+
+    /**
+     * Сохранение платежа
+     */
+    public function savePayment(Request $request, $athleteId)
+    {
+        $request->validate([
+            'package_type' => 'required|string',
+            'total_sessions' => 'required|integer|min:1',
+            'package_price' => 'required|numeric|min:0',
+            'payment_method' => 'required|string',
+            'purchase_date' => 'required|date',
+            'payment_description' => 'nullable|string',
+            'expires_date' => 'nullable|date',
+        ]);
+
+        $athlete = Athlete::where('id', $athleteId)
+            ->where('trainer_id', auth()->id())
+            ->firstOrFail();
+
+        // Находим или создаем запись в trainer_finances
+        $finance = \App\Models\TrainerFinance::updateOrCreate(
+            [
+                'trainer_id' => auth()->id(),
+                'athlete_id' => $athlete->id,
+            ],
+            [
+                'package_type' => $request->package_type,
+                'total_sessions' => $request->total_sessions,
+                'package_price' => $request->package_price,
+                'payment_method' => $request->payment_method,
+                'purchase_date' => $request->purchase_date,
+                'payment_description' => $request->payment_description,
+                'expires_date' => $request->expires_date,
+                'total_paid' => $request->package_price,
+                'last_payment_date' => $request->purchase_date,
+            ]
+        );
+
+        // Добавляем новый платеж в историю
+        $paymentHistory = $finance->payment_history ?? [];
+        $paymentHistory[] = [
+            'id' => time() . rand(1000, 9999),
+            'date' => $request->purchase_date,
+            'amount' => $request->package_price,
+            'description' => $request->payment_description ?? $request->package_type,
+            'payment_method' => $request->payment_method,
+        ];
+
+        $finance->update([
+            'payment_history' => $paymentHistory,
+            'total_paid' => collect($paymentHistory)->sum('amount'),
+            'last_payment_date' => $request->purchase_date,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Платеж сохранен'
+        ]);
+    }
+
+    /**
+     * Обновление платежа
+     */
+    public function updatePayment(Request $request, $athleteId, $paymentId)
+    {
+        $request->validate([
+            'package_type' => 'required|string',
+            'total_sessions' => 'required|integer|min:1',
+            'package_price' => 'required|numeric|min:0',
+            'payment_method' => 'required|string',
+            'purchase_date' => 'required|date',
+            'payment_description' => 'nullable|string',
+            'expires_date' => 'nullable|date',
+        ]);
+
+        $athlete = Athlete::where('id', $athleteId)
+            ->where('trainer_id', auth()->id())
+            ->firstOrFail();
+
+        $finance = \App\Models\TrainerFinance::where('trainer_id', auth()->id())
+            ->where('athlete_id', $athlete->id)
+            ->firstOrFail();
+
+        // Обновляем основной платеж
+        $finance->update([
+            'package_type' => $request->package_type,
+            'total_sessions' => $request->total_sessions,
+            'package_price' => $request->package_price,
+            'payment_method' => $request->payment_method,
+            'purchase_date' => $request->purchase_date,
+            'payment_description' => $request->payment_description,
+            'expires_date' => $request->expires_date,
+        ]);
+
+        // Обновляем конкретный платеж в истории
+        $paymentHistory = $finance->payment_history ?? [];
+        foreach ($paymentHistory as $key => $payment) {
+            if ($payment['id'] == $paymentId) {
+                $paymentHistory[$key] = [
+                    'id' => $paymentId,
+                    'date' => $request->purchase_date,
+                    'amount' => $request->package_price,
+                    'description' => $request->payment_description ?? $request->package_type,
+                    'payment_method' => $request->payment_method,
+                ];
+                break;
+            }
+        }
+
+        $finance->update([
+            'payment_history' => $paymentHistory,
+            'total_paid' => collect($paymentHistory)->sum('amount'),
+            'last_payment_date' => collect($paymentHistory)->max('date'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Платеж обновлен'
+        ]);
+    }
+
+    /**
+     * Удаление платежа
+     */
+    public function deletePayment($athleteId, $paymentId)
+    {
+        $athlete = Athlete::where('id', $athleteId)
+            ->where('trainer_id', auth()->id())
+            ->firstOrFail();
+
+        $finance = \App\Models\TrainerFinance::where('trainer_id', auth()->id())
+            ->where('athlete_id', $athlete->id)
+            ->firstOrFail();
+
+        // Удаляем платеж из истории
+        $paymentHistory = $finance->payment_history ?? [];
+        $paymentHistory = array_filter($paymentHistory, function($payment) use ($paymentId) {
+            return $payment['id'] != $paymentId;
+        });
+
+        $paymentHistory = array_values($paymentHistory); // Переиндексируем массив
+
+        $finance->update([
+            'payment_history' => $paymentHistory,
+            'total_paid' => collect($paymentHistory)->sum('amount'),
+            'last_payment_date' => collect($paymentHistory)->max('date'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Платеж удален'
         ]);
     }
 }

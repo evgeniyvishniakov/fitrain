@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shared\User;
+use App\Models\TrainerFinance;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -88,8 +89,20 @@ class AthletePaymentController extends Controller
             $data['used_sessions'] = $data['used_sessions'] ?? 0;
             $data['payment_description'] = $data['description'] ?? '';
             
+            // Получаем или создаем запись в trainer_finances
+            $trainerFinance = TrainerFinance::where('trainer_id', Auth::user()->id)
+                ->where('athlete_id', $athleteId)
+                ->first();
+                
+            if (!$trainerFinance) {
+                $trainerFinance = new TrainerFinance();
+                $trainerFinance->trainer_id = Auth::user()->id;
+                $trainerFinance->athlete_id = $athleteId;
+                $trainerFinance->payment_history = [];
+            }
+            
             // Создаем запись в истории платежей
-            $paymentHistory = $athlete->payment_history ?? [];
+            $paymentHistory = $trainerFinance->payment_history ?? [];
             
             // Переводим код типа пакета в нормальное название
             $packageTypeLabels = [
@@ -131,8 +144,8 @@ class AthletePaymentController extends Controller
                 $totalSessionsFromHistory += $sessions;
             }
             
-            // Обновляем данные спортсмена
-            $athlete->update([
+            // Обновляем данные в trainer_finances
+            $trainerFinance->update([
                 'package_type' => $packageTypeLabel,
                 'total_sessions' => $totalSessionsFromHistory ?: $data['total_sessions'],
                 'used_sessions' => $data['used_sessions'],
@@ -149,7 +162,7 @@ class AthletePaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Платеж успешно создан',
-                'data' => $athlete->fresh()
+                'data' => $trainerFinance->fresh()
             ]);
 
         } catch (\Exception $e) {
@@ -204,6 +217,18 @@ class AthletePaymentController extends Controller
             $data['used_sessions'] = $data['used_sessions'] ?? 0;
             $data['payment_description'] = $data['description'] ?? '';
 
+            // Получаем запись из trainer_finances
+            $trainerFinance = TrainerFinance::where('trainer_id', Auth::user()->id)
+                ->where('athlete_id', $athleteId)
+                ->first();
+                
+            if (!$trainerFinance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Финансовые данные не найдены'
+                ], 404);
+            }
+
             // Получаем переводы типов пакетов
             $packageTypeLabels = [
                 'single' => 'Разовая тренировка',
@@ -225,7 +250,7 @@ class AthletePaymentController extends Controller
             $paymentMethodLabel = $paymentMethodLabels[$data['payment_method']] ?? $data['payment_method'];
 
             // Обновляем конкретный платеж в истории
-            $paymentHistory = $athlete->payment_history ?? [];
+            $paymentHistory = $trainerFinance->payment_history ?? [];
             $paymentIdInt = (int)$paymentId;
             
             foreach ($paymentHistory as &$payment) {
@@ -249,8 +274,8 @@ class AthletePaymentController extends Controller
                 $totalSessionsFromHistory += $sessions;
             }
             
-            // Обновляем данные спортсмена
-            $athlete->update([
+            // Обновляем данные в trainer_finances
+            $trainerFinance->update([
                 'package_type' => $packageTypeLabel,
                 'total_sessions' => $totalSessionsFromHistory ?: $data['total_sessions'],
                 'used_sessions' => $data['used_sessions'],
@@ -267,7 +292,7 @@ class AthletePaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Платеж успешно обновлен',
-                'data' => $athlete->fresh()
+                'data' => $trainerFinance->fresh()
             ]);
 
         } catch (\Exception $e) {
@@ -294,8 +319,20 @@ class AthletePaymentController extends Controller
                 ], 403);
             }
 
+            // Получаем запись из trainer_finances
+            $trainerFinance = TrainerFinance::where('trainer_id', Auth::user()->id)
+                ->where('athlete_id', $athleteId)
+                ->first();
+                
+            if (!$trainerFinance) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Финансовые данные не найдены'
+                ], 404);
+            }
+
             // Удаляем конкретный платеж из истории
-            $paymentHistory = $athlete->payment_history ?? [];
+            $paymentHistory = $trainerFinance->payment_history ?? [];
             $paymentIdInt = (int)$paymentId;
             
             $paymentHistory = array_values(array_filter($paymentHistory, function($payment) use ($paymentIdInt) {
@@ -322,7 +359,7 @@ class AthletePaymentController extends Controller
                     $lastPaymentDate = $lastPayment['date'] ?? null;
                 }
                 
-                $athlete->update([
+                $trainerFinance->update([
                     'payment_history' => $paymentHistory,
                     'total_sessions' => $totalSessionsFromHistory,
                     'total_paid' => $totalPaid,
@@ -330,7 +367,7 @@ class AthletePaymentController extends Controller
                 ]);
             } else {
                 // Если платежей не осталось, обнуляем финансовые данные
-                $athlete->update([
+                $trainerFinance->update([
                     'package_type' => null,
                     'total_sessions' => 0,
                     'used_sessions' => 0,
@@ -348,7 +385,7 @@ class AthletePaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Платеж успешно удален',
-                'data' => $athlete->fresh()
+                'data' => $trainerFinance->fresh()
             ]);
 
         } catch (\Exception $e) {

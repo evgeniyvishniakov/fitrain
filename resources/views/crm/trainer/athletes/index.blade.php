@@ -316,6 +316,36 @@ function athletesApp() {
             }
         },
         
+        // Обновление финансовых данных из истории платежей
+        updateFinanceFromPaymentHistory() {
+            if (!this.currentAthlete) return;
+            
+            const paymentHistory = this.currentAthlete.payment_history || [];
+            let totalSessionsFromHistory = 0;
+            
+            paymentHistory.forEach(payment => {
+                const description = payment.description || '';
+                const sessions = this.extractSessionsFromDescription(description);
+                totalSessionsFromHistory += sessions;
+            });
+            
+            // Обновляем финансовые данные для отображения
+            this.currentAthlete.finance = {
+                id: this.currentAthlete.id,
+                package_type: this.currentAthlete.package_type,
+                total_sessions: totalSessionsFromHistory || this.currentAthlete.total_sessions || 0,
+                used_sessions: this.currentAthlete.used_sessions || 0,
+                remaining_sessions: (totalSessionsFromHistory || this.currentAthlete.total_sessions || 0) - (this.currentAthlete.used_sessions || 0),
+                package_price: this.currentAthlete.package_price || 0,
+                purchase_date: this.currentAthlete.purchase_date,
+                expires_date: this.currentAthlete.expires_date,
+                status: (totalSessionsFromHistory || this.currentAthlete.total_sessions || 0) > 0 ? 'active' : 'inactive',
+                total_paid: this.currentAthlete.total_paid || 0,
+                last_payment_date: this.currentAthlete.last_payment_date,
+                payment_history: paymentHistory
+            };
+        },
+        
         // Форматирование чисел - убираем лишние нули
         formatNumber(value, unit = '') {
             if (value === null || value === undefined || value === '') return '';
@@ -792,7 +822,6 @@ function athletesApp() {
                     // Обновляем данные спортсмена актуальными данными с сервера
                     if (result.athlete) {
                         this.currentAthlete = { ...this.currentAthlete, ...result.athlete };
-                        
                         
                         // Обновляем спортсмена в общем списке
                         const athleteIndex = this.athletes.findIndex(a => a.id === this.currentAthlete.id);
@@ -1769,7 +1798,7 @@ function athletesApp() {
                 return 0;
             }
             
-            // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок"
+            // Основной вариант: "4 тренировки", "8 тренировок", "12 тренировок" (RU)
             const mainMatch = description.match(/(\d+)\s+(?:тренировка|тренировки|тренировок)/i);
             if (mainMatch) {
                 return parseInt(mainMatch[1]);
@@ -1781,13 +1810,45 @@ function athletesApp() {
                 return parseInt(tMatch[1]);
             }
             
-            // Разовая тренировка
+            // Украинский вариант: "4 тренування", "8 тренувань", "12 тренувань"
+            const ukMatch = description.match(/(\d+)\s+(?:тренування|тренувань)/i);
+            if (ukMatch) {
+                return parseInt(ukMatch[1]);
+            }
+            
+            // Английский вариант: "4 workouts", "8 workouts", "12 workouts"
+            const enMatch = description.match(/(\d+)\s+workouts?/i);
+            if (enMatch) {
+                return parseInt(enMatch[1]);
+            }
+            
+            // Разовая тренировка (RU)
             if (/Разовая\s*тренировка/i.test(description)) {
                 return 1;
             }
             
-            // Безлимит
+            // Разове тренування (UA)
+            if (/Разове\s*тренування/i.test(description)) {
+                return 1;
+            }
+            
+            // Single workout (EN)
+            if (/Single\s*workout/i.test(description)) {
+                return 1;
+            }
+            
+            // Безлимит (RU)
             if (/Безлимит/i.test(description)) {
+                return 30;
+            }
+            
+            // Безліміт (UA)
+            if (/Безліміт/i.test(description)) {
+                return 30;
+            }
+            
+            // Unlimited (EN)
+            if (/Unlimited/i.test(description)) {
                 return 30;
             }
             
@@ -1845,34 +1906,29 @@ function athletesApp() {
                 if (response.ok) {
                     // Обновляем данные спортсмена из ответа сервера
                     if (result.data) {
-                        this.currentAthlete = result.data;
+                        // API возвращает данные из TrainerFinance, нужно обновить finance объект
+                        const financeData = result.data;
+                        const paymentHistory = financeData.payment_history || [];
                         
-                        // Пересчитываем total_sessions из payment_history для гарантии правильности
-                        const paymentHistory = this.currentAthlete.payment_history || [];
-                        let totalSessionsFromHistory = 0;
+                        // Обновляем finance объект в currentAthlete
+                        if (this.currentAthlete && this.currentAthlete.finance) {
+                            this.currentAthlete.finance = {
+                                id: this.currentAthlete.id,
+                                package_type: financeData.package_type,
+                                total_sessions: financeData.total_sessions,
+                                used_sessions: financeData.used_sessions,
+                                remaining_sessions: financeData.total_sessions - financeData.used_sessions,
+                                package_price: financeData.package_price,
+                                purchase_date: financeData.purchase_date,
+                                expires_date: financeData.expires_date,
+                                status: financeData.total_sessions > 0 ? 'active' : 'inactive',
+                                total_paid: financeData.total_paid,
+                                last_payment_date: financeData.last_payment_date,
+                                payment_history: paymentHistory
+                            };
+                        }
                         
-                        paymentHistory.forEach(payment => {
-                            const description = payment.description || '';
-                            const sessions = this.extractSessionsFromDescription(description);
-                            totalSessionsFromHistory += sessions;
-                        });
-                        
-                        // Обновляем финансовые данные для отображения
-                        console.log('Payment history before finance update:', paymentHistory);
-                        this.currentAthlete.finance = {
-                            id: this.currentAthlete.id,
-                            package_type: this.currentAthlete.package_type,
-                            total_sessions: totalSessionsFromHistory || this.currentAthlete.total_sessions,
-                            used_sessions: this.currentAthlete.used_sessions,
-                            remaining_sessions: (totalSessionsFromHistory || this.currentAthlete.total_sessions) - this.currentAthlete.used_sessions,
-                            package_price: this.currentAthlete.package_price,
-                            purchase_date: this.currentAthlete.purchase_date,
-                            expires_date: this.currentAthlete.expires_date,
-                            status: this.currentAthlete.package_type ? 'active' : 'inactive',
-                            total_paid: this.currentAthlete.total_paid,
-                            last_payment_date: this.currentAthlete.last_payment_date,
-                            payment_history: paymentHistory
-                        };
+                        console.log('Updated finance data:', this.currentAthlete?.finance);
                     }
                     
                     // Показываем уведомление об успехе
@@ -1981,39 +2037,47 @@ function athletesApp() {
                 if (result.success) {
                     // Обновляем данные спортсмена из ответа сервера
                     if (result.data) {
-                        this.currentAthlete = result.data;
+                        // API возвращает данные из TrainerFinance, нужно обновить finance объект
+                        const financeData = result.data;
+                        const paymentHistory = financeData.payment_history || [];
                         
-                        // Пересчитываем total_sessions из payment_history
-                        const paymentHistory = this.currentAthlete.payment_history || [];
-                        let totalSessionsFromHistory = 0;
-                        
-                        paymentHistory.forEach(payment => {
-                            const description = payment.description || '';
-                            const sessions = this.extractSessionsFromDescription(description);
-                            totalSessionsFromHistory += sessions;
-                        });
-                        
-                        // Обновляем финансовые данные для отображения
-                        console.log('Payment history before finance update (delete):', paymentHistory);
-                        if (paymentHistory.length > 0) {
-                            this.currentAthlete.finance = {
-                                id: this.currentAthlete.id,
-                                package_type: this.currentAthlete.package_type,
-                                total_sessions: totalSessionsFromHistory || this.currentAthlete.total_sessions,
-                                used_sessions: this.currentAthlete.used_sessions,
-                                remaining_sessions: (totalSessionsFromHistory || this.currentAthlete.total_sessions) - this.currentAthlete.used_sessions,
-                                package_price: this.currentAthlete.package_price,
-                                purchase_date: this.currentAthlete.purchase_date,
-                                expires_date: this.currentAthlete.expires_date,
-                                status: this.currentAthlete.package_type ? 'active' : 'inactive',
-                                total_paid: this.currentAthlete.total_paid,
-                                last_payment_date: this.currentAthlete.last_payment_date,
-                                payment_history: paymentHistory
-                            };
-                        } else {
-                            // Если платежей не осталось, обнуляем финансовые данные
-                            this.currentAthlete.finance = null;
+                        // Обновляем finance объект в currentAthlete
+                        if (this.currentAthlete && this.currentAthlete.finance) {
+                            if (paymentHistory.length > 0) {
+                                this.currentAthlete.finance = {
+                                    id: this.currentAthlete.id,
+                                    package_type: financeData.package_type,
+                                    total_sessions: financeData.total_sessions,
+                                    used_sessions: financeData.used_sessions,
+                                    remaining_sessions: financeData.total_sessions - financeData.used_sessions,
+                                    package_price: financeData.package_price,
+                                    purchase_date: financeData.purchase_date,
+                                    expires_date: financeData.expires_date,
+                                    status: financeData.total_sessions > 0 ? 'active' : 'inactive',
+                                    total_paid: financeData.total_paid,
+                                    last_payment_date: financeData.last_payment_date,
+                                    payment_history: paymentHistory
+                                };
+                            } else {
+                                // Если платежей не осталось, обнуляем финансовые данные
+                                this.currentAthlete.finance = {
+                                    id: this.currentAthlete.id,
+                                    package_type: null,
+                                    total_sessions: 0,
+                                    used_sessions: 0,
+                                    remaining_sessions: 0,
+                                    package_price: 0,
+                                    purchase_date: null,
+                                    expires_date: null,
+                                    status: 'inactive',
+                                    total_paid: 0,
+                                    last_payment_date: null,
+                                    payment_history: []
+                                };
+                            }
                         }
+                        
+                        console.log('Updated finance data after delete:', this.currentAthlete?.finance);
                     }
                     
                     // Показываем уведомление об успехе
@@ -2869,11 +2933,11 @@ function athletesApp() {
                                     <div class="text-sm text-green-800">{{ __('common.measurement_records_label') }}</div>
                                 </div>
                                 <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.finance?.used_sessions || 0"></div>
+                                    <div class="text-2xl font-bold text-blue-600" x-text="(currentAthlete?.workouts || []).filter(workout => workout.status === 'completed').length"></div>
                                     <div class="text-sm text-blue-800">{{ __('common.workouts') }}</div>
                                 </div>
                                 <div class="bg-orange-50 rounded-lg p-4 text-center">
-                                    <div class="text-2xl font-bold text-orange-600" x-text="currentAthlete?.finance?.remaining_sessions || 0"></div>
+                                    <div class="text-2xl font-bold text-orange-600" x-text="(currentAthlete?.finance?.total_sessions || 0) - (currentAthlete?.workouts || []).filter(workout => workout.status === 'completed').length"></div>
                                     <div class="text-sm text-orange-800">{{ __('common.remaining') }}</div>
                                 </div>
                                 <div class="bg-purple-50 rounded-lg p-4 text-center">
@@ -2903,15 +2967,15 @@ function athletesApp() {
                                 <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.general_statistics') }}</h4>
                                 <div class="flex flex-wrap items-center justify-between gap-4">
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.total_paid) || 0).toFixed(2)">0.00</div>
+                                        <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.finance?.total_paid) || 0).toFixed(2)">0.00</div>
                                         <div class="text-sm text-gray-500">{{ __('common.total_paid') }}</div>
                                     </div>
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.payment_history?.length || 0">0</div>
+                                        <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.finance?.payment_history?.length || 0">0</div>
                                         <div class="text-sm text-gray-500">{{ __('common.payments_count') }}</div>
                                     </div>
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.last_payment_date ? new Date(currentAthlete.last_payment_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : '—'">—</div>
+                                        <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.finance?.last_payment_date ? new Date(currentAthlete.finance.last_payment_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : '—'">—</div>
                                         <div class="text-sm text-gray-500">{{ __('common.last_payment') }}</div>
                                     </div>
                                 </div>
@@ -2921,9 +2985,7 @@ function athletesApp() {
                             <div class="bg-white border border-gray-200 rounded-lg p-6">
                                 <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.payment_history') }}</h4>
                                 <div class="space-y-3">
-                                    <!-- Debug info -->
-                                    <div class="text-xs text-gray-400" x-text="'Payment history length: ' + (currentAthlete?.payment_history?.length || 0)"></div>
-                                    <template x-for="(payment, index) in (currentAthlete?.payment_history || [])" :key="payment.id || index">
+                                    <template x-for="(payment, index) in (currentAthlete?.finance?.payment_history || [])" :key="index">
                                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                             <div class="flex-1">
                                                 <div class="font-medium text-gray-900" x-text="payment.description">{{ __('common.package') }} 12 {{ __('common.workouts') }}</div>
@@ -2955,7 +3017,7 @@ function athletesApp() {
                                     </template>
                                     
                                     <!-- Пустое состояние -->
-                                    <div x-show="!currentAthlete?.payment_history?.length" class="text-center py-8 text-gray-500">
+                                    <div x-show="!currentAthlete?.finance?.payment_history?.length" class="text-center py-8 text-gray-500">
                                         <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                                         </svg>
@@ -3345,7 +3407,7 @@ function athletesApp() {
                                                 <span class="px-3 py-1 text-sm rounded-full font-medium"
                                                       :class="{
                                                           'bg-green-100 text-green-800': workout.status === 'completed',
-                                                          'bg-yellow-100 text-yellow-800': workout.status === 'planned',
+                                                          'bg-blue-100 text-blue-800': workout.status === 'planned',
                                                           'bg-red-100 text-red-800': workout.status === 'cancelled'
                                                       }"
                                                       x-text="{

@@ -56,6 +56,11 @@ Route::middleware(["auth"])->group(function () {
         Route::put("/trainer/athletes/{athleteId}/measurements/{measurementId}", [TrainerController::class, "updateMeasurement"])->name("crm.trainer.athlete.measurements.update");
         Route::delete("/trainer/athletes/{athleteId}/measurements/{measurementId}", [TrainerController::class, "deleteMeasurement"])->name("crm.trainer.athlete.measurements.delete");
         
+        // Маршруты для финансовых данных
+        Route::post("/trainer/athletes/{athleteId}/payments", [TrainerController::class, "savePayment"])->name("crm.trainer.athlete.payments.store");
+        Route::put("/trainer/athletes/{athleteId}/payments/{paymentId}", [TrainerController::class, "updatePayment"])->name("crm.trainer.athlete.payments.update");
+        Route::delete("/trainer/athletes/{athleteId}/payments/{paymentId}", [TrainerController::class, "deletePayment"])->name("crm.trainer.athlete.payments.delete");
+        
         // Тренировки только для тренеров (управление)
         Route::post("/workouts", [WorkoutController::class, "store"])->name("crm.workouts.store");
         Route::put("/workouts/{id}", [WorkoutController::class, "update"])->name("crm.workouts.update");
