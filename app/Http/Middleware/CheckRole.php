@@ -14,8 +14,17 @@ class CheckRole
             return redirect()->route('crm.login');
         }
 
-        if (!auth()->user()->hasRole($role)) {
-            abort(403, 'Доступ запрещен');
+        $user = auth()->user();
+        
+        // Специальная логика для trainer: разрешаем доступ и Self-Athlete
+        if ($role === 'trainer') {
+            if (!$user->hasRole('trainer') && !$user->hasRole('self-athlete')) {
+                abort(403, 'Доступ запрещен');
+            }
+        } else {
+            if (!$user->hasRole($role)) {
+                abort(403, 'Доступ запрещен');
+            }
         }
 
         return $next($request);

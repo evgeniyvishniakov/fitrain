@@ -909,7 +909,7 @@ function exerciseApp() {
                 
                 <!-- Кнопки -->
                 <div class="buttons-container">
-                    @if(auth()->user()->hasRole('trainer'))
+                    @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
                         <button @click="showCreate()" 
                                 class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
                             {{ __('common.create_exercise') }}
@@ -991,7 +991,7 @@ function exerciseApp() {
                         <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
                             {{ __('common.view') }}
                         </button>
-                        @if(auth()->user()->hasRole('trainer'))
+                        @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
                             <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                                 {{ __('common.edit') }}
                             </button>
@@ -1014,7 +1014,7 @@ function exerciseApp() {
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет упражнений</h3>
             <p class="text-gray-600 mb-8 max-w-md mx-auto">Добавьте упражнения в базу для создания тренировок.</p>
-            @if(auth()->user()->hasRole('trainer'))
+            @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     {{ __('common.create') }} {{ __('common.first_exercise') }}

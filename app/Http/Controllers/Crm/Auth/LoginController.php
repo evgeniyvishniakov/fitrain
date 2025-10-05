@@ -28,6 +28,16 @@ class LoginController extends BaseController
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            
+            // Редирект в зависимости от роли
+            if (auth()->user()->hasRole('self-athlete')) {
+                return redirect()->intended(route('crm.self-athlete.dashboard'));
+            } elseif (auth()->user()->hasRole('trainer')) {
+                return redirect()->intended(route('crm.trainer.dashboard'));
+            } elseif (auth()->user()->hasRole('athlete')) {
+                return redirect()->intended(route('crm.dashboard.main'));
+            }
+            
             return redirect()->intended(route('crm.dashboard.main'));
         }
 

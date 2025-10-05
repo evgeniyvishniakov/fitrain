@@ -18,6 +18,10 @@ class RolePermissionSeeder extends Seeder
             'create_workouts',
             'edit_workouts',
             'delete_workouts',
+            'view_exercises',
+            'create_exercises',
+            'edit_exercises',
+            'delete_exercises',
             'view_progress',
             'edit_progress',
             'view_nutrition',
@@ -34,6 +38,7 @@ class RolePermissionSeeder extends Seeder
         // Создаем роли
         $trainerRole = Role::firstOrCreate(['name' => 'trainer']);
         $athleteRole = Role::firstOrCreate(['name' => 'athlete']);
+        $selfAthleteRole = Role::firstOrCreate(['name' => 'self-athlete']);
 
         // Назначаем разрешения тренеру
         $trainerRole->syncPermissions([
@@ -63,6 +68,27 @@ class RolePermissionSeeder extends Seeder
             'edit_nutrition',
             'view_settings',
             'edit_settings',
+        ]);
+
+        // Назначаем разрешения Self-Athlete (самостоятельный спортсмен)
+        $selfAthleteRole->syncPermissions([
+            'view_dashboard',
+            'view_calendar',
+            'view_workouts',
+            'create_workouts',
+            'edit_workouts',
+            'delete_workouts',
+            'view_exercises',
+            'create_exercises',
+            'edit_exercises',
+            'delete_exercises',
+            'view_progress',
+            'edit_progress',
+            'view_nutrition',
+            'edit_nutrition',
+            'view_settings',
+            'edit_settings',
+            // НЕ имеет права manage_clients - не может создавать спортсменов
         ]);
     }
 }

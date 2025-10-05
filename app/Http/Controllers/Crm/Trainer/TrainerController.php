@@ -76,57 +76,103 @@ class TrainerController extends BaseController
     {
         $trainer = auth()->user();
         
-        // Общее количество спортсменов
-        $athletes = $trainer->athletes()->count();
+        // Для Self-Athlete считаем только себя, для тренера - всех спортсменов
+        if ($trainer->hasRole('self-athlete')) {
+            $athletes = 1; // Self-Athlete сам себе спортсмен
+        } else {
+            $athletes = $trainer->athletes()->count();
+        }
         
-        // Общее количество тренировок
-        $workouts = $trainer->trainerWorkouts()->count();
-        
-        // Тренировки на сегодня
-        $todayWorkouts = $trainer->trainerWorkouts()
-            ->whereDate('date', now()->format('Y-m-d'))
-            ->count();
-        
-        // Завершенные тренировки за месяц
-        $completedThisMonth = $trainer->trainerWorkouts()
-            ->where('status', 'completed')
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
-            ->count();
-        
-        $recentWorkouts = $trainer->trainerWorkouts()->with('athlete')->latest()->take(5)->get();
+        // Для Self-Athlete тренировки - это его собственные тренировки
+        if ($trainer->hasRole('self-athlete')) {
+            $workouts = \App\Models\Trainer\Workout::where('athlete_id', $trainer->id)->count();
+            $todayWorkouts = \App\Models\Trainer\Workout::where('athlete_id', $trainer->id)
+                ->whereDate('date', now()->format('Y-m-d'))
+                ->count();
+            $completedThisMonth = \App\Models\Trainer\Workout::where('athlete_id', $trainer->id)
+                ->where('status', 'completed')
+                ->whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
+                ->count();
+            $recentWorkouts = \App\Models\Trainer\Workout::where('athlete_id', $trainer->id)->latest()->take(5)->get();
+        } else {
+            // Общее количество тренировок
+            $workouts = $trainer->trainerWorkouts()->count();
+            
+            // Тренировки на сегодня
+            $todayWorkouts = $trainer->trainerWorkouts()
+                ->whereDate('date', now()->format('Y-m-d'))
+                ->count();
+            
+            // Завершенные тренировки за месяц
+            $completedThisMonth = $trainer->trainerWorkouts()
+                ->where('status', 'completed')
+                ->whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
+                ->count();
+            
+            $recentWorkouts = $trainer->trainerWorkouts()->with('athlete')->latest()->take(5)->get();
+        }
         
         // Данные для календаря (берем тренировки за последние 3 месяца)
         $startDate = now()->subMonths(3)->format('Y-m-d');
         $endDate = now()->addMonths(3)->format('Y-m-d');
         
-        $monthWorkouts = $trainer->trainerWorkouts()
-            ->whereBetween('date', [$startDate, $endDate])
-            ->with('athlete:id,name')
-            ->select('id', 'title', 'date', 'time', 'status', 'athlete_id')
-            ->get()
-            ->map(function($workout) {
-                return [
-                    'id' => $workout->id,
-                    'title' => $workout->title,
-                    'date' => $workout->date,
-                    'time' => $workout->time,
-                    'status' => $workout->status,
-                    'athlete_name' => $workout->athlete ? $workout->athlete->name : 'Неизвестно'
-                ];
-            });
-        
-        // Ближайшие тренировки (сегодня и завтра)
-        $today = now()->format('Y-m-d');
-        $tomorrow = now()->addDay()->format('Y-m-d');
-        
-        $upcomingWorkouts = $trainer->trainerWorkouts()
-            ->with('athlete:id,name')
-            ->whereIn('date', [$today, $tomorrow])
-            ->where('status', '!=', 'cancelled')
-            ->orderBy('date')
-            ->orderBy('time')
-            ->get();
+        if ($trainer->hasRole('self-athlete')) {
+            $monthWorkouts = \App\Models\Trainer\Workout::where('athlete_id', $trainer->id)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->select('id', 'title', 'date', 'time', 'status', 'athlete_id')
+                ->get()
+                ->map(function($workout) use ($trainer) {
+                    return [
+                        'id' => $workout->id,
+                        'title' => $workout->title,
+                        'date' => $workout->date,
+                        'time' => $workout->time,
+                        'status' => $workout->status,
+                        'athlete_name' => $trainer->name // Self-Athlete сам себе спортсмен
+                    ];
+                });
+            
+            // Ближайшие тренировки (сегодня и завтра)
+            $today = now()->format('Y-m-d');
+            $tomorrow = now()->addDay()->format('Y-m-d');
+            
+            $upcomingWorkouts = \App\Models\Trainer\Workout::where('athlete_id', $trainer->id)
+                ->whereIn('date', [$today, $tomorrow])
+                ->where('status', '!=', 'cancelled')
+                ->orderBy('date')
+                ->orderBy('time')
+                ->get();
+        } else {
+            $monthWorkouts = $trainer->trainerWorkouts()
+                ->whereBetween('date', [$startDate, $endDate])
+                ->with('athlete:id,name')
+                ->select('id', 'title', 'date', 'time', 'status', 'athlete_id')
+                ->get()
+                ->map(function($workout) {
+                    return [
+                        'id' => $workout->id,
+                        'title' => $workout->title,
+                        'date' => $workout->date,
+                        'time' => $workout->time,
+                        'status' => $workout->status,
+                        'athlete_name' => $workout->athlete ? $workout->athlete->name : 'Неизвестно'
+                    ];
+                });
+            
+            // Ближайшие тренировки (сегодня и завтра)
+            $today = now()->format('Y-m-d');
+            $tomorrow = now()->addDay()->format('Y-m-d');
+            
+            $upcomingWorkouts = $trainer->trainerWorkouts()
+                ->with('athlete:id,name')
+                ->whereIn('date', [$today, $tomorrow])
+                ->where('status', '!=', 'cancelled')
+                ->orderBy('date')
+                ->orderBy('time')
+                ->get();
+        }
         
         return view('crm.trainer.dashboard', compact(
             'trainer', 

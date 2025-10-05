@@ -90,7 +90,10 @@ class AthleteController extends BaseController
         }
         
         
-        return view('crm.athlete.dashboard', compact(
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.dashboard' : 'crm.athlete.dashboard';
+        
+        return view($view, compact(
             'athlete', 
             'totalWorkouts', 
             'plannedWorkouts', 
@@ -140,7 +143,10 @@ class AthleteController extends BaseController
     public function profile()
     {
         $athlete = auth()->user();
-        return view('crm.athlete.profile', compact('athlete'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.profile' : 'crm.athlete.profile';
+        
+        return view($view, compact('athlete'));
     }
     
     public function updateProfile(Request $request)
@@ -261,7 +267,10 @@ class AthleteController extends BaseController
             $remainingCount = 0;
         }
         
-        return view('crm.athlete.workouts', compact('workouts', 'workoutsCount', 'completedCount', 'inProgressCount', 'plannedCount', 'remainingCount'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.workouts' : 'crm.athlete.workouts';
+        
+        return view($view, compact('workouts', 'workoutsCount', 'completedCount', 'inProgressCount', 'plannedCount', 'remainingCount'));
     }
     
     public function nutrition()
@@ -269,13 +278,19 @@ class AthleteController extends BaseController
         $athlete = auth()->user();
         $nutrition = $athlete->nutrition()->paginate(10);
         
-        return view('crm.athlete.nutrition', compact('nutrition'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.nutrition' : 'crm.athlete.nutrition';
+        
+        return view($view, compact('nutrition'));
     }
     
     public function settings()
     {
         $athlete = auth()->user();
-        return view('crm.athlete.settings', compact('athlete'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.settings' : 'crm.athlete.settings';
+        
+        return view($view, compact('athlete'));
     }
 
     public function measurements()
@@ -334,7 +349,10 @@ class AthleteController extends BaseController
             $totalMeasurements = 0;
         }
         
-        return view('crm.athlete.measurements', compact('athlete', 'measurements', 'lastMeasurement', 'totalMeasurements'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.measurements' : 'crm.athlete.measurements';
+        
+        return view($view, compact('athlete', 'measurements', 'lastMeasurement', 'totalMeasurements'));
     }
 
     /**
@@ -503,7 +521,10 @@ class AthleteController extends BaseController
             $measurements = collect();
         }
         
-        return view('crm.athlete.progress', compact('athlete', 'progressData', 'recentWorkouts', 'measurements'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.progress' : 'crm.athlete.progress';
+        
+        return view($view, compact('athlete', 'progressData', 'recentWorkouts', 'measurements'));
     }
 
     public function updateExerciseProgress(Request $request)
@@ -630,24 +651,73 @@ class AthleteController extends BaseController
      */
     public function updateSettings(Request $request)
     {
+        try {
+            $athlete = auth()->user();
+            
+            // Если это запрос на обновление профиля (есть поля профиля)
+            if ($request->has('name') || $request->has('email')) {
+                $validated = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'email' => 'required|email|unique:users,email,' . $athlete->id,
+                    'phone' => 'nullable|string|max:20',
+                    'date_of_birth' => 'nullable|date',
+                    'gender' => 'nullable|in:male,female',
+                    'height' => 'nullable|numeric|min:100|max:250',
+                    'weight' => 'nullable|numeric|min:30|max:300',
+                ]);
+                
+                $athlete->update($validated);
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => __('common.profile_updated_successfully'),
+                        'user' => $athlete->fresh()
+                    ]);
+                }
+                
+                return redirect()->back()->with('success', __('common.profile_updated_successfully'));
+            }
+            
+            // Если это запрос на обновление настроек языка и валюты
+            $validated = $request->validate([
+                'language_code' => 'required|string|exists:languages,code',
+                'currency_code' => 'required|string|exists:currencies,code',
+            ]);
 
-        $request->validate([
-            'language_code' => 'required|string|exists:languages,code',
-            'currency_code' => 'required|string|exists:currencies,code',
-        ]);
+            $athlete->update($validated);
 
-        $athlete = auth()->user();
-        $athlete->update($request->only([
-            'language_code', 'currency_code'
-        ]));
+            // Обновляем локаль в сессии для немедленного применения
+            if ($request->has('language_code')) {
+                session(['locale' => $request->get('language_code')]);
+            }
 
-        // Обновляем локаль в сессии для немедленного применения
-        if ($request->has('language_code')) {
-            session(['locale' => $request->get('language_code')]);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Настройки языка и валюты обновлены'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ошибка при сохранении: ' . $e->getMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Ошибка при сохранении: ' . $e->getMessage());
         }
-
-
-        return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
     }
 
     /**
@@ -655,7 +725,10 @@ class AthleteController extends BaseController
      */
     public function exercises()
     {
-        return view('crm.athlete.exercises');
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.exercises' : 'crm.athlete.exercises';
+        
+        return view($view);
     }
 
     /**

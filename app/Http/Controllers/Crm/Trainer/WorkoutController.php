@@ -19,6 +19,13 @@ class WorkoutController extends BaseController
             }])->latest()->paginate(10);
             $athletes = $user->athletes()->get();
             
+        } elseif ($user->hasRole('self-athlete')) {
+            // Self-Athlete видит только свои тренировки
+            $workouts = Workout::where('athlete_id', $user->id)->with(['exercises' => function($query) {
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
+            }])->latest()->paginate(10);
+            $athletes = [$user]; // Self-Athlete сам себе спортсмен
+            
         } else {
             $workouts = $user->workouts()->with(['trainer', 'exercises' => function($query) {
                 $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
@@ -44,31 +51,40 @@ class WorkoutController extends BaseController
             return $workout;
         });
         
-        return view('crm.trainer.workouts.index', compact('workouts', 'athletes'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.workouts' : 'crm.trainer.workouts.index';
+        
+        return view($view, compact('workouts', 'athletes'));
     }
     
     
     public function store(Request $request)
     {
-        if (!auth()->user()->hasRole('trainer')) {
+        if (!auth()->user()->hasRole('trainer') && !auth()->user()->hasRole('self-athlete')) {
             abort(403, 'Доступ запрещен');
         }
         
-        $request->validate([
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'athlete_id' => 'required|exists:users,id',
             'date' => 'required|date',
             'time' => 'nullable|date_format:H:i',
             'duration' => 'nullable|integer|min:1',
             'status' => 'nullable|in:planned,completed,cancelled',
-        ]);
+        ];
+        
+        // Для тренера athlete_id обязателен, для Self-Athlete автоматически
+        if (auth()->user()->hasRole('trainer')) {
+            $rules['athlete_id'] = 'required|exists:users,id';
+        }
+        
+        $request->validate($rules);
         
         $workout = Workout::create([
             'title' => $request->title,
             'description' => $request->description,
             'trainer_id' => auth()->id(),
-            'athlete_id' => $request->athlete_id,
+            'athlete_id' => auth()->user()->hasRole('self-athlete') ? auth()->id() : $request->athlete_id,
             'date' => $request->date,
             'time' => $request->time,
             'duration' => $request->duration,
@@ -145,7 +161,10 @@ class WorkoutController extends BaseController
             abort(403, 'Доступ запрещен');
         }
         
+        // Для тренера проверяем trainer_id, для Self-Athlete проверяем athlete_id
         if (auth()->user()->hasRole('trainer') && $workout->trainer_id !== auth()->id()) {
+            abort(403, 'Доступ запрещен');
+        } elseif (auth()->user()->hasRole('self-athlete') && $workout->athlete_id !== auth()->id()) {
             abort(403, 'Доступ запрещен');
         }
         
@@ -155,13 +174,16 @@ class WorkoutController extends BaseController
     
     public function update(Request $request, $id)
     {
-        if (!auth()->user()->hasRole('trainer')) {
+        if (!auth()->user()->hasRole('trainer') && !auth()->user()->hasRole('self-athlete')) {
             abort(403, 'Доступ запрещен');
         }
         
         $workout = Workout::findOrFail($id);
         
-        if ($workout->trainer_id !== auth()->id()) {
+        // Для тренера проверяем trainer_id, для Self-Athlete проверяем athlete_id
+        if (auth()->user()->hasRole('trainer') && $workout->trainer_id !== auth()->id()) {
+            abort(403, 'Доступ запрещен');
+        } elseif (auth()->user()->hasRole('self-athlete') && $workout->athlete_id !== auth()->id()) {
             abort(403, 'Доступ запрещен');
         }
         
@@ -275,13 +297,16 @@ class WorkoutController extends BaseController
     
     public function destroy($id)
     {
-        if (!auth()->user()->hasRole('trainer')) {
+        if (!auth()->user()->hasRole('trainer') && !auth()->user()->hasRole('self-athlete')) {
             abort(403, 'Доступ запрещен');
         }
         
         $workout = Workout::findOrFail($id);
         
-        if ($workout->trainer_id !== auth()->id()) {
+        // Для тренера проверяем trainer_id, для Self-Athlete проверяем athlete_id
+        if (auth()->user()->hasRole('trainer') && $workout->trainer_id !== auth()->id()) {
+            abort(403, 'Доступ запрещен');
+        } elseif (auth()->user()->hasRole('self-athlete') && $workout->athlete_id !== auth()->id()) {
             abort(403, 'Доступ запрещен');
         }
 
@@ -303,13 +328,16 @@ class WorkoutController extends BaseController
      */
     public function updateStatus(Request $request, $id)
     {
-        if (!auth()->user()->hasRole('trainer')) {
+        if (!auth()->user()->hasRole('trainer') && !auth()->user()->hasRole('self-athlete')) {
             abort(403, 'Доступ запрещен');
         }
         
         $workout = Workout::findOrFail($id);
         
-        if ($workout->trainer_id !== auth()->id()) {
+        // Для тренера проверяем trainer_id, для Self-Athlete проверяем athlete_id
+        if (auth()->user()->hasRole('trainer') && $workout->trainer_id !== auth()->id()) {
+            abort(403, 'Доступ запрещен');
+        } elseif (auth()->user()->hasRole('self-athlete') && $workout->athlete_id !== auth()->id()) {
             abort(403, 'Доступ запрещен');
         }
         

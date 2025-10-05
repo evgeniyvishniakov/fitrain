@@ -39,7 +39,10 @@ class ExerciseController extends BaseController
               ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
         })->orderBy('created_at', 'desc')->get();
 
-        return view('crm.trainer.exercises.index', compact('exercises', 'allExercises'));
+        // Определяем view в зависимости от роли пользователя
+        $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.exercises' : 'crm.trainer.exercises.index';
+        
+        return view($view, compact('exercises', 'allExercises'));
     }
 
     public function create()
