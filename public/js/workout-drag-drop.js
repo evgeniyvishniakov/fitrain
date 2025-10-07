@@ -51,16 +51,11 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     event.preventDefault();
     event.stopPropagation();
     
-    console.log('handleDrop: начало перетаскивания');
-    
     // Приводим к числу для корректного сравнения
     const draggedId = parseInt(draggedExerciseId);
     const targetId = parseInt(targetExerciseId);
     
-    console.log(`handleDrop: draggedId=${draggedId}, targetId=${targetId}`);
-    
     if (!draggedId || draggedId === targetId) {
-        console.log('handleDrop: отмена - одинаковые ID или нет draggedId');
         cleanupDragState();
         return;
     }
@@ -94,7 +89,6 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     const targetElement = document.querySelector(`[data-exercise-id="${targetId}"]`);
     
     if (!draggedElement || !targetElement) {
-        console.log('handleDrop: не найдены элементы в DOM');
         cleanupDragState();
         return;
     }
@@ -104,11 +98,7 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     const draggedIndex = Array.from(exerciseElements).indexOf(draggedElement);
     const targetIndexNum = Array.from(exerciseElements).indexOf(targetElement);
     
-    console.log(`handleDrop: DOM позиции - draggedIndex=${draggedIndex}, targetIndexNum=${targetIndexNum}`);
-    console.log(`handleDrop: упражнения до перестановки:`, exercises.map(e => ({id: e.id, name: e.name})));
-    
     if (draggedIndex === -1 || targetIndexNum === -1) {
-        console.log('handleDrop: не найдены позиции в DOM');
         cleanupDragState();
         return;
     }
@@ -154,37 +144,27 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     // Перемещаем упражнение
     const [draggedExercise] = exercises.splice(draggedIndex, 1);
     
-    console.log(`handleDrop: перетаскиваем упражнение:`, {id: draggedExercise.id, name: draggedExercise.name});
-    
     // Вычисляем правильную позицию для вставки
     let insertIndex = targetIndexNum;
     
-    console.log(`handleDrop: вставляем на позицию ${insertIndex}`);
-    
     exercises.splice(insertIndex, 0, draggedExercise);
-    
-    console.log(`handleDrop: упражнения после перестановки:`, exercises.map(e => ({id: e.id, name: e.name})));
     
     // Обновляем данные в зависимости от режима
     if (appElement) {
         const workoutApp = Alpine.$data(appElement);
         if (workoutApp && workoutApp.currentWorkout && workoutApp.currentWorkout.exercises) {
             // Режим редактирования - обновляем данные в Alpine.js
-            console.log('handleDrop: обновляем через Alpine.js, новый порядок:', exercises.map(e => e.id));
             workoutApp.currentWorkout.exercises = exercises;
             workoutApp.displaySelectedExercises(exercises);
         } else {
             // Режим создания - перерисовываем через глобальную функцию
-            console.log('handleDrop: обновляем через глобальную функцию, новый порядок:', exercises.map(e => e.id));
             displaySelectedExercises(exercises);
         }
     } else {
         // Режим создания - перерисовываем через глобальную функцию
-        console.log('handleDrop: обновляем через глобальную функцию (else), новый порядок:', exercises.map(e => e.id));
         displaySelectedExercises(exercises);
     }
     
-    console.log('handleDrop: завершение перетаскивания');
     cleanupDragState();
 }
 
@@ -206,12 +186,8 @@ function bindDragDropEvents() {
     // Ищем элементы упражнений во всех возможных контейнерах
     const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id], .space-y-4 > div[data-exercise-id], [data-exercise-id][draggable="true"]');
     
-    console.log('bindDragDropEvents: найдено элементов упражнений:', exerciseElements.length);
-    
     exerciseElements.forEach((element, index) => {
         const exerciseId = parseInt(element.dataset.exerciseId);
-        
-        console.log(`bindDragDropEvents: элемент ${index}, exerciseId: ${exerciseId}, draggable: ${element.draggable}`);
         
         // Обновляем data-exercise-index на реальный индекс в DOM
         element.setAttribute('data-exercise-index', index);

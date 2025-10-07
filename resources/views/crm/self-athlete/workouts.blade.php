@@ -337,14 +337,28 @@ function workoutApp() {
                     // Иначе извлекаем дату из ISO строки
                     const dateStr = this.currentWorkout.date.toString();
                     if (dateStr.includes('T')) {
-                        this.formDate = dateStr.split('T')[0];
-                    } else {
+                        // Для ISO даты используем локальную дату
                         const date = new Date(this.currentWorkout.date);
-                        this.formDate = date.toISOString().split('T')[0];
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        this.formDate = `${year}-${month}-${day}`;
+                    } else {
+                        // Используем локальную дату без сдвига часового пояса
+                        const date = new Date(this.currentWorkout.date);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        this.formDate = `${year}-${month}-${day}`;
                     }
                 }
             } else {
-                this.formDate = new Date().toISOString().split('T')[0];
+                // Для новой тренировки используем сегодняшнюю дату в локальном времени
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                this.formDate = `${year}-${month}-${day}`;
             }
             // Обрезаем секунды из времени (если есть)
             if (this.currentWorkout.time) {
@@ -953,39 +967,80 @@ function workoutApp() {
         // Сбор данных упражнений
         collectExerciseData() {
             const exercises = [];
-            const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
             
-            exerciseElements.forEach(element => {
-                const exerciseId = element.dataset.exerciseId;
-                
-                // Ищем название упражнения - это второй span с классом font-medium
-                const nameSpans = element.querySelectorAll('.font-medium');
-                const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
-                
-                // Собираем все поля динамически
-                const exerciseData = {
-                    exercise_id: parseInt(exerciseId),
-                    name: exerciseName
-                };
-                
-                // Находим все input поля для этого упражнения
-                const inputs = element.querySelectorAll('input');
-                inputs.forEach(input => {
-                    const name = input.name;
-                    if (name.startsWith('notes_')) {
-                        exerciseData.notes = input.value || '';
-                    } else {
-                        // Извлекаем название поля (sets, reps, weight, etc.)
-                        const fieldName = name.replace(`_${exerciseId}`, '');
-                        const value = input.type === 'number' ? 
-                            (parseFloat(input.value) || 0) : 
-                            (input.value || '');
-                        exerciseData[fieldName] = value;
+            // Используем порядок из Alpine.js данных, если они есть
+            if (this.currentWorkout && this.currentWorkout.exercises && this.currentWorkout.exercises.length > 0) {
+                // Режим редактирования - используем порядок из Alpine.js
+                this.currentWorkout.exercises.forEach(exercise => {
+                    const exerciseId = exercise.id || exercise.exercise_id;
+                    const element = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
+                    
+                    if (element) {
+                        // Ищем название упражнения - это второй span с классом font-medium
+                        const nameSpans = element.querySelectorAll('.font-medium');
+                        const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
+                        
+                        // Собираем все поля динамически
+                        const exerciseData = {
+                            exercise_id: parseInt(exerciseId),
+                            name: exerciseName
+                        };
+                        
+                        // Находим все input поля для этого упражнения
+                        const inputs = element.querySelectorAll('input');
+                        inputs.forEach(input => {
+                            const name = input.name;
+                            if (name.startsWith('notes_')) {
+                                exerciseData.notes = input.value || '';
+                            } else {
+                                // Извлекаем название поля (sets, reps, weight, etc.)
+                                const fieldName = name.replace(`_${exerciseId}`, '');
+                                const value = input.type === 'number' ? 
+                                    (parseFloat(input.value) || 0) : 
+                                    (input.value || '');
+                                exerciseData[fieldName] = value;
+                            }
+                        });
+                        
+                        exercises.push(exerciseData);
                     }
                 });
+            } else {
+                // Режим создания - используем порядок из DOM
+                const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
                 
-                exercises.push(exerciseData);
-            });
+                exerciseElements.forEach(element => {
+                    const exerciseId = element.dataset.exerciseId;
+                    
+                    // Ищем название упражнения - это второй span с классом font-medium
+                    const nameSpans = element.querySelectorAll('.font-medium');
+                    const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
+                    
+                    // Собираем все поля динамически
+                    const exerciseData = {
+                        exercise_id: parseInt(exerciseId),
+                        name: exerciseName
+                    };
+                    
+                    // Находим все input поля для этого упражнения
+                    const inputs = element.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        const name = input.name;
+                        if (name.startsWith('notes_')) {
+                            exerciseData.notes = input.value || '';
+                        } else {
+                            // Извлекаем название поля (sets, reps, weight, etc.)
+                            const fieldName = name.replace(`_${exerciseId}`, '');
+                            const value = input.type === 'number' ? 
+                                (parseFloat(input.value) || 0) : 
+                                (input.value || '');
+                            exerciseData[fieldName] = value;
+                        }
+                    });
+                    
+                    exercises.push(exerciseData);
+                });
+            }
             
             return exercises;
         },
@@ -1495,10 +1550,13 @@ function workoutApp() {
                 return `${day}.${month}.${year}`;
             }
             
-            // Если дата в формате YYYY-MM-DDTHH:mm:ss.sssZ (ISO), извлекаем только дату
+            // Если дата в формате YYYY-MM-DDTHH:mm:ss.sssZ (ISO), используем локальную дату
             if (typeof dateString === 'string' && dateString.includes('T')) {
-                const datePart = dateString.split('T')[0];
-                const [year, month, day] = datePart.split('-');
+                // Создаем объект Date и используем локальную дату
+                const date = new Date(dateString);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
                 return `${day}.${month}.${year}`;
             }
             
@@ -2962,15 +3020,16 @@ function workoutApp() {
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_categories') }}</option>
-                    <option value="Грудь">{{ __('common.chest') }}</option>
-                    <option value="Спина">{{ __('common.back') }}</option>
-                    <option value="Ноги">{{ __('common.legs') }}</option>
-                    <option value="Плечи">{{ __('common.shoulders') }}</option>
-                    <option value="Руки">{{ __('common.arms') }}</option>
+                    <option value="Грудь">Грудь</option>
+                    <option value="Спина">Спина</option>
+                    <option value="Ноги">Ноги</option>
+                    <option value="Плечи">Плечи</option>
+                    <option value="Руки">Руки</option>
                     <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                     <option value="Руки(Бицепс)">Руки(Бицепс)</option>
-                    <option value="Кардио">{{ __('common.cardio') }}</option>
-                    <option value="Гибкость">{{ __('common.flexibility') }}</option>
+                    <option value="Пресс">Пресс</option>
+                    <option value="Кардио">Кардио</option>
+                    <option value="Гибкость">Гибкость</option>
                 </select>
                 
                 <!-- Фильтр оборудования -->
@@ -3368,7 +3427,6 @@ function addSelectedExercises() {
             
             // Дополнительно привязываем события для новых упражнений в режиме редактирования
             setTimeout(() => {
-                console.log('addSelectedExercises (режим редактирования): вызываем bindDragDropEvents');
                 bindDragDropEvents();
             }, 200);
         } else {
@@ -3377,7 +3435,6 @@ function addSelectedExercises() {
             
             // Привязываем события drag and drop к новым упражнениям в режиме создания
             setTimeout(() => {
-                console.log('addSelectedExercises (режим создания): вызываем bindDragDropEvents');
                 bindDragDropEvents();
             }, 100);
         }
@@ -3387,7 +3444,6 @@ function addSelectedExercises() {
         
         // Привязываем события drag and drop к новым упражнениям в режиме создания
         setTimeout(() => {
-            console.log('addSelectedExercises (глобальный режим): вызываем bindDragDropEvents');
             bindDragDropEvents();
         }, 100);
     }

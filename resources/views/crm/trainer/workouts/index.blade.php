@@ -1516,10 +1516,13 @@ function workoutApp() {
                 return `${day}.${month}.${year}`;
             }
             
-            // Если дата в формате YYYY-MM-DDTHH:mm:ss.sssZ (ISO), извлекаем только дату
+            // Если дата в формате YYYY-MM-DDTHH:mm:ss.sssZ (ISO), используем локальную дату
             if (typeof dateString === 'string' && dateString.includes('T')) {
-                const datePart = dateString.split('T')[0];
-                const [year, month, day] = datePart.split('-');
+                // Создаем объект Date и используем локальную дату
+                const date = new Date(dateString);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
                 return `${day}.${month}.${year}`;
             }
             
