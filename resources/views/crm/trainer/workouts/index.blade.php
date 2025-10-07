@@ -4,14 +4,13 @@
 @section("page-title", __('common.workouts'))
 
 <script src="{{ asset('js/notifications.js') }}"></script>
+<script src="{{ asset('js/workout-drag-drop.js') }}"></script>
 
 <!-- Drag and Drop функциональность для упражнений -->
 <script>
-// Drag and Drop функциональность для упражнений
-let draggedExerciseId = null;
-let draggedExerciseIndex = null;
+// Функции drag and drop уже доступны глобально из workout-drag-drop.js
 
-function handleDragStart(event, exerciseId, exerciseIndex) {
+// function handleDragStart(event, exerciseId, exerciseIndex) {
     // Проверяем, что перетаскивание НЕ началось с кнопки "Удалить"
     if (event.target.closest('button[onclick*="removeExercise"]')) {
         event.preventDefault();
@@ -37,14 +36,14 @@ function handleDragStart(event, exerciseId, exerciseIndex) {
     });
 }
 
-function handleDragOver(event, targetExerciseId, targetIndex) {
+// function handleDragOver(event, targetExerciseId, targetIndex) {
     event.preventDefault();
     event.stopPropagation();
     event.dataTransfer.dropEffect = 'move';
     return false;
 }
 
-function handleDragEnter(event, targetExerciseId, targetIndex) {
+// function handleDragEnter(event, targetExerciseId, targetIndex) {
     event.preventDefault();
     event.stopPropagation();
     if (event.target.closest('[data-exercise-id]')) {
@@ -56,7 +55,7 @@ function handleDragEnter(event, targetExerciseId, targetIndex) {
     return false;
 }
 
-function handleDragLeave(event, targetExerciseId, targetIndex) {
+// function handleDragLeave(event, targetExerciseId, targetIndex) {
     event.preventDefault();
     event.stopPropagation();
     if (event.target.closest('[data-exercise-id]')) {
@@ -66,7 +65,7 @@ function handleDragLeave(event, targetExerciseId, targetIndex) {
     return false;
 }
 
-function handleDrop(event, targetExerciseId, targetIndex) {
+// function handleDrop(event, targetExerciseId, targetIndex) {
     event.preventDefault();
     event.stopPropagation();
     
@@ -103,8 +102,12 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     }
     
     // Находим индексы упражнений - проверяем разные возможные поля
-    const draggedIndex = exercises.findIndex(ex => ex.id === draggedId || ex.exercise_id === draggedId);
-    const targetIndexNum = exercises.findIndex(ex => ex.id === targetId || ex.exercise_id === targetId);
+    const draggedIndex = exercises.findIndex(ex => 
+        ex.id == draggedId || ex.exercise_id == draggedId || ex.id == parseInt(draggedId) || ex.exercise_id == parseInt(draggedId)
+    );
+    const targetIndexNum = exercises.findIndex(ex => 
+        ex.id == targetId || ex.exercise_id == targetId || ex.id == parseInt(targetId) || ex.exercise_id == parseInt(targetId)
+    );
     
     if (draggedIndex === -1 || targetIndexNum === -1) {
         cleanupDragState();
@@ -135,7 +138,10 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     
     // Обновляем упражнения с текущими значениями полей
     exercises.forEach(exercise => {
-        const fieldData = currentFieldValues.find(f => f.exercise_id === exercise.id);
+        const fieldData = currentFieldValues.find(f => 
+            f.exercise_id == exercise.id || f.exercise_id == exercise.exercise_id ||
+            f.id == exercise.id || f.id == exercise.exercise_id
+        );
         if (fieldData) {
             // Обновляем значения полей из DOM
             exercise.sets = fieldData.sets || exercise.sets;
@@ -179,7 +185,7 @@ function handleDrop(event, targetExerciseId, targetIndex) {
     cleanupDragState();
 }
 
-function cleanupDragState() {
+// function cleanupDragState() {
     // Удаляем все классы drag-over
     document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
     document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
@@ -931,6 +937,54 @@ function workoutApp() {
         
         // Сбор данных упражнений
         collectExerciseData() {
+            // Используем данные из Alpine.js для правильного порядка
+            if (this.currentWorkout && this.currentWorkout.exercises) {
+                return this.currentWorkout.exercises.map(exercise => {
+                    // Находим соответствующий DOM элемент
+                    const element = document.querySelector(`[data-exercise-id="${exercise.id || exercise.exercise_id}"]`);
+                    if (!element) {
+                        // Если DOM элемент не найден, возвращаем данные как есть
+                        return {
+                            exercise_id: exercise.id || exercise.exercise_id,
+                            name: exercise.name,
+                            sets: exercise.sets || 3,
+                            reps: exercise.reps || 12,
+                            weight: exercise.weight || 0,
+                            rest: exercise.rest || 60,
+                            time: exercise.time || 0,
+                            distance: exercise.distance || 0,
+                            tempo: exercise.tempo || '',
+                            notes: exercise.notes || ''
+                        };
+                    }
+                    
+                    // Собираем данные из DOM
+                    const exerciseData = {
+                        exercise_id: parseInt(exercise.id || exercise.exercise_id),
+                        name: exercise.name
+                    };
+                    
+                    // Находим все input поля для этого упражнения
+                    const inputs = element.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        const name = input.name;
+                        if (name.startsWith('notes_')) {
+                            exerciseData.notes = input.value || '';
+                        } else {
+                            // Извлекаем название поля (sets, reps, weight, etc.)
+                            const fieldName = name.replace(`_${exercise.id || exercise.exercise_id}`, '');
+                            const value = input.type === 'number' ? 
+                                (parseFloat(input.value) || 0) : 
+                                (input.value || '');
+                            exerciseData[fieldName] = value;
+                        }
+                    });
+                    
+                    return exerciseData;
+                });
+            }
+            
+            // Fallback: собираем из DOM в том порядке, в котором они есть
             const exercises = [];
             const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
             
@@ -1224,13 +1278,7 @@ function workoutApp() {
                         <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
                              data-exercise-id="${exerciseId}" 
                              data-exercise-index="${index}"
-                             draggable="true" 
-                             ondragstart="handleDragStart(event, ${exerciseId}, ${index})" 
-                             ondragover="handleDragOver(event, ${exerciseId}, ${index})" 
-                             ondrop="handleDrop(event, ${exerciseId}, ${index})" 
-                             ondragenter="handleDragEnter(event, ${exerciseId}, ${index})" 
-                             ondragleave="handleDragLeave(event, ${exerciseId}, ${index})"
-                             ondragend="cleanupDragState()">
+                             draggable="true">
                             <!-- Заголовок упражнения -->
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center space-x-3 flex-1 cursor-move" title="{{ __('common.drag_to_reorder') }}">
@@ -1275,6 +1323,11 @@ function workoutApp() {
                 // Глобальная замена всех "null" значений в HTML
                 const cleanedHtml = list.innerHTML.replace(/value="null"/g, 'value=""').replace(/value='null'/g, 'value=""');
                 list.innerHTML = cleanedHtml;
+                
+                // Привязываем события drag and drop через общий файл
+                setTimeout(() => {
+                    bindDragDropEvents();
+                }, 0);
             } else {
                 // Показываем пустое состояние
                 emptyState.style.display = 'block';
@@ -2912,6 +2965,8 @@ function workoutApp() {
                     <option value="Ноги">{{ __('common.legs') }}</option>
                     <option value="Плечи">{{ __('common.shoulders') }}</option>
                     <option value="Руки">{{ __('common.arms') }}</option>
+                    <option value="Руки(Трицепс)">Руки(Трицепс)</option>
+                    <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                     <option value="Кардио">{{ __('common.cardio') }}</option>
                     <option value="Гибкость">{{ __('common.flexibility') }}</option>
                 </select>
@@ -3299,8 +3354,28 @@ function addSelectedExercises() {
     // Объединяем существующие и новые уникальные упражнения
     const allExercises = [...currentExercises, ...uniqueNewExercises];
     
-    // Отображаем все упражнения в форме
-    displaySelectedExercises(allExercises);
+    // Проверяем, находимся ли мы в режиме редактирования
+    const appElement = document.querySelector('[x-data*="workoutApp"]');
+    
+    if (appElement) {
+        const workoutApp = Alpine.$data(appElement);
+        if (workoutApp && workoutApp.currentWorkout && workoutApp.currentWorkout.exercises) {
+            // Режим редактирования - обновляем данные в Alpine.js
+            workoutApp.currentWorkout.exercises = allExercises;
+            workoutApp.displaySelectedExercises(allExercises);
+        } else {
+            // Режим создания - используем глобальную функцию
+            displaySelectedExercises(allExercises);
+        }
+    } else {
+        // Режим создания - используем глобальную функцию
+        displaySelectedExercises(allExercises);
+    }
+    
+    // Привязываем события drag and drop к новым упражнениям
+    setTimeout(() => {
+        bindDragDropEvents();
+    }, 100);
     
     closeExerciseModal();
 }
@@ -3390,12 +3465,12 @@ function collectExerciseDataFromDOM() {
         const exerciseData = {
             exercise_id: parseInt(exerciseId),
             name: exerciseName,
-            sets: '',
-            reps: '',
-            weight: '',
-            rest: '',
-            time: '',
-            distance: '',
+            sets: 3,
+            reps: 12,
+            weight: 0,
+            rest: 60,
+            time: 0,
+            distance: 0,
             tempo: '',
             notes: ''
         };
@@ -3610,13 +3685,7 @@ function displaySelectedExercises(exercises) {
                 <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
                      data-exercise-id="${exerciseId}" 
                      data-exercise-index="${index}"
-                     draggable="true" 
-                     ondragstart="handleDragStart(event, ${exerciseId}, ${index})" 
-                     ondragover="handleDragOver(event, ${exerciseId}, ${index})" 
-                     ondrop="handleDrop(event, ${exerciseId}, ${index})" 
-                     ondragenter="handleDragEnter(event, ${exerciseId}, ${index})" 
-                     ondragleave="handleDragLeave(event, ${exerciseId}, ${index})"
-                     ondragend="cleanupDragState()">
+                     draggable="true">
                     <!-- Заголовок упражнения -->
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center space-x-3 flex-1 cursor-move" title="Перетащите для изменения порядка">
@@ -3653,6 +3722,23 @@ function displaySelectedExercises(exercises) {
         const cleanedHtml = htmlContent.replace(/value="null"/g, 'value=""').replace(/value='null'/g, 'value=""');
         
         list.innerHTML = cleanedHtml;
+        
+        // Привязываем события drag and drop к новым элементам
+        const exerciseElements = list.querySelectorAll('[data-exercise-id]');
+        
+        exerciseElements.forEach((element, index) => {
+            const exerciseId = parseInt(element.dataset.exerciseId);
+            
+            // Обновляем data-exercise-index на реальный индекс в DOM
+            element.setAttribute('data-exercise-index', index);
+            
+            // События drag and drop привязываются через общий файл
+        });
+        
+        // Привязываем события drag and drop через общий файл
+        setTimeout(() => {
+            bindDragDropEvents();
+        }, 0);
     } else {
         // Показываем пустое состояние
         emptyState.style.display = 'block';
@@ -3678,7 +3764,30 @@ function toggleExerciseDetails(exerciseId) {
 
 // Удаление упражнения из списка
 function removeExercise(exerciseId) {
-    // Находим элемент с упражнением и удаляем его
+    // Проверяем, находимся ли мы в режиме редактирования
+    const appElement = document.querySelector('[x-data*="workoutApp"]');
+    
+    if (appElement) {
+        const workoutApp = Alpine.$data(appElement);
+        if (workoutApp && workoutApp.currentWorkout && workoutApp.currentWorkout.exercises) {
+            // Режим редактирования - удаляем из данных Alpine.js
+            workoutApp.currentWorkout.exercises = workoutApp.currentWorkout.exercises.filter(
+                ex => ex.id !== parseInt(exerciseId) && ex.exercise_id !== parseInt(exerciseId)
+            );
+            
+            // Перерисовываем упражнения через Alpine.js
+            if (workoutApp.currentWorkout.exercises.length > 0) {
+                workoutApp.displaySelectedExercises(workoutApp.currentWorkout.exercises);
+            } else {
+                // Если упражнений не осталось, показываем пустое состояние
+                document.getElementById('selectedExercisesContainer').style.display = 'none';
+                document.getElementById('emptyExercisesState').style.display = 'block';
+            }
+            return;
+        }
+    }
+    
+    // Режим создания - удаляем из DOM напрямую
     const exerciseElement = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
     if (exerciseElement) {
         exerciseElement.remove();
@@ -3726,8 +3835,33 @@ function addSelectedTemplate() {
             };
         });
         
-        // Отображаем упражнения из шаблона
-        displaySelectedExercises(templateExercises);
+        // Проверяем, находимся ли мы в режиме редактирования
+        const appElement = document.querySelector('[x-data*="workoutApp"]');
+        
+        if (appElement) {
+            const workoutApp = Alpine.$data(appElement);
+            if (workoutApp && workoutApp.currentWorkout && workoutApp.currentWorkout.exercises) {
+                // Режим редактирования - добавляем к существующим упражнениям
+                const currentExercises = workoutApp.currentWorkout.exercises || [];
+                const existingIds = currentExercises.map(ex => ex.id);
+                const uniqueTemplateExercises = templateExercises.filter(ex => !existingIds.includes(ex.id));
+                const allExercises = [...currentExercises, ...uniqueTemplateExercises];
+                
+                workoutApp.currentWorkout.exercises = allExercises;
+                workoutApp.displaySelectedExercises(allExercises);
+            } else {
+                // Режим создания - заменяем все упражнения
+                displaySelectedExercises(templateExercises);
+            }
+        } else {
+            // Режим создания - заменяем все упражнения
+            displaySelectedExercises(templateExercises);
+        }
+        
+        // Привязываем события drag and drop к новым упражнениям из шаблона
+        setTimeout(() => {
+            bindDragDropEvents();
+        }, 100);
     }
     closeTemplateModal();
 }

@@ -466,7 +466,17 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-white">{{ auth()->user()->name ?? 'Пользователь' }}</p>
-                            <p class="text-xs text-white/70">Тренер</p>
+                            <p class="text-xs text-white/70">
+                                @if(auth()->user()->hasRole('trainer'))
+                                    Тренер
+                                @elseif(auth()->user()->hasRole('self-athlete'))
+                                    Self-Athlete
+                                @elseif(auth()->user()->hasRole('athlete'))
+                                    Спортсмен
+                                @else
+                                    Пользователь
+                                @endif
+                            </p>
                         </div>
                     </div>
                     

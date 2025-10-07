@@ -23,6 +23,7 @@ class Workout extends BaseModel
 
     protected $casts = [
         'is_counted' => 'boolean',
+        'date' => 'date',
     ];
     
     // Мутатор для обработки pivot полей и замены NULL на пустые строки

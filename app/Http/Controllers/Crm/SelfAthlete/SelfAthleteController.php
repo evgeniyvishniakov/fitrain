@@ -14,18 +14,92 @@ class SelfAthleteController extends BaseController
      */
     public function dashboard()
     {
-        $user = auth()->user();
+        $athlete = auth()->user();
         
-        // Получаем статистику
-        $workouts = Workout::where('athlete_id', $user->id)->count();
-        $exercises = Exercise::count(); // Все доступные упражнения
-        $recentWorkouts = Workout::where('athlete_id', $user->id)
-            ->with(['exercises'])
-            ->latest()
-            ->take(5)
+        // Общее количество тренировок
+        $totalWorkouts = $athlete->workouts()->count();
+        
+        // Запланированные тренировки
+        $plannedWorkouts = $athlete->workouts()->where('status', 'planned')->count();
+        
+        // Завершенные тренировки
+        $completedWorkouts = $athlete->workouts()->where('status', 'completed')->count();
+        
+        // Последняя тренировка или следующая
+        $lastOrNextWorkout = $athlete->workouts()
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->first();
+        
+        // Ближайшие тренировки (следующие 7 дней)
+        $upcomingWorkouts = $athlete->workouts()
+            ->where('date', '>=', now()->toDateString())
+            ->where('date', '<=', now()->addDays(7)->toDateString())
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
             ->get();
         
-        return view('crm.self-athlete.dashboard', compact('workouts', 'exercises', 'recentWorkouts'));
+        // Все тренировки для календаря (расширенный диапазон)
+        $monthWorkouts = $athlete->workouts()
+            ->where('date', '>=', now()->startOfMonth()->subMonth()->toDateString())
+            ->where('date', '<=', now()->endOfMonth()->addMonth()->toDateString())
+            ->orderBy('date', 'asc')
+            ->orderBy('time', 'asc')
+            ->get() ?? collect();
+        
+        $recentWorkouts = $athlete->workouts()->latest()->take(5)->get();
+        
+        // Данные для карточек измерений
+        $lastMeasurement = $athlete->measurements()->latest('measurement_date')->first();
+        $currentWeight = $lastMeasurement ? $lastMeasurement->weight : $athlete->current_weight;
+        $totalMeasurements = $athlete->measurements()->count();
+        
+        // Рассчитываем ИМТ из последнего измерения
+        $bmi = null;
+        $bmiCategory = null;
+        $bmiColor = null;
+        
+        if ($lastMeasurement && $lastMeasurement->weight && $athlete->current_height) {
+            $heightInMeters = $athlete->current_height / 100;
+            $bmi = round($lastMeasurement->weight / ($heightInMeters * $heightInMeters), 1);
+        } elseif ($athlete->current_weight && $athlete->current_height) {
+            $heightInMeters = $athlete->current_height / 100;
+            $bmi = round($athlete->current_weight / ($heightInMeters * $heightInMeters), 1);
+        }
+        
+        // Определяем категорию и цвет ИМТ
+        if ($bmi) {
+            if ($bmi < 18.5) {
+                $bmiCategory = 'Недостаточный вес';
+                $bmiColor = 'blue';
+            } elseif ($bmi < 25) {
+                $bmiCategory = 'Нормальный вес';
+                $bmiColor = 'green';
+            } elseif ($bmi < 30) {
+                $bmiCategory = 'Избыточный вес';
+                $bmiColor = 'yellow';
+            } else {
+                $bmiCategory = 'Ожирение';
+                $bmiColor = 'red';
+            }
+        }
+        
+        return view('crm.self-athlete.dashboard', compact(
+            'athlete', 
+            'totalWorkouts', 
+            'plannedWorkouts', 
+            'completedWorkouts', 
+            'lastOrNextWorkout', 
+            'upcomingWorkouts', 
+            'monthWorkouts', 
+            'recentWorkouts', 
+            'lastMeasurement', 
+            'currentWeight', 
+            'totalMeasurements', 
+            'bmi', 
+            'bmiCategory', 
+            'bmiColor'
+        ));
     }
     
     // Профиль перенесен в настройки

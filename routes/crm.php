@@ -197,6 +197,12 @@ Route::middleware(["auth"])->group(function () {
         Route::delete("/self-athlete/exercises/{id}", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "destroy"])->name("crm.self-athlete.exercises.destroy");
         Route::get("/self-athlete/exercises/from-workouts", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "getExercisesFromWorkouts"])->name("crm.self-athlete.exercises.from-workouts");
         
+        // Пользовательские видео к системным упражнениям для Self-Athlete
+        Route::get("/self-athlete/exercises/user-videos", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "getAllUserVideos"])->name("crm.self-athlete.exercises.user-videos.all");
+        Route::post("/self-athlete/exercises/{id}/user-video", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "storeUserVideo"])->name("crm.self-athlete.exercises.user-video.store");
+        Route::get("/self-athlete/exercises/{id}/user-video", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "getUserVideo"])->name("crm.self-athlete.exercises.user-video.get");
+        Route::delete("/self-athlete/exercises/{id}/user-video", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "deleteUserVideo"])->name("crm.self-athlete.exercises.user-video.delete");
+        
         // Обновление статуса тренировки Self-Athlete
         Route::patch("/self-athlete/workouts/{workoutId}/status", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "updateWorkoutStatus"])->name("crm.self-athlete.workout.status.update");
     });

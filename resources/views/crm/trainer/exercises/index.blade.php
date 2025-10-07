@@ -874,7 +874,8 @@ function exerciseApp() {
                         <option value="Спина">{{ __('common.back') }}</option>
                         <option value="Ноги">{{ __('common.legs') }}</option>
                         <option value="Плечи">{{ __('common.shoulders') }}</option>
-                        <option value="Руки">{{ __('common.arms') }}</option>
+                        <option value="Руки(Бицепс)">Руки(Бицепс)</option>
+                        <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                         <option value="Пресс">{{ __('common.abs') }}</option>
                         <option value="Кардио">{{ __('common.cardio') }}</option>
                         <option value="Гибкость">{{ __('common.flexibility') }}</option>
@@ -1127,7 +1128,8 @@ function exerciseApp() {
                             <option value="Спина">Спина</option>
                             <option value="Ноги">Ноги</option>
                             <option value="Плечи">Плечи</option>
-                            <option value="Руки">Руки</option>
+                            <option value="Руки(Бицепс)">Руки(Бицепс)</option>
+                            <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                             <option value="Пресс">Пресс</option>
                             <option value="Кардио">Кардио</option>
                             <option value="Гибкость">Гибкость</option>

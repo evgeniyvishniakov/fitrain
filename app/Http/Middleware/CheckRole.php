@@ -16,15 +16,9 @@ class CheckRole
 
         $user = auth()->user();
         
-        // Специальная логика для trainer: разрешаем доступ и Self-Athlete
-        if ($role === 'trainer') {
-            if (!$user->hasRole('trainer') && !$user->hasRole('self-athlete')) {
-                abort(403, 'Доступ запрещен');
-            }
-        } else {
-            if (!$user->hasRole($role)) {
-                abort(403, 'Доступ запрещен');
-            }
+        // Проверяем роль пользователя
+        if (!$user->hasRole($role)) {
+            abort(403, 'Доступ запрещен');
         }
 
         return $next($request);

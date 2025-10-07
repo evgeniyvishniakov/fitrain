@@ -31,7 +31,7 @@ class DashboardController extends BaseController
         } elseif ($user->hasRole('athlete')) {
             return redirect()->route('crm.athlete.dashboard');
         } elseif ($user->hasRole('self-athlete')) {
-            return redirect()->route('crm.trainer.dashboard'); // Self-Athlete использует интерфейс тренера
+            return redirect()->route('crm.self-athlete.dashboard');
         }
         
         // Если роль не определена, показываем общий дашборд
