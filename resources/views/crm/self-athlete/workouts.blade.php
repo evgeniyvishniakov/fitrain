@@ -3089,7 +3089,7 @@ function workoutApp() {
                 </select>
                                         </div>
             
-            <div id="exercises-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+            <div id="exercises-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%;">
                 <p style="color: black;">{{ __('common.loading_exercises') }}</p>
                                     </div>
             
@@ -3259,16 +3259,26 @@ function renderExercises() {
     }
     
     container.innerHTML = exercises.map(exercise => {
+        const hasImage = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
+        const imageUrl = hasImage ? `/storage/${exercise.image_url}` : '';
+        
         return `
             <div data-exercise-id="${exercise.id}" 
                  data-exercise-name="${exercise.name}" 
                  data-exercise-category="${exercise.category}" 
                  data-exercise-equipment="${exercise.equipment}"
-                 style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s;" 
+                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 130px;"
                  onclick="toggleExercise(this, ${exercise.id}, '${exercise.name}', '${exercise.category}', '${exercise.equipment}')">
-                <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${exercise.name}</h4>
-                <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exercise.category}</p>
-                <p style="font-size: 14px; color: #9ca3af;">${exercise.equipment}</p>
+                ${hasImage ? `
+                    <img src="${imageUrl}" 
+                         alt="${exercise.name}" 
+                         style="width: 60px; height: 100px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                ` : ''}
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 600; color: #111827; margin-bottom: 5px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
+                    <div style="font-size: 13px; color: #6b7280; margin-bottom: 3px;">${exercise.category}</div>
+                    <div style="font-size: 13px; color: #9ca3af;">${exercise.equipment}</div>
+                </div>
             </div>
         `;
     }).join('');
