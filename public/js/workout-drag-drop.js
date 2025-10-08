@@ -19,22 +19,97 @@ function handleDragStart(event, exerciseId, exerciseIndex) {
     draggedExerciseId = parseInt(exerciseId);
     draggedExerciseIndex = parseInt(exerciseIndex);
     
-    // Добавляем класс для визуального эффекта
-    event.target.classList.add('dragging');
+    // Включаем прокрутку страницы при перетаскивании
+    enableScrollDuringDrag();
+    
+    // Находим родительский блок упражнения (не саму иконку)
+    let exerciseContainer = event.target.closest('[data-exercise-id]');
+    
+    // Если мы нашли саму иконку drag handle, ищем её родительский блок упражнения
+    if (exerciseContainer && exerciseContainer.hasAttribute('draggable')) {
+        // Ищем родительский блок, который содержит весь контент упражнения
+        exerciseContainer = exerciseContainer.parentElement.closest('[data-exercise-id]');
+    }
+    
+    if (exerciseContainer) {
+        // Добавляем класс для визуального эффекта на оригинальный блок
+        exerciseContainer.classList.add('dragging');
+        
+        // ПРИМЕНЯЕМ ПРЯМЫЕ СТИЛИ ДЛЯ УМЕНЬШЕНИЯ И ЗАТЕМНЕНИЯ (как в self-athlete)
+        exerciseContainer.style.setProperty('opacity', '0.5', 'important');
+        exerciseContainer.style.setProperty('transform', 'scale(0.95)', 'important');
+        exerciseContainer.style.setProperty('transition', 'all 0.2s ease', 'important');
+        
+    } else {
+        // Fallback - добавляем класс на target
+        event.target.classList.add('dragging');
+        event.target.style.setProperty('opacity', '0.5', 'important');
+        event.target.style.setProperty('transform', 'scale(0.95)', 'important');
+        event.target.style.setProperty('transition', 'all 0.2s ease', 'important');
+    }
     
     return true;
 }
 
+function handleDragEnd(event, exerciseId, exerciseIndex) {
+    // Очищаем состояние перетаскивания
+    cleanupDragState();
+}
+
 function handleDragOver(event, targetExerciseId, targetIndex) {
     event.preventDefault();
+    
+    // Прокрутка страницы при перетаскивании
+    if (draggedExerciseId !== null) {
+        const scrollThreshold = 150; // Увеличиваем зону прокрутки
+        const scrollSpeed = 15; // Увеличиваем скорость прокрутки
+        
+        // Прокрутка вверх
+        if (event.clientY < scrollThreshold) {
+            window.scrollBy(0, -scrollSpeed);
+        }
+        // Прокрутка вниз
+        else if (event.clientY > window.innerHeight - scrollThreshold) {
+            window.scrollBy(0, scrollSpeed);
+        }
+        
+        // Также пробуем прокрутку по горизонтали
+        const horizontalThreshold = 150;
+        if (event.clientX < horizontalThreshold) {
+            window.scrollBy(-scrollSpeed, 0);
+        } else if (event.clientX > window.innerWidth - horizontalThreshold) {
+            window.scrollBy(scrollSpeed, 0);
+        }
+    }
+    
     return false;
 }
 
 function handleDragEnter(event, targetExerciseId, targetIndex) {
     event.preventDefault();
+    event.stopPropagation();
     const target = event.currentTarget;
     if (target && !target.classList.contains('drag-over')) {
+        // Убираем подсветку с других элементов
+        document.querySelectorAll('.drag-over').forEach(el => {
+            if (el !== target) {
+                el.classList.remove('drag-over');
+                // Убираем прямые стили ТОЛЬКО если это НЕ перетаскиваемый элемент
+                if (!el.classList.contains('dragging')) {
+                    el.style.borderColor = '';
+                    el.style.backgroundColor = '';
+                    el.style.boxShadow = '';
+                    el.style.transform = ''; // УБИРАЕМ УВЕЛИЧЕНИЕ
+                }
+            }
+        });
         target.classList.add('drag-over');
+        
+        // ПРИМЕНЯЕМ СТИЛИ НАПРЯМУЮ ЧЕРЕЗ JAVASCRIPT
+        target.style.borderColor = '#4f46e5';
+        target.style.backgroundColor = '#f0f9ff';
+        target.style.boxShadow = '0 0 0 2px #e0e7ff';
+        target.style.transform = 'scale(1.02)'; // УВЕЛИЧИВАЕМ ПРИ НАВЕДЕНИИ
     }
     return false;
 }
@@ -42,7 +117,18 @@ function handleDragEnter(event, targetExerciseId, targetIndex) {
 function handleDragLeave(event, targetExerciseId, targetIndex) {
     const target = event.currentTarget;
     if (target) {
-        target.classList.remove('drag-over');
+        // Проверяем, что курсор действительно покинул элемент
+        // Если relatedTarget является дочерним элементом, не убираем подсветку
+        if (!target.contains(event.relatedTarget)) {
+            target.classList.remove('drag-over');
+            // Убираем прямые стили ТОЛЬКО если это НЕ перетаскиваемый элемент
+            if (!target.classList.contains('dragging')) {
+                target.style.borderColor = '';
+                target.style.backgroundColor = '';
+                target.style.boxShadow = '';
+                target.style.transform = ''; // УБИРАЕМ УВЕЛИЧЕНИЕ
+            }
+        }
     }
     return false;
 }
@@ -93,10 +179,13 @@ function handleDrop(event, targetExerciseId, targetIndex) {
         return;
     }
     
-    // Получаем реальные позиции в DOM
-    const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
-    const draggedIndex = Array.from(exerciseElements).indexOf(draggedElement);
-    const targetIndexNum = Array.from(exerciseElements).indexOf(targetElement);
+    // Получаем реальные позиции в DOM - ищем родительские элементы упражнений
+    const exerciseContainers = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
+    const draggedContainer = draggedElement.closest('[data-exercise-id]');
+    const targetContainer = targetElement.closest('[data-exercise-id]');
+    
+    const draggedIndex = Array.from(exerciseContainers).indexOf(draggedContainer);
+    const targetIndexNum = Array.from(exerciseContainers).indexOf(targetContainer);
     
     if (draggedIndex === -1 || targetIndexNum === -1) {
         cleanupDragState();
@@ -169,74 +258,111 @@ function handleDrop(event, targetExerciseId, targetIndex) {
 }
 
 function cleanupDragState() {
-    // Удаляем все классы drag-over
-    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    // Удаляем все классы drag-over и прямые стили
+    document.querySelectorAll('.drag-over').forEach(el => {
+        el.classList.remove('drag-over');
+        el.style.borderColor = '';
+        el.style.backgroundColor = '';
+        el.style.boxShadow = '';
+    });
     document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
     
     // Очищаем переменные
     draggedExerciseId = null;
     draggedExerciseIndex = null;
     
-    // Удаляем класс dragging
-    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+    // Удаляем класс dragging и восстанавливаем стили
+    document.querySelectorAll('.dragging').forEach(el => {
+        el.classList.remove('dragging');
+        // ВОССТАНАВЛИВАЕМ СТИЛИ (убираем уменьшение и затемнение)
+        el.style.opacity = '1';
+        el.style.transform = 'scale(1)';
+        el.style.transition = '';
+    });
+    
+    // Отключаем прокрутку страницы
+    disableScrollDuringDrag();
+}
+
+// Включение прокрутки страницы при перетаскивании
+function enableScrollDuringDrag() {
+    // Добавляем обработчик на window для лучшей совместимости
+    window.addEventListener('wheel', handleWheelDuringDrag, { passive: false, capture: true });
+    document.addEventListener('wheel', handleWheelDuringDrag, { passive: false, capture: true });
+}
+
+// Отключение прокрутки страницы
+function disableScrollDuringDrag() {
+    window.removeEventListener('wheel', handleWheelDuringDrag, { capture: true });
+    document.removeEventListener('wheel', handleWheelDuringDrag, { capture: true });
+}
+
+// Обработчик прокрутки колесиком мыши во время drag
+function handleWheelDuringDrag(event) {
+    if (draggedExerciseId !== null) {
+        // Прокручиваем страницу с учетом скорости
+        const scrollSpeed = event.deltaY * 0.5; // Уменьшаем скорость для более плавной прокрутки
+        window.scrollBy(0, scrollSpeed);
+        event.preventDefault();
+        event.stopPropagation();
+    }
 }
 
 // Функция для привязки событий drag and drop к элементам
 function bindDragDropEvents() {
-    // Ищем элементы упражнений во всех возможных контейнерах
-    const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id], .space-y-4 > div[data-exercise-id], [data-exercise-id][draggable="true"]');
+    // Ищем drag handle элементы (иконки с двумя полосочками)
+    const dragHandles = document.querySelectorAll('[draggable="true"]');
     
-    exerciseElements.forEach((element, index) => {
-        const exerciseId = parseInt(element.dataset.exerciseId);
+    // Ищем все блоки упражнений для drop target
+    const exerciseContainers = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
+    
+    
+    // Привязываем события drag к handle элементам
+    dragHandles.forEach((handle, index) => {
+        const exerciseContainer = handle.closest('[data-exercise-id]');
+        if (!exerciseContainer) return;
+        
+        const exerciseId = parseInt(exerciseContainer.dataset.exerciseId);
         
         // Обновляем data-exercise-index на реальный индекс в DOM
-        element.setAttribute('data-exercise-index', index);
+        const containerIndex = Array.from(exerciseContainers).indexOf(exerciseContainer);
+        exerciseContainer.setAttribute('data-exercise-index', containerIndex);
         
-        // Удаляем старые обработчики, если есть
-        element.removeEventListener('dragstart', element._dragStartHandler);
-        element.removeEventListener('dragover', element._dragOverHandler);
-        element.removeEventListener('drop', element._dropHandler);
-        element.removeEventListener('dragenter', element._dragEnterHandler);
-        element.removeEventListener('dragleave', element._dragLeaveHandler);
-        element.removeEventListener('dragend', element._dragEndHandler);
+        // Удаляем старые обработчики с handle, если есть
+        handle.removeEventListener('dragstart', handle._dragStartHandler);
+        handle.removeEventListener('dragend', handle._dragEndHandler);
         
-        // Создаем новые обработчики
-        element._dragStartHandler = (event) => {
-            const currentIndex = parseInt(element.dataset.exerciseIndex);
-            handleDragStart(event, exerciseId, currentIndex);
-        };
+        // Создаем обработчики для drag handle
+        handle._dragStartHandler = (e) => handleDragStart(e, exerciseId, containerIndex);
+        handle._dragEndHandler = (e) => handleDragEnd(e, exerciseId, containerIndex);
         
-        element._dragOverHandler = (event) => {
-            const currentIndex = parseInt(element.dataset.exerciseIndex);
-            handleDragOver(event, exerciseId, currentIndex);
-        };
+        // Привязываем обработчики к drag handle
+        handle.addEventListener('dragstart', handle._dragStartHandler);
+        handle.addEventListener('dragend', handle._dragEndHandler);
+    });
+    
+    // Привязываем события drop ко всем контейнерам упражнений
+    exerciseContainers.forEach((container, index) => {
+        const exerciseId = parseInt(container.dataset.exerciseId);
         
-        element._dropHandler = (event) => {
-            const currentIndex = parseInt(element.dataset.exerciseIndex);
-            handleDrop(event, exerciseId, currentIndex);
-        };
+        // Удаляем старые обработчики с контейнера, если есть
+        container.removeEventListener('dragover', container._dragOverHandler);
+        container.removeEventListener('drop', container._dropHandler);
+        container.removeEventListener('dragenter', container._dragEnterHandler);
+        container.removeEventListener('dragleave', container._dragLeaveHandler);
         
-        element._dragEnterHandler = (event) => {
-            const currentIndex = parseInt(element.dataset.exerciseIndex);
-            handleDragEnter(event, exerciseId, currentIndex);
-        };
+        // Создаем обработчики для drop target (контейнер)
+        container._dragOverHandler = (e) => handleDragOver(e, exerciseId, index);
+        container._dropHandler = (e) => handleDrop(e, exerciseId, index);
+        container._dragEnterHandler = (e) => handleDragEnter(e, exerciseId, index);
+        container._dragLeaveHandler = (e) => handleDragLeave(e, exerciseId, index);
         
-        element._dragLeaveHandler = (event) => {
-            const currentIndex = parseInt(element.dataset.exerciseIndex);
-            handleDragLeave(event, exerciseId, currentIndex);
-        };
+        // Привязываем обработчики к контейнеру
+        container.addEventListener('dragover', container._dragOverHandler);
+        container.addEventListener('drop', container._dropHandler);
+        container.addEventListener('dragenter', container._dragEnterHandler);
+        container.addEventListener('dragleave', container._dragLeaveHandler);
         
-        element._dragEndHandler = (event) => {
-            cleanupDragState();
-        };
-        
-        // Привязываем новые обработчики
-        element.addEventListener('dragstart', element._dragStartHandler);
-        element.addEventListener('dragover', element._dragOverHandler);
-        element.addEventListener('drop', element._dropHandler);
-        element.addEventListener('dragenter', element._dragEnterHandler);
-        element.addEventListener('dragleave', element._dragLeaveHandler);
-        element.addEventListener('dragend', element._dragEndHandler);
     });
 }
 
@@ -248,5 +374,7 @@ window.WorkoutDragDrop = {
     handleDragEnter,
     handleDragLeave,
     cleanupDragState,
-    bindDragDropEvents
+    bindDragDropEvents,
+    enableScrollDuringDrag,
+    disableScrollDuringDrag
 };

@@ -280,7 +280,7 @@ return [
     'exercise_status_label' => 'Execution Status',
     
     // Exercise parameters
-    'time_seconds' => 'Time (sec)',
+    'time_seconds' => 'Time (min)',
     'tempo_speed' => 'Tempo/Speed',
     'distance_meters' => 'Distance (m)',
     
@@ -506,7 +506,7 @@ return [
     'sets' => 'Sets',
     'repetitions' => 'Repetitions',
     'weight_kg' => 'Weight (kg)',
-    'time_sec' => 'Time (sec)',
+    'time_sec' => 'Time (min)',
     'distance_m' => 'Distance (m)',
     'pace_speed' => 'Pace/Speed',
     'notes' => 'Notes',

@@ -11,68 +11,60 @@
 // Функции drag and drop уже доступны глобально из workout-drag-drop.js
 
 // Старые функции drag and drop - заменены на функции из общего файла
-/*
-function handleDragStart_OLD(event, exerciseId, exerciseIndex) {
-    // Проверяем, что перетаскивание НЕ началось с кнопки "Удалить"
-    if (event.target.closest('button[onclick*="removeExercise"]')) {
-        event.preventDefault();
-        return false;
-    }
-    
-    // Очищаем предыдущее состояние перетаскивания
-    cleanupDragState();
-    
-    draggedExerciseId = parseInt(exerciseId);
-    draggedExerciseIndex = parseInt(exerciseIndex);
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', exerciseId.toString());
-    
-    // Добавляем класс для визуального эффекта
-    event.target.closest('[data-exercise-id]').style.opacity = '0.5';
-    
-    // Добавляем класс для всех элементов, которые могут принимать drop
-    document.querySelectorAll('[data-exercise-id]').forEach(target => {
-        if (target.dataset.exerciseId !== exerciseId.toString()) {
-            target.classList.add('drop-target');
-        }
-    });
-}
-*/
+// function handleDragStart_OLD(event, exerciseId, exerciseIndex) {
+//     // Проверяем, что перетаскивание НЕ началось с кнопки "Удалить"
+//     if (event.target.closest('button[onclick*="removeExercise"]')) {
+//         event.preventDefault();
+//         return false;
+//     }
+//     
+//     // Очищаем предыдущее состояние перетаскивания
+//     cleanupDragState();
+//     
+//     draggedExerciseId = parseInt(exerciseId);
+//     draggedExerciseIndex = parseInt(exerciseIndex);
+//     event.dataTransfer.effectAllowed = 'move';
+//     event.dataTransfer.setData('text/plain', exerciseId.toString());
+//     
+//     // Добавляем класс для визуального эффекта
+//     event.target.closest('[data-exercise-id]').style.opacity = '0.5';
+//     
+//     // Добавляем класс для всех элементов, которые могут принимать drop
+//     document.querySelectorAll('[data-exercise-id]').forEach(target => {
+//         if (target.dataset.exerciseId !== exerciseId.toString()) {
+//             target.classList.add('drop-target');
+//         }
+//     });
+// }
 
-/*
-function handleDragOver_OLD(event, targetExerciseId, targetIndex) {
-    event.preventDefault();
-    event.stopPropagation();
-    event.dataTransfer.dropEffect = 'move';
-    return false;
-}
-*/
+// function handleDragOver_OLD(event, targetExerciseId, targetIndex) {
+//     event.preventDefault();
+//     event.stopPropagation();
+//     event.dataTransfer.dropEffect = 'move';
+//     return false;
+// }
 
-/*
-function handleDragEnter_OLD(event, targetExerciseId, targetIndex) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.target.closest('[data-exercise-id]')) {
-        const target = event.target.closest('[data-exercise-id]');
-        if (target.dataset.exerciseId !== draggedExerciseId.toString()) {
-            target.classList.add('drag-over');
-        }
-    }
-    return false;
-}
-*/
+// function handleDragEnter_OLD(event, targetExerciseId, targetIndex) {
+//     event.preventDefault();
+//     event.stopPropagation();
+//     if (event.target.closest('[data-exercise-id]')) {
+//         const target = event.target.closest('[data-exercise-id]');
+//         if (target.dataset.exerciseId !== draggedExerciseId.toString()) {
+//             target.classList.add('drag-over');
+//         }
+//     }
+//     return false;
+// }
 
-/*
-function handleDragLeave_OLD(event, targetExerciseId, targetIndex) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (event.target.closest('[data-exercise-id]')) {
-        const target = event.target.closest('[data-exercise-id]');
-        target.classList.remove('drag-over');
-    }
-    return false;
-}
-*/
+// function handleDragLeave_OLD(event, targetExerciseId, targetIndex) {
+//     event.preventDefault();
+//     event.stopPropagation();
+//     if (event.target.closest('[data-exercise-id]')) {
+//         const target = event.target.closest('[data-exercise-id]');
+//         target.classList.remove('drag-over');
+//     }
+//     return false;
+// }
 
 /*
 function handleDrop_OLD(event, targetExerciseId, targetIndex) {
@@ -271,6 +263,8 @@ function workoutApp() {
         saveTimeout: null, // Таймер для автосохранения
         lastSaved: null, // Время последнего сохранения
         workoutProgress: {}, // Прогресс для каждой тренировки (как у спортсмена)
+        lastChangedExercise: null, // Последнее измененное упражнение
+        exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
         
         // Модальное окно для видео
         videoModal: {
@@ -278,9 +272,6 @@ function workoutApp() {
             url: '',
             title: ''
         },
-        workoutProgress: {}, // Прогресс для каждой тренировки
-        lastChangedExercise: null, // Последнее измененное упражнение
-        exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
         
         // Навигация
                 showList() {
@@ -396,11 +387,11 @@ function workoutApp() {
                         tempo: safeValue(exercise.tempo || exercise.pivot?.tempo, ''),
                         notes: safeValue(exercise.notes || exercise.pivot?.notes, ''),
                     category: exercise.category || '',
-                    fields_config: exercise.fields_config || ['sets', 'reps', 'weight', 'rest']
+                    fields_config: exercise.fields_config || ['weight', 'reps', 'sets', 'rest']
                                     };
                                 });
                 
-                this.displaySelectedExercises(formattedExercises);
+                this.displaySelectedExercises(formattedExercises, false); // false = режим редактирования, свернуто
             } else {
                 // Очищаем форму упражнений
                 document.getElementById('selectedExercisesContainer').style.display = 'none';
@@ -415,6 +406,27 @@ function workoutApp() {
             this.loadExerciseProgress(workoutId);
             // Загружаем данные подходов из workoutProgress
             this.loadSetsDataFromProgress(workoutId);
+            
+            // Отображаем упражнения в развернутом виде для просмотра
+            if (this.currentWorkout && this.currentWorkout.exercises) {
+                const formattedExercises = this.currentWorkout.exercises.map(exercise => {
+                    return {
+                        id: exercise.exercise_id || exercise.id,
+                        name: exercise.name,
+                        sets: exercise.sets || exercise.pivot?.sets || 3,
+                        reps: exercise.reps || exercise.pivot?.reps || 12,
+                        weight: exercise.weight || exercise.pivot?.weight || 0,
+                        rest: exercise.rest || exercise.pivot?.rest || 60,
+                        time: exercise.time || exercise.pivot?.time || 0,
+                        distance: exercise.distance || exercise.pivot?.distance || 0,
+                        tempo: exercise.tempo || exercise.pivot?.tempo || '',
+                        notes: exercise.notes || exercise.pivot?.notes || '',
+                        category: exercise.category || '',
+                        fields_config: exercise.fields_config || ['weight', 'reps', 'sets', 'rest']
+                    };
+                });
+                this.displaySelectedExercises(formattedExercises, true); // true = режим просмотра, развернуто
+            }
         },
 
         // Обновление прогресса упражнений в списке тренировок
@@ -605,7 +617,8 @@ function workoutApp() {
         formatNumber(value) {
             if (!value || value === 0) return '0';
             const num = parseFloat(value);
-            return num % 1 === 0 ? num.toString() : num.toString();
+            // Убираем незначащие нули после запятой
+            return num % 1 === 0 ? num.toString() : num.toString().replace(/\.?0+$/, '');
         },
         
         // Получить класс рамки для поля в развернутых подходах
@@ -712,6 +725,23 @@ function workoutApp() {
                             // Записываем время последнего сохранения
                             this.lastSaved = new Date();
                             
+                            // Обновляем workoutProgress для корректного отображения в списке
+                            if (this.currentWorkout && this.currentWorkout.id) {
+                                if (!this.workoutProgress[this.currentWorkout.id]) {
+                                    this.workoutProgress[this.currentWorkout.id] = {};
+                                }
+                                
+                                // Обновляем данные для всех сохраненных упражнений
+                                exercises.forEach(exercise => {
+                                    this.workoutProgress[this.currentWorkout.id][exercise.exercise_id] = {
+                                        status: exercise.status,
+                                        athlete_comment: exercise.athlete_comment,
+                                        sets_data: exercise.sets_data,
+                                        completed_at: new Date().toISOString()
+                                    };
+                                });
+                            }
+                            
                             // Показываем уведомление только для последнего измененного упражнения
                             let title = '';
                             let message = '';
@@ -739,6 +769,10 @@ function workoutApp() {
                                 } else if (status === 'not_done') {
                             title = '{{ __('common.status_updated') }}';
                             message = '{{ __('common.exercise_not_completed') }}';
+                                } else if (status === null) {
+                                    // Если статус был отменен
+                                    title = '{{ __('common.progress_saved') }}';
+                                    message = 'Статус упражнения отменен';
                                 }
                                 
                                 // Сбрасываем последнее измененное упражнение
@@ -762,37 +796,52 @@ function workoutApp() {
             }
         },
         
-        // Загрузка сохраненного прогресса (только из данных упражнений)
-        loadExerciseProgress(workoutId) {
-            // Загружаем данные из уже существующего прогресса в упражнениях
-            if (this.currentWorkout && this.currentWorkout.exercises) {
-                this.currentWorkout.exercises.forEach(exercise => {
-                    const exerciseId = exercise.exercise_id || exercise.id;
-                    if (exercise.progress && exercise.progress.status) {
-                        this.exerciseStatuses[exerciseId] = exercise.progress.status;
-                        
-                        if (exercise.progress.athlete_comment) {
-                            this.exerciseComments[exerciseId] = exercise.progress.athlete_comment;
-                        }
-                        
-                        // Загружаем данные по подходам из прогресса спортсмена
-                        if (exercise.progress.sets_data) {
-                            this.exerciseSetsData[exerciseId] = exercise.progress.sets_data;
-                        }
-                        
-                        // Поля подходов свернуты по умолчанию
-                        this.exerciseSetsExpanded[exerciseId] = false;
+        // Загрузка сохраненного прогресса с сервера
+        async loadExerciseProgress(workoutId) {
+            try {
+                const response = await fetch(`/self-athlete/exercise-progress?workout_id=${workoutId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     }
                 });
-            }
-            
-            // Дополнительно: если есть данные в exerciseSetsData, но нет статуса, устанавливаем "частично"
-            Object.keys(this.exerciseSetsData).forEach(exerciseId => {
-                if (!this.exerciseStatuses[exerciseId] && this.exerciseSetsData[exerciseId] && this.exerciseSetsData[exerciseId].length > 0) {
-                    this.exerciseStatuses[exerciseId] = 'partial';
-                    this.exerciseSetsExpanded[exerciseId] = false; // Свернуто по умолчанию
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success && result.progress) {
+                        // Инициализируем workoutProgress для этой тренировки
+                        if (!this.workoutProgress[workoutId]) {
+                            this.workoutProgress[workoutId] = {};
+                        }
+                        
+                        // Загружаем прогресс для каждого упражнения
+                        Object.keys(result.progress).forEach(exerciseId => {
+                            const progressData = result.progress[exerciseId];
+                            
+                            // Сохраняем в exerciseStatuses для текущего просмотра
+                            if (progressData.status) {
+                                this.exerciseStatuses[exerciseId] = progressData.status;
+                            }
+                            
+                            if (progressData.athlete_comment) {
+                                this.exerciseComments[exerciseId] = progressData.athlete_comment;
+                            }
+                            
+                            if (progressData.sets_data) {
+                                this.exerciseSetsData[exerciseId] = progressData.sets_data;
+                                this.exerciseSetsExpanded[exerciseId] = false;
+                            }
+                            
+                            // Сохраняем в workoutProgress для отображения в списке
+                            this.workoutProgress[workoutId][exerciseId] = progressData;
+                        });
+                    }
                 }
-            });
+            } catch (error) {
+                console.error('Ошибка загрузки прогресса:', error);
+            }
         },
         
         // Фильтрация
@@ -968,79 +1017,41 @@ function workoutApp() {
         collectExerciseData() {
             const exercises = [];
             
-            // Используем порядок из Alpine.js данных, если они есть
-            if (this.currentWorkout && this.currentWorkout.exercises && this.currentWorkout.exercises.length > 0) {
-                // Режим редактирования - используем порядок из Alpine.js
-                this.currentWorkout.exercises.forEach(exercise => {
-                    const exerciseId = exercise.id || exercise.exercise_id;
-                    const element = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
-                    
-                    if (element) {
-                        // Ищем название упражнения - это второй span с классом font-medium
-                        const nameSpans = element.querySelectorAll('.font-medium');
-                        const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
-                        
-                        // Собираем все поля динамически
-                        const exerciseData = {
-                            exercise_id: parseInt(exerciseId),
-                            name: exerciseName
-                        };
-                        
-                        // Находим все input поля для этого упражнения
-                        const inputs = element.querySelectorAll('input');
-                        inputs.forEach(input => {
-                            const name = input.name;
-                            if (name.startsWith('notes_')) {
-                                exerciseData.notes = input.value || '';
-                            } else {
-                                // Извлекаем название поля (sets, reps, weight, etc.)
-                                const fieldName = name.replace(`_${exerciseId}`, '');
-                                const value = input.type === 'number' ? 
-                                    (parseFloat(input.value) || 0) : 
-                                    (input.value || '');
-                                exerciseData[fieldName] = value;
-                            }
-                        });
-                        
-                        exercises.push(exerciseData);
+            // ВСЕГДА используем DOM для сбора данных (более надежно)
+            // Режим создания - используем порядок из DOM
+            const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
+            
+            exerciseElements.forEach((element, index) => {
+                const exerciseId = element.dataset.exerciseId;
+                
+                // Ищем название упражнения - это второй span с классом font-medium
+                const nameSpans = element.querySelectorAll('.font-medium');
+                const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
+                
+                // Собираем все поля динамически
+                const exerciseData = {
+                    exercise_id: parseInt(exerciseId),
+                    name: exerciseName
+                };
+                
+                // Находим все input поля для этого упражнения
+                const inputs = element.querySelectorAll('input');
+                inputs.forEach(input => {
+                    const name = input.name;
+                    if (name.startsWith('notes_')) {
+                        exerciseData.notes = input.value || '';
+                    } else {
+                        // Извлекаем название поля (sets, reps, weight, etc.)
+                        const fieldName = name.replace(`_${exerciseId}`, '');
+                        const value = input.type === 'number' ? 
+                            (parseFloat(input.value) || 0) : 
+                            (input.value || '');
+                        exerciseData[fieldName] = value;
                     }
                 });
-            } else {
-                // Режим создания - используем порядок из DOM
-                const exerciseElements = document.querySelectorAll('#selectedExercisesList > div[data-exercise-id]');
                 
-                exerciseElements.forEach(element => {
-                    const exerciseId = element.dataset.exerciseId;
-                    
-                    // Ищем название упражнения - это второй span с классом font-medium
-                    const nameSpans = element.querySelectorAll('.font-medium');
-                    const exerciseName = nameSpans.length > 1 ? nameSpans[1].textContent : nameSpans[0].textContent;
-                    
-                    // Собираем все поля динамически
-                    const exerciseData = {
-                        exercise_id: parseInt(exerciseId),
-                        name: exerciseName
-                    };
-                    
-                    // Находим все input поля для этого упражнения
-                    const inputs = element.querySelectorAll('input');
-                    inputs.forEach(input => {
-                        const name = input.name;
-                        if (name.startsWith('notes_')) {
-                            exerciseData.notes = input.value || '';
-                        } else {
-                            // Извлекаем название поля (sets, reps, weight, etc.)
-                            const fieldName = name.replace(`_${exerciseId}`, '');
-                            const value = input.type === 'number' ? 
-                                (parseFloat(input.value) || 0) : 
-                                (input.value || '');
-                            exerciseData[fieldName] = value;
-                        }
-                    });
-                    
-                    exercises.push(exerciseData);
-                });
-            }
+                exercises.push(exerciseData);
+            });
             
             return exercises;
         },
@@ -1105,7 +1116,7 @@ function workoutApp() {
                                     exercise_id: exercise.exercise_id, // Сохраняем exercise_id для поиска
                                     name: exercise.name,
                                     category: originalExercise?.category || '',
-                                    fields_config: originalExercise?.fields_config || ['sets', 'reps', 'weight', 'rest'],
+                                    fields_config: originalExercise?.fields_config || ['weight', 'reps', 'sets', 'rest'],
                                     pivot: {
                                         sets: exercise.sets,
                                         reps: exercise.reps,
@@ -1273,7 +1284,7 @@ function workoutApp() {
         
         
         // Отображение выбранных упражнений в форме
-        displaySelectedExercises(exercises) {
+        displaySelectedExercises(exercises, isViewMode = false) {
             const container = document.getElementById('selectedExercisesContainer');
             const list = document.getElementById('selectedExercisesList');
             const emptyState = document.getElementById('emptyExercisesState');
@@ -1292,20 +1303,21 @@ function workoutApp() {
                 
                 // Отображаем упражнения с динамическими полями и drag and drop
                 list.innerHTML = exercises.map((exercise, index) => {
-                    const fieldsConfig = exercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
+                    const fieldsConfig = exercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
                             const exerciseId = exercise.exercise_id || exercise.id;
                     const fieldsHtml = this.generateFieldsHtml(exerciseId, fieldsConfig, exercise);
                     
                     return `
                         <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
                              data-exercise-id="${exerciseId}" 
-                             data-exercise-index="${index}"
-                             draggable="true">
+                             data-exercise-index="${index}">
                             <!-- Заголовок упражнения -->
                             <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center space-x-3 flex-1 cursor-move" title="{{ __('common.drag_to_reorder') }}">
+                                <div class="flex items-center space-x-3 flex-1">
                                     <!-- Drag Handle -->
-                                    <div class="text-gray-400 hover:text-gray-600">
+                                    <div class="text-gray-400 hover:text-gray-600 cursor-move" 
+                                         draggable="true" 
+                                         title="{{ __('common.drag_to_reorder') }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
                                         </svg>
@@ -1320,7 +1332,7 @@ function workoutApp() {
                                     <div onclick="toggleExerciseDetails(${exercise.id})" 
                                          onmousedown="event.stopPropagation()" 
                                          class="cursor-pointer">
-                                        <svg id="chevron-${exercise.id}" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg id="chevron-${exercise.id}" class="w-4 h-4 text-gray-400 transition-transform" style="transform: ${isViewMode ? 'rotate(0deg)' : 'rotate(-90deg)'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                         </svg>
                                     </div>
@@ -1333,7 +1345,7 @@ function workoutApp() {
                             </div>
                             
                             <!-- Параметры упражнения - сворачиваемые -->
-                            <div id="details-${exercise.id}" class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                            <div id="details-${exercise.id}" class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm" style="display: ${isViewMode ? 'block' : 'none'}">
                                 <div class="exercise-params-grid grid grid-cols-4 gap-4">
                                     ${fieldsHtml}
                                 </div>
@@ -1483,6 +1495,12 @@ function workoutApp() {
                         if (savedValue) {
                             value = savedValue;
                         }
+                    }
+                    
+                    // Форматируем значение - убираем лишние нули после запятой
+                    if (config.type === 'number' && value) {
+                        const num = parseFloat(value);
+                        value = num % 1 === 0 ? num.toString() : num.toString().replace(/\.?0+$/, '');
                     }
                     
                     html += `
@@ -1724,13 +1742,23 @@ function workoutApp() {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
                             }
                         });
 
                         const result = await response.json();
                         
-                        if (Array.isArray(result) && result.length > 0) {
+                        // Поддерживаем оба формата ответа: массив и объект {success: true, progress: {...}}
+                        if (result.success && result.progress) {
+                            // Формат: {success: true, progress: {exerciseId: {...}}}
+                            this.workoutProgress[workout.id] = {};
+                            
+                            Object.keys(result.progress).forEach(exerciseId => {
+                                this.workoutProgress[workout.id][exerciseId] = result.progress[exerciseId];
+                            });
+                        } else if (Array.isArray(result) && result.length > 0) {
+                            // Формат: [{exercise_id: ..., status: ...}, ...]
                             this.workoutProgress[workout.id] = {};
                             
                             result.forEach(progress => {
@@ -2158,6 +2186,19 @@ function workoutApp() {
                     }
                 }
                 
+                /* Стили для drag and drop */
+                .dragging {
+                    opacity: 0.5 !important;
+                    transform: scale(0.95) !important;
+                    transition: all 0.2s ease !important;
+                }
+                
+                .drag-over {
+                    border-color: #4f46e5 !important;
+                    background-color: #f0f9ff !important;
+                    box-shadow: 0 0 0 2px #e0e7ff !important;
+                }
+                
             </style>
             <div class="filters-row">
                 <!-- Поиск -->
@@ -2285,7 +2326,7 @@ function workoutApp() {
                                 <div class="text-xs font-medium text-gray-500">{{ __('common.exercises') }}</div>
                                         <!-- Отображаем все упражнения через Alpine.js -->
                                 <template x-for="(exercise, index) in (workout.exercises || [])" :key="`exercise-${workout.id}-${index}`">
-                                    <span x-show="index < 3 || isExercisesExpanded(workout.id)"
+                                    <span x-show="index < 5 || isExercisesExpanded(workout.id)"
                                                   class="inline-block px-2 py-1 text-xs rounded-full font-medium"
                                                   :class="{
                                               'bg-green-100 text-green-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'completed',
@@ -2299,10 +2340,10 @@ function workoutApp() {
                                         </template>
                                         
                                         <!-- Кнопка разворачивания/сворачивания -->
-                                <button x-show="(workout.exercises || []).length > 3" 
+                                <button x-show="(workout.exercises || []).length > 5" 
                                         @click="toggleExercisesExpanded(workout.id)" 
                                                     class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
-                                    <span x-text="isExercisesExpanded(workout.id) ? '{{ __('common.collapse') }}' : '+' + ((workout.exercises || []).length - 3) + ' {{ __('common.more') }}'"></span>
+                                    <span x-text="isExercisesExpanded(workout.id) ? '{{ __('common.collapse') }}' : '+' + ((workout.exercises || []).length - 5) + ' {{ __('common.more') }}'"></span>
                                             </button>
                                     </div>
                                 </div>
@@ -2685,36 +2726,8 @@ function workoutApp() {
                             
                             <!-- Параметры упражнения -->
                             <div class="exercise-params-grid">
-                                <!-- Подходы -->
-                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('sets')" 
-                                     class="exercise-field bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-4">
-                                    <div class="text-center">
-                                        <div class="flex items-center justify-center mb-2">
-                                            <svg class="w-4 h-4 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                            </svg>
-                                            <span class="text-sm font-semibold text-indigo-800">{{ __('common.sets') }}</span>
-                                        </div>
-                                        <div class="text-2xl font-bold text-indigo-900" x-text="formatNumber(exercise.sets || exercise.pivot?.sets || 0)"></div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Повторения -->
-                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
-                                     class="exercise-field bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
-                                    <div class="text-center">
-                                        <div class="flex items-center justify-center mb-2">
-                                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                            </svg>
-                                            <span class="text-sm font-semibold text-green-800">{{ __('common.repetitions') }}</span>
-                                        </div>
-                                        <div class="text-2xl font-bold text-green-900" x-text="formatNumber(exercise.reps || exercise.pivot?.reps || 0)"></div>
-                                    </div>
-                                </div>
-                                
                                 <!-- Вес -->
-                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
+                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('weight')" 
                                      class="exercise-field bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2727,8 +2740,36 @@ function workoutApp() {
                                     </div>
                                 </div>
                                 
+                                <!-- Повторения -->
+                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('reps')" 
+                                     class="exercise-field bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
+                                    <div class="text-center">
+                                        <div class="flex items-center justify-center mb-2">
+                                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                            </svg>
+                                            <span class="text-sm font-semibold text-green-800">{{ __('common.repetitions') }}</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-green-900" x-text="formatNumber(exercise.reps || exercise.pivot?.reps || 0)"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Подходы -->
+                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('sets')" 
+                                     class="exercise-field bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-4">
+                                    <div class="text-center">
+                                        <div class="flex items-center justify-center mb-2">
+                                            <svg class="w-4 h-4 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                            </svg>
+                                            <span class="text-sm font-semibold text-indigo-800">{{ __('common.sets') }}</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-indigo-900" x-text="formatNumber(exercise.sets || exercise.pivot?.sets || 0)"></div>
+                                    </div>
+                                </div>
+                                
                                 <!-- Отдых -->
-                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
+                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('rest')" 
                                      class="exercise-field bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2742,7 +2783,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Время -->
-                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('time')" 
+                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('time')" 
                                      class="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2756,7 +2797,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Дистанция -->
-                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('distance')" 
+                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('distance')" 
                                      class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2770,7 +2811,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Темп -->
-                                <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('tempo')" 
+                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('tempo')" 
                                      class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2816,17 +2857,17 @@ function workoutApp() {
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'completed')" 
                                                 :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'completed' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ✅ {{ __('common.completed') }}
+                                            ✅ {{ __('common.exercise_status_completed') }}
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'partial')" 
                                                 :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'partial' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ⚠️ {{ __('common.partially_completed') }}
+                                            ⚠️ {{ __('common.exercise_status_partial') }}
                                         </button>
                                         <button @click="setExerciseStatus(exercise.exercise_id || exercise.id, 'not_done')" 
                                                 :class="currentWorkout && getExerciseStatusForList(currentWorkout.id, exercise.exercise_id || exercise.id) === 'not_done' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'"
                                                 class="px-3 py-1 text-xs font-medium border rounded-full transition-colors">
-                                            ❌ {{ __('common.not_completed') }}
+                                            ❌ {{ __('common.exercise_status_not_done') }}
                                         </button>
                                     </div>
                                 </div>
@@ -2880,29 +2921,8 @@ function workoutApp() {
                                                     </div>
                                                     
                                                     <div class="sets-fields-grid">
-                                                        <!-- Повторения -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
-                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
-                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
-                                                            <div class="text-center">
-                                                                <div class="flex items-center justify-center mb-2">
-                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                                                    </svg>
-                                                                    <span class="text-xs font-semibold text-green-800">{{ __('common.repetitions') }}</span>
-                                                                </div>
-                                                                <input 
-                                                                    type="number" 
-                                                                    x-model="set.reps"
-                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
-                                                                    placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none"
-                                                                    min="0">
-                                                            </div>
-                                                        </div>
-                                                        
                                                         <!-- Вес -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
+                                                        <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('weight')" 
                                                              class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
                                                              :class="getSetFieldBorderClass(exercise, set, 'weight')">
                                                             <div class="text-center">
@@ -2923,8 +2943,29 @@ function workoutApp() {
                                                             </div>
                                                         </div>
                                                         
+                                                        <!-- Повторения -->
+                                                        <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('reps')" 
+                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-green-800">{{ __('common.repetitions') }}</span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    x-model="set.reps"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none"
+                                                                    min="0">
+                                                            </div>
+                                                        </div>
+                                                        
                                                         <!-- Отдых -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
+                                                        <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('rest')" 
                                                              class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3"
                                                              :class="getSetFieldBorderClass(exercise, set, 'rest')">
                                                             <div class="text-center">
@@ -3431,7 +3472,7 @@ function addSelectedExercises() {
             }, 200);
         } else {
             // Режим создания - используем глобальную функцию
-            displaySelectedExercises(allExercises);
+    displaySelectedExercises(allExercises);
             
             // Привязываем события drag and drop к новым упражнениям в режиме создания
             setTimeout(() => {
@@ -3660,13 +3701,13 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
             value: '2'
         },
         'time': {
-            label: 'Время (сек)',
+            label: 'Время (мин)',
             icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
             color: 'blue',
             type: 'number',
             min: '0',
-            max: '3600',
-            step: '1',
+            max: '120',
+            step: '0.5',
             value: '0'
         },
         'distance': {
@@ -3771,7 +3812,7 @@ function getColorClasses(color) {
 }
 
 // Отображение выбранных упражнений в форме
-function displaySelectedExercises(exercises) {
+function displaySelectedExercises(exercises, isViewMode = false) {
     const container = document.getElementById('selectedExercisesContainer');
     const list = document.getElementById('selectedExercisesList');
     const emptyState = document.getElementById('emptyExercisesState');
@@ -3795,39 +3836,49 @@ function displaySelectedExercises(exercises) {
         
         // Отображаем упражнения с динамическими полями
         const htmlContent = exercises.map((exercise, index) => {
-            const fieldsConfig = exercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
+            const fieldsConfig = exercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
             const exerciseId = exercise.exercise_id || exercise.id;
             const fieldsHtml = generateFieldsHtml(exerciseId, fieldsConfig, exercise);
             
             return `
                 <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md" 
                      data-exercise-id="${exerciseId}" 
-                     data-exercise-index="${index}"
-                     draggable="true">
+                     data-exercise-index="${index}">
                     <!-- Заголовок упражнения -->
                     <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center space-x-3 flex-1 cursor-move" title="Перетащите для изменения порядка">
+                        <div class="flex items-center space-x-3 flex-1">
                             <!-- Drag Handle -->
-                            <div class="text-gray-400 hover:text-gray-600">
+                            <div class="text-gray-400 hover:text-gray-600 cursor-move" 
+                                 draggable="true" 
+                                 title="Перетащите для изменения порядка">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
                                 </svg>
                             </div>
-                            <div class="flex-1">
+                            <div class="cursor-pointer flex-1" onclick="toggleExerciseDetails(${exercise.id})" onmousedown="event.stopPropagation()">
                             <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
                             <span class="font-medium text-gray-900">${exercise.name}</span>
                             <span class="text-sm text-gray-600">(${exercise.category || '{{ __('common.not_specified') }}'} • ${exercise.equipment || '{{ __('common.not_specified') }}'})</span>
                         </div>
                         </div>
-                        <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800 ml-2" onmousedown="event.stopPropagation()">
+                        <div class="flex items-center space-x-2">
+                            <div onclick="toggleExerciseDetails(${exercise.id})" 
+                                 onmousedown="event.stopPropagation()" 
+                                 class="cursor-pointer">
+                                <svg id="chevron-${exercise.id}" class="w-4 h-4 text-gray-400 transition-transform" style="transform: ${isViewMode ? 'rotate(0deg)' : 'rotate(-90deg)'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                            <button type="button" onclick="removeExercise(${exercise.id})" class="text-red-600 hover:text-red-800" onmousedown="event.stopPropagation()">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
+                        </div>
                     </div>
                     
-                    <!-- Параметры упражнения - всегда развернуты -->
-                    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <!-- Параметры упражнения - сворачиваемые -->
+                    <div id="details-${exercise.id}" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200" style="display: ${isViewMode ? 'block' : 'none'}">
                         <div class="exercise-params-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
                             ${fieldsHtml}
                         </div>
@@ -3872,11 +3923,11 @@ function toggleExerciseDetails(exerciseId) {
     if (detailsElement.style.display === 'none') {
         // Разворачиваем
         detailsElement.style.display = 'block';
-        chevronElement.style.transform = 'rotate(0deg)';
+        chevronElement.style.transform = 'rotate(0deg)'; // стрелочка вниз
     } else {
         // Сворачиваем
         detailsElement.style.display = 'none';
-        chevronElement.style.transform = 'rotate(180deg)';
+        chevronElement.style.transform = 'rotate(-90deg)'; // стрелочка вправо
     }
 }
 
@@ -3969,7 +4020,7 @@ function addSelectedTemplate() {
                 workoutApp.displaySelectedExercises(allExercises);
             } else {
                 // Режим создания - заменяем все упражнения
-                displaySelectedExercises(templateExercises);
+        displaySelectedExercises(templateExercises);
             }
         } else {
             // Режим создания - заменяем все упражнения

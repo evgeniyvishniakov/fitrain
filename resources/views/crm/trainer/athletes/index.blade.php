@@ -3394,10 +3394,10 @@ function athletesApp() {
                                                 <div x-show="(workout.exercises || []).length > 0" class="mt-3">
                                                     <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
                                                     <div class="flex flex-wrap gap-1">
-                                                        <template x-for="(exercise, index) in (workout.exercises || []).slice(0, 3)" :key="`exercise-${workout.id}-${index}`">
+                                                        <template x-for="(exercise, index) in (workout.exercises || []).slice(0, 5)" :key="`exercise-${workout.id}-${index}`">
                                                             <span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full" x-text="exercise.name || 'Без названия'"></span>
                                                         </template>
-                                                        <span x-show="(workout.exercises || []).length > 3" class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full" x-text="'+' + ((workout.exercises || []).length - 3) + ' еще'"></span>
+                                                        <span x-show="(workout.exercises || []).length > 5" class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full" x-text="'+' + ((workout.exercises || []).length - 5) + ' еще'"></span>
                                                     </div>
                                                 </div>
                                             </div>

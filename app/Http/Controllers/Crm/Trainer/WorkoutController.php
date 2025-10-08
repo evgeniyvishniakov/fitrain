@@ -15,20 +15,23 @@ class WorkoutController extends BaseController
         
         if ($user->hasRole('trainer')) {
             $workouts = $user->trainerWorkouts()->with(['athlete', 'exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*')
+                    ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = $user->athletes()->get();
             
         } elseif ($user->hasRole('self-athlete')) {
             // Self-Athlete видит только свои тренировки
             $workouts = Workout::where('athlete_id', $user->id)->with(['exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*')
+                    ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = [$user]; // Self-Athlete сам себе спортсмен
             
         } else {
             $workouts = $user->workouts()->with(['trainer', 'exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*');
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*')
+                    ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = [];
         }
@@ -94,7 +97,7 @@ class WorkoutController extends BaseController
 
         // Сохраняем упражнения через связь many-to-many
         if ($request->exercises && is_array($request->exercises)) {
-            foreach ($request->exercises as $exerciseData) {
+            foreach ($request->exercises as $index => $exerciseData) {
                 $workout->exercises()->attach($exerciseData['exercise_id'], [
                     'sets' => $exerciseData['sets'] ?? 3,
                     'reps' => $exerciseData['reps'] ?? 12,
@@ -104,6 +107,7 @@ class WorkoutController extends BaseController
                     'distance' => $exerciseData['distance'] ?? 0,
                     'tempo' => $exerciseData['tempo'] ?? null,
                     'notes' => $exerciseData['notes'] ?? null,
+                    'order_index' => $index,
                 ]);
             }
         }
@@ -115,7 +119,8 @@ class WorkoutController extends BaseController
         
         // Загружаем связанные данные для фронтенда
         $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
-            $query->select('exercises.*', 'workout_exercise.*');
+            $query->select('exercises.*', 'workout_exercise.*')
+                ->orderBy('workout_exercise.order_index', 'asc');
         }]);
         
         // Добавляем прогресс упражнений для новой тренировки
@@ -225,7 +230,7 @@ class WorkoutController extends BaseController
             
             // Только если все упражнения существуют, обновляем
             $workout->exercises()->detach(); // Удаляем все старые связи
-            foreach ($request->exercises as $exerciseData) {
+            foreach ($request->exercises as $index => $exerciseData) {
                 if (!isset($exerciseData['exercise_id'])) {
                     continue;
                 }
@@ -238,6 +243,7 @@ class WorkoutController extends BaseController
                     'distance' => $exerciseData['distance'] ?? 0,
                     'tempo' => $exerciseData['tempo'] ?? null,
                     'notes' => $exerciseData['notes'] ?? null,
+                    'order_index' => $index,
                 ]);
             }
         } else {
@@ -258,7 +264,8 @@ class WorkoutController extends BaseController
         
         // Загружаем связанные данные для фронтенда
         $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
-            $query->select('exercises.*', 'workout_exercise.*');
+            $query->select('exercises.*', 'workout_exercise.*')
+                ->orderBy('workout_exercise.order_index', 'asc');
         }]);
         
         // Добавляем прогресс упражнений для обновленной тренировки

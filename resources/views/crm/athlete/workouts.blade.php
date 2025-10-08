@@ -833,7 +833,7 @@
                                     <div class="flex flex-wrap gap-1">
                                         <!-- Отображаем все упражнения через Alpine.js -->
                                         <template x-for="(exercise, index) in ({{ json_encode($workout->exercises ?? []) }} || [])" :key="`exercise-{{ $workout->id }}-${index}`">
-                                            <span x-show="index < 3 || isExercisesExpanded({{ $workout->id }})"
+                                            <span x-show="index < 5 || isExercisesExpanded({{ $workout->id }})"
                                                   class="inline-block px-2 py-1 text-xs rounded-full font-medium"
                                                   :class="{
                                                       'bg-green-100 text-green-700': getExerciseStatusForList({{ $workout->id }}, exercise.exercise_id || exercise.id) === 'completed',
@@ -1264,7 +1264,7 @@
                                                                     <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-blue-800">Время (сек)</span>
+                                                                    <span class="text-xs font-semibold text-blue-800">Время (мин)</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 

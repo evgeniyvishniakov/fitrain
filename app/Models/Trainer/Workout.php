@@ -69,7 +69,8 @@ class Workout extends BaseModel
     public function exercises()
     {
         return $this->belongsToMany(\App\Models\Trainer\Exercise::class, 'workout_exercise', 'workout_id', 'exercise_id')
-                    ->withPivot(['exercise_id', 'sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'])
-                    ->withTimestamps();
+                    ->withPivot(['exercise_id', 'sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes', 'order_index'])
+                    ->withTimestamps()
+                    ->orderBy('workout_exercise.order_index', 'asc');
     }
 }

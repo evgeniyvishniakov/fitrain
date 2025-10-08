@@ -280,7 +280,7 @@ return [
     'exercise_status_label' => 'Статус выполнения',
     
     // Параметры упражнений
-    'time_seconds' => 'Время (сек)',
+    'time_seconds' => 'Время (мин)',
     'tempo_speed' => 'Темп/Скорость',
     'distance_meters' => 'Дистанция (м)',
     
@@ -525,7 +525,7 @@ return [
     'sets' => 'Подходы',
     'repetitions' => 'Повторения',
     'weight_kg' => 'Вес (кг)',
-    'time_sec' => 'Время (сек)',
+    'time_sec' => 'Время (мин)',
     'distance_m' => 'Дистанция (м)',
     'pace_speed' => 'Темп/Скорость',
     'notes' => 'Примечания',

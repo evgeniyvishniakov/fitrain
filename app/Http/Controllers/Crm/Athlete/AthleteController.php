@@ -228,6 +228,7 @@ class AthleteController extends BaseController
             $workouts->getCollection()->transform(function ($workout) {
                 $workout->exercises = $workout->exercises()
                     ->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*')
+                    ->orderBy('workout_exercise.order_index', 'asc')
                     ->get();
                 return $workout;
             });
