@@ -143,6 +143,7 @@ class ExerciseController extends BaseController
         }
         
         $exercise->update($data);
+        $exercise->refresh();
 
         return response()->json([
             'success' => true,

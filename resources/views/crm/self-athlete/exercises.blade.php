@@ -242,12 +242,14 @@ function exerciseApp() {
                 });
                 
                 const fileInput = document.querySelector('input[name="image"]');
-                if (fileInput && fileInput.files[0]) {
+                const hasNewFile = fileInput && fileInput.files[0];
+                
+                if (hasNewFile) {
                     formData.append('image', fileInput.files[0]);
                 }
                 
-                // Если редактируем и formImageUrl пустой - значит удаляем картинку
-                if (this.currentExercise && this.currentExercise.id && !this.formImageUrl) {
+                // Только если НЕТ нового файла И formImageUrl пустой - удаляем картинку
+                if (!hasNewFile && this.currentExercise && this.currentExercise.id && !this.formImageUrl) {
                     formData.append('remove_image', '1');
                 }
                 
@@ -1110,7 +1112,7 @@ function exerciseApp() {
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
                     <div style="display: flex; gap: 1rem;">
                         <!-- Картинка слева -->
-                        <div x-show="exercise.image_url" style="flex: 0 0 25%; max-width: 25%;">
+                        <div x-show="exercise.image_url && exercise.image_url != 'null' && exercise.image_url != null" style="flex: 0 0 25%; max-width: 25%;">
                             <img :src="`/storage/${exercise.image_url}`" 
                                  :alt="exercise.name"
                                  class="w-full h-full object-cover rounded-lg"
@@ -1154,8 +1156,8 @@ function exerciseApp() {
                             </div>
                             
                             <!-- Группы мышц -->
-                            <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && exercise.muscle_groups.length > 0">
-                                <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="exercise.muscle_groups.join(', ')"></span>
+                            <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
+                                <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
                             </div>
                             
                             <!-- Кнопки внизу справа -->
@@ -1661,7 +1663,7 @@ function exerciseApp() {
             <!-- Картинка слева и информация справа -->
             <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
                 <!-- Картинка слева -->
-                <div x-show="currentExercise?.image_url" style="flex: 0 0 35%; max-width: 35%;">
+                <div x-show="currentExercise?.image_url && currentExercise.image_url != 'null' && currentExercise.image_url != null" style="flex: 0 0 35%; max-width: 35%;">
                     <img :src="`/storage/${currentExercise?.image_url}`" 
                          :alt="currentExercise?.name"
                          class="w-full rounded-lg shadow-md"
