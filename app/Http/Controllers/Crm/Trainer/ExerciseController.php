@@ -59,13 +59,19 @@ class ExerciseController extends BaseController
             'equipment' => 'required|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
-            'image_url' => 'nullable|url',
+            'image' => 'nullable|image|max:5120',
             'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);
 
-        $data = $request->all();
-        $data['trainer_id'] = auth()->id(); // Привязываем к текущему тренеру
+        $data = $request->except(['image']);
+        $data['trainer_id'] = auth()->id();
+        
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('exercises', 'public');
+            $data['image_url'] = $path;
+        }
+        
         $exercise = Exercise::create($data);
 
         return response()->json([
@@ -113,12 +119,30 @@ class ExerciseController extends BaseController
             'equipment' => 'required|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
-            'image_url' => 'nullable|url',
+            'image' => 'nullable|image|max:5120',
             'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);
 
-        $exercise->update($request->all());
+        $data = $request->except(['image', 'remove_image']);
+        
+        // Если пришел флаг удаления картинки
+        if ($request->input('remove_image') == '1') {
+            if ($exercise->image_url && \Storage::disk('public')->exists($exercise->image_url)) {
+                \Storage::disk('public')->delete($exercise->image_url);
+            }
+            $data['image_url'] = null;
+        }
+        // Если загружается новая картинка
+        elseif ($request->hasFile('image')) {
+            if ($exercise->image_url && \Storage::disk('public')->exists($exercise->image_url)) {
+                \Storage::disk('public')->delete($exercise->image_url);
+            }
+            $path = $request->file('image')->store('exercises', 'public');
+            $data['image_url'] = $path;
+        }
+        
+        $exercise->update($data);
 
         return response()->json([
             'success' => true,
@@ -186,6 +210,9 @@ class ExerciseController extends BaseController
         }
         
         // Если не используется, удаляем
+        if ($exercise->image_url && \Storage::disk('public')->exists($exercise->image_url)) {
+            \Storage::disk('public')->delete($exercise->image_url);
+        }
         $exercise->delete();
 
         return response()->json([
