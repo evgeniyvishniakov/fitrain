@@ -60,16 +60,22 @@ class ExerciseController extends BaseController
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
             'image' => 'nullable|image|max:5120',
+            'image_2' => 'nullable|image|max:5120',
             'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);
 
-        $data = $request->except(['image']);
+        $data = $request->except(['image', 'image_2']);
         $data['trainer_id'] = auth()->id();
         
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('exercises', 'public');
             $data['image_url'] = $path;
+        }
+        
+        if ($request->hasFile('image_2')) {
+            $path = $request->file('image_2')->store('exercises', 'public');
+            $data['image_url_2'] = $path;
         }
         
         $exercise = Exercise::create($data);
@@ -120,26 +126,41 @@ class ExerciseController extends BaseController
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
             'image' => 'nullable|image|max:5120',
+            'image_2' => 'nullable|image|max:5120',
             'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);
 
-        $data = $request->except(['image', 'remove_image']);
+        $data = $request->except(['image', 'image_2', 'remove_image', 'remove_image_2']);
         
-        // Если пришел флаг удаления картинки
+        // Обработка первого изображения
         if ($request->input('remove_image') == '1') {
             if ($exercise->image_url && \Storage::disk('public')->exists($exercise->image_url)) {
                 \Storage::disk('public')->delete($exercise->image_url);
             }
             $data['image_url'] = null;
         }
-        // Если загружается новая картинка
         elseif ($request->hasFile('image')) {
             if ($exercise->image_url && \Storage::disk('public')->exists($exercise->image_url)) {
                 \Storage::disk('public')->delete($exercise->image_url);
             }
             $path = $request->file('image')->store('exercises', 'public');
             $data['image_url'] = $path;
+        }
+        
+        // Обработка второго изображения
+        if ($request->input('remove_image_2') == '1') {
+            if ($exercise->image_url_2 && \Storage::disk('public')->exists($exercise->image_url_2)) {
+                \Storage::disk('public')->delete($exercise->image_url_2);
+            }
+            $data['image_url_2'] = null;
+        }
+        elseif ($request->hasFile('image_2')) {
+            if ($exercise->image_url_2 && \Storage::disk('public')->exists($exercise->image_url_2)) {
+                \Storage::disk('public')->delete($exercise->image_url_2);
+            }
+            $path = $request->file('image_2')->store('exercises', 'public');
+            $data['image_url_2'] = $path;
         }
         
         $exercise->update($data);
@@ -213,6 +234,9 @@ class ExerciseController extends BaseController
         // Если не используется, удаляем
         if ($exercise->image_url && \Storage::disk('public')->exists($exercise->image_url)) {
             \Storage::disk('public')->delete($exercise->image_url);
+        }
+        if ($exercise->image_url_2 && \Storage::disk('public')->exists($exercise->image_url_2)) {
+            \Storage::disk('public')->delete($exercise->image_url_2);
         }
         $exercise->delete();
 

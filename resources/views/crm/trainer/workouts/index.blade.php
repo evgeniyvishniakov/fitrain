@@ -304,6 +304,19 @@ function workoutApp() {
             if (exercisesList) {
                 exercisesList.innerHTML = '';
             }
+            
+            // Автоматически добавляем упражнение "Разминка" при создании тренировки
+            const warmupExercise = exercises.find(ex => ex.name === 'Разминка');
+            if (warmupExercise) {
+                const warmupData = {
+                    id: warmupExercise.id,
+                    name: warmupExercise.name,
+                    category: warmupExercise.category || '',
+                    equipment: warmupExercise.equipment || '',
+                    fields_config: warmupExercise.fields_config || ['weight', 'reps', 'sets', 'rest']
+                };
+                this.displaySelectedExercises([warmupData], false);
+            }
         },
         
         showEdit(workoutId) {
@@ -1336,14 +1349,15 @@ function workoutApp() {
         // Генерация HTML для полей упражнения (точная копия оригинальной функции)
         generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
             const fieldConfigs = {
-                'sets': {
-                    label: '{{ __('common.sets') }}',
-                    icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-                    color: 'indigo',
+                'weight': {
+                    label: '{{ __('common.weight_kg') }}',
+                    icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+                    color: 'orange',
                     type: 'number',
-                    min: '1',
-                    max: '20',
-                    value: '3'
+                    min: '0',
+                    max: '1000',
+                    step: '0.5',
+                    value: '0'
                 },
                 'reps': {
                     label: '{{ __('common.repetitions') }}',
@@ -1354,15 +1368,14 @@ function workoutApp() {
                     max: '100',
                     value: '10'
                 },
-                'weight': {
-                    label: '{{ __('common.weight_kg') }}',
-                    icon: 'M13 10V3L4 14h7v7l9-11h-7z',
-                    color: 'orange',
+                'sets': {
+                    label: '{{ __('common.sets') }}',
+                    icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+                    color: 'indigo',
                     type: 'number',
-                    min: '0',
-                    max: '1000',
-                    step: '0.5',
-                    value: '0'
+                    min: '1',
+                    max: '20',
+                    value: '3'
                 },
                 'rest': {
                     label: '{{ __('common.rest') }} ({{ __('common.min') }})',
@@ -2931,19 +2944,25 @@ function workoutApp() {
             </div>
             
             <!-- Действия -->
-            @if(auth()->user()->hasRole('trainer'))
-                <div class="flex space-x-2 pt-6 border-t border-gray-200">
-                    <button @click="showEdit(currentWorkout?.id)" 
-                            class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                        {{ __('common.edit') }}
-                    </button>
-                    
-                    <button @click="deleteWorkout(currentWorkout?.id)" 
-                            class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                        {{ __('common.delete') }}
-                    </button>
-                </div>
-            @endif
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <button @click="showList()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                    ← Назад к списку
+                </button>
+                @if(auth()->user()->hasRole('trainer'))
+                    <div class="flex space-x-2">
+                        <button @click="showEdit(currentWorkout?.id)" 
+                                class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                            {{ __('common.edit') }}
+                        </button>
+                        
+                        <button @click="deleteWorkout(currentWorkout?.id)" 
+                                class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                            {{ __('common.delete') }}
+                        </button>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 </div>
@@ -3177,16 +3196,21 @@ function renderExercises() {
         const hasImage = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
         const imageUrl = hasImage ? `/storage/${exercise.image_url}` : '';
         
+        // Экранируем специальные символы для безопасного использования в HTML атрибутах
+        const escapeName = (exercise.name || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const escapeCategory = (exercise.category || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const escapeEquipment = (exercise.equipment || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        
         return `
             <div data-exercise-id="${exercise.id}" 
-                 data-exercise-name="${exercise.name}" 
-                 data-exercise-category="${exercise.category}" 
-                 data-exercise-equipment="${exercise.equipment}"
+                 data-exercise-name="${escapeName}" 
+                 data-exercise-category="${escapeCategory}" 
+                 data-exercise-equipment="${escapeEquipment}"
                  style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 130px;"
-                 onclick="toggleExercise(this, ${exercise.id}, '${exercise.name}', '${exercise.category}', '${exercise.equipment}')">
+                 onclick="toggleExercise(this, ${exercise.id})">
                 ${hasImage ? `
                     <img src="${imageUrl}" 
-                         alt="${exercise.name}" 
+                         alt="${escapeName}" 
                          style="width: 60px; height: 100px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
                 ` : ''}
                 <div style="flex: 1; min-width: 0;">
@@ -3233,7 +3257,7 @@ function renderTemplates() {
 }
 
 // Переключение упражнения
-function toggleExercise(element, id, name, category, equipment) {
+function toggleExercise(element, id) {
     const isSelected = element.style.backgroundColor === 'rgb(239, 246, 255)';
     
     if (isSelected) {
@@ -3244,12 +3268,8 @@ function toggleExercise(element, id, name, category, equipment) {
         element.style.borderColor = 'rgb(147, 197, 253)';
     }
     
-    // Сохраняем данные в data-атрибуты
+    // Сохраняем состояние выделения
     element.dataset.selected = !isSelected;
-    element.dataset.exerciseId = id;
-    element.dataset.exerciseName = name;
-    element.dataset.exerciseCategory = category;
-    element.dataset.exerciseEquipment = equipment;
 }
 
 // Переключение шаблона
@@ -3274,9 +3294,14 @@ function toggleTemplate(element, id, name, exercises) {
 
 // Фильтрация упражнений
 function filterExercises() {
-    const searchTerm = document.getElementById('exercise-search').value.toLowerCase();
-    const categoryFilter = document.getElementById('category-filter').value.toLowerCase();
-    const equipmentFilter = document.getElementById('equipment-filter').value.toLowerCase();
+    const searchTerm = document.getElementById('exercise-search').value.toLowerCase().trim();
+    const categoryFilter = document.getElementById('category-filter').value.toLowerCase().trim();
+    let equipmentFilter = document.getElementById('equipment-filter').value.toLowerCase().trim();
+    
+    // Нормализация оборудования: множественное число -> единственное
+    if (equipmentFilter === 'тренажеры') {
+        equipmentFilter = 'тренажер';
+    }
 
     // Получаем уже выбранные упражнения
     const selectedExerciseIds = getSelectedExerciseIds();
@@ -3284,26 +3309,32 @@ function filterExercises() {
     const exerciseElements = document.querySelectorAll('#exercises-container > div[data-exercise-id]');
     const noResults = document.getElementById('no-results');
     let visibleCount = 0;
+    
+    console.log('Фильтрация:', { searchTerm, categoryFilter, equipmentFilter, selectedExerciseIds });
 
     exerciseElements.forEach(element => {
         const exerciseId = parseInt(element.dataset.exerciseId);
-        const name = element.querySelector('h4').textContent.toLowerCase();
-        const category = element.querySelector('p').textContent.toLowerCase();
-        const equipment = element.querySelectorAll('p')[1].textContent.toLowerCase();
+        // Используем data-атрибуты вместо поиска по DOM
+        const name = (element.dataset.exerciseName || '').toLowerCase().trim();
+        const category = (element.dataset.exerciseCategory || '').toLowerCase().trim();
+        const equipment = (element.dataset.exerciseEquipment || '').toLowerCase().trim();
 
-        const matchesSearch = name.includes(searchTerm);
-        const matchesCategory = !categoryFilter || category.includes(categoryFilter);
-        const matchesEquipment = !equipmentFilter || equipment.includes(equipmentFilter);
+        const matchesSearch = !searchTerm || name.includes(searchTerm);
+        const matchesCategory = !categoryFilter || category === categoryFilter || category.includes(categoryFilter);
+        const matchesEquipment = !equipmentFilter || equipment === equipmentFilter || equipment.includes(equipmentFilter);
         const isNotSelected = !selectedExerciseIds.includes(exerciseId);
-
+        
+        console.log(`Упражнение ${exerciseId}:`, { name, category, equipment, matchesSearch, matchesCategory, matchesEquipment, isNotSelected });
 
         if (matchesSearch && matchesCategory && matchesEquipment && isNotSelected) {
-            element.style.display = 'block';
+            element.style.display = 'flex';
             visibleCount++;
         } else {
             element.style.display = 'none';
         }
     });
+    
+    console.log('Видимых упражнений:', visibleCount);
 
     // Показываем/скрываем сообщение о пустых результатах
     if (visibleCount === 0) {
@@ -3530,14 +3561,15 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
         return exerciseData[fieldName];
     }
     const fieldConfigs = {
-        'sets': {
-            label: 'Подходы',
-            icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-            color: 'indigo',
+        'weight': {
+            label: 'Вес (кг)',
+            icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+            color: 'orange',
             type: 'number',
-            min: '1',
-            max: '20',
-            value: '3'
+            min: '0',
+            max: '1000',
+            step: '0.5',
+            value: '0'
         },
         'reps': {
             label: 'Повторения',
@@ -3548,15 +3580,14 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
             max: '100',
             value: '10'
         },
-        'weight': {
-            label: 'Вес (кг)',
-            icon: 'M13 10V3L4 14h7v7l9-11h-7z',
-            color: 'orange',
+        'sets': {
+            label: 'Подходы',
+            icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
+            color: 'indigo',
             type: 'number',
-            min: '0',
-            max: '1000',
-            step: '0.5',
-            value: '0'
+            min: '1',
+            max: '20',
+            value: '3'
         },
         'rest': {
             label: '{{ __('common.rest') }} ({{ __('common.min') }})',

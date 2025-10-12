@@ -37,7 +37,12 @@ function exerciseApp() {
         formMuscleGroupsText: '',
         formInstructions: '',
         formVideoUrl: '',
+        formImage: null,
+        formImagePreview: '',
         formImageUrl: '',
+        formImage2: null,
+        formImagePreview2: '',
+        formImageUrl2: '',
         formFieldsConfig: ['sets', 'reps', 'weight', 'rest'], // По умолчанию
         
         // Навигация
@@ -56,7 +61,12 @@ function exerciseApp() {
             this.formMuscleGroupsText = '';
             this.formInstructions = '';
             this.formVideoUrl = '';
+            this.formImage = null;
+            this.formImagePreview = '';
             this.formImageUrl = '';
+            this.formImage2 = null;
+            this.formImagePreview2 = '';
+            this.formImageUrl2 = '';
             this.formFieldsConfig = ['sets', 'reps', 'weight', 'rest'];
         },
         
@@ -70,13 +80,22 @@ function exerciseApp() {
             this.formMuscleGroupsText = Array.isArray(this.currentExercise.muscle_groups) ? this.currentExercise.muscle_groups.join(', ') : '';
             this.formInstructions = this.currentExercise.instructions || '';
             this.formVideoUrl = this.currentExercise.video_url || '';
-            this.formImageUrl = this.currentExercise.image_url ? `/storage/${this.currentExercise.image_url}` : '';
+            this.formImage = null;
+            this.formImagePreview = this.currentExercise.image_url ? `/storage/${this.currentExercise.image_url}` : '';
+            this.formImageUrl = this.currentExercise.image_url || '';
+            this.formImage2 = null;
+            this.formImagePreview2 = this.currentExercise.image_url_2 ? `/storage/${this.currentExercise.image_url_2}` : '';
+            this.formImageUrl2 = this.currentExercise.image_url_2 || '';
             this.formFieldsConfig = this.currentExercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
         },
         
         showView(exerciseId) {
             this.currentView = 'view';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            
+            console.log('Просмотр упражнения:', this.currentExercise);
+            console.log('image_url:', this.currentExercise?.image_url);
+            console.log('image_url_2:', this.currentExercise?.image_url_2);
             
             // Загружаем пользовательское видео, если упражнение системное
             if (this.currentExercise && this.currentExercise.is_system) {
@@ -241,6 +260,7 @@ function exerciseApp() {
                     formData.append('fields_config[' + index + ']', field);
                 });
                 
+                // Обработка первого изображения
                 const fileInput = document.querySelector('input[name="image"]');
                 const hasNewFile = fileInput && fileInput.files[0];
                 
@@ -251,6 +271,26 @@ function exerciseApp() {
                 // Только если НЕТ нового файла И formImageUrl пустой - удаляем картинку
                 if (!hasNewFile && this.currentExercise && this.currentExercise.id && !this.formImageUrl) {
                     formData.append('remove_image', '1');
+                }
+                
+                // Обработка второго изображения
+                const fileInput2 = document.querySelector('input[name="image_2"]');
+                const hasNewFile2 = fileInput2 && fileInput2.files[0];
+                
+                console.log('=== ВТОРОЕ ИЗОБРАЖЕНИЕ ===');
+                console.log('fileInput2:', fileInput2);
+                console.log('hasNewFile2:', hasNewFile2);
+                console.log('formImageUrl2:', this.formImageUrl2);
+                
+                if (hasNewFile2) {
+                    console.log('Добавляем второе изображение:', hasNewFile2.name, hasNewFile2.size);
+                    formData.append('image_2', fileInput2.files[0]);
+                }
+                
+                // Только если НЕТ нового файла И formImageUrl2 пустой - удаляем вторую картинку
+                if (!hasNewFile2 && this.currentExercise && this.currentExercise.id && !this.formImageUrl2) {
+                    console.log('Удаляем второе изображение');
+                    formData.append('remove_image_2', '1');
                 }
                 
                 const url = this.currentExercise && this.currentExercise.id ? 
@@ -339,15 +379,21 @@ function exerciseApp() {
                     }));
                     
                     // Обновляем список упражнений
+                    console.log('Результат от сервера:', result.exercise);
+                    console.log('image_url:', result.exercise?.image_url);
+                    console.log('image_url_2:', result.exercise?.image_url_2);
+                    
                     if (this.currentExercise && this.currentExercise.id) {
                         // Редактирование - обновляем существующее
                         const index = this.exercises.findIndex(e => e.id === this.currentExercise.id);
                         if (index !== -1) {
                             this.exercises[index] = result.exercise;
+                            console.log('Обновлено упражнение в списке:', this.exercises[index]);
                         }
                     } else {
                         // Создание - добавляем новое
                         this.exercises.unshift(result.exercise);
+                        console.log('Добавлено новое упражнение:', result.exercise);
                     }
                     
                     // Переключаемся на список
@@ -963,6 +1009,108 @@ function exerciseApp() {
                     }
                 }));
             }
+        },
+        
+        // Обработка выбора первого изображения
+        handleImageSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Валидация типа файла
+                if (!file.type.startsWith('image/')) {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка',
+                            message: 'Пожалуйста, выберите файл изображения'
+                        }
+                    }));
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Валидация размера файла (макс 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка',
+                            message: 'Размер файла не должен превышать 5MB'
+                        }
+                    }));
+                    event.target.value = '';
+                    return;
+                }
+                
+                this.formImage = file;
+                
+                // Создаём превью
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.formImagePreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+        
+        // Удаление первого изображения
+        removeImage() {
+            this.formImage = null;
+            this.formImagePreview = '';
+            const fileInput = document.querySelector('input[name="image"]');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+        },
+        
+        // Обработка выбора второго изображения
+        handleImageSelect2(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Валидация типа файла
+                if (!file.type.startsWith('image/')) {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка',
+                            message: 'Пожалуйста, выберите файл изображения'
+                        }
+                    }));
+                    event.target.value = '';
+                    return;
+                }
+                
+                // Валидация размера файла (макс 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка',
+                            message: 'Размер файла не должен превышать 5MB'
+                        }
+                    }));
+                    event.target.value = '';
+                    return;
+                }
+                
+                this.formImage2 = file;
+                
+                // Создаём превью
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.formImagePreview2 = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        },
+        
+        // Удаление второго изображения
+        removeImage2() {
+            this.formImage2 = null;
+            this.formImagePreview2 = '';
+            const fileInput = document.querySelector('input[name="image_2"]');
+            if (fileInput) {
+                fileInput.value = '';
+            }
         }
     }
 }
@@ -1112,7 +1260,7 @@ function exerciseApp() {
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
                     <div style="display: flex; gap: 1rem;">
                         <!-- Картинка слева -->
-                        <div x-show="exercise.image_url && exercise.image_url != 'null' && exercise.image_url != null" style="flex: 0 0 25%; max-width: 25%;">
+                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 25%;">
                             <img :src="`/storage/${exercise.image_url}`" 
                                  :alt="exercise.name"
                                  class="w-full h-full object-cover rounded-lg"
@@ -1154,28 +1302,28 @@ function exerciseApp() {
                                     </span>
                                 </div>
                             </div>
-                            
+                                
                             <!-- Группы мышц -->
                             <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
                                 <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
-                            </div>
+                    </div>
                             
                             <!-- Кнопки внизу справа -->
                             <div class="flex space-x-2 mt-4" style="margin-top: auto; padding-top: 1rem;">
-                                <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                                    {{ __('common.view') }}
-                                </button>
-                                @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
-                                    <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                        {{ __('common.edit') }}
-                                    </button>
-                                    <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                        {{ __('common.delete') }}
-                                    </button>
-                                    <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                                        {{ __('common.add') }} {{ __('common.video') }}
-                                    </button>
-                                @endif
+                        <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                            {{ __('common.view') }}
+                        </button>
+                        @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
+                            <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                {{ __('common.edit') }}
+                            </button>
+                            <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                {{ __('common.delete') }}
+                            </button>
+                            <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                                {{ __('common.add') }} {{ __('common.video') }}
+                            </button>
+                        @endif
                             </div>
                         </div>
                     </div>
@@ -1269,29 +1417,73 @@ function exerciseApp() {
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Изображение упражнения</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Главное изображение упражнения</label>
                     
                     <!-- Текущая картинка при редактировании -->
-                    <div x-show="currentView === 'edit' && formImageUrl" class="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div x-show="currentView === 'edit' && formImageUrl && formImageUrl !== '/storage/' && formImageUrl !== '/storage/undefined' && formImageUrl !== '/storage/null'" class="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="flex items-start justify-between mb-2">
                             <p class="text-sm text-gray-600">Текущее изображение:</p>
                             <button type="button"
-                                    @click="formImageUrl = ''"
+                                    @click="formImageUrl = ''; formImagePreview = ''"
                                     class="text-xs text-red-600 hover:text-red-800 font-medium">
                                 Удалить картинку
                             </button>
                         </div>
-                        <img :src="formImageUrl" 
-                             alt="Текущая картинка"
-                             class="max-w-xs max-h-32 rounded-lg border border-gray-300">
+                        <template x-if="formImagePreview || formImageUrl">
+                            <img :src="formImagePreview || formImageUrl" 
+                                 alt="Текущая картинка"
+                                 class="max-w-xs max-h-32 object-contain rounded-lg border border-gray-300">
+                        </template>
                         <p class="text-xs text-gray-500 mt-2">Загрузите новый файл ниже, чтобы заменить</p>
                     </div>
                     
                     <input type="file" 
                            name="image"
                            accept="image/*"
+                           @change="handleImageSelect($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-xs text-gray-500">Выберите изображение с компьютера (JPG, PNG, GIF, WEBP, макс 5MB)</p>
+                    <p class="mt-1 text-xs text-gray-500">Выберите главное изображение (JPG, PNG, GIF, WEBP, макс 5MB)</p>
+                    
+                    <!-- Превью нового изображения при создании -->
+                    <div x-show="currentView === 'create' && formImagePreview" class="mt-3">
+                        <p class="text-xs text-gray-500 mb-1">Превью:</p>
+                        <img :src="formImagePreview" alt="Превью" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Второе изображение (необязательно)</label>
+                    
+                    <!-- Текущая вторая картинка при редактировании -->
+                    <div x-show="currentView === 'edit' && formImageUrl2 && formImageUrl2 !== '/storage/' && formImageUrl2 !== '/storage/undefined' && formImageUrl2 !== '/storage/null'" class="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="flex items-start justify-between mb-2">
+                            <p class="text-sm text-gray-600">Текущее второе изображение:</p>
+                            <button type="button"
+                                    @click="formImageUrl2 = ''; formImagePreview2 = ''"
+                                    class="text-xs text-red-600 hover:text-red-800 font-medium">
+                                Удалить картинку
+                            </button>
+                        </div>
+                        <template x-if="formImagePreview2 || formImageUrl2">
+                            <img :src="formImagePreview2 || formImageUrl2" 
+                                 alt="Текущая вторая картинка"
+                                 class="max-w-xs max-h-32 object-contain rounded-lg border border-gray-300">
+                        </template>
+                        <p class="text-xs text-gray-500 mt-2">Загрузите новый файл ниже, чтобы заменить</p>
+                    </div>
+                    
+                    <input type="file" 
+                           name="image_2"
+                           accept="image/*"
+                           @change="handleImageSelect2($event)"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <p class="mt-1 text-xs text-gray-500">Доп. изображение упражнения (JPG, PNG, GIF, WEBP, макс 5MB)</p>
+                    
+                    <!-- Превью второго изображения при создании -->
+                    <div x-show="currentView === 'create' && formImagePreview2" class="mt-3">
+                        <p class="text-xs text-gray-500 mb-1">Превью:</p>
+                        <img :src="formImagePreview2" alt="Превью 2" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                    </div>
                 </div>
                 
                 <!-- Категория и Оборудование в одну строку -->
@@ -1375,22 +1567,22 @@ function exerciseApp() {
                     </div>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
-                        <!-- Подходы -->
-                        <label class="field-card" :class="formFieldsConfig.includes('sets') ? 'field-card-selected' : 'field-card-unselected'">
+                        <!-- Вес -->
+                        <label class="field-card" :class="formFieldsConfig.includes('weight') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
                                    x-model="formFieldsConfig" 
-                                   value="sets"
+                                   value="weight"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
-                                     :class="formFieldsConfig.includes('sets') ? 'bg-indigo-100' : 'bg-gray-100'">
-                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                     :class="formFieldsConfig.includes('weight') ? 'bg-orange-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('sets') ? 'text-indigo-900' : 'text-gray-900'">Подходы</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'">Количество подходов</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('weight') ? 'text-orange-900' : 'text-gray-900'">Вес (кг)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'">Рабочий вес</div>
                                 </div>
                             </div>
                         </label>
@@ -1415,22 +1607,22 @@ function exerciseApp() {
                             </div>
                         </label>
                         
-                        <!-- Вес -->
-                        <label class="field-card" :class="formFieldsConfig.includes('weight') ? 'field-card-selected' : 'field-card-unselected'">
+                        <!-- Подходы -->
+                        <label class="field-card" :class="formFieldsConfig.includes('sets') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
                                    x-model="formFieldsConfig" 
-                                   value="weight"
+                                   value="sets"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
-                                     :class="formFieldsConfig.includes('weight') ? 'bg-orange-100' : 'bg-gray-100'">
-                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                     :class="formFieldsConfig.includes('sets') ? 'bg-indigo-100' : 'bg-gray-100'">
+                                    <svg class="w-5 h-5" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('weight') ? 'text-orange-900' : 'text-gray-900'">Вес (кг)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'">Рабочий вес</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('sets') ? 'text-indigo-900' : 'text-gray-900'">Подходы</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'">Количество подходов</div>
                                 </div>
                             </div>
                         </label>
@@ -1653,22 +1845,91 @@ function exerciseApp() {
     <!-- Просмотр упражнения -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6 flex justify-end">
-            <button @click="showList()" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                {{ __('common.back_to_list') }}
-            </button>
+                <button @click="showList()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                    {{ __('common.back_to_list') }}
+                </button>
         </div>
         
         <div x-show="currentExercise" class="space-y-6">
             <!-- Картинка слева и информация справа -->
             <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
-                <!-- Картинка слева -->
-                <div x-show="currentExercise?.image_url && currentExercise.image_url != 'null' && currentExercise.image_url != null" style="flex: 0 0 35%; max-width: 35%;">
-                    <img :src="`/storage/${currentExercise?.image_url}`" 
-                         :alt="currentExercise?.name"
-                         class="w-full rounded-lg shadow-md"
-                         style="max-height: 400px; object-fit: contain;">
+                <!-- Картинки и видео слева -->
+                <div style="flex: 0 0 35%; max-width: 35%; display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Главное изображение -->
+                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined'">
+                        <div>
+                            <img :src="`/storage/${currentExercise.image_url}`" 
+                                 :alt="currentExercise.name"
+                                 class="w-full rounded-lg shadow-md"
+                                 style="max-height: 300px; object-fit: contain;">
+                        </div>
+                    </template>
+            
+                    <!-- Второе изображение -->
+                    <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                        <div>
+                            <img :src="`/storage/${currentExercise.image_url_2}`" 
+                                 :alt="currentExercise.name"
+                                 class="w-full rounded-lg shadow-md"
+                                 style="max-height: 300px; object-fit: contain;">
+                        </div>
+                    </template>
+            
+            <!-- Системное видео -->
+                    <div x-show="currentExercise?.video_url">
+                        <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                    <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                            <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
+                        <a :href="currentExercise?.video_url" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                                   class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                                    Видео
+                        </a>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- Пользовательское видео -->
+                    <div x-show="currentExercise?.is_system && currentUserVideo">
+                        <div class="flex items-center justify-between mb-1">
+                            <p class="text-xs text-gray-500 font-medium">Моё видео</p>
+                    <button @click="showAddVideo(currentExercise.id)" 
+                                    class="text-xs text-indigo-600 hover:text-indigo-800">
+                                Изменить
+                </button>
+</div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div x-show="isYouTubeUrl(currentUserVideo?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                <iframe :src="getYouTubeEmbedUrl(currentUserVideo?.video_url)" 
+                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                    allowfullscreen>
+            </iframe>
+                    </div>
+                            <div x-show="!isYouTubeUrl(currentUserVideo?.video_url)" class="text-center py-4">
+                                <a :href="currentUserVideo?.video_url" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                                   class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                                    Видео
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
                 
                 <!-- Информация справа -->
                 <div style="flex: 1;">
@@ -1691,96 +1952,40 @@ function exerciseApp() {
                     </div>
                     
                     <!-- Группы мышц -->
-                    <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Группы мышц</h3>
+                    <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0" class="mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Группы мышц</h3>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" x-text="group"></span>
                             </template>
                         </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Инструкции -->
-            <div x-show="currentExercise?.instructions">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.execution_instructions') }}</h3>
-                <div class="bg-gray-50 rounded-lg p-4">
-                <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
-                </div>
-            </div>
-            
-            <!-- Системное видео -->
-            <div x-show="currentExercise?.video_url" class="mt-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Системное видео упражнения</h3>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                        <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center">
-                        <a :href="currentExercise?.video_url" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
-                            Открыть видео
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Пользовательское видео -->
-            <div x-show="currentExercise?.is_system" class="mt-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Моё видео к упражнению</h3>
-                    <button @click="showAddVideo(currentExercise.id)" 
-                            class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                        <span x-text="currentUserVideo ? 'Изменить видео' : 'Добавить видео'"></span>
-                </button>
-</div>
-
-                <div x-show="!currentUserVideo" class="bg-gray-50 rounded-lg p-8 text-center">
-                    <div class="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
-                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                </svg>
-    </div>
-                    <h4 class="text-lg font-medium text-gray-900 mb-2">Нет пользовательского видео</h4>
-                    <p class="text-gray-600 mb-4">Добавьте своё видео с правильной техникой выполнения этого упражнения</p>
-                    <button @click="showAddVideo(currentExercise.id)" 
-                            class="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 transition-colors">
-                        Добавить видео
-            </button>
-        </div>
-                
-                <div x-show="currentUserVideo" class="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                    <div class="mb-4">
-                        <h4 class="text-lg font-semibold text-purple-900" x-text="currentUserVideo?.title || 'Моё видео'"></h4>
-                        <p x-show="currentUserVideo?.description" class="text-purple-700 mt-1" x-text="currentUserVideo?.description"></p>
-                    </div>
                     
-                    <div x-show="currentUserVideo && currentUserVideo.video_url && isYouTubeUrl(currentUserVideo.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                        <iframe x-show="currentUserVideo && currentUserVideo.video_url" :src="currentUserVideo && currentUserVideo.video_url ? getYouTubeEmbedUrl(currentUserVideo.video_url) : ''" 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                    allowfullscreen>
-            </iframe>
+                    <!-- Инструкции -->
+                    <div x-show="currentExercise?.instructions">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('common.execution_instructions') }}</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
+                        </div>
                     </div>
-                    <div x-show="currentUserVideo && currentUserVideo.video_url && !isYouTubeUrl(currentUserVideo.video_url)" class="text-center">
-                        <a x-show="currentUserVideo && currentUserVideo.video_url" :href="currentUserVideo && currentUserVideo.video_url ? currentUserVideo.video_url : '#'" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
-                            Открыть видео
-                        </a>
-                    </div>
+                </div>
+            </div>
+            
+            <!-- Кнопки действий внизу -->
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <button @click="showList()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                    ← Назад к списку
+                </button>
+                <div class="flex space-x-2">
+                    <button @click="showEdit(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                        Редактировать
+                    </button>
+                    <button @click="deleteExercise(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                        Удалить
+                    </button>
                 </div>
             </div>
         </div>
