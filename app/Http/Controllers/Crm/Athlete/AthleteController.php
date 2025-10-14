@@ -762,4 +762,101 @@ class AthleteController extends BaseController
             ], 500);
         }
     }
+    
+    /**
+     * Получить историю упражнения (последние данные для автозаполнения)
+     */
+    public function getExerciseHistory($exerciseId)
+    {
+        try {
+            $athlete = auth()->user();
+            
+            
+            // Находим последнюю тренировку с этим упражнением (используем JOIN вместо Eloquent отношений)
+            $lastWorkoutId = \DB::table('workout_exercise')
+                ->join('workouts', 'workout_exercise.workout_id', '=', 'workouts.id')
+                ->where('workouts.athlete_id', $athlete->id)
+                ->where('workout_exercise.exercise_id', $exerciseId)
+                ->orderBy('workouts.date', 'desc')
+                ->orderBy('workouts.created_at', 'desc')
+                ->select('workouts.id')
+                ->first();
+            
+            if (!$lastWorkoutId) {
+                return response()->json([
+                    'success' => true,
+                    'has_history' => false
+                ]);
+            }
+            
+            // Загружаем тренировку
+            $lastWorkout = \App\Models\Trainer\Workout::find($lastWorkoutId->id);
+            
+            // Загружаем данные упражнения из промежуточной таблицы
+            $exerciseData = \DB::table('workout_exercise')
+                ->where('workout_id', $lastWorkout->id)
+                ->where('exercise_id', $exerciseId)
+                ->first();
+            
+            if (!$exerciseData) {
+                return response()->json([
+                    'success' => true,
+                    'has_history' => false
+                ]);
+            }
+            
+            // Получаем плановые данные (из промежуточной таблицы)
+            $plan = [
+                'weight' => $exerciseData->weight ?? 0,
+                'reps' => $exerciseData->reps ?? 0,
+                'sets' => $exerciseData->sets ?? 0,
+                'rest' => $exerciseData->rest ?? 0,
+                'time' => $exerciseData->time ?? 0,
+                'distance' => $exerciseData->distance ?? 0,
+                'tempo' => $exerciseData->tempo ?? null,
+            ];
+            
+            // Получаем фактические данные (из progress если есть)
+            $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $lastWorkout->id)
+                ->where('exercise_id', $exerciseId)
+                ->where('athlete_id', $athlete->id)
+                ->first();
+            
+            $fact = null;
+            if ($progress && $progress->sets_data) {
+                // Вычисляем средние значения из sets_data
+                $setsData = $progress->sets_data;
+                $completedSets = array_filter($setsData, fn($set) => ($set['completed'] ?? false));
+                
+                if (count($completedSets) > 0) {
+                    $avgWeight = collect($completedSets)->avg('weight') ?? 0;
+                    $avgReps = collect($completedSets)->avg('reps') ?? 0;
+                    
+                    $fact = [
+                        'weight' => round($avgWeight, 1),
+                        'reps' => round($avgReps),
+                        'sets' => count($completedSets),
+                        'completed_percentage' => round((count($completedSets) / count($setsData)) * 100)
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'has_history' => true,
+                'workout_date' => $lastWorkout->date,
+                'workout_title' => $lastWorkout->title,
+                'plan' => $plan,
+                'fact' => $fact,
+                'is_completed' => $lastWorkout->status === 'completed'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Ошибка получения истории упражнения: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

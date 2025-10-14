@@ -4132,16 +4132,82 @@ function displaySelectedExercises(exercises, isViewMode = false) {
     }
 }
 
+// Загрузка истории упражнения и автозаполнение
+async function loadExerciseHistory(exerciseId) {
+    try {
+        const response = await fetch(`/self-athlete/exercises/${exerciseId}/history`);
+        const data = await response.json();
+        
+        if (data.success && data.has_history) {
+            console.log(`История упражнения ${exerciseId}:`, data);
+            
+            // Автозаполняем поля значениями из последней тренировки
+            const fieldsToFill = data.plan;
+            
+            // Если есть факт - используем его, иначе план
+            const valuesToUse = data.fact || fieldsToFill;
+            
+            for (const [field, value] of Object.entries(valuesToUse)) {
+                const input = document.querySelector(`input[name="${field}_${exerciseId}"]`);
+                if (input && value) {
+                    input.value = value;
+                }
+            }
+            
+            // Добавляем компактную подсказку над полями
+            const detailsDiv = document.getElementById(`details-${exerciseId}`);
+            if (detailsDiv) {
+                const existingHint = detailsDiv.querySelector('.exercise-history-hint');
+                if (!existingHint) {
+                    const date = new Date(data.workout_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                    const hint = document.createElement('div');
+                    hint.className = 'exercise-history-hint mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between';
+                    hint.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-xs text-blue-700">
+                                📊 С прошлого раза (${date})
+                                ${data.fact && data.fact.completed_percentage < 100 ? 
+                                    `<span class="text-orange-600">⚠️ выполнено ${data.fact.completed_percentage}%</span>` : 
+                                    '✅'}
+                            </span>
+                        </div>
+                        <button type="button" 
+                                onclick="showExerciseHistoryModal(${exerciseId})"
+                                class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center space-x-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>История</span>
+                        </button>
+                    `;
+                    detailsDiv.insertBefore(hint, detailsDiv.firstChild);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки истории упражнения:', error);
+    }
+}
+
 // Сворачивание/разворачивание деталей упражнения
 function toggleExerciseDetails(exerciseId) {
+    console.log('toggleExerciseDetails вызван для упражнения:', exerciseId);
     const detailsElement = document.getElementById(`details-${exerciseId}`);
     const chevronElement = document.getElementById(`chevron-${exerciseId}`);
     
     if (detailsElement.style.display === 'none') {
+        console.log('Разворачиваем упражнение, загружаем историю...');
         // Разворачиваем
         detailsElement.style.display = 'block';
         chevronElement.style.transform = 'rotate(0deg)'; // стрелочка вниз
+        
+        // Загружаем историю при первом открытии
+        loadExerciseHistory(exerciseId);
     } else {
+        console.log('Сворачиваем упражнение');
         // Сворачиваем
         detailsElement.style.display = 'none';
         chevronElement.style.transform = 'rotate(-90deg)'; // стрелочка вправо
@@ -4268,6 +4334,134 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
 });
+
+// Показать модальное окно с полной историей упражнения
+async function showExerciseHistoryModal(exerciseId) {
+    try {
+        const response = await fetch(`/self-athlete/exercises/${exerciseId}/history`);
+        const data = await response.json();
+        
+        if (!data.success || !data.has_history) {
+            alert('История не найдена');
+            return;
+        }
+        
+        const date = new Date(data.workout_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        
+        let modalContent = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
+                <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; position: relative;" onclick="event.stopPropagation()">
+                    <button onclick="this.closest('[style*=fixed]').remove()" 
+                            style="position: absolute; top: 16px; right: 16px; color: #666; font-size: 28px; background: none; border: none; cursor: pointer; line-height: 1; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s;"
+                            onmouseover="this.style.background='#f3f4f6'; this.style.color='#111';"
+                            onmouseout="this.style.background='none'; this.style.color='#666';">
+                        &times;
+                    </button>
+                    
+                    <h3 style="font-size: 18px; font-weight: 600; color: #111; margin-bottom: 20px; padding-right: 40px;">📊 История упражнения</h3>
+                    
+                    <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Последняя тренировка: ${date}</div>
+                        <div style="font-weight: 600; color: #111;">${data.workout_title}</div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+        `;
+        
+        // План
+        modalContent += `
+            <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 12px;">
+                <div style="font-weight: 600; color: #1e40af; margin-bottom: 8px;">📋 План:</div>
+                <div style="font-size: 14px; color: #1e3a8a;">
+                    ${data.plan.weight > 0 ? `Вес: ${data.plan.weight} кг<br>` : ''}
+                    ${data.plan.reps > 0 ? `Повторения: ${data.plan.reps}<br>` : ''}
+                    ${data.plan.sets > 0 ? `Подходы: ${data.plan.sets}<br>` : ''}
+                    ${data.plan.rest > 0 ? `Отдых: ${data.plan.rest} мин` : ''}
+                </div>
+            </div>
+        `;
+        
+        // Факт (если есть)
+        if (data.fact) {
+            const isFullyCompleted = data.fact.completed_percentage === 100;
+            modalContent += `
+                <div style="background: ${isFullyCompleted ? '#d1fae5' : '#fef3c7'}; border: 1px solid ${isFullyCompleted ? '#6ee7b7' : '#fcd34d'}; border-radius: 8px; padding: 12px;">
+                    <div style="font-weight: 600; color: ${isFullyCompleted ? '#065f46' : '#92400e'}; margin-bottom: 8px;">
+                        ${isFullyCompleted ? '✅ Выполнено:' : '⚠️ Выполнено частично:'}
+                    </div>
+                    <div style="font-size: 14px; color: ${isFullyCompleted ? '#064e3b' : '#78350f'};">
+                        ${data.fact.weight > 0 ? `Вес: ${data.fact.weight} кг<br>` : ''}
+                        ${data.fact.reps > 0 ? `Повторения: ${data.fact.reps}<br>` : ''}
+                        ${data.fact.sets > 0 ? `Подходы: ${data.fact.sets}<br>` : ''}
+                        Выполнено подходов: ${data.fact.completed_percentage}%
+                    </div>
+                </div>
+            `;
+        }
+        
+        modalContent += `
+                    </div>
+                    
+                    <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button onclick="copyExerciseData(${exerciseId}, 'plan')" 
+                                style="flex: 1; min-width: 140px; padding: 10px; background: #4f46e5; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">
+                            📋 Скопировать план
+                        </button>
+                        ${data.fact ? `
+                            <button onclick="copyExerciseData(${exerciseId}, 'fact')" 
+                                    style="flex: 1; min-width: 140px; padding: 10px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">
+                                ✅ Скопировать факт
+                            </button>
+                        ` : ''}
+                        <button onclick="this.closest('[style*=fixed]').remove()" 
+                                style="flex: 1; min-width: 140px; padding: 10px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: 500; cursor: pointer;">
+                            ❌ Отмена
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Сохраняем данные в глобальную переменную для copyExerciseData
+        window.currentExerciseHistory = window.currentExerciseHistory || {};
+        window.currentExerciseHistory[exerciseId] = data;
+        
+        // Добавляем модальное окно в DOM
+        document.body.insertAdjacentHTML('beforeend', modalContent);
+        
+    } catch (error) {
+        console.error('Ошибка загрузки полной истории:', error);
+        alert('Ошибка загрузки истории упражнения');
+    }
+}
+
+// Копирование данных упражнения (план или факт)
+function copyExerciseData(exerciseId, type = 'plan') {
+    const historyData = window.currentExerciseHistory?.[exerciseId];
+    if (!historyData) return;
+    
+    const valuesToCopy = type === 'fact' && historyData.fact ? historyData.fact : historyData.plan;
+    
+    for (const [field, value] of Object.entries(valuesToCopy)) {
+        const input = document.querySelector(`input[name="${field}_${exerciseId}"]`);
+        if (input && value) {
+            input.value = value;
+        }
+    }
+    
+    // Закрываем модальное окно
+    document.querySelector('[style*="position: fixed"]')?.remove();
+    
+    // Показываем уведомление
+    window.dispatchEvent(new CustomEvent('show-notification', {
+        detail: {
+            type: 'success',
+            title: 'Данные скопированы',
+            message: `Данные (${type === 'fact' ? 'факт' : 'план'}) успешно скопированы`
+        }
+    }));
+}
+
 </script>
 
 </div>

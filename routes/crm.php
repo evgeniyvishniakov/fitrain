@@ -190,12 +190,13 @@ Route::middleware(["auth"])->group(function () {
         
         // Упражнения для Self-Athlete (полный доступ как у тренера)
         Route::get("/self-athlete/exercises", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "index"])->name("crm.self-athlete.exercises");
+        Route::get("/self-athlete/exercises/from-workouts", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "getExercisesFromWorkouts"])->name("crm.self-athlete.exercises.from-workouts");
+        Route::get("/self-athlete/exercises/{exerciseId}/history", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "getExerciseHistory"])->name("crm.self-athlete.exercises.history");
         Route::get("/self-athlete/exercises/create", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "create"])->name("crm.self-athlete.exercises.create");
         Route::post("/self-athlete/exercises", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "store"])->name("crm.self-athlete.exercises.store");
         Route::get("/self-athlete/exercises/{id}/edit", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "edit"])->name("crm.self-athlete.exercises.edit");
         Route::put("/self-athlete/exercises/{id}", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "update"])->name("crm.self-athlete.exercises.update");
         Route::delete("/self-athlete/exercises/{id}", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "destroy"])->name("crm.self-athlete.exercises.destroy");
-        Route::get("/self-athlete/exercises/from-workouts", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "getExercisesFromWorkouts"])->name("crm.self-athlete.exercises.from-workouts");
         
         // Пользовательские видео к системным упражнениям для Self-Athlete
         Route::get("/self-athlete/exercises/user-videos", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "getAllUserVideos"])->name("crm.self-athlete.exercises.user-videos.all");
