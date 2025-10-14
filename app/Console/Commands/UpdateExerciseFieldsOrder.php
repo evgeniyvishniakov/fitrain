@@ -14,22 +14,36 @@ class UpdateExerciseFieldsOrder extends Command
     {
         $this->info('Updating fields_config order for all exercises...');
         
+        // Правильный порядок полей
+        $fieldOrder = ['weight', 'reps', 'sets', 'rest', 'time', 'distance', 'tempo'];
+        
         $exercises = Exercise::all();
         $updated = 0;
         
         foreach ($exercises as $exercise) {
-            if ($exercise->fields_config) {
-                $config = is_array($exercise->fields_config) ? $exercise->fields_config : json_decode($exercise->fields_config, true);
+            if ($exercise->fields_config && is_array($exercise->fields_config)) {
+                $oldConfig = $exercise->fields_config;
                 
-                if ($config === ['sets', 'reps', 'weight', 'rest']) {
-                    $exercise->fields_config = ['weight', 'reps', 'sets', 'rest'];
+                // Сортируем поля согласно правильному порядку
+                $newConfig = $oldConfig;
+                usort($newConfig, function($a, $b) use ($fieldOrder) {
+                    return array_search($a, $fieldOrder) - array_search($b, $fieldOrder);
+                });
+                
+                // Если порядок изменился - обновляем
+                if ($oldConfig !== $newConfig) {
+                    $this->line("Updating exercise '{$exercise->name}' (ID: {$exercise->id})");
+                    $this->line("  Old order: " . json_encode($oldConfig));
+                    $this->line("  New order: " . json_encode($newConfig));
+                    
+                    $exercise->fields_config = $newConfig;
                     $exercise->save();
                     $updated++;
                 }
             }
         }
         
-        $this->info("Updated {$updated} exercises with new field order!");
+        $this->info("Updated {$updated} exercises with correct field order!");
         
         return 0;
     }

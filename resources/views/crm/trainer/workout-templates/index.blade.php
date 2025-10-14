@@ -651,6 +651,8 @@ function templatesApp() {
                             onblur="this.style.borderColor = '#d1d5db'">
                         <option value="">{{ __('common.all_equipment') }}</option>
                         <option value="Штанга">Штанга</option>
+                        <option value="Гриф">Гриф</option>
+                        <option value="Блин">Блин</option>
                         <option value="Гантели">Гантели</option>
                         <option value="Собственный вес">Собственный вес</option>
                         <option value="Тренажеры">Тренажеры</option>

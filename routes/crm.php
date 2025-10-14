@@ -164,12 +164,12 @@ Route::middleware(["auth"])->group(function () {
         
         // Маршруты для Self-Athlete (аналогичные athlete, но с self-athlete URL)
         Route::get("/self-athlete/workouts", [\App\Http\Controllers\Crm\Trainer\WorkoutController::class, "index"])->name("crm.self-athlete.workouts");
+        Route::get("/self-athlete/workouts/api", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "getWorkouts"])->name("crm.self-athlete.workouts.api");
         Route::get("/self-athlete/workouts/create", [\App\Http\Controllers\Crm\Trainer\WorkoutController::class, "create"])->name("crm.self-athlete.workouts.create");
         Route::post("/self-athlete/workouts", [\App\Http\Controllers\Crm\Trainer\WorkoutController::class, "store"])->name("crm.self-athlete.workouts.store");
         Route::get("/self-athlete/workouts/{id}/edit", [\App\Http\Controllers\Crm\Trainer\WorkoutController::class, "edit"])->name("crm.self-athlete.workouts.edit");
         Route::put("/self-athlete/workouts/{id}", [\App\Http\Controllers\Crm\Trainer\WorkoutController::class, "update"])->name("crm.self-athlete.workouts.update");
         Route::delete("/self-athlete/workouts/{id}", [\App\Http\Controllers\Crm\Trainer\WorkoutController::class, "destroy"])->name("crm.self-athlete.workouts.destroy");
-        Route::get("/self-athlete/workouts/api", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "getWorkouts"])->name("crm.self-athlete.workouts.api");
         Route::get("/self-athlete/progress", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "progress"])->name("crm.self-athlete.progress");
         Route::get("/self-athlete/measurements", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "measurements"])->name("crm.self-athlete.measurements");
         Route::post("/self-athlete/measurements", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "storeMeasurement"])->name("crm.self-athlete.measurements.store");

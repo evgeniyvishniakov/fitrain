@@ -40,9 +40,17 @@ function dashboardCalendar() {
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const startOfCalendar = new Date(firstDay);
-            startOfCalendar.setDate(startOfCalendar.getDate() - firstDay.getDay() + 1); // Понедельник
+            
+            // Правильный расчет для недели, начинающейся с понедельника
+            // getDay() возвращает: 0=воскресенье, 1=понедельник, ..., 6=суббота
+            let dayOfWeek = firstDay.getDay();
+            dayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek; // Преобразуем: 0 (воскресенье) -> 7
+            startOfCalendar.setDate(startOfCalendar.getDate() - (dayOfWeek - 1)); // Откат до понедельника
+            
             const endOfCalendar = new Date(lastDay);
-            endOfCalendar.setDate(endOfCalendar.getDate() + (7 - lastDay.getDay())); // Воскресенье
+            let lastDayOfWeek = lastDay.getDay();
+            lastDayOfWeek = lastDayOfWeek === 0 ? 7 : lastDayOfWeek;
+            endOfCalendar.setDate(endOfCalendar.getDate() + (7 - lastDayOfWeek)); // Доводим до воскресенья
             
             const days = [];
             const currentDay = new Date(startOfCalendar);
@@ -62,11 +70,15 @@ function dashboardCalendar() {
                     return workoutDateString === dayString;
                 });
                 
+                // Динамическое определение "сегодня"
+                const today = new Date();
+                const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
                 days.push({
                     date: dayString,
                     day: currentDay.getDate(),
                     isCurrentMonth: currentDay.getMonth() === month,
-                    isToday: dayString === '{{ now()->format('Y-m-d') }}',
+                    isToday: dayString === todayString,
                     workouts: dayWorkouts
                 });
                 

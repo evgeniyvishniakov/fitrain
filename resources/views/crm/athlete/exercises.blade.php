@@ -406,6 +406,8 @@ function exerciseApp() {
                             class="w-full px-4 py-3 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">Весь инвентарь</option>
                         <option value="Штанга">Штанга</option>
+                        <option value="Гриф">Гриф</option>
+                        <option value="Блин">Блин</option>
                         <option value="Гантели">Гантели</option>
                         <option value="Собственный вес">Собственный вес</option>
                         <option value="Тренажер">Тренажер</option>

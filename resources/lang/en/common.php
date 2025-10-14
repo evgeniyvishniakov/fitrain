@@ -576,6 +576,8 @@ return [
     // Additional translations for workouts
     'all_equipment' => 'All equipment',
     'barbell' => 'Barbell',
+    'barbell_bar' => 'Barbell bar',
+    'weight_plate' => 'Weight plate',
     'dumbbells' => 'Dumbbells',
     'body_weight' => 'Body weight',
     'machines' => 'Machines',

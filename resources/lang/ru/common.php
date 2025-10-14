@@ -595,6 +595,8 @@ return [
     // Дополнительные переводы для тренировок
     'all_equipment' => 'Все оборудование',
     'barbell' => 'Штанга',
+    'barbell_bar' => 'Гриф',
+    'weight_plate' => 'Блин',
     'dumbbells' => 'Гантели',
     'body_weight' => 'Собственный вес',
     'machines' => 'Тренажеры',

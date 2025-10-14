@@ -23,6 +23,13 @@
             url: '',
             title: ''
         },
+        
+        // Модальное окно для деталей упражнения
+        exerciseDetailModal: {
+            isOpen: false,
+            exercise: null
+        },
+        
                 workoutProgress: {}, // Progress for each workout
                 isLoading: true, // Loading flag
                 lastChangedExercise: null, // Last changed exercise
@@ -419,6 +426,183 @@
                     this.videoModal.isOpen = false;
                     this.videoModal.url = '';
                     this.videoModal.title = '';
+                },
+                
+                // Открытие модального окна с деталями упражнения
+                openExerciseDetailModal(exercise) {
+                    // Создаем модальное окно динамически (как openSimpleModal)
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.8);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 10px;
+                    `;
+                    
+                    // Создаем контент модального окна
+                    const content = document.createElement('div');
+                    content.style.cssText = `
+                        position: relative;
+                        background: white;
+                        border-radius: 12px;
+                        padding: 0;
+                        max-width: 1200px;
+                        width: 100%;
+                        max-height: 96vh;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                    `;
+                    
+                    // Заголовок
+                    const header = document.createElement('div');
+                    header.style.cssText = 'padding: 20px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;';
+                    header.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0; font-size: 22px; font-weight: bold; color: #111827;">${exercise.name}</h3>
+                                <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-size: 12px; font-weight: 500;">
+                                        ${exercise.category || 'Не указано'}
+                                    </span>
+                                    <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 12px; font-weight: 500;">
+                                        ${exercise.equipment || 'Не указано'}
+                                    </span>
+                                </div>
+                            </div>
+                            <button style="background: #f3f4f6; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; color: #6b7280; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-left: 12px;">
+                                <span style="line-height: 1;">&times;</span>
+                            </button>
+                        </div>
+                    `;
+                    
+                    const closeButton = header.querySelector('button');
+                    closeButton.addEventListener('click', () => modal.remove());
+                    
+                    // Контент с прокруткой
+                    const body = document.createElement('div');
+                    body.style.cssText = 'padding: 20px; overflow-y: auto; flex: 1;';
+                    
+                    let bodyHTML = '';
+                    
+                    // Изображения
+                    const hasImage1 = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
+                    const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
+                    
+                    if (hasImage1 || hasImage2) {
+                        // Определяем количество колонок
+                        const gridColumns = (hasImage1 && hasImage2) ? '1fr 1fr' : '1fr';
+                        bodyHTML += `<div style="display: grid; grid-template-columns: ${gridColumns}; gap: 16px; margin-bottom: 24px;">`;
+                        
+                    if (hasImage1) {
+                        bodyHTML += `
+                            <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                <img src="/storage/${exercise.image_url}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                                <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
+                                    Фаза 1
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (hasImage2) {
+                        bodyHTML += `
+                            <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                                <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
+                                    Фаза 2
+                                </div>
+                            </div>
+                        `;
+                    }
+                        
+                        bodyHTML += '</div>';
+                    }
+                    
+                    // Описание
+                    if (exercise.description) {
+                        bodyHTML += `
+                            <div style="margin-bottom: 24px;">
+                                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">Описание</h4>
+                                <p style="color: #6b7280; margin: 0; line-height: 1.6;">${exercise.description}</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Инструкции
+                    if (exercise.instructions) {
+                        bodyHTML += `
+                            <div style="margin-bottom: 24px;">
+                                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">Инструкции</h4>
+                                <div style="background: #f9fafb; border-left: 4px solid #6366f1; padding: 16px; border-radius: 8px;">
+                                    <p style="color: #374151; margin: 0; white-space: pre-line; line-height: 1.8;">${exercise.instructions}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Группы мышц
+                    if (exercise.muscle_groups && exercise.muscle_groups.length > 0) {
+                        bodyHTML += `
+                            <div style="margin-bottom: 24px;">
+                                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">Группы мышц</h4>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                    ${exercise.muscle_groups.map(muscle => `
+                                        <span style="display: inline-flex; align-items: center; padding: 6px 14px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 9999px; font-size: 13px; font-weight: 500;">${muscle}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Видео
+                    if (exercise.video_url) {
+                        bodyHTML += '<div style="margin-bottom: 24px;"><h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">Видео</h4>';
+                        
+                        if (exercise.video_url.includes('youtube.com') || exercise.video_url.includes('youtu.be')) {
+                            const embedUrl = this.getYouTubeEmbedUrl(exercise.video_url);
+                            bodyHTML += `
+                                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                    <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px;" allowfullscreen></iframe>
+                                </div>
+                            `;
+                        } else {
+                            bodyHTML += `
+                                <a href="${exercise.video_url}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s;">
+                                    <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
+                                    Открыть видео
+                                </a>
+                            `;
+                        }
+                        
+                        bodyHTML += '</div>';
+                    }
+                    
+                    body.innerHTML = bodyHTML;
+                    
+                    // Собираем все вместе
+                    content.appendChild(header);
+                    content.appendChild(body);
+                    modal.appendChild(content);
+                    
+                    // Добавляем в DOM
+                    document.body.appendChild(modal);
+                    
+                    // Закрытие по клику на фон
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
                 },
                 
                 isYouTubeUrl(url) {
@@ -993,7 +1177,21 @@
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-3">
                                         <span class="text-sm text-indigo-600 font-medium" x-text="(index + 1) + '.'"></span>
-                                        <span class="text-sm font-medium text-gray-900" x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
+                                        
+                                        <!-- Картинка упражнения (кликабельна) -->
+                                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null" 
+                                             @click="openExerciseDetailModal(exercise)"
+                                             class="cursor-pointer hover:opacity-80 transition-opacity">
+                                            <img :src="(exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null) ? '/storage/' + exercise.image_url : ''" 
+                                                 :alt="exercise.name"
+                                                 class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                 onerror="this.parentElement.style.display='none'">
+                                        </div>
+                                        
+                                        <!-- Название упражнения (кликабельно) -->
+                                        <span class="text-sm font-medium text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
+                                              @click="openExerciseDetailModal(exercise)"
+                                              x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
                                         <span class="text-xs text-gray-500" x-text="(exercise.category || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (exercise.equipment || '')"></span>
                                     </div>
                                     <!-- Ссылка на видео упражнения - только на десктопе -->
@@ -1617,6 +1815,118 @@ input[type="number"].no-spinner:hover {
     }
 }
 </style>
+
+<!-- Модальное окно деталей упражнения -->
+<div x-show="exerciseDetailModal.isOpen" 
+     x-cloak
+     style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    
+    <!-- Фон для закрытия -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" @click="closeExerciseDetailModal()"></div>
+    
+    <!-- Модальное окно -->
+    <div style="position: relative; background: white; border-radius: 12px; padding: 0; max-width: 800px; width: 100%; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+        
+        <!-- Заголовок -->
+        <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0; font-size: 22px; font-weight: bold; color: #111827;" x-text="exerciseDetailModal.exercise?.name"></h3>
+                    <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-size: 12px; font-weight: 500;">
+                            <span x-text="exerciseDetailModal.exercise?.category || '{{ __('common.not_specified') }}'"></span>
+                        </span>
+                        <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 12px; font-weight: 500;">
+                            <span x-text="exerciseDetailModal.exercise?.equipment || '{{ __('common.not_specified') }}'"></span>
+                        </span>
+                    </div>
+                </div>
+                <button @click="closeExerciseDetailModal()" style="background: #f3f4f6; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; color: #6b7280; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; margin-left: 12px;">
+                    <span style="line-height: 1;">&times;</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Контент с прокруткой -->
+        <div style="padding: 20px; overflow-y: auto; flex: 1;">
+            
+            <!-- Изображения -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <div x-show="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null" style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <img :src="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null ? '/storage/' + exerciseDetailModal.exercise.image_url : ''" 
+                         :alt="exerciseDetailModal.exercise?.name"
+                         style="width: 100%; height: 280px; object-fit: cover;">
+                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
+                        Фаза 1
+                    </div>
+                </div>
+                <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
+                         :alt="exerciseDetailModal.exercise?.name"
+                         style="width: 100%; height: 280px; object-fit: cover;">
+                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
+                        Фаза 2
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Описание -->
+            <div x-show="exerciseDetailModal.exercise?.description" style="margin-bottom: 24px;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">
+                    {{ __('common.description') }}
+                </h4>
+                <p style="color: #6b7280; margin: 0; line-height: 1.6;" x-text="exerciseDetailModal.exercise?.description"></p>
+            </div>
+            
+            <!-- Инструкции -->
+            <div x-show="exerciseDetailModal.exercise?.instructions" style="margin-bottom: 24px;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">
+                    {{ __('common.instructions') }}
+                </h4>
+                <div style="background: #f9fafb; border-left: 4px solid #6366f1; padding: 16px; border-radius: 8px;">
+                    <p style="color: #374151; margin: 0; white-space: pre-line; line-height: 1.8;" x-text="exerciseDetailModal.exercise?.instructions"></p>
+                </div>
+            </div>
+            
+            <!-- Группы мышц -->
+            <div x-show="exerciseDetailModal.exercise?.muscle_groups && exerciseDetailModal.exercise.muscle_groups.length > 0" style="margin-bottom: 24px;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">
+                    {{ __('common.muscle_groups') }}
+                </h4>
+                <div style="display: flex; flex-wrap: gap; gap: 8px;">
+                    <template x-for="muscle in (exerciseDetailModal.exercise?.muscle_groups || [])" :key="muscle">
+                        <span style="display: inline-flex; align-items: center; padding: 6px 14px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 9999px; font-size: 13px; font-weight: 500;" x-text="muscle"></span>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Видео -->
+            <div x-show="exerciseDetailModal.exercise?.video_url" style="margin-bottom: 24px;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">
+                    {{ __('common.video') }}
+                </h4>
+                <div x-show="isYouTubeUrl(exerciseDetailModal.exercise?.video_url)" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <iframe :src="getYouTubeEmbedUrl(exerciseDetailModal.exercise?.video_url)" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px;" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+                <div x-show="!isYouTubeUrl(exerciseDetailModal.exercise?.video_url)">
+                    <a :href="exerciseDetailModal.exercise?.video_url" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s;">
+                        <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        {{ __('common.open_video') }}
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
 
 
 @endsection

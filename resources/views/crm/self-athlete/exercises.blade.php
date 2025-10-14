@@ -43,7 +43,7 @@ function exerciseApp() {
         formImage2: null,
         formImagePreview2: '',
         formImageUrl2: '',
-        formFieldsConfig: ['sets', 'reps', 'weight', 'rest'], // По умолчанию
+        formFieldsConfig: ['weight', 'reps', 'sets', 'rest'], // По умолчанию
         
         // Навигация
         showList() {
@@ -67,7 +67,7 @@ function exerciseApp() {
             this.formImage2 = null;
             this.formImagePreview2 = '';
             this.formImageUrl2 = '';
-            this.formFieldsConfig = ['sets', 'reps', 'weight', 'rest'];
+            this.formFieldsConfig = ['weight', 'reps', 'sets', 'rest'];
         },
         
         showEdit(exerciseId) {
@@ -86,7 +86,7 @@ function exerciseApp() {
             this.formImage2 = null;
             this.formImagePreview2 = this.currentExercise.image_url_2 ? `/storage/${this.currentExercise.image_url_2}` : '';
             this.formImageUrl2 = this.currentExercise.image_url_2 || '';
-            this.formFieldsConfig = this.currentExercise.fields_config || ['sets', 'reps', 'weight', 'rest'];
+            this.formFieldsConfig = this.currentExercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
         },
         
         showView(exerciseId) {
@@ -379,9 +379,6 @@ function exerciseApp() {
                     }));
                     
                     // Обновляем список упражнений
-                    console.log('Результат от сервера:', result.exercise);
-                    console.log('image_url:', result.exercise?.image_url);
-                    console.log('image_url_2:', result.exercise?.image_url_2);
                     
                     if (this.currentExercise && this.currentExercise.id) {
                         // Редактирование - обновляем существующее
@@ -1111,6 +1108,22 @@ function exerciseApp() {
             if (fileInput) {
                 fileInput.value = '';
             }
+        },
+        
+        // Переключение поля (добавить/удалить) с сохранением правильного порядка
+        toggleField(field) {
+            const index = this.formFieldsConfig.indexOf(field);
+            if (index > -1) {
+                // Удаляем поле из массива
+                this.formFieldsConfig.splice(index, 1);
+            } else {
+                // Добавляем поле и сортируем согласно фиксированному порядку
+                this.formFieldsConfig.push(field);
+                
+                // Фиксированный порядок полей
+                const fieldOrder = ['weight', 'reps', 'sets', 'rest', 'time', 'distance', 'tempo'];
+                this.formFieldsConfig.sort((a, b) => fieldOrder.indexOf(a) - fieldOrder.indexOf(b));
+            }
         }
     }
 }
@@ -1178,16 +1191,16 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="category"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_categories') }}</option>
-                        <option value="Грудь">{{ __('common.chest') }}</option>
-                        <option value="Спина">{{ __('common.back') }}</option>
-                        <option value="Ноги">{{ __('common.legs') }}</option>
-                        <option value="Плечи">{{ __('common.shoulders') }}</option>
+                        <option value="">Все категории</option>
+                        <option value="Грудь">Грудь</option>
+                        <option value="Спина">Спина</option>
+                        <option value="Ноги">Ноги</option>
+                        <option value="Плечи">Плечи</option>
                         <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                         <option value="Руки(Трицепс)">Руки(Трицепс)</option>
-                        <option value="Пресс">{{ __('common.abs') }}</option>
-                        <option value="Кардио">{{ __('common.cardio') }}</option>
-                        <option value="Гибкость">{{ __('common.flexibility') }}</option>
+                        <option value="Пресс">Пресс</option>
+                        <option value="Кардио">Кардио</option>
+                        <option value="Гибкость">Гибкость</option>
                     </select>
                 </div>
                 
@@ -1197,6 +1210,8 @@ function exerciseApp() {
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">{{ __('common.all_equipment') }}</option>
                         <option value="Штанга">{{ __('common.barbell') }}</option>
+                        <option value="Гриф">{{ __('common.barbell_bar') }}</option>
+                        <option value="Блин">{{ __('common.weight_plate') }}</option>
                         <option value="Гантели">{{ __('common.dumbbells') }}</option>
                         <option value="Собственный вес">{{ __('common.body_weight') }}</option>
                         <option value="Тренажер">{{ __('common.machines') }}</option>
@@ -1223,10 +1238,6 @@ function exerciseApp() {
                         <button @click="showCreate()" 
                                 class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
                             {{ __('common.create_exercise') }}
-                        </button>
-                        <button @click="loadExercisesFromWorkouts()" 
-                                class="px-4 py-3 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-xl hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                            📥 Загрузить из тренировок
                         </button>
                     @endif
                 </div>
@@ -1515,6 +1526,8 @@ function exerciseApp() {
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             <option value="">Выберите оборудование</option>
                             <option value="Штанга">Штанга</option>
+                            <option value="Гриф">Гриф</option>
+                            <option value="Блин">Блин</option>
                             <option value="Гантели">Гантели</option>
                             <option value="Собственный вес">Собственный вес</option>
                             <option value="Тренажер">Тренажер</option>
@@ -1570,8 +1583,8 @@ function exerciseApp() {
                         <!-- Вес -->
                         <label class="field-card" :class="formFieldsConfig.includes('weight') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
-                                   x-model="formFieldsConfig" 
-                                   value="weight"
+                                   @click.prevent="toggleField('weight')" 
+                                   :checked="formFieldsConfig.includes('weight')"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -1590,8 +1603,8 @@ function exerciseApp() {
                         <!-- Повторения -->
                         <label class="field-card" :class="formFieldsConfig.includes('reps') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
-                                   x-model="formFieldsConfig" 
-                                   value="reps"
+                                   @click.prevent="toggleField('reps')" 
+                                   :checked="formFieldsConfig.includes('reps')"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -1610,8 +1623,8 @@ function exerciseApp() {
                         <!-- Подходы -->
                         <label class="field-card" :class="formFieldsConfig.includes('sets') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
-                                   x-model="formFieldsConfig" 
-                                   value="sets"
+                                   @click.prevent="toggleField('sets')" 
+                                   :checked="formFieldsConfig.includes('sets')"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -1630,8 +1643,8 @@ function exerciseApp() {
                         <!-- Отдых -->
                         <label class="field-card" :class="formFieldsConfig.includes('rest') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
-                                   x-model="formFieldsConfig" 
-                                   value="rest"
+                                   @click.prevent="toggleField('rest')" 
+                                   :checked="formFieldsConfig.includes('rest')"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -1650,8 +1663,8 @@ function exerciseApp() {
                         <!-- Время -->
                         <label class="field-card" :class="formFieldsConfig.includes('time') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
-                                   x-model="formFieldsConfig" 
-                                   value="time"
+                                   @click.prevent="toggleField('time')" 
+                                   :checked="formFieldsConfig.includes('time')"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -1670,8 +1683,8 @@ function exerciseApp() {
                         <!-- Дистанция -->
                         <label class="field-card" :class="formFieldsConfig.includes('distance') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
-                                   x-model="formFieldsConfig" 
-                                   value="distance"
+                                   @click.prevent="toggleField('distance')" 
+                                   :checked="formFieldsConfig.includes('distance')"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -1690,8 +1703,8 @@ function exerciseApp() {
                         <!-- Темп -->
                         <label class="field-card" :class="formFieldsConfig.includes('tempo') ? 'field-card-selected' : 'field-card-unselected'">
                             <input type="checkbox" 
-                                   x-model="formFieldsConfig" 
-                                   value="tempo"
+                                   @click.prevent="toggleField('tempo')" 
+                                   :checked="formFieldsConfig.includes('tempo')"
                                    class="hidden">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -1713,7 +1726,7 @@ function exerciseApp() {
                         <h4 class="text-sm font-medium text-gray-700 mb-3">Быстрые шаблоны</h4>
                         <div class="flex flex-wrap gap-2">
                             <button type="button" 
-                                    @click="formFieldsConfig = ['sets', 'reps', 'weight', 'rest']"
+                                    @click="formFieldsConfig = ['weight', 'reps', 'sets', 'rest']"
                                     class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
                                 💪 Силовое
                             </button>

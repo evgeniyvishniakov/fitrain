@@ -1,39 +1,37 @@
-@extends("crm.layouts.app")
-
-@section("title", __('common.calendar'))
-@section("page-title", __('common.calendar'))
+<?php $__env->startSection("title", __('common.calendar')); ?>
+<?php $__env->startSection("page-title", __('common.calendar')); ?>
 
 <script>
 // SPA функциональность для календаря
 function calendarApp() {
     return {
-        currentDate: '{{ $currentDate }}',
-        workoutsByDay: @json($workoutsByDay),
-        athletes: @json($athletes),
+        currentDate: '<?php echo e($currentDate); ?>',
+        workoutsByDay: <?php echo json_encode($workoutsByDay, 15, 512) ?>,
+        athletes: <?php echo json_encode($athletes, 15, 512) ?>,
         selectedAthleteId: '',
-        isTrainer: {{ auth()->user()->hasRole('trainer') ? 'true' : 'false' }},
-        serverToday: '{{ now()->format('Y-m-d') }}',
+        isTrainer: <?php echo e(auth()->user()->hasRole('trainer') ? 'true' : 'false'); ?>,
+        serverToday: '<?php echo e(now()->format('Y-m-d')); ?>',
         showWorkoutModal: false,
         currentWorkoutDetails: {},
         
         // Календарные данные
-        weekDays: ['{{ __('common.monday') }}', '{{ __('common.tuesday') }}', '{{ __('common.wednesday') }}', '{{ __('common.thursday') }}', '{{ __('common.friday') }}', '{{ __('common.saturday') }}', '{{ __('common.sunday') }}'],
+        weekDays: ['<?php echo e(__('common.monday')); ?>', '<?php echo e(__('common.tuesday')); ?>', '<?php echo e(__('common.wednesday')); ?>', '<?php echo e(__('common.thursday')); ?>', '<?php echo e(__('common.friday')); ?>', '<?php echo e(__('common.saturday')); ?>', '<?php echo e(__('common.sunday')); ?>'],
         
         get currentMonthYear() {
             const date = new Date(this.currentDate);
             const monthNames = {
-                0: '{{ __('common.january') }}',
-                1: '{{ __('common.february') }}',
-                2: '{{ __('common.march') }}',
-                3: '{{ __('common.april') }}',
-                4: '{{ __('common.may') }}',
-                5: '{{ __('common.june') }}',
-                6: '{{ __('common.july') }}',
-                7: '{{ __('common.august') }}',
-                8: '{{ __('common.september') }}',
-                9: '{{ __('common.october') }}',
-                10: '{{ __('common.november') }}',
-                11: '{{ __('common.december') }}'
+                0: '<?php echo e(__('common.january')); ?>',
+                1: '<?php echo e(__('common.february')); ?>',
+                2: '<?php echo e(__('common.march')); ?>',
+                3: '<?php echo e(__('common.april')); ?>',
+                4: '<?php echo e(__('common.may')); ?>',
+                5: '<?php echo e(__('common.june')); ?>',
+                6: '<?php echo e(__('common.july')); ?>',
+                7: '<?php echo e(__('common.august')); ?>',
+                8: '<?php echo e(__('common.september')); ?>',
+                9: '<?php echo e(__('common.october')); ?>',
+                10: '<?php echo e(__('common.november')); ?>',
+                11: '<?php echo e(__('common.december')); ?>'
             };
             const month = monthNames[date.getMonth()];
             const year = date.getFullYear();
@@ -181,9 +179,9 @@ function calendarApp() {
         
         getStatusText(status) {
             const texts = {
-                'completed': '{{ __('common.completed_status') }}',
-                'planned': '{{ __('common.planned_status') }}',
-                'cancelled': '{{ __('common.cancelled_status') }}'
+                'completed': '<?php echo e(__('common.completed_status')); ?>',
+                'planned': '<?php echo e(__('common.planned_status')); ?>',
+                'cancelled': '<?php echo e(__('common.cancelled_status')); ?>'
             };
             return texts[status] || status;
         }
@@ -191,7 +189,7 @@ function calendarApp() {
 }
 </script>
 
-@section("content")
+<?php $__env->startSection("content"); ?>
 <div x-data="calendarApp()" x-cloak class="space-y-6 fade-in-up">
     
     <!-- Панель управления -->
@@ -213,10 +211,10 @@ function calendarApp() {
             <div class="calendar-controls">
                 <!-- Фильтр по спортсмену -->
                 <div x-show="isTrainer" class="flex items-center space-x-3">
-                    <label class="text-sm font-medium text-gray-700">{{ __('common.athlete') }}:</label>
+                    <label class="text-sm font-medium text-gray-700"><?php echo e(__('common.athlete')); ?>:</label>
                     <select x-model="selectedAthleteId" @change="loadWorkouts()" 
                             class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">{{ __('common.all_athletes') }}</option>
+                        <option value=""><?php echo e(__('common.all_athletes')); ?></option>
                         <template x-for="athlete in athletes" :key="athlete.id">
                             <option :value="athlete.id" x-text="athlete.name"></option>
                         </template>
@@ -233,7 +231,8 @@ function calendarApp() {
                     </button>
                     <button @click="goToToday()" 
                             class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                        {{ __('common.today') }}
+                        <?php echo e(__('common.today')); ?>
+
                     </button>
                     <button @click="nextMonth()" 
                             class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
@@ -296,7 +295,8 @@ function calendarApp() {
                             <div x-show="day.workouts.length > 2" 
                                  class="text-xs text-center py-2 bg-indigo-100 text-indigo-700 rounded-lg font-medium hover:bg-indigo-200 cursor-pointer transition-colors"
                                  @click="showAllWorkoutsForDay(day)">
-                                +<span x-text="day.workouts.length - 2"></span> {{ __('common.more_workouts') }}
+                                +<span x-text="day.workouts.length - 2"></span> <?php echo e(__('common.more_workouts')); ?>
+
                             </div>
                         </div>
                         
@@ -342,7 +342,7 @@ function calendarApp() {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900" x-text="currentWorkoutDetails.isMultiple ? '{{ __('common.all_workouts') }}' : currentWorkoutDetails.title"></h3>
+                    <h3 class="text-lg font-bold text-gray-900" x-text="currentWorkoutDetails.isMultiple ? '<?php echo e(__('common.all_workouts')); ?>' : currentWorkoutDetails.title"></h3>
                 </div>
                 <button @click="showWorkoutModal = false" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,9 +365,9 @@ function calendarApp() {
                                       'bg-red-100 text-red-800 border border-red-200': currentWorkoutDetails.status === 'cancelled'
                                   }"
                                   x-text="{
-                                      'completed': '✓ {{ __('common.completed_status') }}',
-                                      'planned': '⏰ {{ __('common.planned_status') }}',
-                                      'cancelled': '✗ {{ __('common.cancelled_status') }}'
+                                      'completed': '✓ <?php echo e(__('common.completed_status')); ?>',
+                                      'planned': '⏰ <?php echo e(__('common.planned_status')); ?>',
+                                      'cancelled': '✗ <?php echo e(__('common.cancelled_status')); ?>'
                                   }[currentWorkoutDetails.status] || currentWorkoutDetails.status">
                             </span>
                         </div>
@@ -379,7 +379,7 @@ function calendarApp() {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
                                 <div>
-                                    <div class="text-xs text-gray-500">{{ __('common.date') }}</div>
+                                    <div class="text-xs text-gray-500"><?php echo e(__('common.date')); ?></div>
                                     <div class="font-semibold" x-text="new Date(currentWorkoutDetails.date).toLocaleDateString('ru-RU')"></div>
                                 </div>
                             </div>
@@ -389,8 +389,8 @@ function calendarApp() {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <div>
-                                    <div class="text-xs text-gray-500">{{ __('common.time') }}</div>
-                                    <div class="font-semibold" x-text="currentWorkoutDetails.time ? currentWorkoutDetails.time.substring(0, 5) : '{{ __('common.not_specified') }}'"></div>
+                                    <div class="text-xs text-gray-500"><?php echo e(__('common.time')); ?></div>
+                                    <div class="font-semibold" x-text="currentWorkoutDetails.time ? currentWorkoutDetails.time.substring(0, 5) : '<?php echo e(__('common.not_specified')); ?>'"></div>
                                 </div>
                             </div>
                             
@@ -399,8 +399,8 @@ function calendarApp() {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 <div>
-                                    <div class="text-xs text-gray-500">{{ __('common.duration') }}</div>
-                                    <div class="font-semibold" x-text="currentWorkoutDetails.duration + ' {{ __('common.minutes') }}'"></div>
+                                    <div class="text-xs text-gray-500"><?php echo e(__('common.duration')); ?></div>
+                                    <div class="font-semibold" x-text="currentWorkoutDetails.duration + ' <?php echo e(__('common.minutes')); ?>'"></div>
                                 </div>
                             </div>
                             
@@ -409,7 +409,7 @@ function calendarApp() {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                 </svg>
                                 <div>
-                                    <div class="text-xs text-gray-500">{{ __('common.athlete') }}</div>
+                                    <div class="text-xs text-gray-500"><?php echo e(__('common.athlete')); ?></div>
                                     <div class="font-semibold" x-text="currentWorkoutDetails.athlete_name"></div>
                                 </div>
                             </div>
@@ -431,9 +431,9 @@ function calendarApp() {
                                               'bg-red-100 text-red-800 border border-red-200': workout.status === 'cancelled'
                                           }"
                                           x-text="{
-                                              'completed': '✓ {{ __('common.completed_status') }}',
-                                              'planned': '⏰ {{ __('common.planned_status') }}',
-                                              'cancelled': '✗ {{ __('common.cancelled_status') }}'
+                                              'completed': '✓ <?php echo e(__('common.completed_status')); ?>',
+                                              'planned': '⏰ <?php echo e(__('common.planned_status')); ?>',
+                                              'cancelled': '✗ <?php echo e(__('common.cancelled_status')); ?>'
                                           }[workout.status] || workout.status"></span>
                                 </div>
                                 <div class="flex items-center space-x-4 text-sm text-gray-600">
@@ -441,7 +441,7 @@ function calendarApp() {
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
-                                        <span x-text="workout.time ? workout.time.substring(0, 5) : '{{ __('common.not_specified') }}'"></span>
+                                        <span x-text="workout.time ? workout.time.substring(0, 5) : '<?php echo e(__('common.not_specified')); ?>'"></span>
                                     </div>
                                     <div class="flex items-center space-x-1">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -458,7 +458,7 @@ function calendarApp() {
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
 <style>
 /* Стили для заголовка календаря */
@@ -529,3 +529,5 @@ function calendarApp() {
     }
 }
 </style>
+
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/trainer/calendar/index.blade.php ENDPATH**/ ?>

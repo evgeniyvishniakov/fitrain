@@ -21,7 +21,7 @@ class CalendarController extends Controller
         // Получаем тренировки для тренера
         if ($user->hasRole('trainer')) {
             // Тренер видит все тренировки (пока что все, потом можно добавить фильтрацию по trainer_id)
-            $workouts = Workout::with(['athlete', 'exercises' => function($query) {
+            $workouts = Workout::with(['athlete', 'trainer', 'exercises' => function($query) {
                     $query->orderBy('workout_exercise.order_index', 'asc');
                 }])
                 ->whereBetween('date', [
@@ -31,9 +31,22 @@ class CalendarController extends Controller
                 ->orderBy('date')
                 ->orderBy('time')
                 ->get();
+        } elseif ($user->hasRole('self-athlete')) {
+            // Self-athlete видит тренировки где он athlete_id (создал сам для себя)
+            $workouts = Workout::with(['athlete', 'trainer', 'exercises' => function($query) {
+                    $query->orderBy('workout_exercise.order_index', 'asc');
+                }])
+                ->where('athlete_id', $user->id)
+                ->whereBetween('date', [
+                    $date->copy()->startOfMonth()->format('Y-m-d'),
+                    $date->copy()->endOfMonth()->format('Y-m-d')
+                ])
+                ->orderBy('date')
+                ->orderBy('time')
+                ->get();
         } else {
-            // Спортсмен видит только свои тренировки
-            $workouts = Workout::with(['athlete', 'exercises' => function($query) {
+            // Обычный спортсмен видит только свои тренировки
+            $workouts = Workout::with(['athlete', 'trainer', 'exercises' => function($query) {
                     $query->orderBy('workout_exercise.order_index', 'asc');
                 }])
                 ->where('athlete_id', $user->id)
@@ -53,7 +66,8 @@ class CalendarController extends Controller
             $workout->exercises_count = $workout->exercises ? $workout->exercises->count() : 0;
             return $workout;
         })->groupBy(function($workout) {
-            return $workout->date;
+            // Форматируем дату как Y-m-d без времени
+            return Carbon::parse($workout->date)->format('Y-m-d');
         });
         
         // Получаем спортсменов для фильтрации (только для тренера)
@@ -80,7 +94,7 @@ class CalendarController extends Controller
         
         $user = auth()->user()->load('roles');
         
-        $query = Workout::with(['athlete', 'exercises' => function($query) {
+        $query = Workout::with(['athlete', 'trainer', 'exercises' => function($query) {
                 $query->orderBy('workout_exercise.order_index', 'asc');
             }])
             ->whereBetween('date', [$startDate, $endDate]);
@@ -90,7 +104,11 @@ class CalendarController extends Controller
             if ($athleteId) {
                 $query->where('athlete_id', $athleteId);
             }
+        } elseif ($user->hasRole('self-athlete')) {
+            // Self-athlete видит тренировки где он athlete_id
+            $query->where('athlete_id', $user->id);
         } else {
+            // Обычный спортсмен видит только свои тренировки
             $query->where('athlete_id', $user->id);
         }
         
@@ -103,7 +121,7 @@ class CalendarController extends Controller
                     'id' => $workout->id,
                     'title' => $workout->title,
                     'description' => $workout->description,
-                    'date' => $workout->date,
+                    'date' => Carbon::parse($workout->date)->format('Y-m-d'), // Форматируем дату без времени!
                     'time' => $workout->time,
                     'duration' => $workout->duration,
                     'status' => $workout->status,
