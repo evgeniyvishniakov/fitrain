@@ -798,6 +798,12 @@ class AthleteController extends BaseController
                 ->where('exercise_id', $exerciseId)
                 ->first();
             
+            // Получаем конфигурацию полей упражнения
+            $exercise = \App\Models\Trainer\Exercise::find($exerciseId);
+            $fieldsConfig = $exercise && $exercise->fields_config 
+                ? (is_array($exercise->fields_config) ? $exercise->fields_config : json_decode($exercise->fields_config, true))
+                : [];
+            
             if (!$exerciseData) {
                 return response()->json([
                     'success' => true,
@@ -823,20 +829,45 @@ class AthleteController extends BaseController
                 ->first();
             
             $fact = null;
-            if ($progress && $progress->sets_data) {
-                // Вычисляем средние значения из sets_data
-                $setsData = $progress->sets_data;
-                $completedSets = array_filter($setsData, fn($set) => ($set['completed'] ?? false));
+            $setsDetails = null;
+            $exerciseStatus = null;
+            
+            if ($progress) {
+                $exerciseStatus = $progress->status; // completed, partial, not_done
                 
-                if (count($completedSets) > 0) {
-                    $avgWeight = collect($completedSets)->avg('weight') ?? 0;
-                    $avgReps = collect($completedSets)->avg('reps') ?? 0;
+                // Если есть детальные данные подходов
+                if ($progress->sets_data) {
+                    $setsData = is_array($progress->sets_data) ? $progress->sets_data : json_decode($progress->sets_data, true);
                     
+                    if (!empty($setsData) && is_array($setsData)) {
+                        $avgWeight = collect($setsData)->avg('weight') ?? 0;
+                        $avgReps = collect($setsData)->avg('reps') ?? 0;
+                        
+                        // Определяем процент выполнения на основе плана
+                        $plannedSets = $exerciseData->sets ?? count($setsData);
+                        $actualSets = count($setsData);
+                        $completedPercentage = $plannedSets > 0 ? round(($actualSets / $plannedSets) * 100) : 100;
+                        
+                        $fact = [
+                            'weight' => round($avgWeight, 1),
+                            'reps' => round($avgReps),
+                            'sets' => $actualSets,
+                            'completed_percentage' => $completedPercentage
+                        ];
+                        
+                        // Передаем детали каждого подхода
+                        $setsDetails = $setsData;
+                    }
+                }
+                // Если нет детальных данных, но упражнение отмечено как выполненное - используем план
+                elseif ($exerciseStatus === 'completed' || $exerciseStatus === 'partial') {
                     $fact = [
-                        'weight' => round($avgWeight, 1),
-                        'reps' => round($avgReps),
-                        'sets' => count($completedSets),
-                        'completed_percentage' => round((count($completedSets) / count($setsData)) * 100)
+                        'weight' => $exerciseData->weight ?? 0,
+                        'reps' => $exerciseData->reps ?? 0,
+                        'sets' => $exerciseData->sets ?? 0,
+                        'time' => $exerciseData->time ?? 0,
+                        'distance' => $exerciseData->distance ?? 0,
+                        'completed_percentage' => $exerciseStatus === 'completed' ? 100 : 50
                     ];
                 }
             }
@@ -848,6 +879,9 @@ class AthleteController extends BaseController
                 'workout_title' => $lastWorkout->title,
                 'plan' => $plan,
                 'fact' => $fact,
+                'sets_details' => $setsDetails,
+                'exercise_status' => $exerciseStatus,
+                'fields_config' => $fieldsConfig,
                 'is_completed' => $lastWorkout->status === 'completed'
             ]);
             
