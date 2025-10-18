@@ -63,6 +63,14 @@ function exerciseApp() {
             this.formImagePreview2 = '';
             this.formImageUrl2 = '';
             this.formFieldsConfig = ['weight', 'reps', 'sets', 'rest'];
+            
+            // Очищаем input файлов при открытии формы создания
+            setTimeout(() => {
+                const imageInput = document.querySelector('input[name="image"]');
+                const imageInput2 = document.querySelector('input[name="image_2"]');
+                if (imageInput) imageInput.value = '';
+                if (imageInput2) imageInput2.value = '';
+            }, 0);
         },
         
         showEdit(exerciseId) {
@@ -82,6 +90,14 @@ function exerciseApp() {
             this.formImagePreview2 = this.currentExercise.image_url_2 ? `/storage/${this.currentExercise.image_url_2}` : '';
             this.formImageUrl2 = this.currentExercise.image_url_2 || '';
             this.formFieldsConfig = this.currentExercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
+            
+            // Очищаем input файлов при открытии формы редактирования
+            setTimeout(() => {
+                const imageInput = document.querySelector('input[name="image"]');
+                const imageInput2 = document.querySelector('input[name="image_2"]');
+                if (imageInput) imageInput.value = '';
+                if (imageInput2) imageInput2.value = '';
+            }, 0);
         },
         
         showView(exerciseId) {
@@ -593,6 +609,23 @@ function exerciseApp() {
         init() {
             // Загружаем пользовательские видео при инициализации
             this.loadAllUserVideos();
+            
+            // Сбрасываем пагинацию при изменении фильтров
+            this.$watch('search', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('category', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('equipment', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('exerciseType', () => {
+                this.currentPage = 1;
+            });
         },
         
         getYouTubeEmbedUrl(url) {
@@ -1073,6 +1106,7 @@ function exerciseApp() {
                         <option value="">{{ __('common.all_equipment') }}</option>
                         <option value="Штанга">{{ __('common.barbell') }}</option>
                         <option value="Гриф">{{ __('common.barbell_bar') }}</option>
+                        <option value="Трап-гриф">Трап-гриф</option>
                         <option value="Блин">{{ __('common.weight_plate') }}</option>
                         <option value="Гантели">{{ __('common.dumbbells') }}</option>
                         <option value="Собственный вес">{{ __('common.body_weight') }}</option>
@@ -1413,6 +1447,7 @@ function exerciseApp() {
                             <option value="">Выберите оборудование</option>
                             <option value="Штанга">Штанга</option>
                             <option value="Гриф">Гриф</option>
+                            <option value="Трап-гриф">Трап-гриф</option>
                             <option value="Блин">Блин</option>
                             <option value="Гантели">Гантели</option>
                             <option value="Собственный вес">Собственный вес</option>
@@ -1760,13 +1795,13 @@ function exerciseApp() {
             <div style="display: flex; gap: 2rem; align-items: flex-start;">
                 <!-- Картинки и видео слева -->
                 <div style="flex: 0 0 35%; max-width: 500px; display: flex; flex-direction: column; gap: 1rem;">
-                    <!-- Главное изображение -->
-                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined'">
+                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
                         <div>
                             <img :src="`/storage/${currentExercise.image_url}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md"
-                                 style="max-height: 300px; object-fit: contain;">
+                                 style="object-fit: contain;">
                         </div>
                     </template>
                     
@@ -1776,7 +1811,7 @@ function exerciseApp() {
                             <img :src="`/storage/${currentExercise.image_url_2}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md"
-                                 style="max-height: 300px; object-fit: contain;">
+                                 style="object-fit: contain;">
                         </div>
                     </template>
                     

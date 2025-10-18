@@ -652,6 +652,7 @@ function templatesApp() {
                         <option value="">{{ __('common.all_equipment') }}</option>
                         <option value="Штанга">Штанга</option>
                         <option value="Гриф">Гриф</option>
+                        <option value="Трап-гриф">Трап-гриф</option>
                         <option value="Блин">Блин</option>
                         <option value="Гантели">Гантели</option>
                         <option value="Собственный вес">Собственный вес</option>

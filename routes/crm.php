@@ -119,6 +119,9 @@ Route::middleware(["auth"])->group(function () {
         Route::post("/trainer/nutrition-plans/{id}/days", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "saveDays"])->name("crm.trainer.nutrition-plans.save-days");
         Route::post("/trainer/nutrition-plans/{id}/day", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "saveDay"])->name("crm.trainer.nutrition-plans.save-day");
         Route::delete("/trainer/nutrition-plans/{planId}/days/{dayId}", [\App\Http\Controllers\Crm\Trainer\NutritionPlanController::class, "deleteDay"])->name("crm.trainer.nutrition-plans.delete-day");
+        
+        // История упражнений для тренера
+        Route::get("/trainer/exercises/{exerciseId}/history", [\App\Http\Controllers\Crm\Athlete\AthleteController::class, "getExerciseHistory"])->name("crm.trainer.exercises.history");
     });
     
     // Маршруты только для спортсменов

@@ -158,6 +158,23 @@ function exerciseApp() {
         // Инициализация
         async init() {
             await this.loadExercises();
+            
+            // Сбрасываем пагинацию при изменении фильтров
+            this.$watch('search', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('category', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('equipment', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('exerciseType', () => {
+                this.currentPage = 1;
+            });
         },
         
         // Загрузка упражнений из тренировок спортсмена
@@ -407,6 +424,7 @@ function exerciseApp() {
                         <option value="">Весь инвентарь</option>
                         <option value="Штанга">Штанга</option>
                         <option value="Гриф">Гриф</option>
+                        <option value="Трап-гриф">Трап-гриф</option>
                         <option value="Блин">Блин</option>
                         <option value="Гантели">Гантели</option>
                         <option value="Собственный вес">Собственный вес</option>

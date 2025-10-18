@@ -315,7 +315,7 @@ function workoutApp() {
                     name: warmupExercise.name,
                     category: warmupExercise.category || '',
                     equipment: warmupExercise.equipment || '',
-                    fields_config: warmupExercise.fields_config || ['weight', 'reps', 'sets', 'rest']
+                    fields_config: warmupExercise.fields_config
                 };
                 this.displaySelectedExercises([warmupData], false);
             }
@@ -395,7 +395,7 @@ function workoutApp() {
                         tempo: safeValue(exercise.tempo || exercise.pivot?.tempo, ''),
                         notes: safeValue(exercise.notes || exercise.pivot?.notes, ''),
                     category: exercise.category || '',
-                    fields_config: exercise.fields_config || ['weight', 'reps', 'sets', 'rest']
+                    fields_config: exercise.fields_config
                                     };
                                 });
                 
@@ -430,7 +430,7 @@ function workoutApp() {
                         tempo: exercise.tempo || exercise.pivot?.tempo || '',
                         notes: exercise.notes || exercise.pivot?.notes || '',
                         category: exercise.category || '',
-                        fields_config: exercise.fields_config || ['weight', 'reps', 'sets', 'rest']
+                        fields_config: exercise.fields_config
                     };
                 });
                 this.displaySelectedExercises(formattedExercises, true); // true = режим просмотра, развернуто
@@ -954,6 +954,7 @@ function workoutApp() {
                     // Убираем подсветку (возвращаем к исходному статусу)
                     if (this.currentWorkout && this.currentWorkout.id === workoutId) {
                         this.currentWorkout.status = 'planned'; // Возвращаем к планированной
+                        this.formStatus = 'planned'; // Обновляем также формы
                     }
                     
                     const workoutInList = this.workouts.find(w => w.id === workoutId);
@@ -996,6 +997,8 @@ function workoutApp() {
                     // Обновляем статус в текущей тренировке
                     if (this.currentWorkout && this.currentWorkout.id === workoutId) {
                         this.currentWorkout.status = newStatus;
+                        // Обновляем также статус в форме, чтобы при сохранении не перезаписывался
+                        this.formStatus = newStatus;
                     }
                     
                     // Обновляем статус в списке тренировок
@@ -1061,6 +1064,24 @@ function workoutApp() {
                 exercises.push(exerciseData);
             });
             
+            // Если упражнения не найдены в DOM, но это режим редактирования с существующими упражнениями
+            if (exercises.length === 0 && this.currentWorkout && this.currentWorkout.exercises && this.currentWorkout.exercises.length > 0) {
+                console.warn('Упражнения не найдены в DOM, используем данные из currentWorkout');
+                // Возвращаем упражнения из currentWorkout в нужном формате
+                return this.currentWorkout.exercises.map(exercise => ({
+                    exercise_id: exercise.exercise_id || exercise.id,
+                    name: exercise.name,
+                    sets: exercise.pivot?.sets || exercise.sets || 3,
+                    reps: exercise.pivot?.reps || exercise.reps || 12,
+                    weight: exercise.pivot?.weight || exercise.weight || 0,
+                    rest: exercise.pivot?.rest || exercise.rest || 60,
+                    time: exercise.pivot?.time || exercise.time || 0,
+                    distance: exercise.pivot?.distance || exercise.distance || 0,
+                    tempo: exercise.pivot?.tempo || exercise.tempo || '',
+                    notes: exercise.pivot?.notes || exercise.notes || ''
+                }));
+            }
+            
             return exercises;
         },
         
@@ -1124,7 +1145,7 @@ function workoutApp() {
                                     exercise_id: exercise.exercise_id, // Сохраняем exercise_id для поиска
                                     name: exercise.name,
                                     category: originalExercise?.category || '',
-                                    fields_config: originalExercise?.fields_config || ['weight', 'reps', 'sets', 'rest'],
+                                    fields_config: originalExercise?.fields_config,
                                     pivot: {
                                         sets: exercise.sets,
                                         reps: exercise.reps,
@@ -1311,7 +1332,7 @@ function workoutApp() {
                 
                 // Отображаем упражнения с динамическими полями и drag and drop
                 list.innerHTML = exercises.map((exercise, index) => {
-                    const fieldsConfig = exercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
+                    const fieldsConfig = exercise.fields_config;
                             const exerciseId = exercise.exercise_id || exercise.id;
                     const fieldsHtml = this.generateFieldsHtml(exerciseId, fieldsConfig, exercise);
                     
@@ -1659,13 +1680,17 @@ function workoutApp() {
                     // Изображения
                     const hasImage1 = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
                     const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
+                    const isImage2Gif = hasImage2 && exercise.image_url_2.toLowerCase().endsWith('.gif');
                     
-                    if (hasImage1 || hasImage2) {
+                    // Если вторая картинка - GIF, не показываем первую
+                    const showImage1 = hasImage1 && !isImage2Gif;
+                    
+                    if (showImage1 || hasImage2) {
                         // Определяем количество колонок
-                        const gridColumns = (hasImage1 && hasImage2) ? '1fr 1fr' : '1fr';
+                        const gridColumns = (showImage1 && hasImage2) ? '1fr 1fr' : '1fr';
                         bodyHTML += `<div style="display: grid; grid-template-columns: ${gridColumns}; gap: 16px; margin-bottom: 24px;">`;
                         
-                        if (hasImage1) {
+                        if (showImage1) {
                             bodyHTML += `
                                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                                     <img src="/storage/${exercise.image_url}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
@@ -2914,7 +2939,7 @@ function workoutApp() {
                             <!-- Параметры упражнения -->
                             <div class="exercise-params-grid">
                                 <!-- Вес -->
-                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('weight')" 
+                                <div x-show="exercise.fields_config?.includes('weight')" 
                                      class="exercise-field bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2928,7 +2953,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Повторения -->
-                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('reps')" 
+                                <div x-show="exercise.fields_config?.includes('reps')" 
                                      class="exercise-field bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2942,7 +2967,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Подходы -->
-                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('sets')" 
+                                <div x-show="exercise.fields_config?.includes('sets')" 
                                      class="exercise-field bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2956,7 +2981,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Отдых -->
-                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('rest')" 
+                                <div x-show="exercise.fields_config?.includes('rest')" 
                                      class="exercise-field bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2970,7 +2995,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Время -->
-                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('time')" 
+                                <div x-show="exercise.fields_config?.includes('time')" 
                                      class="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2984,7 +3009,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Дистанция -->
-                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('distance')" 
+                                <div x-show="exercise.fields_config?.includes('distance')" 
                                      class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -2998,7 +3023,7 @@ function workoutApp() {
                                 </div>
                                 
                                 <!-- Темп -->
-                                <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('tempo')" 
+                                <div x-show="exercise.fields_config?.includes('tempo')" 
                                      class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-4">
                                     <div class="text-center">
                                         <div class="flex items-center justify-center mb-2">
@@ -3109,7 +3134,7 @@ function workoutApp() {
                                                     
                                                     <div class="sets-fields-grid">
                                                         <!-- Вес -->
-                                                        <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('weight')" 
+                                                        <div x-show="exercise.fields_config?.includes('weight')" 
                                                              class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
                                                              :class="getSetFieldBorderClass(exercise, set, 'weight')">
                                                             <div class="text-center">
@@ -3131,7 +3156,7 @@ function workoutApp() {
                                                         </div>
                                                         
                                                         <!-- Повторения -->
-                                                        <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('reps')" 
+                                                        <div x-show="exercise.fields_config?.includes('reps')" 
                                                              class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
                                                              :class="getSetFieldBorderClass(exercise, set, 'reps')">
                                                             <div class="text-center">
@@ -3152,7 +3177,7 @@ function workoutApp() {
                                                         </div>
                                                         
                                                         <!-- Отдых -->
-                                                        <div x-show="(exercise.fields_config || ['weight', 'reps', 'sets', 'rest']).includes('rest')" 
+                                                        <div x-show="exercise.fields_config?.includes('rest')" 
                                                              class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3"
                                                              :class="getSetFieldBorderClass(exercise, set, 'rest')">
                                                             <div class="text-center">
@@ -3275,6 +3300,7 @@ function workoutApp() {
                     <option value="">{{ __('common.all_equipment') }}</option>
                     <option value="Штанга">{{ __('common.barbell') }}</option>
                     <option value="Гриф">{{ __('common.barbell_bar') }}</option>
+                    <option value="Трап-гриф">Трап-гриф</option>
                     <option value="Блин">{{ __('common.weight_plate') }}</option>
                     <option value="Гантели">{{ __('common.dumbbells') }}</option>
                     <option value="Собственный вес">{{ __('common.body_weight') }}</option>
@@ -4053,7 +4079,7 @@ function displaySelectedExercises(exercises, isViewMode = false) {
         
         // Отображаем упражнения с динамическими полями
         const htmlContent = exercises.map((exercise, index) => {
-            const fieldsConfig = exercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
+            const fieldsConfig = exercise.fields_config;
             const exerciseId = exercise.exercise_id || exercise.id;
             const fieldsHtml = generateFieldsHtml(exerciseId, fieldsConfig, exercise);
             
@@ -4157,69 +4183,73 @@ async function loadExerciseHistory(exerciseId) {
             // Добавляем компактную подсказку над полями
             const detailsDiv = document.getElementById(`details-${exerciseId}`);
             if (detailsDiv) {
+                // Удаляем существующую подсказку если есть
                 const existingHint = detailsDiv.querySelector('.exercise-history-hint');
-                if (!existingHint) {
-                    const date = new Date(data.workout_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
-                    
-                    // Получаем разрешённые поля для упражнения
-                    const allowedFields = data.fields_config || [];
-                    const isFieldAllowed = (field) => allowedFields.length === 0 || allowedFields.includes(field);
-                    
-                    // Формируем строку с планом (показываем только разрешённые и заполненные поля)
-                    let planText = '';
-                    if (isFieldAllowed('weight') && data.plan.weight > 0) planText += `${data.plan.weight} кг`;
-                    if (isFieldAllowed('reps') && data.plan.reps > 0) planText += (planText ? ' × ' : '') + `${data.plan.reps} раз`;
-                    if (isFieldAllowed('sets') && data.plan.sets > 0) planText += (planText ? ' × ' : '') + `${data.plan.sets} подх`;
-                    if (isFieldAllowed('time') && data.plan.time > 0) planText += (planText ? ', ' : '') + `${data.plan.time} мин`;
-                    if (isFieldAllowed('distance') && data.plan.distance > 0) planText += (planText ? ', ' : '') + `${data.plan.distance} м`;
-                    
-                    // Формируем строку с фактом (если есть)
-                    let factText = '';
-                    if (data.fact) {
-                        if (isFieldAllowed('weight') && data.fact.weight > 0) factText += `${data.fact.weight} кг`;
-                        if (isFieldAllowed('reps') && data.fact.reps > 0) factText += (factText ? ' × ' : '') + `${data.fact.reps} раз`;
-                        if (isFieldAllowed('sets') && data.fact.sets > 0) factText += (factText ? ' × ' : '') + `${data.fact.sets} подх`;
-                        if (isFieldAllowed('time') && data.fact.time > 0) factText += (factText ? ', ' : '') + `${data.fact.time} мин`;
-                        if (isFieldAllowed('distance') && data.fact.distance > 0) factText += (factText ? ', ' : '') + `${data.fact.distance} м`;
-                    }
-                    
-                    const hint = document.createElement('div');
-                    hint.style.cssText = 'margin-bottom: 12px; padding: 12px; background: linear-gradient(to right, #eff6ff, #e0e7ff); border: 1px solid #bfdbfe; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;';
-                    
-                    const factColor = data.exercise_status === 'completed' ? '#15803d' : (data.exercise_status === 'partial' ? '#c2410c' : '#dc2626');
-                    const factIcon = data.exercise_status === 'completed' ? '✅' : (data.exercise_status === 'partial' ? '⚠️' : '❌');
-                    const factLabel = data.exercise_status === 'completed' ? 'Выполнено:' : (data.exercise_status === 'partial' ? 'Частично:' : 'Факт:');
-                    
-                    hint.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <svg style="width: 16px; height: 16px; color: #2563eb; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <span style="font-size: 12px; font-weight: 600; color: #1e40af;">С прошлого раза (${date})</span>
-                            </div>
-                            <div style="font-size: 12px; color: #374151;">
-                                📋 <span style="font-weight: 500;">План:</span> ${planText || 'не указан'}
-                            </div>
-                            ${data.fact ? `
-                                <div style="font-size: 12px; color: ${factColor};">
-                                    ${factIcon} <span style="font-weight: 500;">${factLabel}</span> ${factText}
-                                </div>
-                            ` : '<div style="font-size: 12px; color: #9ca3af; font-style: italic;">Не выполнено</div>'}
-                        </div>
-                        <button type="button" 
-                                onclick="showExerciseHistoryModal(${exerciseId})"
-                                style="font-size: 12px; color: #2563eb; font-weight: 500; display: flex; align-items: center; gap: 4px; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #93c5fd; cursor: pointer; flex-shrink: 0; transition: all 0.2s;"
-                                onmouseover="this.style.borderColor='#60a5fa'; this.style.color='#1d4ed8';"
-                                onmouseout="this.style.borderColor='#93c5fd'; this.style.color='#2563eb';">
-                            <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                if (existingHint) {
+                    existingHint.remove();
+                }
+                
+                const date = new Date(data.workout_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                
+                // Получаем разрешённые поля для упражнения
+                const allowedFields = data.fields_config || [];
+                const isFieldAllowed = (field) => allowedFields.length === 0 || allowedFields.includes(field);
+                
+                // Формируем строку с планом (показываем только разрешённые и заполненные поля)
+                let planText = '';
+                if (isFieldAllowed('weight') && data.plan.weight > 0) planText += `${data.plan.weight} кг`;
+                if (isFieldAllowed('reps') && data.plan.reps > 0) planText += (planText ? ' × ' : '') + `${data.plan.reps} раз`;
+                if (isFieldAllowed('sets') && data.plan.sets > 0) planText += (planText ? ' × ' : '') + `${data.plan.sets} подх`;
+                if (isFieldAllowed('time') && data.plan.time > 0) planText += (planText ? ', ' : '') + `${data.plan.time} мин`;
+                if (isFieldAllowed('distance') && data.plan.distance > 0) planText += (planText ? ', ' : '') + `${data.plan.distance} м`;
+                
+                // Формируем строку с фактом (если есть)
+                let factText = '';
+                if (data.fact) {
+                    if (isFieldAllowed('weight') && data.fact.weight > 0) factText += `${data.fact.weight} кг`;
+                    if (isFieldAllowed('reps') && data.fact.reps > 0) factText += (factText ? ' × ' : '') + `${data.fact.reps} раз`;
+                    if (isFieldAllowed('sets') && data.fact.sets > 0) factText += (factText ? ' × ' : '') + `${data.fact.sets} подх`;
+                    if (isFieldAllowed('time') && data.fact.time > 0) factText += (factText ? ', ' : '') + `${data.fact.time} мин`;
+                    if (isFieldAllowed('distance') && data.fact.distance > 0) factText += (factText ? ', ' : '') + `${data.fact.distance} м`;
+                }
+                
+                const hint = document.createElement('div');
+                hint.className = 'exercise-history-hint';
+                hint.style.cssText = 'margin-bottom: 12px; padding: 12px; background: linear-gradient(to right, #eff6ff, #e0e7ff); border: 1px solid #bfdbfe; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;';
+                
+                const factColor = data.exercise_status === 'completed' ? '#15803d' : (data.exercise_status === 'partial' ? '#c2410c' : '#dc2626');
+                const factIcon = data.exercise_status === 'completed' ? '✅' : (data.exercise_status === 'partial' ? '⚠️' : '❌');
+                const factLabel = data.exercise_status === 'completed' ? 'Выполнено:' : (data.exercise_status === 'partial' ? 'Частично:' : 'Факт:');
+                
+                hint.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <svg style="width: 16px; height: 16px; color: #2563eb; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            <span>История</span>
-                        </button>
-                    `;
-                    detailsDiv.insertBefore(hint, detailsDiv.firstChild);
-                }
+                            <span style="font-size: 12px; font-weight: 600; color: #1e40af;">С прошлого раза (${date})</span>
+                        </div>
+                        <div style="font-size: 12px; color: #374151;">
+                            📋 <span style="font-weight: 500;">План:</span> ${planText || 'не указан'}
+                        </div>
+                        ${data.fact ? `
+                            <div style="font-size: 12px; color: ${factColor};">
+                                ${factIcon} <span style="font-weight: 500;">${factLabel}</span> ${factText}
+                            </div>
+                        ` : '<div style="font-size: 12px; color: #9ca3af; font-style: italic;">Не выполнено</div>'}
+                    </div>
+                    <button type="button" 
+                            onclick="showExerciseHistoryModal(${exerciseId})"
+                            style="font-size: 12px; color: #2563eb; font-weight: 500; display: flex; align-items: center; gap: 4px; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #93c5fd; cursor: pointer; flex-shrink: 0; transition: all 0.2s;"
+                            onmouseover="this.style.borderColor='#60a5fa'; this.style.color='#1d4ed8';"
+                            onmouseout="this.style.borderColor='#93c5fd'; this.style.color='#2563eb';">
+                        <svg style="width: 12px; height: 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>История</span>
+                    </button>
+                `;
+                detailsDiv.insertBefore(hint, detailsDiv.firstChild);
             }
         }
     } catch (error) {

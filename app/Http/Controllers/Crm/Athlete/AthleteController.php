@@ -766,23 +766,33 @@ class AthleteController extends BaseController
     /**
      * Получить историю упражнения (последние данные для автозаполнения)
      */
-    public function getExerciseHistory($exerciseId)
+    public function getExerciseHistory($exerciseId, Request $request)
     {
         try {
-            $athlete = auth()->user();
+            // Для тренера берем athlete_id из запроса, для self-athlete - из auth
+            $athleteId = $request->get('athlete_id');
+            if (!$athleteId) {
+                $athlete = auth()->user();
+                $athleteId = $athlete->id;
+            }
             
+            \Log::info("Запрос истории упражнения {$exerciseId} для athlete {$athleteId}");
             
-            // Находим последнюю тренировку с этим упражнением (используем JOIN вместо Eloquent отношений)
+            // Находим последнюю тренировку с этим упражнением (только ПРОШЛЫЕ тренировки)
             $lastWorkoutId = \DB::table('workout_exercise')
                 ->join('workouts', 'workout_exercise.workout_id', '=', 'workouts.id')
-                ->where('workouts.athlete_id', $athlete->id)
+                ->where('workouts.athlete_id', $athleteId)
                 ->where('workout_exercise.exercise_id', $exerciseId)
+                ->where('workouts.date', '<', now()->toDateString()) // Только ПРОШЛЫЕ даты
                 ->orderBy('workouts.date', 'desc')
                 ->orderBy('workouts.created_at', 'desc')
                 ->select('workouts.id')
                 ->first();
             
+            \Log::info("lastWorkoutId: " . ($lastWorkoutId ? $lastWorkoutId->id : 'null'));
+            
             if (!$lastWorkoutId) {
+                \Log::info("Истории нет для упражнения {$exerciseId} и athlete {$athleteId}");
                 return response()->json([
                     'success' => true,
                     'has_history' => false
@@ -825,7 +835,7 @@ class AthleteController extends BaseController
             // Получаем фактические данные (из progress если есть)
             $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $lastWorkout->id)
                 ->where('exercise_id', $exerciseId)
-                ->where('athlete_id', $athlete->id)
+                ->where('athlete_id', $athleteId)
                 ->first();
             
             $fact = null;

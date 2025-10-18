@@ -214,42 +214,45 @@ class WorkoutController extends BaseController
             'status' => $request->status,
         ]);
 
-        // Обновляем упражнения
-        if ($request->exercises && is_array($request->exercises)) {
-            // Проверяем, что все упражнения существуют
-            $exerciseIds = collect($request->exercises)->pluck('exercise_id')->filter();
-            $existingExercises = \App\Models\Trainer\Exercise::whereIn('id', $exerciseIds)->pluck('id')->toArray();
-            $missingExercises = $exerciseIds->diff($existingExercises);
-            
-            if ($missingExercises->isNotEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Некоторые упражнения не найдены в базе данных. ID: ' . $missingExercises->implode(', ')
-                ], 400);
-            }
-            
-            // Только если все упражнения существуют, обновляем
-            $workout->exercises()->detach(); // Удаляем все старые связи
-            foreach ($request->exercises as $index => $exerciseData) {
-                if (!isset($exerciseData['exercise_id'])) {
-                    continue;
+        // Обновляем упражнения только если они переданы в запросе
+        if ($request->has('exercises')) {
+            if (is_array($request->exercises) && count($request->exercises) > 0) {
+                // Проверяем, что все упражнения существуют
+                $exerciseIds = collect($request->exercises)->pluck('exercise_id')->filter();
+                $existingExercises = \App\Models\Trainer\Exercise::whereIn('id', $exerciseIds)->pluck('id')->toArray();
+                $missingExercises = $exerciseIds->diff($existingExercises);
+                
+                if ($missingExercises->isNotEmpty()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Некоторые упражнения не найдены в базе данных. ID: ' . $missingExercises->implode(', ')
+                    ], 400);
                 }
-                $workout->exercises()->attach($exerciseData['exercise_id'], [
-                    'sets' => $exerciseData['sets'] ?? 3,
-                    'reps' => $exerciseData['reps'] ?? 12,
-                    'weight' => $exerciseData['weight'] ?? 0,
-                    'rest' => $exerciseData['rest'] ?? 60,
-                    'time' => $exerciseData['time'] ?? 0,
-                    'distance' => $exerciseData['distance'] ?? 0,
-                    'tempo' => $exerciseData['tempo'] ?? null,
-                    'notes' => $exerciseData['notes'] ?? null,
-                    'order_index' => $index,
-                ]);
+                
+                // Только если все упражнения существуют, обновляем
+                $workout->exercises()->detach(); // Удаляем все старые связи
+                foreach ($request->exercises as $index => $exerciseData) {
+                    if (!isset($exerciseData['exercise_id'])) {
+                        continue;
+                    }
+                    $workout->exercises()->attach($exerciseData['exercise_id'], [
+                        'sets' => $exerciseData['sets'] ?? 3,
+                        'reps' => $exerciseData['reps'] ?? 12,
+                        'weight' => $exerciseData['weight'] ?? 0,
+                        'rest' => $exerciseData['rest'] ?? 60,
+                        'time' => $exerciseData['time'] ?? 0,
+                        'distance' => $exerciseData['distance'] ?? 0,
+                        'tempo' => $exerciseData['tempo'] ?? null,
+                        'notes' => $exerciseData['notes'] ?? null,
+                        'order_index' => $index,
+                    ]);
+                }
+            } else {
+                // Если массив упражнений пустой, удаляем все
+                $workout->exercises()->detach();
             }
-        } else {
-            // Если нет упражнений, удаляем все
-            $workout->exercises()->detach();
         }
+        // Если exercises не передан в запросе - не трогаем упражнения вообще
 
         // Обрабатываем изменение статуса
         if ($oldStatus !== $request->status) {

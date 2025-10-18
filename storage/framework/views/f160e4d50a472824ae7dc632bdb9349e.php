@@ -66,6 +66,14 @@ function exerciseApp() {
             this.formImagePreview2 = '';
             this.formImageUrl2 = '';
             this.formFieldsConfig = ['weight', 'reps', 'sets', 'rest'];
+            
+            // Очищаем input файлов при открытии формы создания
+            setTimeout(() => {
+                const imageInput = document.querySelector('input[name="image"]');
+                const imageInput2 = document.querySelector('input[name="image_2"]');
+                if (imageInput) imageInput.value = '';
+                if (imageInput2) imageInput2.value = '';
+            }, 0);
         },
         
         showEdit(exerciseId) {
@@ -85,6 +93,14 @@ function exerciseApp() {
             this.formImagePreview2 = this.currentExercise.image_url_2 ? `/storage/${this.currentExercise.image_url_2}` : '';
             this.formImageUrl2 = this.currentExercise.image_url_2 || '';
             this.formFieldsConfig = this.currentExercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
+            
+            // Очищаем input файлов при открытии формы редактирования
+            setTimeout(() => {
+                const imageInput = document.querySelector('input[name="image"]');
+                const imageInput2 = document.querySelector('input[name="image_2"]');
+                if (imageInput) imageInput.value = '';
+                if (imageInput2) imageInput2.value = '';
+            }, 0);
         },
         
         showView(exerciseId) {
@@ -734,6 +750,23 @@ function exerciseApp() {
         init() {
             // Загружаем пользовательские видео при инициализации
             this.loadAllUserVideos();
+            
+            // Сбрасываем пагинацию при изменении фильтров
+            this.$watch('search', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('category', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('equipment', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('exerciseType', () => {
+                this.currentPage = 1;
+            });
         },
         
         getYouTubeEmbedUrl(url) {
@@ -1023,13 +1056,13 @@ function exerciseApp() {
                     return;
                 }
                 
-                // Валидация размера файла (макс 5MB)
-                if (file.size > 5 * 1024 * 1024) {
+                // Валидация размера файла (макс 10MB)
+                if (file.size > 10 * 1024 * 1024) {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
                             title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 5MB'
+                            message: 'Размер файла не должен превышать 10MB'
                         }
                     }));
                     event.target.value = '';
@@ -1074,13 +1107,13 @@ function exerciseApp() {
                     return;
                 }
                 
-                // Валидация размера файла (макс 5MB)
-                if (file.size > 5 * 1024 * 1024) {
+                // Валидация размера файла (макс 10MB)
+                if (file.size > 10 * 1024 * 1024) {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
                             title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 5MB'
+                            message: 'Размер файла не должен превышать 10MB'
                         }
                     }));
                     event.target.value = '';
@@ -1209,6 +1242,7 @@ function exerciseApp() {
                         <option value=""><?php echo e(__('common.all_equipment')); ?></option>
                         <option value="Штанга"><?php echo e(__('common.barbell')); ?></option>
                         <option value="Гриф"><?php echo e(__('common.barbell_bar')); ?></option>
+                        <option value="Трап-гриф">Трап-гриф</option>
                         <option value="Блин"><?php echo e(__('common.weight_plate')); ?></option>
                         <option value="Гантели"><?php echo e(__('common.dumbbells')); ?></option>
                         <option value="Собственный вес"><?php echo e(__('common.body_weight')); ?></option>
@@ -1459,7 +1493,7 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-xs text-gray-500">Выберите главное изображение (JPG, PNG, GIF, WEBP, макс 5MB)</p>
+                    <p class="mt-1 text-xs text-gray-500">Выберите главное изображение (JPG, PNG, GIF, WEBP, макс 10MB)</p>
                     
                     <!-- Превью нового изображения при создании -->
                     <div x-show="currentView === 'create' && formImagePreview" class="mt-3">
@@ -1494,7 +1528,7 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect2($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-xs text-gray-500">Доп. изображение упражнения (JPG, PNG, GIF, WEBP, макс 5MB)</p>
+                    <p class="mt-1 text-xs text-gray-500">Доп. изображение упражнения (JPG, PNG, GIF, WEBP, макс 10MB)</p>
                     
                     <!-- Превью второго изображения при создании -->
                     <div x-show="currentView === 'create' && formImagePreview2" class="mt-3">
@@ -1533,6 +1567,7 @@ function exerciseApp() {
                             <option value="">Выберите оборудование</option>
                             <option value="Штанга">Штанга</option>
                             <option value="Гриф">Гриф</option>
+                            <option value="Трап-гриф">Трап-гриф</option>
                             <option value="Блин">Блин</option>
                             <option value="Гантели">Гантели</option>
                             <option value="Собственный вес">Собственный вес</option>
@@ -1878,13 +1913,13 @@ function exerciseApp() {
             <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
                 <!-- Картинки и видео слева -->
                 <div style="flex: 0 0 35%; max-width: 35%; display: flex; flex-direction: column; gap: 1rem;">
-                    <!-- Главное изображение -->
-                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined'">
+                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
                         <div>
                             <img :src="`/storage/${currentExercise.image_url}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md"
-                                 style="max-height: 300px; object-fit: contain;">
+                                 style="object-fit: contain;">
                         </div>
                     </template>
             
@@ -1894,7 +1929,7 @@ function exerciseApp() {
                             <img :src="`/storage/${currentExercise.image_url_2}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md"
-                                 style="max-height: 300px; object-fit: contain;">
+                                 style="object-fit: contain;">
                         </div>
                     </template>
             
