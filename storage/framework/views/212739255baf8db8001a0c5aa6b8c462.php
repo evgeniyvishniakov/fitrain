@@ -799,7 +799,7 @@ function workoutApp() {
                     showError('<?php echo e(__('common.saving_error')); ?>', result.message || '<?php echo e(__('common.failed_to_save_progress')); ?>');
                         }
                     } catch (error) {
-                console.error('<?php echo e(__('common.update_error')); ?>:', error);
+                
                 showError('<?php echo e(__('common.connection_error')); ?>', '<?php echo e(__('common.check_internet_connection')); ?>');
             }
         },
@@ -848,7 +848,6 @@ function workoutApp() {
                     }
                 }
             } catch (error) {
-                console.error('Ошибка загрузки прогресса:', error);
             }
         },
         
@@ -987,7 +986,6 @@ function workoutApp() {
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     const text = await response.text();
-                    console.error('<?php echo e(__('common.not_json_response')); ?>:', text);
                     throw new Error('<?php echo e(__('common.server_returned_not_json')); ?>');
                 }
 
@@ -1019,7 +1017,6 @@ function workoutApp() {
                     showError('<?php echo e(__('common.error')); ?>', result.message || '<?php echo e(__('common.failed_to_update_workout_status')); ?>');
                 }
             } catch (error) {
-                console.error('<?php echo e(__('common.status_update_error')); ?>:', error);
                 showError('<?php echo e(__('common.connection_error')); ?>', `<?php echo e(__('common.error')); ?>: ${error.message}`);
             }
         },
@@ -1066,7 +1063,6 @@ function workoutApp() {
             
             // Если упражнения не найдены в DOM, но это режим редактирования с существующими упражнениями
             if (exercises.length === 0 && this.currentWorkout && this.currentWorkout.exercises && this.currentWorkout.exercises.length > 0) {
-                console.warn('Упражнения не найдены в DOM, используем данные из currentWorkout');
                 // Возвращаем упражнения из currentWorkout в нужном формате
                 return this.currentWorkout.exercises.map(exercise => ({
                     exercise_id: exercise.exercise_id || exercise.id,
@@ -1191,7 +1187,6 @@ function workoutApp() {
                     }));
                 }
             } catch (error) {
-                console.error('<?php echo e(__('common.error')); ?>:', error);
                 // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
@@ -1259,7 +1254,6 @@ function workoutApp() {
                     }));
                 }
             } catch (error) {
-                console.error('<?php echo e(__('common.error')); ?>:', error);
                 // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
@@ -1319,7 +1313,6 @@ function workoutApp() {
             const emptyState = document.getElementById('emptyExercisesState');
             
             if (!container || !list || !emptyState) {
-                console.error('<?php echo e(__('common.elements_not_found_for_exercises')); ?>');
                 return;
             }
             
@@ -1971,7 +1964,6 @@ function workoutApp() {
                             });
                         }
                     } catch (error) {
-                        console.error(`Ошибка загрузки прогресса для тренировки ${workout.id}:`, error);
                     }
                 }
             }
@@ -1981,6 +1973,15 @@ function workoutApp() {
         init() {
             // Загружаем прогресс для всех тренировок при загрузке страницы
             this.loadAllWorkoutProgress();
+            
+            // Сбрасываем пагинацию при изменении фильтров
+            this.$watch('search', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('status', () => {
+                this.currentPage = 1;
+            });
         }
     }
 }
@@ -3303,7 +3304,8 @@ function workoutApp() {
                     <option value=""><?php echo e(__('common.all_categories')); ?></option>
                     <option value="Грудь">Грудь</option>
                     <option value="Спина">Спина</option>
-                    <option value="Ноги">Ноги</option>
+                    <option value="Ноги(Бедра)">Ноги(Бедра)</option>
+                    <option value="Ноги(Икры)">Ноги(Икры)</option>
                     <option value="Плечи">Плечи</option>
                     <option value="Руки">Руки</option>
                     <option value="Руки(Трицепс)">Руки(Трицепс)</option>
@@ -3322,10 +3324,14 @@ function workoutApp() {
                     <option value=""><?php echo e(__('common.all_equipment')); ?></option>
                     <option value="Штанга"><?php echo e(__('common.barbell')); ?></option>
                     <option value="Гриф"><?php echo e(__('common.barbell_bar')); ?></option>
+                    <option value="Трап-гриф">Трап-гриф</option>
+                    <option value="EZ-гриф">EZ-гриф</option>
                     <option value="Блин"><?php echo e(__('common.weight_plate')); ?></option>
                     <option value="Гантели"><?php echo e(__('common.dumbbells')); ?></option>
                     <option value="Собственный вес"><?php echo e(__('common.body_weight')); ?></option>
                     <option value="Тренажеры"><?php echo e(__('common.machines')); ?></option>
+                    <option value="Машина Смита">Машина Смита</option>
+                    <option value="Кроссовер">Кроссовер</option>
                     <option value="Скакалка"><?php echo e(__('common.jump_rope')); ?></option>
                     <option value="Турник"><?php echo e(__('common.pull_up_bar')); ?></option>
                 </select>
@@ -3466,10 +3472,8 @@ async function loadExercises() {
             exercises = data.exercises;
             renderExercises();
         } else {
-            console.error('API вернул ошибку:', data);
         }
     } catch (error) {
-        console.error('Ошибка загрузки упражнений:', error);
     }
 }
 
@@ -3488,7 +3492,6 @@ async function loadTemplates() {
             renderTemplates();
         }
     } catch (error) {
-        console.error('Ошибка загрузки шаблонов:', error);
     }
 }
 
@@ -3618,7 +3621,7 @@ function filterExercises() {
     const noResults = document.getElementById('no-results');
     let visibleCount = 0;
     
-    console.log('Фильтрация:', { searchTerm, categoryFilter, equipmentFilter, selectedExerciseIds });
+    
 
     exerciseElements.forEach(element => {
         const exerciseId = parseInt(element.dataset.exerciseId);
@@ -3632,7 +3635,7 @@ function filterExercises() {
         const matchesEquipment = !equipmentFilter || equipment === equipmentFilter || equipment.includes(equipmentFilter);
         const isNotSelected = !selectedExerciseIds.includes(exerciseId);
         
-        console.log(`Упражнение ${exerciseId}:`, { name, category, equipment, matchesSearch, matchesCategory, matchesEquipment, isNotSelected });
+        
 
         if (matchesSearch && matchesCategory && matchesEquipment && isNotSelected) {
             element.style.display = 'flex';
@@ -3642,7 +3645,7 @@ function filterExercises() {
         }
     });
     
-    console.log('Видимых упражнений:', visibleCount);
+    
 
     // Показываем/скрываем сообщение о пустых результатах
     if (visibleCount === 0) {
@@ -4187,7 +4190,6 @@ async function loadExerciseHistory(exerciseId) {
         const data = await response.json();
         
         if (data.success && data.has_history) {
-            console.log(`История упражнения ${exerciseId}:`, data);
             
             // Автозаполняем поля значениями из последней тренировки
             const fieldsToFill = data.plan;
@@ -4275,18 +4277,15 @@ async function loadExerciseHistory(exerciseId) {
             }
         }
     } catch (error) {
-        console.error('Ошибка загрузки истории упражнения:', error);
     }
 }
 
 // Сворачивание/разворачивание деталей упражнения
 function toggleExerciseDetails(exerciseId) {
-    console.log('toggleExerciseDetails вызван для упражнения:', exerciseId);
     const detailsElement = document.getElementById(`details-${exerciseId}`);
     const chevronElement = document.getElementById(`chevron-${exerciseId}`);
     
     if (detailsElement.style.display === 'none') {
-        console.log('Разворачиваем упражнение, загружаем историю...');
         // Разворачиваем
         detailsElement.style.display = 'block';
         chevronElement.style.transform = 'rotate(0deg)'; // стрелочка вниз
@@ -4294,7 +4293,6 @@ function toggleExerciseDetails(exerciseId) {
         // Загружаем историю при первом открытии
         loadExerciseHistory(exerciseId);
     } else {
-        console.log('Сворачиваем упражнение');
         // Сворачиваем
         detailsElement.style.display = 'none';
         chevronElement.style.transform = 'rotate(-90deg)'; // стрелочка вправо
@@ -4549,7 +4547,6 @@ async function showExerciseHistoryModal(exerciseId) {
         document.body.insertAdjacentHTML('beforeend', modalContent);
         
     } catch (error) {
-        console.error('Ошибка загрузки полной истории:', error);
         alert('Ошибка загрузки истории упражнения');
     }
 }

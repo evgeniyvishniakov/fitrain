@@ -450,7 +450,6 @@ function workoutApp() {
                 });
             }
         },
-        
         // Методы для работы с упражнениями (скопированы из athlete/workouts.blade.php)
         
         // Управление статусом упражнений
@@ -908,7 +907,6 @@ function workoutApp() {
             };
             return labels[status] || status;
         },
-
         // Обновление статуса тренировки
         async updateWorkoutStatus(workoutId, newStatus) {
             try {
@@ -1372,7 +1370,6 @@ function workoutApp() {
                 container.style.display = 'none';
             }
         },
-        
         // Генерация HTML для полей упражнения (точная копия оригинальной функции)
         generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
             const fieldConfigs = {
@@ -1794,7 +1791,6 @@ function workoutApp() {
             
             return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
         },
-        
         // Простой метод для открытия модального окна
         openSimpleModal(url, title) {
             
@@ -1954,6 +1950,15 @@ function workoutApp() {
         init() {
             // Загружаем прогресс для всех тренировок при загрузке страницы
             this.loadAllWorkoutProgress();
+            
+            // Сбрасываем пагинацию при изменении фильтров
+            this.$watch('search', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('status', () => {
+                this.currentPage = 1;
+            });
         }
     }
 }
@@ -2276,7 +2281,6 @@ function workoutApp() {
                     gap: 0.75rem !important;
                     width: 100% !important;
                 }
-                
                 @media (min-width: 768px) {
                     .exercise-header-row {
                         flex-direction: row !important;
@@ -2739,7 +2743,6 @@ function workoutApp() {
             </div>
         </form>
     </div>
-
     <!-- ПРОСМОТР ТРЕНИРОВКИ -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
@@ -3188,7 +3191,6 @@ function workoutApp() {
         </div>
     </div>
 </div>
-
 <!-- Красивое модальное окно для упражнений -->
 <div id="exerciseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 80%; max-height: 80%; width: 100%; overflow: hidden;">
@@ -3220,7 +3222,8 @@ function workoutApp() {
                     <option value="">{{ __('common.all_categories') }}</option>
                     <option value="Грудь">{{ __('common.chest') }}</option>
                     <option value="Спина">{{ __('common.back') }}</option>
-                    <option value="Ноги">{{ __('common.legs') }}</option>
+                    <option value="Ноги(Бедра)">{{ __('common.legs_thighs') }}</option>
+                    <option value="Ноги(Икры)">{{ __('common.legs_calves') }}</option>
                     <option value="Плечи">{{ __('common.shoulders') }}</option>
                     <option value="Руки">{{ __('common.arms') }}</option>
                     <option value="Руки(Трицепс)">Руки(Трицепс)</option>
@@ -3232,19 +3235,10 @@ function workoutApp() {
                 <!-- Фильтр оборудования -->
                 <select id="equipment-filter" 
                         onchange="filterExercises()"
-                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
+                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_equipment') }}</option>
-                    <option value="Штанга">{{ __('common.barbell') }}</option>
-                    <option value="Гриф">{{ __('common.barbell_bar') }}</option>
-                    <option value="Трап-гриф">Трап-гриф</option>
-                    <option value="Блин">{{ __('common.weight_plate') }}</option>
-                    <option value="Гантели">{{ __('common.dumbbells') }}</option>
-                    <option value="Собственный вес">{{ __('common.body_weight') }}</option>
-                    <option value="Тренажеры">{{ __('common.machines') }}</option>
-                    <option value="Скакалка">{{ __('common.jump_rope') }}</option>
-                    <option value="Турник">{{ __('common.pull_up_bar') }}</option>
                 </select>
             </div>
             
@@ -3519,47 +3513,61 @@ function toggleTemplate(element, id, name, exercises) {
 
 // Фильтрация упражнений
 function filterExercises() {
-    const searchTerm = document.getElementById('exercise-search').value.toLowerCase().trim();
-    const categoryFilter = document.getElementById('category-filter').value.toLowerCase().trim();
-    let equipmentFilter = document.getElementById('equipment-filter').value.toLowerCase().trim();
-    
-    // Нормализация оборудования: множественное число -> единственное
-    if (equipmentFilter === 'тренажеры') {
-        equipmentFilter = 'тренажер';
+    const searchTerm = document.getElementById('exercise-search').value.toLowerCase();
+    const category = document.getElementById('category-filter').value;
+    const equipment = document.getElementById('equipment-filter').value;
+    const container = document.getElementById('exercises-container');
+    const noResults = document.getElementById('no-results');
+
+    // Динамически заполняем список оборудования по выбранной категории
+    const equipmentSelect = document.getElementById('equipment-filter');
+    const prevValue = equipment;
+    const equipmentSet = new Set();
+    (exercises || []).forEach(ex => {
+        if (!category || ex.category === category) {
+            if (ex.equipment) equipmentSet.add(ex.equipment);
+        }
+    });
+    const currentOptions = Array.from(equipmentSelect.options).map(o => o.value);
+    const desiredOptions = [''].concat(Array.from(equipmentSet).sort());
+    if (JSON.stringify(currentOptions) !== JSON.stringify(desiredOptions)) {
+        equipmentSelect.innerHTML = '';
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '{{ __('common.all_equipment') }}';
+        equipmentSelect.appendChild(emptyOpt);
+        Array.from(equipmentSet).sort().forEach(eq => {
+            const opt = document.createElement('option');
+            opt.value = eq;
+            opt.textContent = eq;
+            equipmentSelect.appendChild(opt);
+        });
+        // Восстанавливаем значение, если оно по-прежнему доступно
+        if (desiredOptions.includes(prevValue)) {
+            equipmentSelect.value = prevValue;
+        } else {
+            equipmentSelect.value = '';
+        }
     }
 
-    // Получаем уже выбранные упражнения
-    const selectedExerciseIds = getSelectedExerciseIds();
-
-    const exerciseElements = document.querySelectorAll('#exercises-container > div[data-exercise-id]');
-    const noResults = document.getElementById('no-results');
+    // Фильтрация карточек упражнений
     let visibleCount = 0;
-    
-    console.log('Фильтрация:', { searchTerm, categoryFilter, equipmentFilter, selectedExerciseIds });
-
-    exerciseElements.forEach(element => {
-        const exerciseId = parseInt(element.dataset.exerciseId);
-        // Используем data-атрибуты вместо поиска по DOM
-        const name = (element.dataset.exerciseName || '').toLowerCase().trim();
-        const category = (element.dataset.exerciseCategory || '').toLowerCase().trim();
-        const equipment = (element.dataset.exerciseEquipment || '').toLowerCase().trim();
+    Array.from(container.children).forEach(element => {
+        const name = element.dataset.exerciseName.toLowerCase();
+        const elementCategory = element.dataset.exerciseCategory;
+        const elementEquipment = element.dataset.exerciseEquipment;
 
         const matchesSearch = !searchTerm || name.includes(searchTerm);
-        const matchesCategory = !categoryFilter || category === categoryFilter || category.includes(categoryFilter);
-        const matchesEquipment = !equipmentFilter || equipment === equipmentFilter || equipment.includes(equipmentFilter);
-        const isNotSelected = !selectedExerciseIds.includes(exerciseId);
-        
-        console.log(`Упражнение ${exerciseId}:`, { name, category, equipment, matchesSearch, matchesCategory, matchesEquipment, isNotSelected });
+        const matchesCategory = !category || elementCategory === category;
+        const matchesEquipment = !equipment || elementEquipment === equipment;
 
-        if (matchesSearch && matchesCategory && matchesEquipment && isNotSelected) {
-            element.style.display = 'flex';
+        if (matchesSearch && matchesCategory && matchesEquipment) {
+            element.style.display = 'block';
             visibleCount++;
         } else {
             element.style.display = 'none';
         }
     });
-    
-    console.log('Видимых упражнений:', visibleCount);
 
     // Показываем/скрываем сообщение о пустых результатах
     if (visibleCount === 0) {
@@ -3662,7 +3670,6 @@ function addSelectedExercises() {
     
     closeExerciseModal();
 }
-
 // Получение текущих упражнений из формы
 function getCurrentExercisesFromForm() {
     const exercises = [];
@@ -4146,7 +4153,6 @@ async function loadExerciseHistory(exerciseId) {
         console.error('Ошибка загрузки истории упражнения:', error);
     }
 }
-
 function toggleExerciseDetails(exerciseId) {
     console.log('toggleExerciseDetails вызван для упражнения:', exerciseId);
     const detailsElement = document.getElementById(`details-${exerciseId}`);
@@ -4547,7 +4553,6 @@ function copyPlanToFields(exerciseId) {
         </div>
     </div>
 </div>
-
 <!-- Модальное окно деталей упражнения -->
 <div x-show="exerciseDetailModal.isOpen" 
      x-cloak

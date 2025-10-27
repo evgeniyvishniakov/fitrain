@@ -109,10 +109,6 @@ function exerciseApp() {
             this.currentView = 'view';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
             
-            console.log('Просмотр упражнения:', this.currentExercise);
-            console.log('image_url:', this.currentExercise?.image_url);
-            console.log('image_url_2:', this.currentExercise?.image_url_2);
-            
             // Загружаем пользовательское видео, если упражнение системное
             if (this.currentExercise && this.currentExercise.is_system) {
                 this.loadUserVideo(exerciseId);
@@ -293,19 +289,14 @@ function exerciseApp() {
                 const fileInput2 = document.querySelector('input[name="image_2"]');
                 const hasNewFile2 = fileInput2 && fileInput2.files[0];
                 
-                console.log('=== ВТОРОЕ ИЗОБРАЖЕНИЕ ===');
-                console.log('fileInput2:', fileInput2);
-                console.log('hasNewFile2:', hasNewFile2);
-                console.log('formImageUrl2:', this.formImageUrl2);
+                
                 
                 if (hasNewFile2) {
-                    console.log('Добавляем второе изображение:', hasNewFile2.name, hasNewFile2.size);
                     formData.append('image_2', fileInput2.files[0]);
                 }
                 
                 // Только если НЕТ нового файла И formImageUrl2 пустой - удаляем вторую картинку
                 if (!hasNewFile2 && this.currentExercise && this.currentExercise.id && !this.formImageUrl2) {
-                    console.log('Удаляем второе изображение');
                     formData.append('remove_image_2', '1');
                 }
                 
@@ -356,7 +347,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -371,7 +362,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -401,12 +392,10 @@ function exerciseApp() {
                         const index = this.exercises.findIndex(e => e.id === this.currentExercise.id);
                         if (index !== -1) {
                             this.exercises[index] = result.exercise;
-                            console.log('Обновлено упражнение в списке:', this.exercises[index]);
                         }
                     } else {
                         // Создание - добавляем новое
                         this.exercises.unshift(result.exercise);
-                        console.log('Добавлено новое упражнение:', result.exercise);
                     }
                     
                     // Переключаемся на список
@@ -422,7 +411,6 @@ function exerciseApp() {
                     }));
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
                 // Показываем уведомление об ошибке с деталями
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
@@ -466,7 +454,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -481,7 +469,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -520,7 +508,6 @@ function exerciseApp() {
                     }));
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
                 // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
@@ -685,7 +672,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -700,7 +687,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -737,7 +724,6 @@ function exerciseApp() {
                     }));
                 }
             } catch (error) {
-                console.error('Ошибка загрузки упражнений из тренировок:', error);
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
@@ -817,7 +803,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    
                     return;
                 }
                 
@@ -825,7 +811,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    
                     return;
                 }
                 
@@ -836,7 +822,6 @@ function exerciseApp() {
                     });
                 }
             } catch (error) {
-                console.error('Ошибка загрузки пользовательских видео:', error);
             }
         },
         
@@ -857,7 +842,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    
                     return;
                 }
                 
@@ -865,7 +850,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    
                     return;
                 }
                 
@@ -876,7 +861,6 @@ function exerciseApp() {
                     this.userVideoDescription = result.video.description || '';
                 }
             } catch (error) {
-                console.error('Ошибка загрузки видео:', error);
             }
         },
         
@@ -906,7 +890,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -921,7 +905,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -958,7 +942,6 @@ function exerciseApp() {
                     }));
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
                 // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
@@ -988,7 +971,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    console.error('Получен HTML вместо JSON. Возможно, требуется авторизация.');
+                    
                     return;
                 }
                 
@@ -996,7 +979,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
+                    
                     return;
                 }
                 
@@ -1029,7 +1012,6 @@ function exerciseApp() {
                     }));
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
                 // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
@@ -1227,7 +1209,8 @@ function exerciseApp() {
                         <option value="">Все категории</option>
                         <option value="Грудь">Грудь</option>
                         <option value="Спина">Спина</option>
-                        <option value="Ноги">Ноги</option>
+                        <option value="Ноги(Бедра)">Ноги(Бедра)</option>
+                        <option value="Ноги(Икры)">Ноги(Икры)</option>
                         <option value="Плечи">Плечи</option>
                         <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                         <option value="Руки(Трицепс)">Руки(Трицепс)</option>
@@ -1241,18 +1224,10 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="equipment"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_equipment') }}</option>
-                        <option value="Штанга">{{ __('common.barbell') }}</option>
-                        <option value="Гриф">{{ __('common.barbell_bar') }}</option>
-                        <option value="Трап-гриф">Трап-гриф</option>
-                        <option value="Блин">{{ __('common.weight_plate') }}</option>
-                        <option value="Гантели">{{ __('common.dumbbells') }}</option>
-                        <option value="Собственный вес">{{ __('common.body_weight') }}</option>
-                        <option value="Тренажер">{{ __('common.machines') }}</option>
-                        <option value="Скакалка">{{ __('common.jump_rope') }}</option>
-                        <option value="Турник">{{ __('common.pull_up_bar') }}</option>
-                        <option value="Брусья">{{ __('common.parallel_bars') }}</option>
-                        <option value="Скамейка">{{ __('common.bench') }}</option>
+                        <option value="">Весь инвентарь</option>
+                        <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment))).sort()" :key="eq">
+                            <option :value="eq" x-text="eq"></option>
+                        </template>
                     </select>
                 </div>
                 
@@ -1542,7 +1517,8 @@ function exerciseApp() {
                             <option value="">Выберите категорию</option>
                             <option value="Грудь">Грудь</option>
                             <option value="Спина">Спина</option>
-                            <option value="Ноги">Ноги</option>
+                            <option value="Ноги(Бедра)">Ноги(Бедра)</option>
+                            <option value="Ноги(Икры)">Ноги(Икры)</option>
                             <option value="Плечи">Плечи</option>
                             <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                             <option value="Руки(Трицепс)">Руки(Трицепс)</option>
@@ -1562,10 +1538,13 @@ function exerciseApp() {
                             <option value="Штанга">Штанга</option>
                             <option value="Гриф">Гриф</option>
                             <option value="Трап-гриф">Трап-гриф</option>
+                            <option value="EZ-гриф">EZ-гриф</option>
                             <option value="Блин">Блин</option>
                             <option value="Гантели">Гантели</option>
                             <option value="Собственный вес">Собственный вес</option>
                             <option value="Тренажер">Тренажер</option>
+                            <option value="Машина Смита">Машина Смита</option>
+                            <option value="Кроссовер">Кроссовер</option>
                             <option value="Скакалка">Скакалка</option>
                             <option value="Турник">Турник</option>
                             <option value="Брусья">Брусья</option>

@@ -533,6 +533,8 @@ return [
     'chest' => 'Груди',
     'back' => 'Спина',
     'legs' => 'Ноги',
+    'legs_thighs' => 'Ноги(Стегна)',
+    'legs_calves' => 'Ноги(Ікри)',
     'shoulders' => 'Плечі',
     'arms' => 'Руки',
     'cardio' => 'Кардіо',

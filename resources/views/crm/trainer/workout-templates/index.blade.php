@@ -42,6 +42,19 @@ function templatesApp() {
         // Инициализация
         init() {
             // Инициализация компонента
+            
+            // Сбрасываем пагинацию при изменении фильтров
+            this.$watch('search', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('category', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('difficulty', () => {
+                this.currentPage = 1;
+            });
         },
         
         // Навигация
@@ -194,7 +207,6 @@ function templatesApp() {
                 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('{{ __('common.template_saved_console') }}', result);
                     
                     // Показываем уведомление об успехе
                     this.showSuccessMessage('{{ __('common.template_saved') }}');
@@ -223,11 +235,9 @@ function templatesApp() {
                     
                 } else {
                     const error = await response.json();
-                    console.error('Ошибка сохранения:', error);
                     this.showErrorMessage('{{ __('common.template_saving_error') }}');
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
                 this.showErrorMessage('{{ __('common.template_saving_general_error') }}');
             }
         },
@@ -245,7 +255,6 @@ function templatesApp() {
                     confirmText: '{{ __('common.delete') }}',
                     cancelText: '{{ __('common.cancel') }}',
                     onConfirm: () => this.performDelete(id),
-                    onCancel: () => console.log('{{ __('common.template_deleting_cancelled') }}')
                 }
             }));
         },
@@ -272,11 +281,9 @@ function templatesApp() {
                     }
                 } else {
                     const error = await response.json();
-                    console.error('Ошибка удаления:', error);
                     this.showErrorMessage('{{ __('common.template_deleting_error') }}');
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
                 this.showErrorMessage('{{ __('common.template_deleting_general_error') }}');
             }
         },
@@ -324,25 +331,20 @@ function templatesApp() {
         
         // Работа с модальным окном упражнений
         async openExerciseModal() {
-            console.log('{{ __('common.opening_exercise_modal') }}');
             try {
                 const response = await fetch('/exercises/api');
                 const data = await response.json();
-                console.log('{{ __('common.exercises_loaded') }}', data);
                 this.availableExercises = data.exercises || [];
             } catch (error) {
-                console.error('{{ __('common.exercise_loading_error') }}', error);
                 this.availableExercises = [];
             }
             this.showExerciseModal = true;
-            console.log('showExerciseModal установлен в:', this.showExerciseModal);
             
             // Принудительно показываем модальное окно
             setTimeout(() => {
                 const modal = document.querySelector('[x-show="showExerciseModal"]');
                 if (modal) {
-                    modal.style.display = 'flex';
-                    console.log('Модальное окно принудительно показано');
+                modal.style.display = 'flex';
                 } else {
                     // Создаем модальное окно через JavaScript
                     this.createModalWithJS();
@@ -351,26 +353,22 @@ function templatesApp() {
         },
         
         closeExerciseModal() {
-            console.log('Закрываем модальное окно');
             this.showExerciseModal = false;
             
             // Принудительно скрываем модальное окно
             const modal = document.querySelector('[x-show="showExerciseModal"]');
             if (modal) {
                 modal.style.display = 'none';
-                console.log('Модальное окно принудительно скрыто');
             }
             
             // Также скрываем JavaScript модальное окно, если есть
             const jsModal = document.getElementById('js-exercise-modal');
             if (jsModal) {
-                jsModal.remove();
-                console.log('JavaScript модальное окно удалено');
+            jsModal.remove();
             }
         },
         
         createModalWithJS() {
-            console.log('Создаем модальное окно через JavaScript');
             
             // Удаляем существующее модальное окно, если есть
             const existingModal = document.getElementById('js-exercise-modal');
@@ -409,7 +407,6 @@ function templatesApp() {
             `;
             
             document.body.appendChild(modal);
-            console.log('Модальное окно создано через JavaScript');
         },
         
         toggleExercise(exercise) {
@@ -537,7 +534,6 @@ function templatesApp() {
                 const data = await response.json();
                 exercises = data.exercises || [];
             } catch (error) {
-                console.error('{{ __('common.exercise_loading_error') }}', error);
             }
     
     // Создаем модальное окно
@@ -627,7 +623,8 @@ function templatesApp() {
                         <option value="">{{ __('common.all_categories') }}</option>
                         <option value="Грудь">{{ __('common.chest') }}</option>
                         <option value="Спина">{{ __('common.back') }}</option>
-                        <option value="Ноги">{{ __('common.legs') }}</option>
+                        <option value="Ноги(Бедра)">{{ __('common.legs_thighs') }}</option>
+                        <option value="Ноги(Икры)">{{ __('common.legs_calves') }}</option>
                         <option value="Плечи">{{ __('common.shoulders') }}</option>
                         <option value="Руки">{{ __('common.arms') }}</option>
                         <option value="Кардио">{{ __('common.cardio') }}</option>
@@ -643,6 +640,7 @@ function templatesApp() {
                                 border: 1px solid #d1d5db;
                                 border-radius: 8px;
                                 font-size: 14px;
+                                font-weight: 600;
                                 outline: none;
                                 background: white;
                                 transition: border-color 0.2s;
@@ -650,15 +648,6 @@ function templatesApp() {
                             onfocus="this.style.borderColor = '#4f46e5'"
                             onblur="this.style.borderColor = '#d1d5db'">
                         <option value="">{{ __('common.all_equipment') }}</option>
-                        <option value="Штанга">Штанга</option>
-                        <option value="Гриф">Гриф</option>
-                        <option value="Трап-гриф">Трап-гриф</option>
-                        <option value="Блин">Блин</option>
-                        <option value="Гантели">Гантели</option>
-                        <option value="Собственный вес">Собственный вес</option>
-                        <option value="Тренажеры">Тренажеры</option>
-                        <option value="Скакалка">Скакалка</option>
-                        <option value="Турник">Турник</option>
                     </select>
                 </div>
                 
@@ -728,7 +717,6 @@ function closeSimpleModal() {
     const modal = document.getElementById('simple-exercise-modal');
     if (modal) {
         modal.remove();
-        console.log('Модальное окно закрыто');
     }
 }
 
@@ -755,28 +743,48 @@ function toggleExercise(element, id, name, category, equipment) {
 // Функция фильтрации упражнений
         function filterExercises() {
             const searchTerm = document.getElementById('exercise-search').value.toLowerCase();
-            const categoryFilter = document.getElementById('category-filter').value.toLowerCase();
-            const equipmentFilter = document.getElementById('equipment-filter').value.toLowerCase();
+            const category = document.getElementById('category-filter').value;
+            const equipment = document.getElementById('equipment-filter').value;
+            const container = document.getElementById('exercises-container');
 
-            const exerciseElements = document.querySelectorAll('#exercises-container > div');
-            const noResults = document.getElementById('no-results');
-            let visibleCount = 0;
-
-            exerciseElements.forEach(element => {
-                const name = element.querySelector('h4').textContent.toLowerCase();
-                const category = element.querySelector('p').textContent.toLowerCase();
-                const equipment = element.querySelectorAll('p')[1].textContent.toLowerCase();
-
-                const matchesSearch = name.includes(searchTerm);
-                const matchesCategory = !categoryFilter || category.includes(categoryFilter);
-                const matchesEquipment = !equipmentFilter || equipment.includes(equipmentFilter);
-
-                if (matchesSearch && matchesCategory && matchesEquipment) {
-                    element.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    element.style.display = 'none';
+            // Динамически заполняем список оборудования по выбранной категории
+            const equipmentSelect = document.getElementById('equipment-filter');
+            const prevValue = equipment;
+            const equipmentSet = new Set();
+            (exercises || []).forEach(ex => {
+                if (!category || ex.category === category) {
+                    if (ex.equipment) equipmentSet.add(ex.equipment);
                 }
+            });
+            equipmentSelect.innerHTML = '';
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = '';
+            emptyOpt.textContent = '{{ __('common.all_equipment') }}';
+            equipmentSelect.appendChild(emptyOpt);
+            Array.from(equipmentSet).sort().forEach(eq => {
+                const opt = document.createElement('option');
+                opt.value = eq;
+                opt.textContent = eq;
+                equipmentSelect.appendChild(opt);
+            });
+            if (equipmentSet.has(prevValue)) {
+                equipmentSelect.value = prevValue;
+            } else {
+                equipmentSelect.value = '';
+            }
+
+            // Фильтрация карточек
+            let visibleCount = 0;
+            const cards = container.querySelectorAll('[data-exercise-id]');
+            cards.forEach(card => {
+                const name = card.dataset.exerciseName.toLowerCase();
+                const elementCategory = card.dataset.exerciseCategory;
+                const elementEquipment = card.dataset.exerciseEquipment;
+                const matchesSearch = !searchTerm || name.includes(searchTerm);
+                const matchesCategory = !category || elementCategory === category;
+                const matchesEquipment = !equipment || elementEquipment === equipment;
+                card.style.display = (matchesSearch && matchesCategory && matchesEquipment) ? 'block' : 'none';
+                if (card.style.display === 'block') visibleCount++;
             });
 
             // Показываем/скрываем сообщение о пустых результатах
@@ -1343,13 +1351,6 @@ function removeExerciseFromAlpine(exerciseId) {
                     <select x-model="exerciseEquipment" 
                             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">{{ __('common.all_equipment') }}</option>
-                        <option value="bodyweight">Собственный вес</option>
-                        <option value="dumbbells">Гантели</option>
-                        <option value="barbell">Штанга</option>
-                        <option value="kettlebell">Гиря</option>
-                        <option value="machine">Тренажер</option>
-                        <option value="cable">Трос</option>
-                        <option value="resistance_band">Эспандер</option>
                     </select>
                 </div>
             </div>

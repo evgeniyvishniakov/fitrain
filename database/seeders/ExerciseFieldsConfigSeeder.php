@@ -69,7 +69,7 @@ class ExerciseFieldsConfigSeeder extends Seeder
                 [
                     'name' => 'Приседания',
                     'description' => 'Базовое упражнение для развития ног',
-                    'category' => 'Ноги',
+                    'category' => 'Ноги(Бедра)',
                     'equipment' => 'Штанга',
                     'muscle_groups' => ['Квадрицепс', 'Ягодицы', 'Бицепс бедра'],
                     'difficulty' => 'intermediate',
@@ -101,7 +101,7 @@ class ExerciseFieldsConfigSeeder extends Seeder
                     'description' => 'Кардио упражнение',
                     'category' => 'Кардио',
                     'equipment' => 'Собственный вес',
-                    'muscle_groups' => ['Ноги', 'Сердце'],
+                    'muscle_groups' => ['Ноги(Бедра)', 'Сердце'],
                     'difficulty' => 'beginner',
                     'is_active' => true,
                     'fields_config' => ['distance', 'time', 'tempo']
@@ -111,7 +111,7 @@ class ExerciseFieldsConfigSeeder extends Seeder
                     'description' => 'Кардио упражнение со скакалкой',
                     'category' => 'Кардио',
                     'equipment' => 'Скакалка',
-                    'muscle_groups' => ['Ноги', 'Плечи', 'Сердце'],
+                    'muscle_groups' => ['Ноги(Бедра)', 'Плечи', 'Сердце'],
                     'difficulty' => 'beginner',
                     'is_active' => true,
                     'fields_config' => ['time', 'tempo']

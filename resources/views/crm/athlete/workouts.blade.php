@@ -101,7 +101,6 @@
                         }
                     }
                 } catch (error) {
-                    console.error('Error loading progress for all workouts:', error);
                 } finally {
                     // Finish loading
                     this.isLoading = false;
@@ -335,7 +334,6 @@
                             showError('Ошибка сохранения', result.message || 'Не удалось сохранить прогресс. Попробуйте еще раз.');
                         }
                     } catch (error) {
-                        console.error('Ошибка обновления:', error);
                         showError('Ошибка соединения', 'Проверьте подключение к интернету и попробуйте еще раз.');
                     }
                 },
@@ -365,7 +363,6 @@
                             });
                         }
                     } catch (error) {
-                        console.error('Ошибка загрузки прогресса:', error);
                     }
                 },
 
@@ -789,7 +786,6 @@
                             showError('Ошибка', result.message || 'Не удалось обновить статус тренировки');
                         }
                     } catch (error) {
-                        console.error('Ошибка обновления статуса:', error);
                         showError('Ошибка соединения', 'Проверьте подключение к интернету и попробуйте еще раз.');
                     }
                 }
