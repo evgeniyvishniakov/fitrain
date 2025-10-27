@@ -27,6 +27,13 @@ class LanguageController extends Controller
         // Сохраняем язык в сессии
         Session::put('locale', $locale);
         
+        // Если пользователь авторизован - сохраняем язык в базу данных
+        if (auth()->check()) {
+            $user = auth()->user();
+            $user->language_code = $locale;
+            $user->save();
+        }
+        
         // Устанавливаем локаль для текущего запроса
         App::setLocale($locale);
 

@@ -23,14 +23,16 @@ class Exercise extends Model
         'is_active',
         'is_system',
         'trainer_id',
-        'fields_config'
+        'fields_config',
+        'translations'
     ];
 
     protected $casts = [
         'muscle_groups' => 'array',
         'is_active' => 'boolean',
         'is_system' => 'boolean',
-        'fields_config' => 'array'
+        'fields_config' => 'array',
+        'translations' => 'array'
     ];
 
     // Константы для категорий
@@ -167,5 +169,99 @@ class Exercise extends Model
         return $this->belongsToMany(\App\Models\Trainer\Workout::class, 'workout_exercise', 'exercise_id', 'workout_id')
                     ->withPivot(['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'])
                     ->withTimestamps();
+    }
+
+    // Методы для работы с переводами
+    
+    /**
+     * Переопределяем метод getAttribute для автоматического перевода
+     */
+    public function getAttribute($key)
+    {
+        $value = parent::getAttribute($key);
+        
+        // Применяем перевод только для текстовых полей и muscle_groups
+        if (in_array($key, ['name', 'description', 'instructions', 'muscle_groups']) && $this->translations) {
+            $locale = app()->getLocale();
+            
+            // Если есть перевод для текущей локали, возвращаем его
+            if (isset($this->translations[$locale][$key]) && !empty($this->translations[$locale][$key])) {
+                return $this->translations[$locale][$key];
+            }
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Получить переведенное значение поля для конкретного языка
+     * 
+     * @param string $field - название поля (name, description, instructions)
+     * @param string $locale - код языка (ru, uk, en)
+     * @return string
+     */
+    public function getTranslated($field, $locale)
+    {
+        if ($this->translations && isset($this->translations[$locale][$field])) {
+            return $this->translations[$locale][$field];
+        }
+        
+        // Возвращаем оригинальное значение
+        return parent::getAttribute($field) ?? '';
+    }
+    
+    /**
+     * Установить перевод для поля
+     */
+    public function setTranslation($field, $value, $locale)
+    {
+        $translations = $this->translations ?? [];
+        
+        if (!isset($translations[$locale])) {
+            $translations[$locale] = [];
+        }
+        
+        $translations[$locale][$field] = $value;
+        $this->translations = $translations;
+    }
+    
+    /**
+     * Установить все переводы для языка
+     */
+    public function setTranslations($data, $locale)
+    {
+        $translations = $this->translations ?? [];
+        $translations[$locale] = $data;
+        $this->translations = $translations;
+    }
+    
+    /**
+     * Получить все переводы для языка
+     */
+    public function getTranslationsForLocale($locale)
+    {
+        return $this->translations[$locale] ?? [];
+    }
+    
+    /**
+     * Переопределяем toArray для правильной сериализации с переводами
+     */
+    public function toArray()
+    {
+        $array = parent::toArray();
+        
+        // Применяем переводы для текстовых полей
+        if ($this->translations) {
+            $locale = app()->getLocale();
+            
+            $translatableFields = ['name', 'description', 'instructions', 'muscle_groups'];
+            foreach ($translatableFields as $field) {
+                if (isset($this->translations[$locale][$field]) && !empty($this->translations[$locale][$field])) {
+                    $array[$field] = $this->translations[$locale][$field];
+                }
+            }
+        }
+        
+        return $array;
     }
 }

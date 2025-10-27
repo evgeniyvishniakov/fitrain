@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\CurrencyController;
+use App\Http\Controllers\Admin\ExerciseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +77,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/{currency}/set-default', [CurrencyController::class, 'setDefault'])->name('set-default');
         Route::post('/{currency}/toggle-status', [CurrencyController::class, 'toggleStatus'])->name('toggle-status');
         Route::post('/update-rates', [CurrencyController::class, 'updateRates'])->name('update-rates');
+    });
+    
+    // Управление упражнениями
+    Route::prefix('exercises')->name('admin.exercises.')->group(function () {
+        Route::get('/', [ExerciseController::class, 'index'])->name('index');
+        Route::post('/', [ExerciseController::class, 'store'])->name('store');
+        Route::get('/{exercise}/edit', [ExerciseController::class, 'edit'])->name('edit');
+        Route::put('/{exercise}', [ExerciseController::class, 'update'])->name('update');
+        Route::delete('/{exercise}', [ExerciseController::class, 'destroy'])->name('destroy');
     });
 
     // Системные функции
