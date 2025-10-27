@@ -171,6 +171,58 @@ class Exercise extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Пользователи, которые добавили это упражнение в избранное
+     */
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'favorite_exercises', 'exercise_id', 'user_id')
+                    ->withTimestamps();
+    }
+
+    // Методы для работы с избранным
+    
+    /**
+     * Проверить, находится ли упражнение в избранном у пользователя
+     */
+    public function isFavoritedBy($userId)
+    {
+        return $this->favoritedBy()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * Добавить в избранное
+     */
+    public function addToFavorites($userId)
+    {
+        if (!$this->isFavoritedBy($userId)) {
+            FavoriteExercise::create([
+                'user_id' => $userId,
+                'exercise_id' => $this->id,
+            ]);
+        }
+    }
+
+    /**
+     * Удалить из избранного
+     */
+    public function removeFromFavorites($userId)
+    {
+        FavoriteExercise::where('user_id', $userId)
+            ->where('exercise_id', $this->id)
+            ->delete();
+    }
+
+    /**
+     * Scope для избранных упражнений пользователя
+     */
+    public function scopeFavorites($query, $userId)
+    {
+        return $query->whereHas('favoritedBy', function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
+    }
+
     // Методы для работы с переводами
     
     /**

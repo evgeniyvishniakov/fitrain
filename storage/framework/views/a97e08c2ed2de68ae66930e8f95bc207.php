@@ -1,25 +1,18 @@
-@extends("crm.layouts.app")
+<?php $__env->startSection("title", __('common.exercises')); ?>
+<?php $__env->startSection("page-title", __('common.exercises')); ?>
 
-@section("title", __('common.exercises'))
-@section("page-title", __('common.exercises'))
-
-@section("header-actions")
-    <!-- Кнопка добавления перенесена в строку с фильтрами -->
-@endsection
-
-@section("content")
 <script>
 // SPA функциональность для упражнений
 function exerciseApp() {
     return {
         currentView: 'list', // list, create, edit, view, add-video
-        exercises: @json($allExercises),
+        exercises: <?php echo json_encode($allExercises, 15, 512) ?>,
         currentExercise: null,
         search: '',
         category: '',
         equipment: '',
         exerciseType: '',
-        favoriteIds: @json($favoriteIds ?? []),
+        favoriteIds: <?php echo json_encode($favoriteIds ?? [], 15, 512) ?>,
         currentPage: 1,
         itemsPerPage: 10,
         
@@ -164,6 +157,19 @@ function exerciseApp() {
             return filtered;
         },
         
+        // Доступные варианты оборудования по выбранной категории
+        availableEquipments() {
+            const equipmentsSet = new Set();
+            (this.exercises || []).forEach(exercise => {
+                if (!this.category || exercise.category === this.category) {
+                    if (exercise.equipment) {
+                        equipmentsSet.add(exercise.equipment);
+                    }
+                }
+            });
+            return Array.from(equipmentsSet).sort();
+        },
+        
         // Пагинация
         get totalPages() {
             const total = Math.ceil(this.filteredExercises.length / this.itemsPerPage);
@@ -202,7 +208,7 @@ function exerciseApp() {
         },
         
         goToPage(page) {
-                this.currentPage = page;
+            this.currentPage = page;
         },
         
         previousPage() {
@@ -220,55 +226,21 @@ function exerciseApp() {
         // Сохранение
         async saveExercise() {
             try {
-                // Валидация на фронтенде
-                if (!this.formName.trim()) {
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'error',
-                            title: 'Ошибка валидации',
-                            message: 'Название упражнения обязательно для заполнения'
-                        }
-                    }));
-                    return;
-                }
-                
-                if (!this.formCategory) {
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'error',
-                            title: 'Ошибка валидации',
-                            message: 'Категория упражнения обязательна для заполнения'
-                        }
-                    }));
-                    return;
-                }
-                
-                if (!this.formEquipment) {
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'error',
-                            title: 'Ошибка валидации',
-                            message: 'Оборудование обязательно для заполнения'
-                        }
-                    }));
-                    return;
-                }
-                
                 const muscleGroups = this.formMuscleGroupsText
                     .split(',')
                     .map(g => g.trim())
                     .filter(g => g.length > 0);
                 
                 const formData = new FormData();
-                formData.append('name', this.formName.trim());
-                formData.append('description', this.formDescription || '');
+                formData.append('name', this.formName);
+                formData.append('description', this.formDescription);
                 formData.append('category', this.formCategory);
                 formData.append('equipment', this.formEquipment);
-                formData.append('instructions', this.formInstructions || '');
-                formData.append('video_url', this.formVideoUrl || '');
+                formData.append('instructions', this.formInstructions);
+                formData.append('video_url', this.formVideoUrl);
                 
                 muscleGroups.forEach((group, index) => {
-                    formData.append('muscle_groups[' + index + ']', group);
+                    formData.append(`muscle_groups[${index}]`, group);
                 });
                 
                 this.formFieldsConfig.forEach((field, index) => {
@@ -304,7 +276,7 @@ function exerciseApp() {
                 }
                 
                 const url = this.currentExercise && this.currentExercise.id ? 
-                    '/self-athlete/exercises/' + this.currentExercise.id : '/self-athlete/exercises';
+                    `/exercises/${this.currentExercise.id}` : '/exercises';
                 const method = 'POST';
                 
                 if (this.currentExercise && this.currentExercise.id) {
@@ -321,41 +293,18 @@ function exerciseApp() {
                 });
                 
                 if (!response.ok) {
-                    // Получаем текст ответа для ошибок валидации
-                    const errorText = await response.text();
-                    let errorMessage = `HTTP error! status: ${response.status}`;
-                    
-                    // Если это ошибка валидации (422), пытаемся извлечь детали
-                    if (response.status === 422) {
-                        try {
-                            const errorData = JSON.parse(errorText);
-                            if (errorData.errors) {
-                                const validationErrors = Object.values(errorData.errors).flat();
-                                errorMessage = `Ошибка валидации: ${validationErrors.join(', ')}`;
-                            } else if (errorData.message) {
-                                errorMessage = errorData.message;
-                            }
-                        } catch (e) {
-                            // Если не удалось распарсить JSON, используем текст как есть
-                            if (errorText && !errorText.includes('<!DOCTYPE')) {
-                                errorMessage = errorText;
-                            }
-                        }
-                    }
-                    
-                    throw new Error(errorMessage);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const text = await response.text();
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.authorization_error') }}',
-                            message: '{{ __('common.reauthorization_required') }}'
+                            title: '<?php echo e(__('common.authorization_error')); ?>',
+                            message: '<?php echo e(__('common.reauthorization_required')); ?>'
                         }
                     }));
                     return;
@@ -365,12 +314,11 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.server_response_error') }}',
-                            message: '{{ __('common.invalid_server_response') }}'
+                            title: '<?php echo e(__('common.server_response_error')); ?>',
+                            message: '<?php echo e(__('common.invalid_server_response')); ?>'
                         }
                     }));
                     return;
@@ -381,10 +329,10 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: this.currentExercise && this.currentExercise.id ? '{{ __('common.exercise_updated') }}' : '{{ __('common.exercise_created') }}',
+                            title: this.currentExercise && this.currentExercise.id ? '<?php echo e(__('common.exercise_updated')); ?>' : '<?php echo e(__('common.exercise_created')); ?>',
                             message: this.currentExercise && this.currentExercise.id ? 
-                                '{{ __('common.exercise_successfully_updated') }}' : 
-                                '{{ __('common.exercise_successfully_added') }}'
+                                '<?php echo e(__('common.exercise_successfully_updated')); ?>' : 
+                                '<?php echo e(__('common.exercise_successfully_added')); ?>'
                         }
                     }));
                     
@@ -408,18 +356,18 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.saving_error') }}',
-                            message: result.message || '{{ __('common.exercise_saving_error') }}'
+                            title: '<?php echo e(__('common.saving_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.exercise_saving_error')); ?>'
                         }
                     }));
                 }
             } catch (error) {
-                // Показываем уведомление об ошибке с деталями
+                // Показываем уведомление об ошибке
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: error.message || '{{ __('common.exercise_saving_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.exercise_saving_error')); ?>'
                     }
                 }));
             }
@@ -428,15 +376,15 @@ function exerciseApp() {
         // Удаление
         deleteExercise(id) {
             const exercise = this.exercises.find(e => e.id === id);
-            const exerciseName = exercise ? exercise.name : '{{ __('common.exercise') }}';
+            const exerciseName = exercise ? exercise.name : '<?php echo e(__('common.exercise')); ?>';
             
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: '{{ __('common.delete') }} {{ __('common.exercise') }}',
-                    message: `{{ __('common.are_you_sure_delete_exercise') }} "${exerciseName}"?`,
-                    confirmText: '{{ __('common.delete') }}',
-                    cancelText: '{{ __('common.cancel') }}',
+                    title: '<?php echo e(__('common.delete')); ?> <?php echo e(__('common.exercise')); ?>',
+                    message: `<?php echo e(__('common.are_you_sure_delete_exercise')); ?> "${exerciseName}"?`,
+                    confirmText: '<?php echo e(__('common.delete')); ?>',
+                    cancelText: '<?php echo e(__('common.cancel')); ?>',
                     onConfirm: () => this.performDelete(id)
                 }
             }));
@@ -444,7 +392,7 @@ function exerciseApp() {
         
         async performDelete(id) {
             try {
-                const response = await fetch(`/self-athlete/exercises/${id}`, {
+                const response = await fetch(`/exercises/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -457,12 +405,11 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.authorization_error') }}',
-                            message: '{{ __('common.reauthorization_required') }}'
+                            title: '<?php echo e(__('common.authorization_error')); ?>',
+                            message: '<?php echo e(__('common.reauthorization_required')); ?>'
                         }
                     }));
                     return;
@@ -472,12 +419,11 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.server_response_error') }}',
-                            message: '{{ __('common.invalid_server_response') }}'
+                            title: '<?php echo e(__('common.server_response_error')); ?>',
+                            message: '<?php echo e(__('common.invalid_server_response')); ?>'
                         }
                     }));
                     return;
@@ -488,8 +434,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.exercise_deleted') }}',
-                            message: result.message || '{{ __('common.exercise_successfully_deleted') }}'
+                            title: '<?php echo e(__('common.exercise_deleted')); ?>',
+                            message: result.message || '<?php echo e(__('common.exercise_successfully_deleted')); ?>'
                         }
                     }));
                     
@@ -505,8 +451,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.deleting_error') }}',
-                            message: result.message || '{{ __('common.exercise_in_use') }}'
+                            title: '<?php echo e(__('common.deleting_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.exercise_in_use')); ?>'
                         }
                     }));
                 }
@@ -515,8 +461,8 @@ function exerciseApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.exercise_deleting_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.exercise_deleting_error')); ?>'
                     }
                 }));
             }
@@ -530,8 +476,8 @@ function exerciseApp() {
         async toggleFavorite(exerciseId) {
             const isFav = this.isFavorite(exerciseId);
             const url = isFav 
-                ? `/self-athlete/exercises/${exerciseId}/favorite`
-                : `/self-athlete/exercises/${exerciseId}/favorite`;
+                ? `/exercises/${exerciseId}/favorite`
+                : `/exercises/${exerciseId}/favorite`;
             const method = isFav ? 'DELETE' : 'POST';
             
             try {
@@ -706,87 +652,6 @@ function exerciseApp() {
             return this.userVideos[exercise.id]?.title || exercise.name;
         },
         
-        // Загрузка упражнений из тренировок
-        async loadExercisesFromWorkouts() {
-            try {
-                const response = await fetch('/self-athlete/exercises/from-workouts', {
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const text = await response.text();
-                
-                // Проверяем, не HTML ли это (например, страница входа)
-                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'error',
-                            title: '{{ __('common.authorization_error') }}',
-                            message: '{{ __('common.reauthorization_required') }}'
-                        }
-                    }));
-                    return;
-                }
-                
-                let result;
-                try {
-                    result = JSON.parse(text);
-                } catch (parseError) {
-                    
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'error',
-                            title: '{{ __('common.server_response_error') }}',
-                            message: '{{ __('common.invalid_server_response') }}'
-                        }
-                    }));
-                    return;
-                }
-                
-                if (result.success && result.exercises) {
-                    // Добавляем загруженные упражнения к существующим
-                    const newExercises = result.exercises.filter(newEx => 
-                        !this.exercises.some(existingEx => existingEx.id === newEx.id)
-                    );
-                    
-                    this.exercises = [...this.exercises, ...newExercises];
-                    
-                    // Показываем уведомление об успехе
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'success',
-                            title: 'Упражнения загружены',
-                            message: `Добавлено ${newExercises.length} новых упражнений из тренировок`
-                        }
-                    }));
-                } else {
-                    window.dispatchEvent(new CustomEvent('show-notification', {
-                        detail: {
-                            type: 'error',
-                            title: 'Ошибка загрузки',
-                            message: result.message || 'Не удалось загрузить упражнения из тренировок'
-                        }
-                    }));
-                }
-            } catch (error) {
-                window.dispatchEvent(new CustomEvent('show-notification', {
-                    detail: {
-                        type: 'error',
-                        title: 'Ошибка',
-                        message: 'Не удалось загрузить упражнения из тренировок'
-                    }
-                }));
-            }
-        },
-        
         // Инициализация
         init() {
             // Загружаем пользовательские видео при инициализации
@@ -799,6 +664,10 @@ function exerciseApp() {
             
             this.$watch('category', () => {
                 this.currentPage = 1;
+                const available = this.availableEquipments();
+                if (this.equipment && !available.includes(this.equipment)) {
+                    this.equipment = '';
+                }
             });
             
             this.$watch('equipment', () => {
@@ -840,7 +709,7 @@ function exerciseApp() {
         // Методы для работы с пользовательскими видео
         async loadAllUserVideos() {
             try {
-                const response = await fetch('/self-athlete/exercises/user-videos', {
+                const response = await fetch('/exercises/user-videos', {
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json',
@@ -856,7 +725,6 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    
                     return;
                 }
                 
@@ -864,7 +732,6 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    
                     return;
                 }
                 
@@ -880,7 +747,7 @@ function exerciseApp() {
         
         async loadUserVideo(exerciseId) {
             try {
-                const response = await fetch(`/self-athlete/exercises/${exerciseId}/user-video`, {
+                const response = await fetch(`/exercises/${exerciseId}/user-video`, {
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json'
@@ -895,7 +762,6 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    
                     return;
                 }
                 
@@ -903,7 +769,6 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    
                     return;
                 }
                 
@@ -925,7 +790,7 @@ function exerciseApp() {
                     description: this.userVideoDescription
                 };
                 
-                const response = await fetch(`/self-athlete/exercises/${this.currentExercise.id}/user-video`, {
+                const response = await fetch(`/exercises/${this.currentExercise.id}/user-video`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -943,12 +808,11 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.authorization_error') }}',
-                            message: '{{ __('common.reauthorization_required') }}'
+                            title: '<?php echo e(__('common.authorization_error')); ?>',
+                            message: '<?php echo e(__('common.reauthorization_required')); ?>'
                         }
                     }));
                     return;
@@ -958,12 +822,11 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.server_response_error') }}',
-                            message: '{{ __('common.invalid_server_response') }}'
+                            title: '<?php echo e(__('common.server_response_error')); ?>',
+                            message: '<?php echo e(__('common.invalid_server_response')); ?>'
                         }
                     }));
                     return;
@@ -974,7 +837,7 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.video_saved') }}',
+                            title: '<?php echo e(__('common.video_saved')); ?>',
                             message: result.message
                         }
                     }));
@@ -989,8 +852,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.saving_error') }}',
-                            message: result.message || '{{ __('common.video_saving_error') }}'
+                            title: '<?php echo e(__('common.saving_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.video_saving_error')); ?>'
                         }
                     }));
                 }
@@ -999,8 +862,8 @@ function exerciseApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.video_saving_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.video_saving_error')); ?>'
                     }
                 }));
             }
@@ -1008,7 +871,7 @@ function exerciseApp() {
         
         async deleteUserVideo() {
             try {
-                const response = await fetch(`/self-athlete/exercises/${this.currentExercise.id}/user-video`, {
+                const response = await fetch(`/exercises/${this.currentExercise.id}/user-video`, {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json',
@@ -1024,7 +887,6 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
-                    
                     return;
                 }
                 
@@ -1032,7 +894,6 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
-                    
                     return;
                 }
                 
@@ -1041,7 +902,7 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.video_deleted') }}',
+                            title: '<?php echo e(__('common.video_deleted')); ?>',
                             message: result.message
                         }
                     }));
@@ -1059,8 +920,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.deleting_error') }}',
-                            message: result.message || '{{ __('common.video_deleting_error') }}'
+                            title: '<?php echo e(__('common.deleting_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.video_deleting_error')); ?>'
                         }
                     }));
                 }
@@ -1069,14 +930,14 @@ function exerciseApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.video_deleting_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.video_deleting_error')); ?>'
                     }
                 }));
             }
         },
         
-        // Обработка выбора первого изображения
+        // Обработка выбора изображения
         handleImageSelect(event) {
             const file = event.target.files[0];
             if (file) {
@@ -1093,13 +954,13 @@ function exerciseApp() {
                     return;
                 }
                 
-                // Валидация размера файла (макс 10MB)
-                if (file.size > 10 * 1024 * 1024) {
+                // Валидация размера файла (макс 5MB)
+                if (file.size > 5 * 1024 * 1024) {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
                             title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 10MB'
+                            message: 'Размер файла не должен превышать 5MB'
                         }
                     }));
                     event.target.value = '';
@@ -1117,7 +978,7 @@ function exerciseApp() {
             }
         },
         
-        // Удаление первого изображения
+        // Удаление изображения
         removeImage() {
             this.formImage = null;
             this.formImagePreview = '';
@@ -1144,13 +1005,13 @@ function exerciseApp() {
                     return;
                 }
                 
-                // Валидация размера файла (макс 10MB)
-                if (file.size > 10 * 1024 * 1024) {
+                // Валидация размера файла (макс 5MB)
+                if (file.size > 5 * 1024 * 1024) {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
                             title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 10MB'
+                            message: 'Размер файла не должен превышать 5MB'
                         }
                     }));
                     event.target.value = '';
@@ -1197,6 +1058,11 @@ function exerciseApp() {
 }
 </script>
 
+<?php $__env->startSection("header-actions"); ?>
+    <!-- Кнопка добавления перенесена в строку с фильтрами -->
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection("content"); ?>
 <div x-data="exerciseApp()" x-init="init()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
@@ -1249,36 +1115,36 @@ function exerciseApp() {
             <div class="filters-row">
                 <!-- Поиск -->
                 <div class="search-container">
-                    <input type="text"
-                           x-model="search"
-                           placeholder="{{ __('common.search_exercises') }}" 
+                    <input type="text" 
+                           x-model="search" 
+                           placeholder="<?php echo e(__('common.search_exercises')); ?>" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
                 <!-- Фильтр категории -->
                 <div class="filter-container">
-                    <select x-model="category"
+                    <select x-model="category" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все категории</option>
-                        <option value="Грудь">Грудь</option>
-                        <option value="Спина">Спина</option>
-                        <option value="Ноги(Бедра)">Ноги(Бедра)</option>
-                        <option value="Ноги(Икры)">Ноги(Икры)</option>
-                        <option value="Плечи">Плечи</option>
+                        <option value=""><?php echo e(__('common.all_categories')); ?></option>
+                        <option value="Грудь"><?php echo e(__('common.chest')); ?></option>
+                        <option value="Спина"><?php echo e(__('common.back')); ?></option>
+                        <option value="Ноги(Бедра)"><?php echo e(__('common.legs_thighs')); ?></option>
+                        <option value="Ноги(Икры)"><?php echo e(__('common.legs_calves')); ?></option>
+                        <option value="Плечи"><?php echo e(__('common.shoulders')); ?></option>
                         <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                         <option value="Руки(Трицепс)">Руки(Трицепс)</option>
-                        <option value="Пресс">Пресс</option>
-                        <option value="Кардио">Кардио</option>
-                        <option value="Гибкость">Гибкость</option>
+                        <option value="Пресс"><?php echo e(__('common.abs')); ?></option>
+                        <option value="Кардио"><?php echo e(__('common.cardio')); ?></option>
+                        <option value="Гибкость"><?php echo e(__('common.flexibility')); ?></option>
                     </select>
                 </div>
                 
                 <!-- Фильтр оборудования -->
                 <div class="filter-container">
-                    <select x-model="equipment"
+                    <select x-model="equipment" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Весь инвентарь</option>
-                        <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment))).sort()" :key="eq">
+                        <option value=""><?php echo e(__('common.all_equipment')); ?></option>
+                        <template x-for="eq in availableEquipments()" :key="eq">
                             <option :value="eq" x-text="eq"></option>
                         </template>
                     </select>
@@ -1288,21 +1154,22 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="exerciseType" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_exercises') }}</option>
-                        <option value="system">{{ __('common.system_exercises') }}</option>
-                        <option value="user">{{ __('common.user_exercises') }}</option>
+                        <option value=""><?php echo e(__('common.all_exercises')); ?></option>
+                        <option value="system"><?php echo e(__('common.system_exercises')); ?></option>
+                        <option value="user"><?php echo e(__('common.user_exercises')); ?></option>
                         <option value="favorite">Избранное</option>
                     </select>
                 </div>
                 
                 <!-- Кнопки -->
                 <div class="buttons-container">
-                    @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
+                    <?php if(auth()->user()->hasRole('trainer')): ?>
                         <button @click="showCreate()" 
                                 class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                            {{ __('common.create_exercise') }}
+                            <?php echo e(__('common.create_exercise')); ?>
+
                         </button>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1310,17 +1177,17 @@ function exerciseApp() {
         <!-- Активные фильтры -->
         <div x-show="search || category || equipment" class="mt-4 pt-4 border-t border-gray-100">
             <div class="flex flex-wrap gap-2">
-                <span class="text-sm text-gray-500">{{ __('common.active_filters') }}</span>
+                <span class="text-sm text-gray-500"><?php echo e(__('common.active_filters')); ?></span>
                 <span x-show="search" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ __('common.search') }}: "<span x-text="search"></span>"
+                    <?php echo e(__('common.search')); ?>: "<span x-text="search"></span>"
                     <button @click="search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
                 </span>
                 <span x-show="category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {{ __('common.category') }}: <span x-text="category"></span>
+                    <?php echo e(__('common.category')); ?>: <span x-text="category"></span>
                     <button @click="category = ''" class="ml-1 text-green-600 hover:text-green-800">×</button>
                 </span>
                 <span x-show="equipment" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    {{ __('common.equipment') }}: <span x-text="equipment"></span>
+                    <?php echo e(__('common.equipment')); ?>: <span x-text="equipment"></span>
                     <button @click="equipment = ''" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
                 </span>
             </div>
@@ -1331,75 +1198,81 @@ function exerciseApp() {
     <div x-show="currentView === 'list'" class="space-y-6">
         <div x-show="paginatedExercises.length > 0" style="display: grid; gap: 24px;" class="exercise-grid">
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
-                    <div style="display: flex; gap: 1rem;">
-                        <!-- Картинка слева -->
-                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 25%;">
-                            <img :src="`/storage/${exercise.image_url}`" 
-                                 :alt="exercise.name"
-                                 class="w-full h-full object-cover rounded-lg"
-                                 style="max-height: 200px;">
-                        </div>
-                        
-                        <!-- Информация справа -->
-                        <div style="flex: 1; display: flex; flex-direction: column;">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
-                                    @click="showView(exercise.id)"
-                                    :title="'Нажмите чтобы открыть: ' + exercise.name">
-                                    <span x-text="exercise.name"></span>
-                                </h3>
-                                <button x-show="hasVideo(exercise)" 
-                                        @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
-                                        class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                    </svg>
-                                    {{ __('common.video') }}
-                                </button>
-                            </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6" style="display: flex; gap: 1.5rem;">
+                    <!-- Картинка слева -->
+                    <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 200px;">
+                        <img :src="`/storage/${exercise.image_url}`" 
+                             :alt="exercise.name"
+                             class="w-full h-full object-cover rounded-lg">
+                    </div>
+                    
+                    <!-- Информация справа -->
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                        <!-- Заголовок -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
+                                        @click="showView(exercise.id)"
+                                        :title="'Нажмите чтобы открыть: ' + exercise.name">
+                                        <span x-text="exercise.name"></span>
+                                    </h3>
+                                    <button x-show="hasVideo(exercise)" 
+                                            @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
+                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        <?php echo e(__('common.video')); ?>
+
+                                    </button>
+                                </div>
                             
                             <!-- Теги -->
                             <div class="flex flex-wrap gap-2 mb-4 justify-between">
                                 <div class="flex flex-wrap gap-2">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
                                 </div>
-                                <div class="flex gap-2">
-                                    <span x-show="exercise.is_system" 
-                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
-                                          title="Системное упражнение нельзя редактировать или удалять">
-                                        Системное
-                                    </span>
-                                    <span x-show="!exercise.is_system" 
-                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                                          title="Пользовательское упражнение можно редактировать и удалять">
-                                        Пользовательское
-                                    </span>
-                                </div>
+                                <span x-show="exercise.is_system" 
+                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
+                                      title="Системное упражнение нельзя редактировать или удалять">
+                                    Системное
+                                </span>
+                                <span x-show="!exercise.is_system" 
+                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                      title="Пользовательское упражнение можно редактировать и удалять">
+                                    Пользовательское
+                                </span>
                             </div>
-                                
+                            
                             <!-- Группы мышц -->
                             <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
                                 <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
+                            </div>
+                        </div>
                     </div>
-                            
-                            <!-- Кнопки внизу справа -->
-                            <div class="flex space-x-2 mt-4" style="margin-top: auto; padding-top: 1rem;">
+                    
+                    <!-- Кнопки -->
+                    <div class="flex space-x-2">
                         <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                            {{ __('common.view') }}
+                            <?php echo e(__('common.view')); ?>
+
                         </button>
-                        @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
-                            <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                {{ __('common.edit') }}
+                        <?php if(auth()->user()->hasRole('trainer')): ?>
+                            <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                <?php echo e(__('common.edit')); ?>
+
                             </button>
-                            <button x-show="!exercise.is_system && exercise.trainer_id === {{ auth()->id() }}" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                {{ __('common.delete') }}
+                            <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                <?php echo e(__('common.delete')); ?>
+
                             </button>
                             <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                                {{ __('common.add') }} {{ __('common.video') }}
+                                <?php echo e(__('common.add')); ?> <?php echo e(__('common.video')); ?>
+
                             </button>
-                        @endif
+                        <?php endif; ?>
                         
                         <!-- Кнопка избранного -->
                         <button @click.stop="toggleFavorite(exercise.id)" 
@@ -1415,8 +1288,7 @@ function exerciseApp() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                             </svg>
                         </button>
-                            </div>
-                        </div>
+                    </div>
                     </div>
                 </div>
             </template>
@@ -1429,12 +1301,13 @@ function exerciseApp() {
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет упражнений</h3>
             <p class="text-gray-600 mb-8 max-w-md mx-auto">Добавьте упражнения в базу для создания тренировок.</p>
-            @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
+            <?php if(auth()->user()->hasRole('trainer')): ?>
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    {{ __('common.create') }} {{ __('common.first_exercise') }}
+                    <?php echo e(__('common.create')); ?> <?php echo e(__('common.first_exercise')); ?>
+
                 </button>
-            @endif
+            <?php endif; ?>
         </div>
         
         <!-- Пагинация -->
@@ -1442,31 +1315,31 @@ function exerciseApp() {
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div class="flex items-center justify-center">
                     <div class="flex items-center space-x-2">
-            <button @click="previousPage()" 
-                    :disabled="currentPage === 1"
+                        <button @click="previousPage()" 
+                                :disabled="currentPage === 1"
                                 :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
                                 class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
-            </button>
-            
-            <template x-for="page in visiblePages" :key="page">
-                <button @click="goToPage(page)" 
+                        </button>
+                        
+                        <template x-for="page in visiblePages" :key="page">
+                            <button @click="goToPage(page)" 
                                     :class="page === currentPage ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'"
                                     class="px-3 py-2 text-sm font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                                 <span x-text="page"></span>
                             </button>
-            </template>
-            
-            <button @click="nextPage()" 
-                    :disabled="currentPage === totalPages"
+                        </template>
+                        
+                        <button @click="nextPage()" 
+                                :disabled="currentPage === totalPages"
                                 :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
                                 class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
-            </button>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1475,15 +1348,16 @@ function exerciseApp() {
 
     <!-- Форма создания/редактирования -->
     <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="mb-6">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '{{ __('common.create_exercise') }}' : '{{ __('common.edit_exercise') }}'"></h2>
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    {{ __('common.back_to_list') }}
-                </button>
+        <div class="mb-6 flex justify-between items-start">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '<?php echo e(__('common.create_exercise')); ?>' : '<?php echo e(__('common.edit_exercise')); ?>'"></h2>
+                <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
             </div>
-            <p class="text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                <?php echo e(__('common.back_to_list')); ?>
+
+            </button>
         </div>
         
         <form @submit.prevent="saveExercise()" class="space-y-6">
@@ -1491,7 +1365,7 @@ function exerciseApp() {
                 <!-- Название и ссылка на видео в одном ряду -->
                 <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.exercise_name') }} *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.exercise_name')); ?> *</label>
                         <input type="text" 
                                x-model="formName" 
                                required
@@ -1507,6 +1381,7 @@ function exerciseApp() {
                     </div>
                 </div>
                 
+                <!-- Загрузка главного изображения -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Главное изображение упражнения</label>
                     
@@ -1533,15 +1408,16 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-xs text-gray-500">Выберите главное изображение (JPG, PNG, GIF, WEBP, макс 10MB)</p>
+                    <p class="mt-1 text-sm text-gray-500">Максимальный размер: 5MB. Форматы: JPG, PNG, GIF</p>
                     
                     <!-- Превью нового изображения при создании -->
-                    <div x-show="currentView === 'create' && formImagePreview" class="mt-3">
+                    <div x-show="currentView === 'create' && formImagePreview" class="mt-4">
                         <p class="text-xs text-gray-500 mb-1">Превью:</p>
                         <img :src="formImagePreview" alt="Превью" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                     </div>
                 </div>
                 
+                <!-- Загрузка второго изображения -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Второе изображение (необязательно)</label>
                     
@@ -1568,20 +1444,42 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect2($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-xs text-gray-500">Доп. изображение упражнения (JPG, PNG, GIF, WEBP, макс 10MB)</p>
+                    <p class="mt-1 text-sm text-gray-500">Дополнительное изображение. Макс 5MB. Форматы: JPG, PNG, GIF</p>
                     
                     <!-- Превью второго изображения при создании -->
-                    <div x-show="currentView === 'create' && formImagePreview2" class="mt-3">
+                    <div x-show="currentView === 'create' && formImagePreview2" class="mt-4">
                         <p class="text-xs text-gray-500 mb-1">Превью:</p>
                         <img :src="formImagePreview2" alt="Превью 2" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                     </div>
                 </div>
                 
-                <!-- Категория и Оборудование в одну строку -->
-                <div style="display: flex !important; gap: 1.5rem !important; flex-wrap: wrap !important; width: 100% !important;">
+                <!-- Три поля в одну строку -->
+                <div class="flex flex-col md:flex-row gap-6 flex-form-row" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <style>
+                        /* Мобильные (< 640px) - в колонку */
+                        @media (max-width: 639px) {
+                            .flex-form-row { flex-direction: column !important; }
+                        }
+                        /* Планшеты (640px - 767px) - в колонку */
+                        @media (min-width: 640px) and (max-width: 767px) {
+                            .flex-form-row { flex-direction: column !important; }
+                        }
+                        /* Планшеты (768px - 1023px) - в линию */
+                        @media (min-width: 768px) and (max-width: 1023px) {
+                            .flex-form-row { flex-direction: row !important; }
+                        }
+                        /* Ноутбуки (1024px - 1279px) - в линию */
+                        @media (min-width: 1024px) and (max-width: 1279px) {
+                            .flex-form-row { flex-direction: row !important; }
+                        }
+                        /* Десктопы (1280px+) - в линию */
+                        @media (min-width: 1280px) {
+                            .flex-form-row { flex-direction: row !important; }
+                        }
+                    </style>
                     <!-- Категория -->
-                    <div style="flex: 1 !important; min-width: 200px !important; width: 50% !important;">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.category') }} *</label>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.category')); ?> *</label>
                         <select x-model="formCategory" 
                                 required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
@@ -1600,8 +1498,8 @@ function exerciseApp() {
                     </div>
                     
                     <!-- Оборудование -->
-                    <div style="flex: 1 !important; min-width: 200px !important; width: 50% !important;">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.equipment_required') }}</label>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.equipment_required')); ?></label>
                         <select x-model="formEquipment" 
                                 required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
@@ -1622,20 +1520,20 @@ function exerciseApp() {
                             <option value="Скамейка">Скамейка</option>
                         </select>
                     </div>
+                    
+                    <!-- Группы мышц -->
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Группы мышц (через запятую)</label>
+                        <input type="text" 
+                               x-model="formMuscleGroupsText" 
+                               placeholder="например: грудь, плечи, трицепс"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    </div>
                 </div>
                 
-                <!-- Группы мышц отдельно -->
+                <!-- Описание -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Группы мышц (через запятую)</label>
-                    <input type="text" 
-                           x-model="formMuscleGroupsText" 
-                           placeholder="например: грудь, плечи, трицепс"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                </div>
-            
-            <!-- Описание -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.description')); ?></label>
                     <textarea x-model="formDescription" 
                               rows="4"
                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
@@ -1643,7 +1541,7 @@ function exerciseApp() {
                 
                 <!-- Инструкции -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.execution_instructions') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.execution_instructions')); ?></label>
                     <textarea x-model="formInstructions" 
                               rows="4"
                               placeholder="Пошаговые инструкции по выполнению упражнения..."
@@ -1739,8 +1637,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('rest') ? 'text-purple-900' : 'text-gray-900'">{{ __('common.rest') }} ({{ __('common.min') }})</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500'">Время отдыха</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('rest') ? 'text-purple-900' : 'text-gray-900""><?php echo e(__('common.rest')); ?> (<?php echo e(__('common.min')); ?>)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500"">Время отдыха</div>
                                 </div>
                             </div>
                         </label>
@@ -1759,8 +1657,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('time') ? 'text-blue-900' : 'text-gray-900'">Время (мин)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500'">Продолжительность</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('time') ? 'text-blue-900' : 'text-gray-900"">Время (мин)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500"">Продолжительность</div>
                                 </div>
                             </div>
                         </label>
@@ -1779,8 +1677,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('distance') ? 'text-emerald-900' : 'text-gray-900'">Дистанция (м)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500'">Пройденное расстояние</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('distance') ? 'text-emerald-900' : 'text-gray-900"">Дистанция (м)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500"">Пройденное расстояние</div>
                                 </div>
                             </div>
                         </label>
@@ -1799,8 +1697,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('tempo') ? 'text-pink-900' : 'text-gray-900'">Темп/Скорость</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500'">Скорость выполнения</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('tempo') ? 'text-pink-900' : 'text-gray-900"">Темп/Скорость</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500"">Скорость выполнения</div>
                                 </div>
                             </div>
                         </label>
@@ -1858,7 +1756,7 @@ function exerciseApp() {
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    <span x-text="currentView === 'create' ? '{{ __('common.create') }}' : '{{ __('common.save') }}'"></span>
+                    <span x-text="currentView === 'create' ? '<?php echo e(__('common.create')); ?>' : '<?php echo e(__('common.save')); ?>'"></span>
                 </button>
             </div>
         </form>
@@ -1866,15 +1764,16 @@ function exerciseApp() {
 
     <!-- Форма добавления пользовательского видео -->
     <div x-show="currentView === 'add-video'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="mb-6">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-2xl font-bold text-gray-900">{{ __('common.add_video_to_exercise') }}</h2>
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    {{ __('common.back_to_list') }}
-                </button>
+        <div class="mb-6 flex justify-between items-start">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900"><?php echo e(__('common.add_video_to_exercise')); ?></h2>
+                <p class="mt-2 text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
             </div>
-            <p class="text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                <?php echo e(__('common.back_to_list')); ?>
+
+            </button>
         </div>
         
         <form @submit.prevent="saveUserVideo()" class="space-y-6">
@@ -1891,7 +1790,7 @@ function exerciseApp() {
                 
                 <!-- Название видео -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.video_title') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.video_title')); ?></label>
                     <input type="text" 
                            x-model="userVideoTitle" 
                            placeholder="Например: Правильная техника выполнения"
@@ -1900,7 +1799,7 @@ function exerciseApp() {
                 
                 <!-- Описание видео -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.video_description') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.video_description')); ?></label>
                     <textarea x-model="userVideoDescription" 
                               rows="3"
                               placeholder="Дополнительные заметки о видео..."
@@ -1930,11 +1829,12 @@ function exerciseApp() {
                         type="button" 
                         @click="deleteUserVideo()" 
                         class="px-6 py-3 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                    {{ __('common.delete_video') }}
+                    <?php echo e(__('common.delete_video')); ?>
+
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    <span x-text="currentUserVideo ? '{{ __('common.update_video') }}' : '{{ __('common.save_video') }}'"></span>
+                    <span x-text="currentUserVideo ? '<?php echo e(__('common.update_video')); ?>' : '<?php echo e(__('common.save_video')); ?>'"></span>
                 </button>
             </div>
         </form>
@@ -1947,35 +1847,19 @@ function exerciseApp() {
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900" x-text="currentExercise?.name || 'Упражнение'"></h2>
                 </div>
-                <div class="flex items-center gap-3">
-                    <!-- Кнопка избранного -->
-                    <button @click.stop="toggleFavorite(currentExercise?.id)" 
-                            class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
-                            :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                            :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
-                        <!-- Заполненная звезда (в избранном) -->
-                        <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                        </svg>
-                        <!-- Пустая звезда (не в избранном) -->
-                        <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                        </svg>
-                    </button>
-                    
-                    <button @click="showList()" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                        {{ __('common.back_to_list') }}
-                    </button>
-                </div>
+                <button @click="showList()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                    <?php echo e(__('common.back_to_list')); ?>
+
+                </button>
             </div>
         </div>
         
         <div x-show="currentExercise" class="space-y-6">
-            <!-- Картинка слева и информация справа -->
-            <div style="display: flex; gap: 1.5rem; align-items: flex-start;">
+            <!-- Картинка и основная информация -->
+            <div style="display: flex; gap: 2rem; align-items: flex-start;">
                 <!-- Картинки и видео слева -->
-                <div style="flex: 0 0 35%; max-width: 35%; display: flex; flex-direction: column; gap: 1rem;">
+                <div style="flex: 0 0 35%; max-width: 500px; display: flex; flex-direction: column; gap: 1rem;">
                     <!-- Главное изображение (скрывается если второе изображение - GIF) -->
                     <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
                         <div>
@@ -1985,7 +1869,7 @@ function exerciseApp() {
                                  style="object-fit: contain;">
                         </div>
                     </template>
-            
+                    
                     <!-- Второе изображение -->
                     <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
                         <div>
@@ -1995,78 +1879,74 @@ function exerciseApp() {
                                  style="object-fit: contain;">
                         </div>
                     </template>
-            
-            <!-- Системное видео -->
+                    
+                    <!-- Системное видео -->
                     <div x-show="currentExercise?.video_url">
                         <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
                         <div class="bg-gray-50 rounded-lg p-2">
-                    <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                        <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                allowfullscreen>
-                        </iframe>
-                    </div>
+                            <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
                             <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
-                        <a :href="currentExercise?.video_url" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
+                                <a :href="currentExercise?.video_url" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
                                    class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
                                     Видео
-                        </a>
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Пользовательское видео -->
+                    
+                    <!-- Пользовательское видео -->
                     <div x-show="currentExercise?.is_system && currentUserVideo">
                         <div class="flex items-center justify-between mb-1">
                             <p class="text-xs text-gray-500 font-medium">Моё видео</p>
-                    <button @click="showAddVideo(currentExercise.id)" 
+                            <button @click="showAddVideo(currentExercise.id)" 
                                     class="text-xs text-indigo-600 hover:text-indigo-800">
                                 Изменить
-                </button>
-</div>
+                            </button>
+                        </div>
                         <div class="bg-gray-50 rounded-lg p-2">
                             <div x-show="isYouTubeUrl(currentUserVideo?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                                 <iframe :src="getYouTubeEmbedUrl(currentUserVideo?.video_url)" 
-                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                    allowfullscreen>
-            </iframe>
-                    </div>
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
                             <div x-show="!isYouTubeUrl(currentUserVideo?.video_url)" class="text-center py-4">
                                 <a :href="currentUserVideo?.video_url" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
                                    class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
                                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
                                     Видео
-                        </a>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
                 
                 <!-- Информация справа -->
                 <div style="flex: 1;">
-                    <!-- Заголовок и описание -->
-                    <div class="mb-4">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-2" x-text="currentExercise?.name || 'Упражнение'"></h2>
-                        <p class="text-gray-600" x-text="currentExercise?.description || 'Без описания'"></p>
-                    </div>
+                    <p class="mb-4 text-gray-600" x-text="currentExercise?.description || 'Без описания'"></p>
                     
                     <!-- Информация об упражнении -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.category') }}</h3>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1"><?php echo e(__('common.category')); ?></h3>
                             <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.equipment') }}</h3>
+                            <h3 class="text-sm font-medium text-gray-500 mb-1"><?php echo e(__('common.equipment')); ?></h3>
                             <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.equipment"></p>
                         </div>
                     </div>
@@ -2083,7 +1963,7 @@ function exerciseApp() {
                     
                     <!-- Инструкции -->
                     <div x-show="currentExercise?.instructions">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('common.execution_instructions') }}</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2"><?php echo e(__('common.execution_instructions')); ?></h3>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
                         </div>
@@ -2178,4 +2058,5 @@ function exerciseApp() {
 }
 </style>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/trainer/exercises/index.blade.php ENDPATH**/ ?>

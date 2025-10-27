@@ -95,6 +95,10 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/exercises/{id}/edit", [ExerciseController::class, "edit"])->name("crm.exercises.edit");
         Route::put("/exercises/{id}", [ExerciseController::class, "update"])->name("crm.exercises.update");
         Route::delete("/exercises/{id}", [ExerciseController::class, "destroy"])->name("crm.exercises.destroy");
+        
+        // Избранные упражнения
+        Route::post("/exercises/{id}/favorite", [ExerciseController::class, "addToFavorites"])->name("crm.exercises.favorite.add");
+        Route::delete("/exercises/{id}/favorite", [ExerciseController::class, "removeFromFavorites"])->name("crm.exercises.favorite.remove");
 
         // Шаблоны тренировок (только для тренеров)
         Route::get("/workout-templates", [WorkoutTemplateController::class, "index"])->name("crm.workout-templates.index");
@@ -200,6 +204,10 @@ Route::middleware(["auth"])->group(function () {
         Route::get("/self-athlete/exercises/{id}/edit", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "edit"])->name("crm.self-athlete.exercises.edit");
         Route::put("/self-athlete/exercises/{id}", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "update"])->name("crm.self-athlete.exercises.update");
         Route::delete("/self-athlete/exercises/{id}", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "destroy"])->name("crm.self-athlete.exercises.destroy");
+        
+        // Избранные упражнения для Self-Athlete
+        Route::post("/self-athlete/exercises/{id}/favorite", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "addToFavorites"])->name("crm.self-athlete.exercises.favorite.add");
+        Route::delete("/self-athlete/exercises/{id}/favorite", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "removeFromFavorites"])->name("crm.self-athlete.exercises.favorite.remove");
         
         // Пользовательские видео к системным упражнениям для Self-Athlete
         Route::get("/self-athlete/exercises/user-videos", [\App\Http\Controllers\Crm\Trainer\ExerciseController::class, "getAllUserVideos"])->name("crm.self-athlete.exercises.user-videos.all");

@@ -31,6 +31,11 @@ class ExerciseController extends BaseController
             $query->byEquipment($request->equipment);
         }
 
+        // Фильтр по избранному
+        if ($request->filled('favorites') && $request->favorites == 1) {
+            $query->favorites(auth()->id());
+        }
+
         $exercises = $query->paginate(12);
         
         // Для JavaScript нужны все упражнения без пагинации
@@ -39,10 +44,15 @@ class ExerciseController extends BaseController
               ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
         })->orderBy('created_at', 'desc')->get();
 
+        // Получаем ID избранных упражнений для пользователя
+        $favoriteIds = \App\Models\Trainer\FavoriteExercise::where('user_id', auth()->id())
+            ->pluck('exercise_id')
+            ->toArray();
+
         // Определяем view в зависимости от роли пользователя
         $view = auth()->user()->hasRole('self-athlete') ? 'crm.self-athlete.exercises' : 'crm.trainer.exercises.index';
         
-        return view($view, compact('exercises', 'allExercises'));
+        return view($view, compact('exercises', 'allExercises', 'favoriteIds'));
     }
 
     public function create()
@@ -354,5 +364,47 @@ class ExerciseController extends BaseController
             'success' => true,
             'videos' => $videos
         ]);
+    }
+
+    /**
+     * Добавить упражнение в избранное
+     */
+    public function addToFavorites($id)
+    {
+        try {
+            $exercise = Exercise::findOrFail($id);
+            $exercise->addToFavorites(auth()->id());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Упражнение добавлено в избранное'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при добавлении в избранное'
+            ], 500);
+        }
+    }
+
+    /**
+     * Удалить упражнение из избранного
+     */
+    public function removeFromFavorites($id)
+    {
+        try {
+            $exercise = Exercise::findOrFail($id);
+            $exercise->removeFromFavorites(auth()->id());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Упражнение удалено из избранного'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ошибка при удалении из избранного'
+            ], 500);
+        }
     }
 }

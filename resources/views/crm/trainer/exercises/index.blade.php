@@ -14,6 +14,7 @@ function exerciseApp() {
         category: '',
         equipment: '',
         exerciseType: '',
+        favoriteIds: @json($favoriteIds ?? []),
         currentPage: 1,
         itemsPerPage: 10,
         
@@ -150,6 +151,8 @@ function exerciseApp() {
                     filtered = filtered.filter(e => e.is_system === true);
                 } else if (this.exerciseType === 'user') {
                     filtered = filtered.filter(e => e.is_system === false);
+                } else if (this.exerciseType === 'favorite') {
+                    filtered = filtered.filter(e => this.favoriteIds.includes(e.id));
                 }
             }
             
@@ -467,7 +470,57 @@ function exerciseApp() {
             }
         },
         
+        // Избранное
+        isFavorite(exerciseId) {
+            return this.favoriteIds.includes(exerciseId);
+        },
         
+        async toggleFavorite(exerciseId) {
+            const isFav = this.isFavorite(exerciseId);
+            const url = isFav 
+                ? `/exercises/${exerciseId}/favorite`
+                : `/exercises/${exerciseId}/favorite`;
+            const method = isFav ? 'DELETE' : 'POST';
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (isFav) {
+                        // Удаляем из избранного
+                        this.favoriteIds = this.favoriteIds.filter(id => id !== exerciseId);
+                    } else {
+                        // Добавляем в избранное
+                        this.favoriteIds.push(exerciseId);
+                    }
+                    
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: isFav ? 'Удалено из избранного' : 'Добавлено в избранное',
+                            message: result.message
+                        }
+                    }));
+                }
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Не удалось обновить избранное'
+                    }
+                }));
+            }
+        },
         
         // Простой метод для открытия модального окна (как в тренировках)
         openSimpleModal(url, title) {
@@ -1106,6 +1159,7 @@ function exerciseApp() {
                         <option value="">{{ __('common.all_exercises') }}</option>
                         <option value="system">{{ __('common.system_exercises') }}</option>
                         <option value="user">{{ __('common.user_exercises') }}</option>
+                        <option value="favorite">Избранное</option>
                     </select>
                 </div>
                 
@@ -1159,18 +1213,20 @@ function exerciseApp() {
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-xl font-semibold text-gray-900">
-                                    <span x-text="exercise.name"></span>
-                                </h3>
-                                <button x-show="hasVideo(exercise)" 
-                                        @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
-                                        class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                    </svg>
-                                    {{ __('common.video') }}
-                                </button>
-                            </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
+                                        @click="showView(exercise.id)"
+                                        :title="'Нажмите чтобы открыть: ' + exercise.name">
+                                        <span x-text="exercise.name"></span>
+                                    </h3>
+                                    <button x-show="hasVideo(exercise)" 
+                                            @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
+                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        {{ __('common.video') }}
+                                    </button>
+                                </div>
                             
                             <!-- Теги -->
                             <div class="flex flex-wrap gap-2 mb-4 justify-between">
@@ -1213,6 +1269,21 @@ function exerciseApp() {
                                 {{ __('common.add') }} {{ __('common.video') }}
                             </button>
                         @endif
+                        
+                        <!-- Кнопка избранного -->
+                        <button @click.stop="toggleFavorite(exercise.id)" 
+                                class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                                :class="isFavorite(exercise.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                                :title="isFavorite(exercise.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                            <!-- Заполненная звезда (в избранном) -->
+                            <svg x-show="isFavorite(exercise.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            <!-- Пустая звезда (не в избранном) -->
+                            <svg x-show="!isFavorite(exercise.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </button>
                     </div>
                     </div>
                 </div>
@@ -1768,10 +1839,27 @@ function exerciseApp() {
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900" x-text="currentExercise?.name || 'Упражнение'"></h2>
                 </div>
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    {{ __('common.back_to_list') }}
-                </button>
+                <div class="flex items-center gap-3">
+                    <!-- Кнопка избранного -->
+                    <button @click.stop="toggleFavorite(currentExercise?.id)" 
+                            class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                            :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                            :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                        <!-- Заполненная звезда (в избранном) -->
+                        <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        <!-- Пустая звезда (не в избранном) -->
+                        <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                        </svg>
+                    </button>
+                    
+                    <button @click="showList()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                        {{ __('common.back_to_list') }}
+                    </button>
+                </div>
             </div>
         </div>
         
