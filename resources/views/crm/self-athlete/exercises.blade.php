@@ -1331,24 +1331,41 @@ function exerciseApp() {
     <div x-show="currentView === 'list'" class="space-y-6">
         <div x-show="paginatedExercises.length > 0" style="display: grid; gap: 24px;" class="exercise-grid">
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
-                    <div style="display: flex; gap: 1rem;">
-                        <!-- Картинка слева -->
-                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 25%;">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-4 md:p-6" @click="showView(exercise.id)">
+                    <!-- Мобильная версия -->
+                    <div class="flex md:hidden gap-4">
+                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" 
+                             class="flex-shrink-0 w-24">
                             <img :src="`/storage/${exercise.image_url}`" 
                                  :alt="exercise.name"
-                                 class="w-full h-full object-cover rounded-lg"
-                                 style="max-height: 200px;">
+                                 class="w-full h-32 object-contain rounded-lg">
                         </div>
-                        
-                        <!-- Информация справа -->
-                        <div style="flex: 1; display: flex; flex-direction: column;">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
-                                    @click="showView(exercise.id)"
-                                    :title="'Нажмите чтобы открыть: ' + exercise.name">
-                                    <span x-text="exercise.name"></span>
-                                </h3>
+                        <div class="flex items-center flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 cursor-pointer">
+                                <span x-text="exercise.name"></span>
+                            </h3>
+                        </div>
+                    </div>
+                    
+                    <!-- Десктопная версия -->
+                    <div class="hidden md:block">
+                        <div style="display: flex; gap: 1rem;">
+                            <!-- Картинка слева -->
+                            <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 25%;">
+                                <img :src="`/storage/${exercise.image_url}`" 
+                                     :alt="exercise.name"
+                                     class="w-full h-full object-cover rounded-lg"
+                                     style="max-height: 200px;">
+                            </div>
+                            
+                            <!-- Информация справа -->
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
+                                        @click.stop="showView(exercise.id)"
+                                        :title="'Нажмите чтобы открыть: ' + exercise.name">
+                                        <span x-text="exercise.name"></span>
+                                    </h3>
                                 <button x-show="hasVideo(exercise)" 
                                         @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
                                         class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
@@ -1385,7 +1402,7 @@ function exerciseApp() {
                     </div>
                             
                             <!-- Кнопки внизу справа -->
-                            <div class="flex space-x-2 mt-4" style="margin-top: auto; padding-top: 1rem;">
+                            <div class="flex space-x-2 mt-4" style="margin-top: auto; padding-top: 1rem;" @click.stop="">
                         <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
                             {{ __('common.view') }}
                         </button>
@@ -1415,6 +1432,7 @@ function exerciseApp() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                             </svg>
                         </button>
+                            </div>
                             </div>
                         </div>
                     </div>

@@ -1198,22 +1198,40 @@ function exerciseApp() {
     <div x-show="currentView === 'list'" class="space-y-6">
         <div x-show="paginatedExercises.length > 0" style="display: grid; gap: 24px;" class="exercise-grid">
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6" style="display: flex; gap: 1.5rem;">
-                    <!-- Картинка слева -->
-                    <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 200px;">
-                        <img :src="`/storage/${exercise.image_url}`" 
-                             :alt="exercise.name"
-                             class="w-full h-full object-cover rounded-lg">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-4 md:p-6" @click="showView(exercise.id)">
+                    <!-- Мобильная версия -->
+                    <div class="mobile-only" style="gap: 1rem;">
+                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" 
+                             class="flex-shrink-0 w-24">
+                            <img :src="`/storage/${exercise.image_url}`" 
+                                 :alt="exercise.name"
+                                 class="w-full h-32 object-contain rounded-lg">
+                        </div>
+                        <div class="flex items-center flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 cursor-pointer">
+                                <span x-text="exercise.name"></span>
+                            </h3>
+                        </div>
                     </div>
                     
-                    <!-- Информация справа -->
-                    <div style="flex: 1; display: flex; flex-direction: column;">
-                        <!-- Заголовок -->
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex-1">
-                                <div class="flex items-center justify-between mb-4">
+                    <!-- Десктопная версия -->
+                    <div class="desktop-only">
+                        <div style="display: flex; gap: 1.5rem;">
+                            <!-- Картинка слева -->
+                            <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 200px;">
+                                <img :src="`/storage/${exercise.image_url}`" 
+                                     :alt="exercise.name"
+                                     class="w-full h-full object-cover rounded-lg">
+                            </div>
+                            
+                            <!-- Информация справа -->
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <!-- Заголовок -->
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
-                                        @click="showView(exercise.id)"
+                                        @click.stop="showView(exercise.id)"
                                         :title="'Нажмите чтобы открыть: ' + exercise.name">
                                         <span x-text="exercise.name"></span>
                                     </h3>
@@ -1228,67 +1246,69 @@ function exerciseApp() {
                                     </button>
                                 </div>
                             
-                            <!-- Теги -->
-                            <div class="flex flex-wrap gap-2 mb-4 justify-between">
-                                <div class="flex flex-wrap gap-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
+                                        <!-- Теги -->
+                                        <div class="flex flex-wrap gap-2 mb-4 justify-between">
+                                            <div class="flex flex-wrap gap-2">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
+                                            </div>
+                                            <span x-show="exercise.is_system" 
+                                                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
+                                                  title="Системное упражнение нельзя редактировать или удалять">
+                                                Системное
+                                            </span>
+                                            <span x-show="!exercise.is_system" 
+                                                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                  title="Пользовательское упражнение можно редактировать и удалять">
+                                                Пользовательское
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Группы мышц -->
+                                        <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
+                                            <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span x-show="exercise.is_system" 
-                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
-                                      title="Системное упражнение нельзя редактировать или удалять">
-                                    Системное
-                                </span>
-                                <span x-show="!exercise.is_system" 
-                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                                      title="Пользовательское упражнение можно редактировать и удалять">
-                                    Пользовательское
-                                </span>
-                            </div>
-                            
-                            <!-- Группы мышц -->
-                            <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
-                                <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
+                                
+                                <!-- Кнопки -->
+                                <div class="flex space-x-2" @click.stop="">
+                                    <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                        <?php echo e(__('common.view')); ?>
+
+                                    </button>
+                                    <?php if(auth()->user()->hasRole('trainer')): ?>
+                                        <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                            <?php echo e(__('common.edit')); ?>
+
+                                        </button>
+                                        <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                            <?php echo e(__('common.delete')); ?>
+
+                                        </button>
+                                        <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                                            <?php echo e(__('common.add')); ?> <?php echo e(__('common.video')); ?>
+
+                                        </button>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Кнопка избранного -->
+                                    <button @click.stop="toggleFavorite(exercise.id)" 
+                                            class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                                            :class="isFavorite(exercise.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                                            :title="isFavorite(exercise.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                                        <!-- Заполненная звезда (в избранном) -->
+                                        <svg x-show="isFavorite(exercise.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                        </svg>
+                                        <!-- Пустая звезда (не в избранном) -->
+                                        <svg x-show="!isFavorite(exercise.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Кнопки -->
-                    <div class="flex space-x-2">
-                        <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                            <?php echo e(__('common.view')); ?>
-
-                        </button>
-                        <?php if(auth()->user()->hasRole('trainer')): ?>
-                            <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                <?php echo e(__('common.edit')); ?>
-
-                            </button>
-                            <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                <?php echo e(__('common.delete')); ?>
-
-                            </button>
-                            <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                                <?php echo e(__('common.add')); ?> <?php echo e(__('common.video')); ?>
-
-                            </button>
-                        <?php endif; ?>
-                        
-                        <!-- Кнопка избранного -->
-                        <button @click.stop="toggleFavorite(exercise.id)" 
-                                class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
-                                :class="isFavorite(exercise.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                                :title="isFavorite(exercise.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
-                            <!-- Заполненная звезда (в избранном) -->
-                            <svg x-show="isFavorite(exercise.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                            <!-- Пустая звезда (не в избранном) -->
-                            <svg x-show="!isFavorite(exercise.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                            </svg>
-                        </button>
-                    </div>
                     </div>
                 </div>
             </template>
@@ -1847,11 +1867,28 @@ function exerciseApp() {
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900" x-text="currentExercise?.name || 'Упражнение'"></h2>
                 </div>
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    <?php echo e(__('common.back_to_list')); ?>
+                <div class="flex items-center gap-3">
+                    <!-- Кнопка избранного -->
+                    <button @click.stop="toggleFavorite(currentExercise?.id)" 
+                            class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                            :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                            :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                        <!-- Заполненная звезда (в избранном) -->
+                        <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        <!-- Пустая звезда (не в избранном) -->
+                        <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                        </svg>
+                    </button>
+                    
+                    <button @click="showList()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                        <?php echo e(__('common.back_to_list')); ?>
 
-                </button>
+                    </button>
+                </div>
             </div>
         </div>
         
@@ -1994,6 +2031,25 @@ function exerciseApp() {
 
 
 <style>
+/* Медиа-запросы для мобильной и десктопной версии */
+.mobile-only {
+    display: flex !important;
+}
+
+.desktop-only {
+    display: none !important;
+}
+
+@media (min-width: 768px) {
+    .mobile-only {
+        display: none !important;
+    }
+    
+    .desktop-only {
+        display: block !important;
+    }
+}
+
 .exercise-grid {
     display: grid;
     grid-template-columns: 1fr;
