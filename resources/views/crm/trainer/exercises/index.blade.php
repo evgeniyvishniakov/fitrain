@@ -1854,121 +1854,93 @@ function exerciseApp() {
 
     <!-- Просмотр упражнения -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900" x-text="currentExercise?.name || 'Упражнение'"></h2>
-                </div>
-                <div class="flex items-center gap-3">
-                    <!-- Кнопка избранного -->
-                    <button @click.stop="toggleFavorite(currentExercise?.id)" 
-                            class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
-                            :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                            :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
-                        <!-- Заполненная звезда (в избранном) -->
-                        <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                        </svg>
-                        <!-- Пустая звезда (не в избранном) -->
-                        <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                        </svg>
-                    </button>
-                    
-                    <button @click="showList()" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                        {{ __('common.back_to_list') }}
-                    </button>
-                </div>
-            </div>
+        <!-- Кнопки сверху -->
+        <div class="flex items-center justify-between mb-6">
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                {{ __('common.back_to_list') }}
+            </button>
+            
+            <!-- Кнопка избранного -->
+            <button @click.stop="toggleFavorite(currentExercise?.id)" 
+                    class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                    :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                    :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                <!-- Заполненная звезда (в избранном) -->
+                <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <!-- Пустая звезда (не в избранном) -->
+                <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                </svg>
+            </button>
         </div>
         
         <div x-show="currentExercise" class="space-y-6">
-            <!-- Картинка и основная информация -->
-            <div style="display: flex; gap: 2rem; align-items: flex-start;">
-                <!-- Картинки и видео слева -->
-                <div style="flex: 0 0 35%; max-width: 500px; display: flex; flex-direction: column; gap: 1rem;">
-                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
-                        <div>
-                            <img :src="`/storage/${currentExercise.image_url}`" 
-                                 :alt="currentExercise.name"
-                                 class="w-full rounded-lg shadow-md"
-                                 style="object-fit: contain;">
-                        </div>
-                    </template>
-                    
-                    <!-- Второе изображение -->
-                    <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
-                        <div>
-                            <img :src="`/storage/${currentExercise.image_url_2}`" 
-                                 :alt="currentExercise.name"
-                                 class="w-full rounded-lg shadow-md"
-                                 style="object-fit: contain;">
-                        </div>
-                    </template>
-                    
-                    <!-- Системное видео -->
-                    <div x-show="currentExercise?.video_url">
-                        <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
-                        <div class="bg-gray-50 rounded-lg p-2">
-                            <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                                <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
-                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                        allowfullscreen>
-                                </iframe>
+            <!-- Название (только на мобилке) -->
+            <h2 class="exercise-view-mobile text-3xl font-bold text-gray-900 text-center" x-text="currentExercise?.name || 'Упражнение'"></h2>
+            
+            <!-- Десктоп версия: картинки слева, информация справа -->
+            <div class="exercise-view-desktop gap-8">
+                <!-- Левая колонка: картинки и видео -->
+                <div class="flex-shrink-0" style="width: 35%; max-width: 500px;">
+                    <div class="space-y-4">
+                        <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                        <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                            <div>
+                                <img :src="`/storage/${currentExercise.image_url}`" 
+                                     :alt="currentExercise.name"
+                                     class="w-full rounded-lg shadow-md"
+                                     style="object-fit: contain;">
                             </div>
-                            <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
-                                <a :href="currentExercise?.video_url" 
-                                   target="_blank" 
-                                   rel="noopener noreferrer"
-                                   class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                    </svg>
-                                    Видео
-                                </a>
+                        </template>
+                        
+                        <!-- Второе изображение -->
+                        <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                            <div>
+                                <img :src="`/storage/${currentExercise.image_url_2}`" 
+                                     :alt="currentExercise.name"
+                                     class="w-full rounded-lg shadow-md"
+                                     style="object-fit: contain;">
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Пользовательское видео -->
-                    <div x-show="currentExercise?.is_system && currentUserVideo">
-                        <div class="flex items-center justify-between mb-1">
-                            <p class="text-xs text-gray-500 font-medium">Моё видео</p>
-                            <button @click="showAddVideo(currentExercise.id)" 
-                                    class="text-xs text-indigo-600 hover:text-indigo-800">
-                                Изменить
-                            </button>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-2">
-                            <div x-show="isYouTubeUrl(currentUserVideo?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                                <iframe :src="getYouTubeEmbedUrl(currentUserVideo?.video_url)" 
-                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                        allowfullscreen>
-                                </iframe>
-                            </div>
-                            <div x-show="!isYouTubeUrl(currentUserVideo?.video_url)" class="text-center py-4">
-                                <a :href="currentUserVideo?.video_url" 
-                                   target="_blank" 
-                                   rel="noopener noreferrer"
-                                   class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                    </svg>
-                                    Видео
-                                </a>
+                        </template>
+                        
+                        <!-- Системное видео -->
+                        <div x-show="currentExercise?.video_url">
+                            <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                    <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                            allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
+                                    <a :href="currentExercise?.video_url" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        Видео
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Информация справа -->
-                <div style="flex: 1;">
-                    <p class="mb-4 text-gray-600" x-text="currentExercise?.description || 'Без описания'"></p>
+                <!-- Правая колонка: информация -->
+                <div class="flex-1 space-y-4">
+                    <!-- Название для десктопа -->
+                    <h2 class="text-3xl font-bold text-gray-900" x-text="currentExercise?.name || 'Упражнение'"></h2>
+                    
+                    <p class="text-gray-600" x-text="currentExercise?.description || 'Без описания'"></p>
                     
                     <!-- Информация об упражнении -->
-                    <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-2 gap-4">
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.category') }}</h3>
                             <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
@@ -1980,7 +1952,7 @@ function exerciseApp() {
                     </div>
                     
                     <!-- Группы мышц -->
-                    <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0" class="mb-4">
+                    <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">Группы мышц</h3>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
@@ -1999,22 +1971,101 @@ function exerciseApp() {
                 </div>
             </div>
             
-            <!-- Кнопки действий внизу -->
-            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
-                    ← Назад к списку
-                </button>
-                <div class="flex space-x-2">
-                    <button @click="showEdit(currentExercise.id)" 
-                            class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                        Редактировать
-                    </button>
-                    <button @click="deleteExercise(currentExercise.id)" 
-                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                        Удалить
-                    </button>
+            <!-- Мобильная версия: всё по центру -->
+            <div class="exercise-view-mobile space-y-6">
+                <!-- Картинки по центру -->
+                <div class="flex flex-col items-center gap-4">
+                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                        <div class="w-full">
+                            <img :src="`/storage/${currentExercise.image_url}`" 
+                                 :alt="currentExercise.name"
+                                 class="w-full rounded-lg shadow-md mx-auto"
+                                 style="object-fit: contain; max-height: 400px;">
+                        </div>
+                    </template>
+                    
+                    <!-- Второе изображение -->
+                    <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                        <div class="w-full">
+                            <img :src="`/storage/${currentExercise.image_url_2}`" 
+                                 :alt="currentExercise.name"
+                                 class="w-full rounded-lg shadow-md mx-auto"
+                                 style="object-fit: contain; max-height: 400px;">
+                        </div>
+                    </template>
                 </div>
+                
+                <!-- Описание -->
+                <div x-show="currentExercise?.description">
+                    <p class="text-gray-600 text-center" x-text="currentExercise?.description"></p>
+                </div>
+                
+                <!-- Информация об упражнении -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.category') }}</h3>
+                        <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.equipment') }}</h3>
+                        <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.equipment"></p>
+                    </div>
+                </div>
+                
+                <!-- Группы мышц -->
+                <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Группы мышц</h3>
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" x-text="group"></span>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- Инструкции -->
+                <div x-show="currentExercise?.instructions">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">{{ __('common.execution_instructions') }}</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
+                    </div>
+                </div>
+                
+                <!-- Системное видео -->
+                <div x-show="currentExercise?.video_url">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
+                            <a :href="currentExercise?.video_url" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                Видео
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Кнопки действий внизу -->
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+                <button @click="showEdit(currentExercise.id)" 
+                        class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                    Редактировать
+                </button>
+                <button @click="deleteExercise(currentExercise.id)" 
+                        class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                    Удалить
+                </button>
             </div>
         </div>
     </div>
@@ -2022,6 +2073,24 @@ function exerciseApp() {
 
 
 <style>
+/* Медиа-запросы для просмотра упражнения */
+@media (min-width: 768px) {
+    .exercise-view-desktop {
+        display: flex !important;
+    }
+    .exercise-view-mobile {
+        display: none !important;
+    }
+}
+@media (max-width: 767px) {
+    .exercise-view-desktop {
+        display: none !important;
+    }
+    .exercise-view-mobile {
+        display: block !important;
+    }
+}
+
 /* Медиа-запросы для мобильной и десктопной версии */
 .mobile-only {
     display: flex !important;
