@@ -3288,6 +3288,7 @@ function workoutApp() {
                     <option value="Руки">Руки</option>
                     <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                     <option value="Руки(Бицепс)">Руки(Бицепс)</option>
+                    <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                     <option value="Пресс">Пресс</option>
                     <option value="Кардио">Кардио</option>
                     <option value="Гибкость">Гибкость</option>
@@ -3574,6 +3575,40 @@ function filterExercises() {
     const searchTerm = document.getElementById('exercise-search').value.toLowerCase().trim();
     const categoryFilter = document.getElementById('category-filter').value.toLowerCase().trim();
     let equipmentFilter = document.getElementById('equipment-filter').value.toLowerCase().trim();
+    
+    // Динамически заполняем список оборудования по выбранной категории
+    const equipmentSelect = document.getElementById('equipment-filter');
+    const prevValue = equipmentFilter;
+    const equipmentSet = new Set();
+    (exercises || []).forEach(ex => {
+        if (!categoryFilter || ex.category.toLowerCase() === categoryFilter) {
+            if (ex.equipment && ex.equipment !== 'null' && ex.equipment !== null) {
+                equipmentSet.add(ex.equipment);
+            }
+        }
+    });
+    const currentOptions = Array.from(equipmentSelect.options).map(o => o.value);
+    const desiredOptions = [''].concat(Array.from(equipmentSet).sort());
+    if (JSON.stringify(currentOptions) !== JSON.stringify(desiredOptions)) {
+        equipmentSelect.innerHTML = '';
+        const emptyOpt = document.createElement('option');
+        emptyOpt.value = '';
+        emptyOpt.textContent = '{{ __('common.all_equipment') }}';
+        equipmentSelect.appendChild(emptyOpt);
+        Array.from(equipmentSet).sort().forEach(eq => {
+            const opt = document.createElement('option');
+            opt.value = eq.toLowerCase();
+            opt.textContent = eq;
+            equipmentSelect.appendChild(opt);
+        });
+        // Восстанавливаем значение, если оно по-прежнему доступно
+        if (desiredOptions.map(o => o.toLowerCase()).includes(prevValue)) {
+            equipmentSelect.value = prevValue;
+        } else {
+            equipmentSelect.value = '';
+            equipmentFilter = '';
+        }
+    }
     
     // Нормализация оборудования: множественное число -> единственное
     if (equipmentFilter === 'тренажеры') {

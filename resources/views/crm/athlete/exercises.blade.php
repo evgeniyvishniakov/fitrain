@@ -364,7 +364,9 @@ function exerciseApp() {
                         <option value="Ноги(Бедра)">Ноги(Бедра)</option>
                         <option value="Ноги(Икры)">Ноги(Икры)</option>
                         <option value="Плечи">Плечи</option>
-                        <option value="Руки">Руки</option>
+                        <option value="Руки(Бицепс)">Руки(Бицепс)</option>
+                        <option value="Руки(Трицепс)">Руки(Трицепс)</option>
+                        <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                         <option value="Пресс">Пресс</option>
                         <option value="Кардио">Кардио</option>
                         <option value="Гибкость">Гибкость</option>
@@ -376,7 +378,7 @@ function exerciseApp() {
                     <select x-model="equipment"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">Весь инвентарь</option>
-                        <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment))).sort()" :key="eq">
+                        <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment).filter(eq => eq && eq !== 'null'))).sort()" :key="eq">
                             <option :value="eq" x-text="eq"></option>
                         </template>
                     </select>

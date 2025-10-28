@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Упражнения'); ?>
 <?php $__env->startSection('page-title', 'Управление упражнениями'); ?>
 
@@ -170,8 +168,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование *</label>
-                    <select name="equipment" id="equipment" required class="w-full px-3 py-2 border rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование</label>
+                    <select name="equipment" id="equipment" class="w-full px-3 py-2 border rounded-lg">
                         <option value="">Выберите оборудование</option>
                         <?php $__currentLoopData = \App\Models\Trainer\Exercise::EQUIPMENT; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <option value="<?php echo e($key); ?>"><?php echo e($label); ?></option>

@@ -626,7 +626,10 @@ function templatesApp() {
                         <option value="Ноги(Бедра)">{{ __('common.legs_thighs') }}</option>
                         <option value="Ноги(Икры)">{{ __('common.legs_calves') }}</option>
                         <option value="Плечи">{{ __('common.shoulders') }}</option>
-                        <option value="Руки">{{ __('common.arms') }}</option>
+                        <option value="Руки(Бицепс)">Руки(Бицепс)</option>
+                        <option value="Руки(Трицепс)">Руки(Трицепс)</option>
+                        <option value="Руки(Предплечье)">Руки(Предплечье)</option>
+                        <option value="Пресс">{{ __('common.abs') }}</option>
                         <option value="Кардио">{{ __('common.cardio') }}</option>
                         <option value="Гибкость">{{ __('common.flexibility') }}</option>
                     </select>
@@ -753,7 +756,9 @@ function toggleExercise(element, id, name, category, equipment) {
             const equipmentSet = new Set();
             (exercises || []).forEach(ex => {
                 if (!category || ex.category === category) {
-                    if (ex.equipment) equipmentSet.add(ex.equipment);
+                    if (ex.equipment && ex.equipment !== 'null' && ex.equipment !== null) {
+                        equipmentSet.add(ex.equipment);
+                    }
                 }
             });
             equipmentSelect.innerHTML = '';

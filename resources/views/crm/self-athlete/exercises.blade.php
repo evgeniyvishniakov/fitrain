@@ -1267,6 +1267,7 @@ function exerciseApp() {
                         <option value="Плечи">Плечи</option>
                         <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                         <option value="Руки(Трицепс)">Руки(Трицепс)</option>
+                        <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                         <option value="Пресс">Пресс</option>
                         <option value="Кардио">Кардио</option>
                         <option value="Гибкость">Гибкость</option>
@@ -1278,7 +1279,7 @@ function exerciseApp() {
                     <select x-model="equipment"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value="">Весь инвентарь</option>
-                        <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment))).sort()" :key="eq">
+                        <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment).filter(eq => eq && eq !== 'null'))).sort()" :key="eq">
                             <option :value="eq" x-text="eq"></option>
                         </template>
                     </select>
@@ -1611,6 +1612,7 @@ function exerciseApp() {
                             <option value="Плечи">Плечи</option>
                             <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                             <option value="Руки(Трицепс)">Руки(Трицепс)</option>
+                            <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                             <option value="Пресс">Пресс</option>
                             <option value="Кардио">Кардио</option>
                             <option value="Гибкость">Гибкость</option>
@@ -1619,9 +1621,8 @@ function exerciseApp() {
                     
                     <!-- Оборудование -->
                     <div style="flex: 1 !important; min-width: 200px !important; width: 50% !important;">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.equipment_required') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.equipment') }}</label>
                         <select x-model="formEquipment" 
-                                required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             <option value="">Выберите оборудование</option>
                             <option value="Штанга">Штанга</option>
@@ -1638,6 +1639,7 @@ function exerciseApp() {
                             <option value="Турник">Турник</option>
                             <option value="Брусья">Брусья</option>
                             <option value="Скамейка">Скамейка</option>
+                            <option value="Резина / Экспандер">Резина / Экспандер</option>
                         </select>
                     </div>
                 </div>
@@ -2164,13 +2166,20 @@ function exerciseApp() {
             
             <!-- Кнопки действий внизу -->
             <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-                <button @click="showEdit(currentExercise.id)" 
+                <button x-show="!currentExercise.is_system && currentExercise.trainer_id === {{ auth()->id() }}" 
+                        @click="showEdit(currentExercise.id)" 
                         class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                     Редактировать
                 </button>
-                <button @click="deleteExercise(currentExercise.id)" 
+                <button x-show="!currentExercise.is_system && currentExercise.trainer_id === {{ auth()->id() }}" 
+                        @click="deleteExercise(currentExercise.id)" 
                         class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                     Удалить
+                </button>
+                <button x-show="currentExercise.is_system" 
+                        @click="showAddVideo(currentExercise.id)" 
+                        class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                    {{ __('common.add') }} {{ __('common.video') }}
                 </button>
             </div>
         </div>

@@ -66,7 +66,7 @@ class ExerciseController extends BaseController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'required|string|in:' . implode(',', array_keys(Exercise::CATEGORIES)),
-            'equipment' => 'required|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
+            'equipment' => 'nullable|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
             'image' => 'nullable|image|max:10240',
@@ -77,6 +77,11 @@ class ExerciseController extends BaseController
 
         $data = $request->except(['image', 'image_2']);
         $data['trainer_id'] = auth()->id();
+        
+        // Преобразуем пустое значение equipment в null
+        if (empty($data['equipment'])) {
+            $data['equipment'] = null;
+        }
         
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('exercises', 'public');
@@ -132,7 +137,7 @@ class ExerciseController extends BaseController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'required|string|in:' . implode(',', array_keys(Exercise::CATEGORIES)),
-            'equipment' => 'required|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
+            'equipment' => 'nullable|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
             'image' => 'nullable|image|max:10240',
@@ -142,6 +147,11 @@ class ExerciseController extends BaseController
         ]);
 
         $data = $request->except(['image', 'image_2', 'remove_image', 'remove_image_2']);
+        
+        // Преобразуем пустое значение equipment в null
+        if (empty($data['equipment'])) {
+            $data['equipment'] = null;
+        }
         
         // Обработка первого изображения
         if ($request->input('remove_image') == '1') {

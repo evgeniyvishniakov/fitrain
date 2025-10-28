@@ -170,8 +170,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование *</label>
-                    <select name="equipment" id="equipment" required class="w-full px-3 py-2 border rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование</label>
+                    <select name="equipment" id="equipment" class="w-full px-3 py-2 border rounded-lg">
                         <option value="">Выберите оборудование</option>
                         @foreach(\App\Models\Trainer\Exercise::EQUIPMENT as $key => $label)
                             <option value="{{ $key }}">{{ $label }}</option>
