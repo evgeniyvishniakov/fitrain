@@ -3307,7 +3307,6 @@ function workoutApp() {
                     <option value="Ноги(Бедра)">Ноги(Бедра)</option>
                     <option value="Ноги(Икры)">Ноги(Икры)</option>
                     <option value="Плечи">Плечи</option>
-                    <option value="Руки">Руки</option>
                     <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                     <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                     <option value="Руки(Предплечье)">Руки(Предплечье)</option>
@@ -3506,12 +3505,12 @@ function renderExercises() {
                  data-exercise-name="${escapeName}" 
                  data-exercise-category="${escapeCategory}" 
                  data-exercise-equipment="${escapeEquipment}"
-                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 130px;"
+                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 160px;"
                  onclick="toggleExercise(this, ${exercise.id})">
                 ${hasImage ? `
                     <img src="${imageUrl}" 
                          alt="${escapeName}" 
-                         style="width: 60px; height: 100px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                         style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
                 ` : ''}
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 600; color: #111827; margin-bottom: 5px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>

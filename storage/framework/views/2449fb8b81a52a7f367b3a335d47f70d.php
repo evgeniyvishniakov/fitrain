@@ -136,7 +136,8 @@
                     <input type="file" name="image" id="image" accept="image/*"
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                     <div id="imagePreview" class="mt-2 hidden">
-                        <img src="" alt="Preview" class="w-32 h-32 object-cover rounded-lg">
+                        <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
+                        <img src="" alt="Preview" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
                     </div>
                 </div>
                 <div>
@@ -144,7 +145,8 @@
                     <input type="file" name="image_2" id="image_2" accept="image/*"
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                     <div id="imagePreview2" class="mt-2 hidden">
-                        <img src="" alt="Preview 2" class="w-32 h-32 object-cover rounded-lg">
+                        <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
+                        <img src="" alt="Preview 2" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
                     </div>
                 </div>
             </div>
@@ -275,6 +277,10 @@ function openCreateModal() {
         cb.checked = defaultFields.includes(cb.value);
     });
     
+    // Скрываем превью изображений
+    document.getElementById('imagePreview').classList.add('hidden');
+    document.getElementById('imagePreview2').classList.add('hidden');
+    
     document.getElementById('exerciseModal').classList.remove('hidden');
 }
 
@@ -340,6 +346,24 @@ function openEditModal(id) {
                     const cb = document.querySelector(`.field-config-checkbox[value="${field}"]`);
                     if (cb) cb.checked = true;
                 });
+            }
+            
+            // Показываем превью текущих изображений
+            const imagePreview = document.getElementById('imagePreview');
+            const imagePreview2 = document.getElementById('imagePreview2');
+            
+            if (data.image_url) {
+                imagePreview.querySelector('img').src = '/storage/' + data.image_url;
+                imagePreview.classList.remove('hidden');
+            } else {
+                imagePreview.classList.add('hidden');
+            }
+            
+            if (data.image_url_2) {
+                imagePreview2.querySelector('img').src = '/storage/' + data.image_url_2;
+                imagePreview2.classList.remove('hidden');
+            } else {
+                imagePreview2.classList.add('hidden');
             }
             
             document.getElementById('exerciseModal').classList.remove('hidden');

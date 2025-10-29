@@ -1269,6 +1269,7 @@ function exerciseApp() {
                         <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                         <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                         <option value="Пресс">Пресс</option>
+                        <option value="Шея">Шея</option>
                         <option value="Кардио">Кардио</option>
                         <option value="Гибкость">Гибкость</option>
                     </select>
@@ -1614,6 +1615,7 @@ function exerciseApp() {
                             <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                             <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                             <option value="Пресс">Пресс</option>
+                            <option value="Шея">Шея</option>
                             <option value="Кардио">Кардио</option>
                             <option value="Гибкость">Гибкость</option>
                         </select>
@@ -1631,6 +1633,7 @@ function exerciseApp() {
                             <option value="EZ-гриф">EZ-гриф</option>
                             <option value="Блин">Блин</option>
                             <option value="Гантели">Гантели</option>
+                            <option value="Гири">Гири</option>
                             <option value="Собственный вес">Собственный вес</option>
                             <option value="Тренажер">Тренажер</option>
                             <option value="Машина Смита">Машина Смита</option>

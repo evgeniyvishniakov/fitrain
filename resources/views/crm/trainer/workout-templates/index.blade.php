@@ -630,6 +630,7 @@ function templatesApp() {
                         <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                         <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                         <option value="Пресс">{{ __('common.abs') }}</option>
+                        <option value="Шея">Шея</option>
                         <option value="Кардио">{{ __('common.cardio') }}</option>
                         <option value="Гибкость">{{ __('common.flexibility') }}</option>
                     </select>
