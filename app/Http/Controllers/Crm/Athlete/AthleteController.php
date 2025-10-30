@@ -778,20 +778,18 @@ class AthleteController extends BaseController
             
             \Log::info("Запрос истории упражнения {$exerciseId} для athlete {$athleteId}");
             
-            // Находим последнюю тренировку с этим упражнением (только ПРОШЛЫЕ тренировки)
-            $lastWorkoutId = \DB::table('workout_exercise')
+            // Находим все тренировки с этим упражнением (только ПРОШЛЫЕ тренировки)
+            $allWorkouts = \DB::table('workout_exercise')
                 ->join('workouts', 'workout_exercise.workout_id', '=', 'workouts.id')
                 ->where('workouts.athlete_id', $athleteId)
                 ->where('workout_exercise.exercise_id', $exerciseId)
                 ->where('workouts.date', '<', now()->toDateString()) // Только ПРОШЛЫЕ даты
                 ->orderBy('workouts.date', 'desc')
                 ->orderBy('workouts.created_at', 'desc')
-                ->select('workouts.id')
-                ->first();
+                ->select('workouts.id', 'workouts.date', 'workouts.title', 'workouts.status')
+                ->get();
             
-            \Log::info("lastWorkoutId: " . ($lastWorkoutId ? $lastWorkoutId->id : 'null'));
-            
-            if (!$lastWorkoutId) {
+            if ($allWorkouts->isEmpty()) {
                 \Log::info("Истории нет для упражнения {$exerciseId} и athlete {$athleteId}");
                 return response()->json([
                     'success' => true,
@@ -799,8 +797,9 @@ class AthleteController extends BaseController
                 ]);
             }
             
-            // Загружаем тренировку
-            $lastWorkout = \App\Models\Trainer\Workout::find($lastWorkoutId->id);
+            // Берем последнюю тренировку для автозаполнения
+            $lastWorkoutId = $allWorkouts->first()->id;
+            $lastWorkout = \App\Models\Trainer\Workout::find($lastWorkoutId);
             
             // Загружаем данные упражнения из промежуточной таблицы
             $exerciseData = \DB::table('workout_exercise')
@@ -882,6 +881,92 @@ class AthleteController extends BaseController
                 }
             }
             
+            // Собираем данные для всех тренировок
+            $allWorkoutsData = [];
+            foreach ($allWorkouts as $workoutRow) {
+                $workout = \App\Models\Trainer\Workout::find($workoutRow->id);
+                if (!$workout) continue;
+                
+                // Загружаем данные упражнения из промежуточной таблицы
+                $workoutExerciseData = \DB::table('workout_exercise')
+                    ->where('workout_id', $workout->id)
+                    ->where('exercise_id', $exerciseId)
+                    ->first();
+                
+                if (!$workoutExerciseData) continue;
+                
+                // Получаем плановые данные
+                $workoutPlan = [
+                    'weight' => $workoutExerciseData->weight ?? 0,
+                    'reps' => $workoutExerciseData->reps ?? 0,
+                    'sets' => $workoutExerciseData->sets ?? 0,
+                    'rest' => $workoutExerciseData->rest ?? 0,
+                    'time' => $workoutExerciseData->time ?? 0,
+                    'distance' => $workoutExerciseData->distance ?? 0,
+                    'tempo' => $workoutExerciseData->tempo ?? null,
+                ];
+                
+                // Получаем фактические данные (из progress если есть)
+                $workoutProgress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $workout->id)
+                    ->where('exercise_id', $exerciseId)
+                    ->where('athlete_id', $athleteId)
+                    ->first();
+                
+                $workoutFact = null;
+                $workoutSetsDetails = null;
+                $workoutExerciseStatus = null;
+                
+                if ($workoutProgress) {
+                    $workoutExerciseStatus = $workoutProgress->status;
+                    
+                    // Если есть детальные данные подходов
+                    if ($workoutProgress->sets_data) {
+                        $workoutSetsData = is_array($workoutProgress->sets_data) ? $workoutProgress->sets_data : json_decode($workoutProgress->sets_data, true);
+                        
+                        if (!empty($workoutSetsData) && is_array($workoutSetsData)) {
+                            $avgWeight = collect($workoutSetsData)->avg('weight') ?? 0;
+                            $avgReps = collect($workoutSetsData)->avg('reps') ?? 0;
+                            
+                            $plannedSets = $workoutExerciseData->sets ?? count($workoutSetsData);
+                            $actualSets = count($workoutSetsData);
+                            $completedPercentage = $plannedSets > 0 ? round(($actualSets / $plannedSets) * 100) : 100;
+                            
+                            $workoutFact = [
+                                'weight' => round($avgWeight, 1),
+                                'reps' => round($avgReps),
+                                'sets' => $actualSets,
+                                'completed_percentage' => $completedPercentage
+                            ];
+                            
+                            $workoutSetsDetails = $workoutSetsData;
+                        }
+                    }
+                    // Если нет детальных данных, но упражнение отмечено как выполненное - используем план
+                    elseif ($workoutExerciseStatus === 'completed' || $workoutExerciseStatus === 'partial') {
+                        $workoutFact = [
+                            'weight' => $workoutExerciseData->weight ?? 0,
+                            'reps' => $workoutExerciseData->reps ?? 0,
+                            'sets' => $workoutExerciseData->sets ?? 0,
+                            'time' => $workoutExerciseData->time ?? 0,
+                            'distance' => $workoutExerciseData->distance ?? 0,
+                            'completed_percentage' => $workoutExerciseStatus === 'completed' ? 100 : 50
+                        ];
+                    }
+                }
+                
+                $allWorkoutsData[] = [
+                    'workout_id' => $workout->id,
+                    'workout_date' => $workout->date,
+                    'workout_title' => $workout->title,
+                    'workout_status' => $workout->status,
+                    'plan' => $workoutPlan,
+                    'fact' => $workoutFact,
+                    'sets_details' => $workoutSetsDetails,
+                    'exercise_status' => $workoutExerciseStatus,
+                    'is_completed' => $workout->status === 'completed'
+                ];
+            }
+            
             return response()->json([
                 'success' => true,
                 'has_history' => true,
@@ -892,7 +977,8 @@ class AthleteController extends BaseController
                 'sets_details' => $setsDetails,
                 'exercise_status' => $exerciseStatus,
                 'fields_config' => $fieldsConfig,
-                'is_completed' => $lastWorkout->status === 'completed'
+                'is_completed' => $lastWorkout->status === 'completed',
+                'all_workouts' => $allWorkoutsData // Добавляем все тренировки
             ]);
             
         } catch (\Exception $e) {
