@@ -4466,40 +4466,39 @@ async function showExerciseHistoryModal(exerciseId) {
                             </div>
                             
                             ${workout.fact ? `
-                                <div style="background: ${factBgColor}; border: 1px solid ${factBorderColor}; border-radius: 8px; padding: 12px; margin-bottom: ${workout.sets_details && workout.sets_details.length > 0 ? '12px' : '0'};">
+                                <div style="background: ${factBgColor}; border: 1px solid ${factBorderColor}; border-radius: 8px; padding: 12px; margin-bottom: 0;">
                                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                                         <span style="font-size: 13px; font-weight: 600; color: ${factColor};">${factIcon} ${factLabel}</span>
                                     </div>
-                                    <div style="font-size: 13px; color: #4b5563; margin-left: 20px;">
+                                    <div style="font-size: 13px; color: #4b5563; margin-left: 20px; margin-bottom: ${workout.sets_details && workout.sets_details.length > 0 && workout.exercise_status === 'partial' ? '12px' : '0'};">
                                         ${factText}
                                     </div>
+                                    ${workout.sets_details && workout.sets_details.length > 0 && workout.exercise_status === 'partial' ? `
+                                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid ${factBorderColor};">
+                                            <div style="font-size: 13px; font-weight: 600; color: ${factColor}; margin-bottom: 8px;">Детали подходов:</div>
+                                            <div style="display: flex; flex-direction: column; gap: 6px;">
+                                                ${workout.sets_details.map((set, setIndex) => `
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255, 255, 255, 0.7); border-radius: 6px; border: 1px solid ${factBorderColor};">
+                                                        <span style="font-size: 12px; font-weight: 500; color: #6b7280;">Подход ${setIndex + 1}</span>
+                                                        <span style="font-size: 12px; color: #374151;">
+                                                            ${set.weight > 0 ? `${set.weight} кг` : ''}
+                                                            ${set.reps > 0 ? (set.weight > 0 ? ' × ' : '') + `${set.reps} раз` : ''}
+                                                            ${set.time > 0 ? (set.weight > 0 || set.reps > 0 ? ', ' : '') + `${set.time} мин` : ''}
+                                                            ${set.distance > 0 ? (set.weight > 0 || set.reps > 0 || set.time > 0 ? ', ' : '') + `${set.distance} м` : ''}
+                                                        </span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             ` : `
-                                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; margin-bottom: ${workout.sets_details && workout.sets_details.length > 0 ? '12px' : '0'};">
+                                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; margin-bottom: 0;">
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <span style="font-size: 13px; font-weight: 600; color: #dc2626;">❌ Не выполнено</span>
                                     </div>
                                 </div>
                             `}
-                            
-                            ${workout.sets_details && workout.sets_details.length > 0 ? `
-                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
-                                    <div style="font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Детали подходов:</div>
-                                    <div style="display: flex; flex-direction: column; gap: 6px;">
-                                        ${workout.sets_details.map((set, setIndex) => `
-                                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                                <span style="font-size: 12px; font-weight: 500; color: #6b7280;">Подход ${setIndex + 1}</span>
-                                                <span style="font-size: 12px; color: #374151;">
-                                                    ${set.weight > 0 ? `${set.weight} кг` : ''}
-                                                    ${set.reps > 0 ? (set.weight > 0 ? ' × ' : '') + `${set.reps} раз` : ''}
-                                                    ${set.time > 0 ? (set.weight > 0 || set.reps > 0 ? ', ' : '') + `${set.time} мин` : ''}
-                                                    ${set.distance > 0 ? (set.weight > 0 || set.reps > 0 || set.time > 0 ? ', ' : '') + `${set.distance} м` : ''}
-                                                </span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            ` : ''}
                         </div>
                     `;
                 }).join('');

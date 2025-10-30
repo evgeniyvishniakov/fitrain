@@ -1431,7 +1431,7 @@ function workoutApp() {
                     type: 'number',
                     min: '0',
                     max: '1000',
-                    step: '0.5',
+                    step: '0.1',
                     value: '0'
                 },
                 'rest': {
@@ -3147,7 +3147,7 @@ function workoutApp() {
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
-                                                                    step="0.5"
+                                                                    step="0.1"
                                                                     x-model="set.weight"
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'weight', $event.target.value)"
                                                                     placeholder="0"
@@ -3937,7 +3937,7 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
             type: 'number',
             min: '0',
             max: '1000',
-            step: '0.5',
+            step: '0.1',
             value: '0'
         },
         'reps': {
