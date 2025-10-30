@@ -1133,7 +1133,9 @@ function exerciseApp() {
                         <option value="Плечи"><?php echo e(__('common.shoulders')); ?></option>
                         <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                         <option value="Руки(Трицепс)">Руки(Трицепс)</option>
+                        <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                         <option value="Пресс"><?php echo e(__('common.abs')); ?></option>
+                        <option value="Шея">Шея</option>
                         <option value="Кардио"><?php echo e(__('common.cardio')); ?></option>
                         <option value="Гибкость"><?php echo e(__('common.flexibility')); ?></option>
                     </select>
@@ -1144,7 +1146,7 @@ function exerciseApp() {
                     <select x-model="equipment" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value=""><?php echo e(__('common.all_equipment')); ?></option>
-                        <template x-for="eq in availableEquipments()" :key="eq">
+                        <template x-for="eq in availableEquipments().filter(e => e && e !== 'null')" :key="eq">
                             <option :value="eq" x-text="eq"></option>
                         </template>
                     </select>
@@ -1511,7 +1513,9 @@ function exerciseApp() {
                             <option value="Плечи">Плечи</option>
                             <option value="Руки(Бицепс)">Руки(Бицепс)</option>
                             <option value="Руки(Трицепс)">Руки(Трицепс)</option>
+                            <option value="Руки(Предплечье)">Руки(Предплечье)</option>
                             <option value="Пресс">Пресс</option>
+                            <option value="Шея">Шея</option>
                             <option value="Кардио">Кардио</option>
                             <option value="Гибкость">Гибкость</option>
                         </select>
@@ -1519,9 +1523,8 @@ function exerciseApp() {
                     
                     <!-- Оборудование -->
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.equipment_required')); ?></label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.equipment')); ?></label>
                         <select x-model="formEquipment" 
-                                required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             <option value="">Выберите оборудование</option>
                             <option value="Штанга">Штанга</option>
@@ -1530,6 +1533,7 @@ function exerciseApp() {
                             <option value="EZ-гриф">EZ-гриф</option>
                             <option value="Блин">Блин</option>
                             <option value="Гантели">Гантели</option>
+                            <option value="Гири">Гири</option>
                             <option value="Собственный вес">Собственный вес</option>
                             <option value="Тренажер">Тренажер</option>
                             <option value="Машина Смита">Машина Смита</option>
@@ -1538,6 +1542,7 @@ function exerciseApp() {
                             <option value="Турник">Турник</option>
                             <option value="Брусья">Брусья</option>
                             <option value="Скамейка">Скамейка</option>
+                            <option value="Резина / Экспандер">Резина / Экспандер</option>
                         </select>
                     </div>
                     
@@ -2066,14 +2071,22 @@ function exerciseApp() {
             </div>
             
             <!-- Кнопки действий внизу -->
-            <div class="flex items-center justify-center gap-3 pt-6 border-t border-gray-200">
-                <button @click="showEdit(currentExercise.id)" 
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+                <button x-show="!currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>" 
+                        @click="showEdit(currentExercise.id)" 
                         class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                     Редактировать
                 </button>
-                <button @click="deleteExercise(currentExercise.id)" 
+                <button x-show="!currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>" 
+                        @click="deleteExercise(currentExercise.id)" 
                         class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                     Удалить
+                </button>
+                <button x-show="currentExercise.is_system" 
+                        @click="showAddVideo(currentExercise.id)" 
+                        class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                    <?php echo e(__('common.add')); ?> <?php echo e(__('common.video')); ?>
+
                 </button>
             </div>
         </div>

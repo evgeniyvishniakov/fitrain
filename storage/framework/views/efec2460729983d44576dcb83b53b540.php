@@ -179,7 +179,8 @@ function athletesApp() {
         itemsPerPage: 12,
         measurementsCurrentPage: 1,
         measurementsItemsPerPage: 6,
-        
+        exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
+        workoutProgress: {}, // Прогресс выполнения упражнений в тренировках
         
         // Поля формы
         formName: '',
@@ -309,6 +310,8 @@ function athletesApp() {
                 await this.loadMeasurements(athleteId);
                 // Загружаем планы питания
                 await this.loadNutritionPlans();
+                // Загружаем прогресс выполнения упражнений
+                await this.loadAllWorkoutProgress();
             } finally {
                 this.loadingAthleteData = false;
             }
@@ -867,6 +870,69 @@ function athletesApp() {
             this.nutritionYear = new Date().getFullYear();
             this.nutritionTitle = '';
             this.nutritionDescription = '';
+        },
+        
+        toggleExercisesExpanded(workoutId) {
+            this.exercisesExpanded[workoutId] = !this.exercisesExpanded[workoutId];
+        },
+        
+        // Проверка, развернуты ли упражнения в карточке
+        isExercisesExpanded(workoutId) {
+            return this.exercisesExpanded[workoutId] || false;
+        },
+        
+        getExerciseStatusForList(workoutId, exerciseId) {
+            return this.workoutProgress[workoutId]?.[exerciseId]?.status || null;
+        },
+        
+        // Загрузка прогресса для всех тренировок спортсмена
+        async loadAllWorkoutProgress() {
+            if (!this.currentAthlete || !this.currentAthlete.workouts) return;
+            
+            for (let workout of this.currentAthlete.workouts) {
+                if (workout.exercises && workout.exercises.length > 0) {
+                    try {
+                        const response = await fetch(`/trainer/exercise-progress?workout_id=${workout.id}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        const result = await response.json();
+                        
+                        // Поддерживаем оба формата ответа: массив и объект {success: true, progress: {...}}
+                        if (result.success && result.progress) {
+                            // Формат: {success: true, progress: {exerciseId: {...}}}
+                            this.workoutProgress[workout.id] = {};
+                            
+                            Object.keys(result.progress).forEach(exerciseId => {
+                                this.workoutProgress[workout.id][exerciseId] = result.progress[exerciseId];
+                            });
+                        } else if (Array.isArray(result) && result.length > 0) {
+                            // Формат: [{exercise_id: ..., status: ...}, ...]
+                            if (!this.workoutProgress[workout.id]) {
+                                this.workoutProgress[workout.id] = {};
+                            }
+                            
+                            result.forEach(progress => {
+                                // Используем exercise_id из прогресса как ключ
+                                const exerciseId = progress.exercise_id || progress.id;
+                                this.workoutProgress[workout.id][exerciseId] = {
+                                    status: progress.status,
+                                    athlete_comment: progress.athlete_comment,
+                                    sets_data: progress.sets_data,
+                                    completed_at: progress.completed_at
+                                };
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Ошибка загрузки прогресса для тренировки ${workout.id}:`, error);
+                    }
+                }
+            }
         },
         
         getDaysInMonth(month, year) {
@@ -3381,7 +3447,7 @@ function athletesApp() {
                                 <span class="text-sm text-gray-500" x-text="(currentAthlete?.workouts || []).length + ' <?php echo e(__('common.workouts_count')); ?>'"></span>
                             </div>
                             
-                            <!-- Список тренировок -->
+                            <!-- Пустое состояние -->
                             <div x-show="(currentAthlete?.workouts || []).length === 0" class="text-center py-12 text-gray-500">
                                 <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
@@ -3392,7 +3458,7 @@ function athletesApp() {
                             
                             <div x-show="(currentAthlete?.workouts || []).length > 0" class="space-y-3">
                                 <template x-for="workout in (currentAthlete?.workouts || [])" :key="workout.id">
-                                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                                         <div class="flex items-start justify-between">
                                             <div class="flex-1">
                                                 <!-- Название и информация о тренировке -->
@@ -3419,12 +3485,28 @@ function athletesApp() {
                                                 
                                                 <!-- Упражнения -->
                                                 <div x-show="(workout.exercises || []).length > 0" class="mt-3">
-                                                    <div class="text-xs font-medium text-gray-500 mb-2">Упражнения:</div>
-                                                    <div class="flex flex-wrap gap-1">
-                                                        <template x-for="(exercise, index) in (workout.exercises || []).slice(0, 5)" :key="`exercise-${workout.id}-${index}`">
-                                                            <span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full" x-text="exercise.name || 'Без названия'"></span>
+                                                    <div class="flex flex-wrap gap-1 items-center">
+                                                        <div class="text-xs font-medium text-gray-500"><?php echo e(__('common.exercises')); ?></div>
+                                                        <!-- Отображаем все упражнения через Alpine.js -->
+                                                        <template x-for="(exercise, index) in (workout.exercises || [])" :key="`exercise-${workout.id}-${index}`">
+                                                            <span x-show="index < 5 || isExercisesExpanded(workout.id)"
+                                                                  class="inline-block px-2 py-1 text-xs rounded-full font-medium"
+                                                                  :class="{
+                                                                      'bg-green-100 text-green-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'completed',
+                                                                      'bg-yellow-100 text-yellow-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'partial',
+                                                                      'bg-red-100 text-red-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'not_done',
+                                                                      'bg-gray-100 text-gray-600': !getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id)
+                                                                  }"
+                                                                  x-text="exercise.name || '<?php echo e(__('common.no_title')); ?>'">
+                                                            </span>
                                                         </template>
-                                                        <span x-show="(workout.exercises || []).length > 5" class="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full" x-text="'+' + ((workout.exercises || []).length - 5) + ' еще'"></span>
+                                                        
+                                                        <!-- Кнопка разворачивания/сворачивания -->
+                                                        <button x-show="(workout.exercises || []).length > 5" 
+                                                                @click.stop="toggleExercisesExpanded(workout.id)" 
+                                                                class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
+                                                            <span x-text="isExercisesExpanded(workout.id) ? '<?php echo e(__('common.collapse')); ?>' : '+' + ((workout.exercises || []).length - 5) + ' <?php echo e(__('common.more')); ?>'"></span>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -3462,7 +3544,7 @@ function athletesApp() {
                             </div>
                             
                             <!-- Планы питания -->
-                            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                            <div>
                                 
                                 
                                 <!-- Загрузка -->
@@ -4932,6 +5014,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
 
 <?php $__env->stopSection(); ?>
 

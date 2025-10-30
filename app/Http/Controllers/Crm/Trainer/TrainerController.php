@@ -214,6 +214,9 @@ class TrainerController extends BaseController
         $trainer = auth()->user();
         $athletes = $trainer->athletes()->with(['workouts' => function($query) {
             $query->latest();
+        }, 'workouts.exercises' => function($query) {
+            $query->select('exercises.id', 'exercises.name', 'exercises.category', 'exercises.equipment', 'exercises.image_url', 'exercises.image_url_2', 'exercises.video_url', 'exercises.fields_config', 'workout_exercise.*')
+                  ->orderBy('workout_exercise.order_index', 'asc');
         }])->paginate(12);
         
         // Добавляем финансовые данные для каждого спортсмена из новой таблицы

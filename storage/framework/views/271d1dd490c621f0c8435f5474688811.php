@@ -3245,9 +3245,11 @@ function workoutApp() {
                     <option value="Ноги(Бедра)"><?php echo e(__('common.legs_thighs')); ?></option>
                     <option value="Ноги(Икры)"><?php echo e(__('common.legs_calves')); ?></option>
                     <option value="Плечи"><?php echo e(__('common.shoulders')); ?></option>
-                    <option value="Руки"><?php echo e(__('common.arms')); ?></option>
                     <option value="Руки(Трицепс)">Руки(Трицепс)</option>
                     <option value="Руки(Бицепс)">Руки(Бицепс)</option>
+                    <option value="Руки(Предплечье)">Руки(Предплечье)</option>
+                    <option value="Пресс"><?php echo e(__('common.abs')); ?></option>
+                    <option value="Шея">Шея</option>
                     <option value="Кардио"><?php echo e(__('common.cardio')); ?></option>
                     <option value="Гибкость"><?php echo e(__('common.flexibility')); ?></option>
                 </select>
@@ -3445,12 +3447,12 @@ function renderExercises() {
                  data-exercise-name="${escapeName}" 
                  data-exercise-category="${escapeCategory}" 
                  data-exercise-equipment="${escapeEquipment}"
-                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 130px;"
+                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 160px;"
                  onclick="toggleExercise(this, ${exercise.id})">
                 ${hasImage ? `
                     <img src="${imageUrl}" 
                          alt="${escapeName}" 
-                         style="width: 60px; height: 100px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                         style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
                 ` : ''}
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 600; color: #111827; margin-bottom: 5px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
@@ -3545,7 +3547,9 @@ function filterExercises() {
     const equipmentSet = new Set();
     (exercises || []).forEach(ex => {
         if (!category || ex.category === category) {
-            if (ex.equipment) equipmentSet.add(ex.equipment);
+            if (ex.equipment && ex.equipment !== 'null' && ex.equipment !== null) {
+                equipmentSet.add(ex.equipment);
+            }
         }
     });
     const currentOptions = Array.from(equipmentSelect.options).map(o => o.value);

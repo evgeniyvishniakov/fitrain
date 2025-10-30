@@ -21,11 +21,15 @@ class ExerciseController extends BaseController
             $query->where('category', $request->category);
         }
         
+        if ($request->filled('equipment')) {
+            $query->where('equipment', $request->equipment);
+        }
+        
         if ($request->filled('is_system')) {
             $query->where('is_system', $request->is_system === '1');
         }
         
-        $exercises = $query->paginate(20);
+        $exercises = $query->paginate(20)->appends($request->query());
         
         return view('admin.exercises.index', compact('exercises'));
     }

@@ -7,16 +7,16 @@
 <div class="space-y-6">
     <!-- Фильтры -->
     <div class="bg-white rounded-xl shadow-sm p-6">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Поиск</label>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg"
+                       class="filter-input block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                        placeholder="Название упражнения">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Категория</label>
-                <select name="category" class="block w-full px-3 py-2 border border-gray-300 rounded-lg">
+                <select name="category" class="filter-select block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все</option>
                     @foreach(\App\Models\Trainer\Exercise::CATEGORIES as $key => $label)
                         <option value="{{ $key }}" {{ request('category') == $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -24,25 +24,28 @@
                 </select>
             </div>
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование</label>
+                <select name="equipment" class="filter-select block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">Все</option>
+                    @foreach(\App\Models\Trainer\Exercise::EQUIPMENT as $key => $label)
+                        <option value="{{ $key }}" {{ request('equipment') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Тип</label>
-                <select name="is_system" class="block w-full px-3 py-2 border border-gray-300 rounded-lg">
+                <select name="is_system" class="filter-select block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все</option>
                     <option value="1" {{ request('is_system') == '1' ? 'selected' : '' }}>Системные</option>
                     <option value="0" {{ request('is_system') == '0' ? 'selected' : '' }}>Пользовательские</option>
                 </select>
-            </div>
-            <div class="flex items-end space-x-2">
-                <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Фильтр
-                </button>
-                <a href="{{ route('admin.exercises.index') }}" class="px-4 py-2 bg-gray-200 rounded-lg">✕</a>
             </div>
         </form>
     </div>
 
     <!-- Кнопка создания -->
     <div class="flex justify-between items-center">
-        <div class="text-sm text-gray-600">Всего: <span class="font-semibold">{{ $exercises->total() }}</span></div>
+        <div class="text-sm text-gray-600" id="exercisesCount">Всего: <span class="font-semibold">{{ $exercises->total() }}</span></div>
         <button onclick="openCreateModal()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
             ➕ Создать упражнение
         </button>
@@ -53,9 +56,10 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Фото</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Название (RU/UK)</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Категория</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Оборудование</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тип</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Действия</th>
                 </tr>
@@ -63,7 +67,17 @@
             <tbody class="divide-y divide-gray-200">
                 @forelse($exercises as $exercise)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 text-sm">{{ $exercise->id }}</td>
+                        <td class="px-6 py-4">
+                            @if($exercise->image_url)
+                                <img src="{{ asset('storage/' . $exercise->image_url) }}" 
+                                     alt="{{ $exercise->getTranslated('name', 'ru') }}" 
+                                     class="w-16 h-16 object-cover rounded-lg border border-gray-200">
+                            @else
+                                <div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                                    Нет фото
+                                </div>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-sm">
                             <div class="font-medium text-sm">🇷🇺 {{ $exercise->getTranslated('name', 'ru') }}</div>
                             @if(isset($exercise->translations['ua']['name']) && !empty($exercise->translations['ua']['name']))
@@ -74,24 +88,33 @@
                             <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{{ $exercise->category }}</span>
                         </td>
                         <td class="px-6 py-4">
+                            <span class="px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs">{{ $exercise->equipment ?? '—' }}</span>
+                        </td>
+                        <td class="px-6 py-4">
                             @if($exercise->is_system)
                                 <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Системное</span>
                             @else
                                 <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Польз.</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 space-x-2">
-                            <button onclick="openEditModal({{ $exercise->id }})" class="text-blue-600 hover:text-blue-900">
-                                ✏️ Редактировать
-                            </button>
-                            <button onclick="deleteExercise({{ $exercise->id }})" class="text-red-600 hover:text-red-900">
-                                🗑️ Удалить
-                            </button>
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-3">
+                                <button onclick="openEditModal({{ $exercise->id }})" 
+                                        class="text-blue-600 hover:text-blue-900 text-xl transition-transform hover:scale-110" 
+                                        title="Редактировать">
+                                    ✏️
+                                </button>
+                                <button onclick="deleteExercise({{ $exercise->id }})" 
+                                        class="text-red-600 hover:text-red-900 text-xl transition-transform hover:scale-110" 
+                                        title="Удалить">
+                                    🗑️
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                             <div class="text-4xl mb-3">🏋️</div>
                             <p>Упражнения не найдены</p>
                         </td>
@@ -100,7 +123,7 @@
             </tbody>
         </table>
         @if($exercises->hasPages())
-            <div class="px-6 py-4 border-t">{{ $exercises->links() }}</div>
+            <div class="px-6 py-4 border-t" id="paginationContainer">{{ $exercises->links() }}</div>
         @endif
     </div>
 </div>
@@ -131,24 +154,52 @@
                 </div>
             </div>
             
-            <!-- Изображения -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Главное изображение</label>
-                    <input type="file" name="image" id="image" accept="image/*"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                    <div id="imagePreview" class="mt-2 hidden">
-                        <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
-                        <img src="" alt="Preview" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
+            <!-- Изображения (основные) -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3 border-b pb-2">Изображения (основные)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Главное изображение</label>
+                        <input type="file" name="image" id="image" accept="image/*"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <div id="imagePreview" class="mt-2 hidden">
+                            <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
+                            <img src="" alt="Preview" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Второе изображение</label>
+                        <input type="file" name="image_2" id="image_2" accept="image/*"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <div id="imagePreview2" class="mt-2 hidden">
+                            <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
+                            <img src="" alt="Preview 2" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Второе изображение</label>
-                    <input type="file" name="image_2" id="image_2" accept="image/*"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                    <div id="imagePreview2" class="mt-2 hidden">
-                        <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
-                        <img src="" alt="Preview 2" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
+            </div>
+            
+            <!-- Изображения для девушек -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-800 mb-3 border-b pb-2">Изображения для девушек (опционально)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Главное изображение (девушки)</label>
+                        <input type="file" name="image_female" id="image_female" accept="image/*"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <div id="imagePreviewFemale" class="mt-2 hidden">
+                            <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
+                            <img src="" alt="Preview Female" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Второе изображение (девушки)</label>
+                        <input type="file" name="image_female_2" id="image_female_2" accept="image/*"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <div id="imagePreviewFemale2" class="mt-2 hidden">
+                            <p class="text-xs text-gray-600 mb-1">Текущее изображение:</p>
+                            <img src="" alt="Preview Female 2" class="w-40 h-40 object-cover rounded-lg border border-gray-200">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -268,6 +319,115 @@
 </div>
 
 <script>
+// Динамическая фильтрация и пагинация без перезагрузки
+let searchTimeout;
+
+function loadExercises(url) {
+    const tableContainer = document.querySelector('.bg-white.rounded-xl.shadow-sm.overflow-hidden');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const countContainer = document.getElementById('exercisesCount');
+    
+    if (!tableContainer) return;
+    
+    // Показываем индикатор загрузки
+    tableContainer.style.opacity = '0.5';
+    tableContainer.style.pointerEvents = 'none';
+    
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'text/html'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Обновляем таблицу
+        const newTable = doc.querySelector('.bg-white.rounded-xl.shadow-sm.overflow-hidden');
+        if (newTable) {
+            const currentTable = document.querySelector('.bg-white.rounded-xl.shadow-sm.overflow-hidden');
+            if (currentTable && currentTable.parentNode) {
+                currentTable.parentNode.replaceChild(newTable, currentTable);
+            }
+        }
+        
+        // Обновляем пагинацию
+        const newPagination = doc.querySelector('#paginationContainer');
+        if (newPagination && paginationContainer) {
+            paginationContainer.innerHTML = newPagination.innerHTML;
+            // Привязываем обработчики к новым ссылкам пагинации
+            attachPaginationHandlers();
+        }
+        
+        // Обновляем счетчик
+        const newCount = doc.querySelector('#exercisesCount');
+        if (newCount && countContainer) {
+            countContainer.innerHTML = newCount.innerHTML;
+        }
+        
+        // Обновляем URL без перезагрузки
+        window.history.pushState({}, '', url);
+        
+        // Убираем индикатор загрузки
+        const updatedTable = document.querySelector('.bg-white.rounded-xl.shadow-sm.overflow-hidden');
+        if (updatedTable) {
+            updatedTable.style.opacity = '1';
+            updatedTable.style.pointerEvents = 'auto';
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка загрузки:', error);
+        const currentTable = document.querySelector('.bg-white.rounded-xl.shadow-sm.overflow-hidden');
+        if (currentTable) {
+            currentTable.style.opacity = '1';
+            currentTable.style.pointerEvents = 'auto';
+        }
+    });
+}
+
+function attachPaginationHandlers() {
+    // Перехватываем клики по ссылкам пагинации
+    const paginationLinks = document.querySelectorAll('#paginationContainer a');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            if (url) {
+                loadExercises(url);
+            }
+        });
+    });
+}
+
+function applyFilters() {
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+    const url = '{{ route('admin.exercises.index') }}?' + params.toString();
+    loadExercises(url);
+}
+
+// Для селектов - мгновенная фильтрация
+document.querySelectorAll('.filter-select').forEach(select => {
+    select.addEventListener('change', applyFilters);
+});
+
+// Для поиска - с задержкой 500мс
+const searchInput = document.querySelector('.filter-input');
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applyFilters, 500);
+    });
+}
+
+// Привязываем обработчики к пагинации при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    attachPaginationHandlers();
+});
+
 function openCreateModal() {
     document.getElementById('modalTitle').textContent = 'Создать упражнение';
     document.getElementById('exerciseForm').reset();
@@ -282,6 +442,8 @@ function openCreateModal() {
     // Скрываем превью изображений
     document.getElementById('imagePreview').classList.add('hidden');
     document.getElementById('imagePreview2').classList.add('hidden');
+    document.getElementById('imagePreviewFemale').classList.add('hidden');
+    document.getElementById('imagePreviewFemale2').classList.add('hidden');
     
     document.getElementById('exerciseModal').classList.remove('hidden');
 }
@@ -353,6 +515,8 @@ function openEditModal(id) {
             // Показываем превью текущих изображений
             const imagePreview = document.getElementById('imagePreview');
             const imagePreview2 = document.getElementById('imagePreview2');
+            const imagePreviewFemale = document.getElementById('imagePreviewFemale');
+            const imagePreviewFemale2 = document.getElementById('imagePreviewFemale2');
             
             if (data.image_url) {
                 imagePreview.querySelector('img').src = '/storage/' + data.image_url;
@@ -366,6 +530,20 @@ function openEditModal(id) {
                 imagePreview2.classList.remove('hidden');
             } else {
                 imagePreview2.classList.add('hidden');
+            }
+            
+            if (data.image_url_female) {
+                imagePreviewFemale.querySelector('img').src = '/storage/' + data.image_url_female;
+                imagePreviewFemale.classList.remove('hidden');
+            } else {
+                imagePreviewFemale.classList.add('hidden');
+            }
+            
+            if (data.image_url_female_2) {
+                imagePreviewFemale2.querySelector('img').src = '/storage/' + data.image_url_female_2;
+                imagePreviewFemale2.classList.remove('hidden');
+            } else {
+                imagePreviewFemale2.classList.add('hidden');
             }
             
             document.getElementById('exerciseModal').classList.remove('hidden');
@@ -427,7 +605,10 @@ document.getElementById('exerciseForm').addEventListener('submit', function(e) {
     .then(r => r.json())
     .then(data => {
         if(data.success) {
-            location.reload();
+            closeModal();
+            // Обновляем список упражнений через AJAX
+            const currentUrl = window.location.href;
+            loadExercises(currentUrl);
         } else {
             alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
         }
@@ -465,6 +646,32 @@ document.getElementById('image_2').addEventListener('change', function(e) {
     }
 });
 
+document.getElementById('image_female').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('imagePreviewFemale');
+            preview.querySelector('img').src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('image_female_2').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('imagePreviewFemale2');
+            preview.querySelector('img').src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
 function deleteExercise(id) {
     if(!confirm('Удалить упражнение?')) return;
     
@@ -476,8 +683,13 @@ function deleteExercise(id) {
     })
     .then(r => r.json())
     .then(data => {
-        if(data.success) location.reload();
-        else alert('Ошибка: ' + data.message);
+        if(data.success) {
+            // Обновляем список упражнений через AJAX
+            const currentUrl = window.location.href;
+            loadExercises(currentUrl);
+        } else {
+            alert('Ошибка: ' + data.message);
+        }
     });
 }
 </script>
