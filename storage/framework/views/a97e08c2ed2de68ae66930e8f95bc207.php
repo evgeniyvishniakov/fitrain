@@ -39,6 +39,62 @@ function exerciseApp() {
         formImageUrl2: '',
         formFieldsConfig: ['weight', 'reps', 'sets', 'rest'], // По умолчанию
         
+        // Получить изображение для отображения в списке
+        // Для категории "Ягодицы" - приоритет женские, для остальных - мужские
+        getDisplayImage(exercise) {
+            if (!exercise) return null;
+            const isGlutes = exercise.category === 'Ягодицы';
+            
+            if (isGlutes) {
+                // Для категории "Ягодицы" - сначала женское
+                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                    return exercise.image_url_female;
+                }
+                // Если женского нет, проверяем мужское
+                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                    return exercise.image_url;
+                }
+            } else {
+                // Для остальных категорий - сначала мужское
+                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                    return exercise.image_url;
+                }
+                // Если мужского нет, проверяем женское
+                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                    return exercise.image_url_female;
+                }
+            }
+            return null;
+        },
+        
+        // Получить второе изображение для отображения в просмотре
+        // Для категории "Ягодицы" - приоритет женские, для остальных - мужские
+        getDisplayImage2(exercise) {
+            if (!exercise) return null;
+            const isGlutes = exercise.category === 'Ягодицы';
+            
+            if (isGlutes) {
+                // Для категории "Ягодицы" - сначала второе женское
+                if (exercise.image_url_female_2 && typeof exercise.image_url_female_2 === 'string' && exercise.image_url_female_2.trim() !== '' && exercise.image_url_female_2 !== 'null') {
+                    return exercise.image_url_female_2;
+                }
+                // Если женского нет, проверяем мужское
+                if (exercise.image_url_2 && typeof exercise.image_url_2 === 'string' && exercise.image_url_2.trim() !== '' && exercise.image_url_2 !== 'null') {
+                    return exercise.image_url_2;
+                }
+            } else {
+                // Для остальных категорий - сначала второе мужское
+                if (exercise.image_url_2 && typeof exercise.image_url_2 === 'string' && exercise.image_url_2.trim() !== '' && exercise.image_url_2 !== 'null') {
+                    return exercise.image_url_2;
+                }
+                // Если мужского нет, проверяем женское
+                if (exercise.image_url_female_2 && typeof exercise.image_url_female_2 === 'string' && exercise.image_url_female_2.trim() !== '' && exercise.image_url_female_2 !== 'null') {
+                    return exercise.image_url_female_2;
+                }
+            }
+            return null;
+        },
+        
         // Навигация
         showList() {
             this.currentView = 'list';
@@ -83,11 +139,14 @@ function exerciseApp() {
             this.formInstructions = this.currentExercise.instructions || '';
             this.formVideoUrl = this.currentExercise.video_url || '';
             this.formImage = null;
-            this.formImagePreview = this.currentExercise.image_url ? `/storage/${this.currentExercise.image_url}` : '';
-            this.formImageUrl = this.currentExercise.image_url || '';
+            // Используем приоритет: женское изображение, если есть, иначе мужское
+            const displayImage = this.getDisplayImage(this.currentExercise);
+            const displayImage2 = this.getDisplayImage2(this.currentExercise);
+            this.formImagePreview = displayImage ? `/storage/${displayImage}` : '';
+            this.formImageUrl = displayImage || '';
             this.formImage2 = null;
-            this.formImagePreview2 = this.currentExercise.image_url_2 ? `/storage/${this.currentExercise.image_url_2}` : '';
-            this.formImageUrl2 = this.currentExercise.image_url_2 || '';
+            this.formImagePreview2 = displayImage2 ? `/storage/${displayImage2}` : '';
+            this.formImageUrl2 = displayImage2 || '';
             this.formFieldsConfig = this.currentExercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
             
             // Очищаем input файлов при открытии формы редактирования
@@ -128,20 +187,21 @@ function exerciseApp() {
             let filtered = this.exercises;
             
             if (this.search) {
+                const normalizedSearch = this.search.toLowerCase();
                 filtered = filtered.filter(e => 
-                    e.name.toLowerCase().includes(this.search.toLowerCase()) ||
-                    (e.description && e.description.toLowerCase().includes(this.search.toLowerCase())) ||
-                    e.category.toLowerCase().includes(this.search.toLowerCase()) ||
-                    e.equipment.toLowerCase().includes(this.search.toLowerCase())
+                    (e.name || '').toLowerCase().includes(normalizedSearch) ||
+                    (e.description || '').toLowerCase().includes(normalizedSearch) ||
+                    (e.category || '').toLowerCase().includes(normalizedSearch) ||
+                    (e.equipment || '').toLowerCase().includes(normalizedSearch)
                 );
             }
             
             if (this.category) {
-                filtered = filtered.filter(e => e.category === this.category);
+                filtered = filtered.filter(e => (e.category || '') === this.category);
             }
             
             if (this.equipment) {
-                filtered = filtered.filter(e => e.equipment === this.equipment);
+                filtered = filtered.filter(e => (e.equipment || '') === this.equipment);
             }
             
             if (this.exerciseType) {
@@ -168,6 +228,30 @@ function exerciseApp() {
                 }
             });
             return Array.from(equipmentsSet).sort();
+        },
+        
+        // Перевод оборудования на текущий язык
+        getEquipmentTranslation(equipment) {
+            if (!equipment) return '';
+            const translations = {
+                'Штанга': '<?php echo e(__('common.barbell')); ?>',
+                'Гриф': '<?php echo e(__('common.barbell_bar')); ?>',
+                'Трап-гриф': '<?php echo e(__('common.trap_bar')); ?>',
+                'EZ-гриф': '<?php echo e(__('common.ez_bar')); ?>',
+                'Отягощения': '<?php echo e(__('common.weight_plate')); ?>',
+                'Гантели': '<?php echo e(__('common.dumbbells')); ?>',
+                'Гири': '<?php echo e(__('common.kettlebells')); ?>',
+                'Собственный вес': '<?php echo e(__('common.body_weight')); ?>',
+                'Тренажер': '<?php echo e(__('common.machines')); ?>',
+                'Машина Смита': '<?php echo e(__('common.smith_machine')); ?>',
+                'Кроссовер / Блок': '<?php echo e(__('common.crossover_block')); ?>',
+                'Скакалка': '<?php echo e(__('common.jump_rope')); ?>',
+                'Турник': '<?php echo e(__('common.pull_up_bar')); ?>',
+                'Брусья': '<?php echo e(__('common.parallel_bars')); ?>',
+                'Скамейка': '<?php echo e(__('common.bench')); ?>',
+                'Резина / Экспандер': '<?php echo e(__('common.resistance_band')); ?>'
+            };
+            return translations[equipment] || equipment;
         },
         
         // Пагинация
@@ -1127,15 +1211,16 @@ function exerciseApp() {
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value=""><?php echo e(__('common.all_categories')); ?></option>
                         <option value="Грудь"><?php echo e(__('common.chest')); ?></option>
-                        <option value="Спина"><?php echo e(__('common.back')); ?></option>
+                        <option value="Спина"><?php echo e(__('common.back_muscles')); ?></option>
                         <option value="Ноги(Бедра)"><?php echo e(__('common.legs_thighs')); ?></option>
                         <option value="Ноги(Икры)"><?php echo e(__('common.legs_calves')); ?></option>
+                        <option value="Ягодицы"><?php echo e(__('common.glutes')); ?></option>
                         <option value="Плечи"><?php echo e(__('common.shoulders')); ?></option>
-                        <option value="Руки(Бицепс)">Руки(Бицепс)</option>
-                        <option value="Руки(Трицепс)">Руки(Трицепс)</option>
-                        <option value="Руки(Предплечье)">Руки(Предплечье)</option>
+                        <option value="Руки(Бицепс)"><?php echo e(__('common.arms_biceps')); ?></option>
+                        <option value="Руки(Трицепс)"><?php echo e(__('common.arms_triceps')); ?></option>
+                        <option value="Руки(Предплечье)"><?php echo e(__('common.arms_forearm')); ?></option>
                         <option value="Пресс"><?php echo e(__('common.abs')); ?></option>
-                        <option value="Шея">Шея</option>
+                        <option value="Шея"><?php echo e(__('common.neck')); ?></option>
                         <option value="Кардио"><?php echo e(__('common.cardio')); ?></option>
                         <option value="Гибкость"><?php echo e(__('common.flexibility')); ?></option>
                     </select>
@@ -1147,7 +1232,7 @@ function exerciseApp() {
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value=""><?php echo e(__('common.all_equipment')); ?></option>
                         <template x-for="eq in availableEquipments().filter(e => e && e !== 'null')" :key="eq">
-                            <option :value="eq" x-text="eq"></option>
+                            <option :value="eq" x-text="getEquipmentTranslation(eq)"></option>
                         </template>
                     </select>
                 </div>
@@ -1159,7 +1244,7 @@ function exerciseApp() {
                         <option value=""><?php echo e(__('common.all_exercises')); ?></option>
                         <option value="system"><?php echo e(__('common.system_exercises')); ?></option>
                         <option value="user"><?php echo e(__('common.user_exercises')); ?></option>
-                        <option value="favorite">Избранное</option>
+                        <option value="favorite"><?php echo e(__('common.favorite_exercises')); ?></option>
                     </select>
                 </div>
                 
@@ -1203,9 +1288,9 @@ function exerciseApp() {
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-4 md:p-6" @click="showView(exercise.id)">
                     <!-- Мобильная версия -->
                     <div class="mobile-only" style="gap: 1rem;">
-                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" 
+                        <div x-show="getDisplayImage(exercise)" 
                              class="flex-shrink-0 w-24">
-                            <img :src="`/storage/${exercise.image_url}`" 
+                            <img :src="`/storage/${getDisplayImage(exercise)}`" 
                                  :alt="exercise.name"
                                  class="w-full h-32 object-contain rounded-lg">
                         </div>
@@ -1220,8 +1305,8 @@ function exerciseApp() {
                     <div class="desktop-only">
                         <div style="display: flex; gap: 1.5rem;">
                             <!-- Картинка слева -->
-                            <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 200px;">
-                                <img :src="`/storage/${exercise.image_url}`" 
+                            <div x-show="getDisplayImage(exercise)" style="flex: 0 0 25%; max-width: 200px;">
+                                <img :src="`/storage/${getDisplayImage(exercise)}`" 
                                      :alt="exercise.name"
                                      class="w-full h-full object-cover rounded-lg">
                             </div>
@@ -1280,16 +1365,22 @@ function exerciseApp() {
 
                                     </button>
                                     <?php if(auth()->user()->hasRole('trainer')): ?>
-                                        <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="showEdit(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                        <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>"
+                                                @click="showEdit(currentExercise.id)"
+                                                class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                                             <?php echo e(__('common.edit')); ?>
 
                                         </button>
-                                        <button x-show="!exercise.is_system && exercise.trainer_id === <?php echo e(auth()->id()); ?>" @click="deleteExercise(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                        <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>"
+                                                @click="deleteExercise(currentExercise.id)"
+                                                class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
                                             <?php echo e(__('common.delete')); ?>
 
                                         </button>
-                                        <button x-show="exercise.is_system" @click="showAddVideo(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                                            <?php echo e(__('common.add')); ?> <?php echo e(__('common.video')); ?>
+                                        <button x-show="currentExercise && currentExercise.is_system"
+                                                @click="showAddVideo(currentExercise.id)"
+                                                class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                            <?php echo e(__('common.add_video')); ?>
 
                                         </button>
                                     <?php endif; ?>
@@ -1505,19 +1596,20 @@ function exerciseApp() {
                         <select x-model="formCategory" 
                                 required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">Выберите категорию</option>
-                            <option value="Грудь">Грудь</option>
-                            <option value="Спина">Спина</option>
-                            <option value="Ноги(Бедра)">Ноги(Бедра)</option>
-                            <option value="Ноги(Икры)">Ноги(Икры)</option>
-                            <option value="Плечи">Плечи</option>
-                            <option value="Руки(Бицепс)">Руки(Бицепс)</option>
-                            <option value="Руки(Трицепс)">Руки(Трицепс)</option>
-                            <option value="Руки(Предплечье)">Руки(Предплечье)</option>
-                            <option value="Пресс">Пресс</option>
-                            <option value="Шея">Шея</option>
-                            <option value="Кардио">Кардио</option>
-                            <option value="Гибкость">Гибкость</option>
+                            <option value=""><?php echo e(__('common.select_category')); ?></option>
+                            <option value="Грудь"><?php echo e(__('common.chest')); ?></option>
+                            <option value="Спина"><?php echo e(__('common.back_muscles')); ?></option>
+                            <option value="Ноги(Бедра)"><?php echo e(__('common.legs_thighs')); ?></option>
+                            <option value="Ноги(Икры)"><?php echo e(__('common.legs_calves')); ?></option>
+                            <option value="Ягодицы"><?php echo e(__('common.glutes')); ?></option>
+                            <option value="Плечи"><?php echo e(__('common.shoulders')); ?></option>
+                            <option value="Руки(Бицепс)"><?php echo e(__('common.arms_biceps')); ?></option>
+                            <option value="Руки(Трицепс)"><?php echo e(__('common.arms_triceps')); ?></option>
+                            <option value="Руки(Предплечье)"><?php echo e(__('common.arms_forearm')); ?></option>
+                            <option value="Пресс"><?php echo e(__('common.abs')); ?></option>
+                            <option value="Шея"><?php echo e(__('common.neck')); ?></option>
+                            <option value="Кардио"><?php echo e(__('common.cardio')); ?></option>
+                            <option value="Гибкость"><?php echo e(__('common.flexibility')); ?></option>
                         </select>
                     </div>
                     
@@ -1526,23 +1618,23 @@ function exerciseApp() {
                         <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.equipment')); ?></label>
                         <select x-model="formEquipment" 
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">Выберите оборудование</option>
-                            <option value="Штанга">Штанга</option>
-                            <option value="Гриф">Гриф</option>
-                            <option value="Трап-гриф">Трап-гриф</option>
-                            <option value="EZ-гриф">EZ-гриф</option>
-                            <option value="Блин">Блин</option>
-                            <option value="Гантели">Гантели</option>
-                            <option value="Гири">Гири</option>
-                            <option value="Собственный вес">Собственный вес</option>
-                            <option value="Тренажер">Тренажер</option>
-                            <option value="Машина Смита">Машина Смита</option>
-                            <option value="Кроссовер">Кроссовер</option>
-                            <option value="Скакалка">Скакалка</option>
-                            <option value="Турник">Турник</option>
-                            <option value="Брусья">Брусья</option>
-                            <option value="Скамейка">Скамейка</option>
-                            <option value="Резина / Экспандер">Резина / Экспандер</option>
+                            <option value=""><?php echo e(__('common.select_equipment')); ?></option>
+                            <option value="Штанга"><?php echo e(__('common.barbell')); ?></option>
+                            <option value="Гриф"><?php echo e(__('common.barbell_bar')); ?></option>
+                            <option value="Трап-гриф"><?php echo e(__('common.trap_bar')); ?></option>
+                            <option value="EZ-гриф"><?php echo e(__('common.ez_bar')); ?></option>
+                            <option value="Отягощения"><?php echo e(__('common.weight_plate')); ?></option>
+                            <option value="Гантели"><?php echo e(__('common.dumbbells')); ?></option>
+                            <option value="Гири"><?php echo e(__('common.kettlebells')); ?></option>
+                            <option value="Собственный вес"><?php echo e(__('common.body_weight')); ?></option>
+                            <option value="Тренажер"><?php echo e(__('common.machines')); ?></option>
+                            <option value="Машина Смита"><?php echo e(__('common.smith_machine')); ?></option>
+                            <option value="Кроссовер / Блок"><?php echo e(__('common.crossover_block')); ?></option>
+                            <option value="Скакалка"><?php echo e(__('common.jump_rope')); ?></option>
+                            <option value="Турник"><?php echo e(__('common.pull_up_bar')); ?></option>
+                            <option value="Брусья"><?php echo e(__('common.parallel_bars')); ?></option>
+                            <option value="Скамейка"><?php echo e(__('common.bench')); ?></option>
+                            <option value="Резина / Экспандер"><?php echo e(__('common.resistance_band')); ?></option>
                         </select>
                     </div>
                     
@@ -1662,8 +1754,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('rest') ? 'text-purple-900' : 'text-gray-900""><?php echo e(__('common.rest')); ?> (<?php echo e(__('common.min')); ?>)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500"">Время отдыха</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('rest') ? 'text-purple-900' : 'text-gray-900'"><?php echo e(__('common.rest')); ?> (<?php echo e(__('common.min')); ?>)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500'">Время отдыха</div>
                                 </div>
                             </div>
                         </label>
@@ -1682,8 +1774,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('time') ? 'text-blue-900' : 'text-gray-900"">Время (мин)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500"">Продолжительность</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('time') ? 'text-blue-900' : 'text-gray-900'">Время (мин)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500'">Продолжительность</div>
                                 </div>
                             </div>
                         </label>
@@ -1702,8 +1794,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('distance') ? 'text-emerald-900' : 'text-gray-900"">Дистанция (м)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500"">Пройденное расстояние</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('distance') ? 'text-emerald-900' : 'text-gray-900'">Дистанция (м)</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500'">Пройденное расстояние</div>
                                 </div>
                             </div>
                         </label>
@@ -1722,8 +1814,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('tempo') ? 'text-pink-900' : 'text-gray-900"">Темп/Скорость</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500"">Скорость выполнения</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('tempo') ? 'text-pink-900' : 'text-gray-900'">Темп/Скорость</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500'">Скорость выполнения</div>
                                 </div>
                             </div>
                         </label>
@@ -1901,9 +1993,9 @@ function exerciseApp() {
                 <div class="flex-shrink-0" style="width: 35%; max-width: 500px;">
                     <div class="space-y-4">
                         <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                        <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                        <template x-if="getDisplayImage(currentExercise) && !(getDisplayImage2(currentExercise) && getDisplayImage2(currentExercise).toLowerCase().endsWith('.gif'))">
                             <div>
-                                <img :src="`/storage/${currentExercise.image_url}`" 
+                                <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
                                      :alt="currentExercise.name"
                                      class="w-full rounded-lg shadow-md"
                                      style="object-fit: contain;">
@@ -1911,9 +2003,9 @@ function exerciseApp() {
                         </template>
                         
                         <!-- Второе изображение -->
-                        <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                        <template x-if="getDisplayImage2(currentExercise)">
                             <div>
-                                <img :src="`/storage/${currentExercise.image_url_2}`" 
+                                <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
                                      :alt="currentExercise.name"
                                      class="w-full rounded-lg shadow-md"
                                      style="object-fit: contain;">
@@ -1990,9 +2082,9 @@ function exerciseApp() {
                 <!-- Картинки по центру -->
                 <div class="flex flex-col items-center gap-4">
                     <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                    <template x-if="getDisplayImage(currentExercise) && !(getDisplayImage2(currentExercise) && getDisplayImage2(currentExercise).toLowerCase().endsWith('.gif'))">
                         <div class="w-full">
-                            <img :src="`/storage/${currentExercise.image_url}`" 
+                            <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md mx-auto"
                                  style="object-fit: contain; max-height: 400px;">
@@ -2000,9 +2092,9 @@ function exerciseApp() {
                     </template>
                     
                     <!-- Второе изображение -->
-                    <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                    <template x-if="getDisplayImage2(currentExercise)">
                         <div class="w-full">
-                            <img :src="`/storage/${currentExercise.image_url_2}`" 
+                            <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md mx-auto"
                                  style="object-fit: contain; max-height: 400px;">
@@ -2072,20 +2164,20 @@ function exerciseApp() {
             
             <!-- Кнопки действий внизу -->
             <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-                <button x-show="!currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>" 
+                <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>"
                         @click="showEdit(currentExercise.id)" 
                         class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
                     Редактировать
                 </button>
-                <button x-show="!currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>" 
+                <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>"
                         @click="deleteExercise(currentExercise.id)" 
-                        class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                        class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
                     Удалить
                 </button>
-                <button x-show="currentExercise.is_system" 
+                <button x-show="currentExercise && currentExercise.is_system"
                         @click="showAddVideo(currentExercise.id)" 
-                        class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                    <?php echo e(__('common.add')); ?> <?php echo e(__('common.video')); ?>
+                        class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <?php echo e(__('common.add_video')); ?>
 
                 </button>
             </div>

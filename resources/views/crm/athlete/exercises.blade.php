@@ -148,6 +148,30 @@ function exerciseApp() {
             }
         },
         
+        // Перевод оборудования на текущий язык
+        getEquipmentTranslation(equipment) {
+            if (!equipment) return '';
+            const translations = {
+                'Штанга': '{{ __('common.barbell') }}',
+                'Гриф': '{{ __('common.barbell_bar') }}',
+                'Трап-гриф': '{{ __('common.trap_bar') }}',
+                'EZ-гриф': '{{ __('common.ez_bar') }}',
+                'Отягощения': '{{ __('common.weight_plate') }}',
+                'Гантели': '{{ __('common.dumbbells') }}',
+                'Гири': '{{ __('common.kettlebells') }}',
+                'Собственный вес': '{{ __('common.body_weight') }}',
+                'Тренажер': '{{ __('common.machines') }}',
+                'Машина Смита': '{{ __('common.smith_machine') }}',
+                'Кроссовер / Блок': '{{ __('common.crossover_block') }}',
+                'Скакалка': '{{ __('common.jump_rope') }}',
+                'Турник': '{{ __('common.pull_up_bar') }}',
+                'Брусья': '{{ __('common.parallel_bars') }}',
+                'Скамейка': '{{ __('common.bench') }}',
+                'Резина / Экспандер': '{{ __('common.resistance_band') }}'
+            };
+            return translations[equipment] || equipment;
+        },
+        
         // Навигация
         showList() {
             this.currentView = 'list';
@@ -164,27 +188,20 @@ function exerciseApp() {
             let filtered = this.exercises;
             
             if (this.search) {
-                filtered = filtered.filter(e => 
-                    e.name.toLowerCase().includes(this.search.toLowerCase()) ||
-                    (e.description && e.description.toLowerCase().includes(this.search.toLowerCase())) ||
-                    (e.muscle_groups && e.muscle_groups.some(m => m.toLowerCase().includes(this.search.toLowerCase())))
+                const normalizedSearch = this.search.toLowerCase();
+                filtered = filtered.filter(exercise =>
+                    (exercise.name || '').toLowerCase().includes(normalizedSearch) ||
+                    (exercise.category || '').toLowerCase().includes(normalizedSearch) ||
+                    (exercise.equipment || '').toLowerCase().includes(normalizedSearch)
                 );
             }
             
             if (this.category) {
-                filtered = filtered.filter(e => e.category === this.category);
+                filtered = filtered.filter(exercise => (exercise.category || '') === this.category);
             }
             
             if (this.equipment) {
-                filtered = filtered.filter(e => e.equipment === this.equipment);
-            }
-            
-            if (this.exerciseType) {
-                if (this.exerciseType === 'system') {
-                    filtered = filtered.filter(e => e.is_system);
-                } else if (this.exerciseType === 'custom') {
-                    filtered = filtered.filter(e => !e.is_system);
-                }
+                filtered = filtered.filter(exercise => (exercise.equipment || '') === this.equipment);
             }
             
             return filtered;
@@ -300,6 +317,13 @@ function exerciseApp() {
         isYouTubeUrl(url) {
             if (!url) return false;
             return url.includes('youtube.com') || url.includes('youtu.be');
+        },
+        
+        // Открытие модального окна для видео
+        openVideoModal(url, title) {
+            window.dispatchEvent(new CustomEvent('open-video-modal', {
+                detail: { url: url, title: title }
+            }));
         }
     }
 }
@@ -307,14 +331,54 @@ function exerciseApp() {
 
 @section("content")
 <style>
-    .exercises-grid-athlete {
-        display: grid !important;
-        grid-template-columns: repeat(1, 1fr) !important;
-        gap: 1rem !important;
+    .exercise-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
     }
+
     @media (min-width: 1024px) {
-        .exercises-grid-athlete {
-            grid-template-columns: repeat(3, 1fr) !important;
+        .exercise-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    /* Мобильная версия карточки упражнения */
+    .exercise-card-mobile {
+        display: flex !important;
+        gap: 1rem;
+    }
+    
+    /* Десктопная версия карточки упражнения */
+    .exercise-card-desktop {
+        display: none !important;
+    }
+    
+    @media (min-width: 768px) {
+        .exercise-card-mobile {
+            display: none !important;
+        }
+        
+        .exercise-card-desktop {
+            display: block !important;
+        }
+    }
+    
+    /* Медиа-запросы для просмотра упражнения */
+    @media (min-width: 768px) {
+        .exercise-view-desktop {
+            display: flex !important;
+        }
+        .exercise-view-mobile {
+            display: none !important;
+        }
+    }
+    @media (max-width: 767px) {
+        .exercise-view-desktop {
+            display: none !important;
+        }
+        .exercise-view-mobile {
+            display: block !important;
         }
     }
 </style>
@@ -358,19 +422,20 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="category"
                             class="w-full px-4 py-3 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все категории</option>
-                        <option value="Грудь">Грудь</option>
-                        <option value="Спина">Спина</option>
-                        <option value="Ноги(Бедра)">Ноги(Бедра)</option>
-                        <option value="Ноги(Икры)">Ноги(Икры)</option>
-                        <option value="Плечи">Плечи</option>
-                        <option value="Руки(Бицепс)">Руки(Бицепс)</option>
-                        <option value="Руки(Трицепс)">Руки(Трицепс)</option>
-                        <option value="Руки(Предплечье)">Руки(Предплечье)</option>
-                        <option value="Пресс">Пресс</option>
-                        <option value="Шея">Шея</option>
-                        <option value="Кардио">Кардио</option>
-                        <option value="Гибкость">Гибкость</option>
+                        <option value="">{{ __('common.all_categories') }}</option>
+                        <option value="Грудь">{{ __('common.chest') }}</option>
+                        <option value="Спина">{{ __('common.back_muscles') }}</option>
+                        <option value="Ноги(Бедра)">{{ __('common.legs_thighs') }}</option>
+                        <option value="Ноги(Икры)">{{ __('common.legs_calves') }}</option>
+                        <option value="Ягодицы">{{ __('common.glutes') }}</option>
+                        <option value="Плечи">{{ __('common.shoulders') }}</option>
+                        <option value="Руки(Бицепс)">{{ __('common.arms_biceps') }}</option>
+                        <option value="Руки(Трицепс)">{{ __('common.arms_triceps') }}</option>
+                        <option value="Руки(Предплечье)">{{ __('common.arms_forearm') }}</option>
+                        <option value="Пресс">{{ __('common.abs') }}</option>
+                        <option value="Шея">{{ __('common.neck') }}</option>
+                        <option value="Кардио">{{ __('common.cardio') }}</option>
+                        <option value="Гибкость">{{ __('common.flexibility') }}</option>
                     </select>
                 </div>
                 
@@ -378,9 +443,9 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="equipment"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Весь инвентарь</option>
+                        <option value="">{{ __('common.all_equipment') }}</option>
                         <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment).filter(eq => eq && eq !== 'null'))).sort()" :key="eq">
-                            <option :value="eq" x-text="eq"></option>
+                            <option :value="eq" x-text="getEquipmentTranslation(eq)"></option>
                         </template>
                     </select>
                 </div>
@@ -389,9 +454,9 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="exerciseType"
                             class="w-full px-4 py-3 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">Все упражнения</option>
-                        <option value="system">Системные</option>
-                        <option value="custom">Пользовательские</option>
+                        <option value="">{{ __('common.all_exercises') }}</option>
+                        <option value="system">{{ __('common.system_exercises') }}</option>
+                        <option value="custom">{{ __('common.user_exercises') }}</option>
                     </select>
                 </div>
             </div>
@@ -418,43 +483,74 @@ function exerciseApp() {
     </div>
 
     <!-- СПИСОК УПРАЖНЕНИЙ -->
-    <div x-show="currentView === 'list'" class="space-y-4">
-        <!-- Сетка упражнений -->
-        <div class="exercises-grid-athlete">
+    <div x-show="currentView === 'list'" class="space-y-6">
+        <div x-show="paginatedExercises.length > 0" style="display: grid; gap: 24px;" class="exercise-grid">
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
-                <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden cursor-pointer"
-                     @click="showView(exercise.id)">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-4 md:p-6" @click="showView(exercise.id)">
+                    <!-- Мобильная версия -->
+                    <div class="exercise-card-mobile">
+                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" 
+                             class="flex-shrink-0 w-24">
+                            <img :src="`/storage/${exercise.image_url}`" 
+                                 :alt="exercise.name"
+                                 class="w-full h-32 object-contain rounded-lg">
+                        </div>
+                        <div class="flex items-center flex-1">
+                            <h3 class="text-lg font-semibold text-gray-900 cursor-pointer">
+                                <span x-text="exercise.name"></span>
+                            </h3>
+                        </div>
+                    </div>
                     
-                    <div class="p-6">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors" x-text="exercise.name"></h3>
-                                <p class="text-gray-600 text-sm mb-4 line-clamp-2" x-text="exercise.description || 'Нет описания'"></p>
-                                
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-                                          x-text="getCategoryName(exercise.category)"></span>
-                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium"
-                                          x-text="getEquipmentName(exercise.equipment)"></span>
-                                    <template x-if="exercise.video_url">
-                                        <span @click.stop="openVideoModal(exercise.video_url, exercise.name)" 
-                                              class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium cursor-pointer hover:bg-red-200 transition-colors">
-                                            📹 Видео
-                                        </span>
-                                    </template>
-                                </div>
-                                
-                                <template x-if="exercise.muscle_groups && exercise.muscle_groups.length > 0">
-                                    <div class="mt-3">
-                                        <span class="text-xs text-gray-500">Группы мышц: </span>
-                                        <span class="text-xs text-gray-700" x-text="exercise.muscle_groups.join(', ')"></span>
-                                    </div>
-                                </template>
+                    <!-- Десктопная версия -->
+                    <div class="exercise-card-desktop">
+                        <div style="display: flex; gap: 1rem;">
+                            <!-- Картинка слева -->
+                            <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 25%;">
+                                <img :src="`/storage/${exercise.image_url}`" 
+                                     :alt="exercise.name"
+                                     class="w-full h-full object-cover rounded-lg"
+                                     style="max-height: 200px;">
                             </div>
                             
-                            <svg class="w-6 h-6 text-gray-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
+                            <!-- Информация справа -->
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
+                                        @click.stop="showView(exercise.id)"
+                                        :title="'Нажмите чтобы открыть: ' + exercise.name">
+                                        <span x-text="exercise.name"></span>
+                                    </h3>
+                                    <button x-show="exercise.video_url" 
+                                            @click.stop="openVideoModal(exercise.video_url, exercise.name)"
+                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        Видео
+                                    </button>
+                                </div>
+                                
+                                <!-- Теги -->
+                                <div class="flex flex-wrap gap-2 mb-4 justify-between">
+                                    <div class="flex flex-wrap gap-2">
+                                        <span x-show="exercise.category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
+                                        <span x-show="exercise.equipment" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
+                                    </div>
+                                </div>
+                                    
+                                <!-- Группы мышц -->
+                                <div class="text-sm text-gray-500 mb-4" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
+                                    <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
+                                </div>
+                                
+                                <!-- Кнопка просмотра внизу справа -->
+                                <div class="flex space-x-2 mt-4" style="margin-top: auto; padding-top: 1rem;" @click.stop="">
+                                    <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                        Просмотр
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -498,62 +594,191 @@ function exerciseApp() {
 
     <!-- ПРОСМОТР УПРАЖНЕНИЯ -->
     <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <!-- Кнопки сверху -->
+        <div class="flex items-center justify-between mb-6">
+            <button @click="showList()" 
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                Назад к списку
+            </button>
+        </div>
         
         <div x-show="currentExercise" class="space-y-6">
-            <!-- Название и теги в одном ряду -->
-            <div class="flex items-center gap-4 flex-wrap">
-                <h4 class="text-2xl font-bold text-gray-900" x-text="currentExercise?.name"></h4>
-                <div class="flex gap-2">
-                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                          x-text="currentExercise ? getCategoryName(currentExercise.category) : ''"></span>
-                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
-                          x-text="currentExercise ? getEquipmentName(currentExercise.equipment) : ''"></span>
+            <!-- Название (только на мобилке) -->
+            <h2 class="exercise-view-mobile text-3xl font-bold text-gray-900 text-center" x-text="currentExercise?.name || 'Упражнение'"></h2>
+            
+            <!-- Десктоп версия: картинки слева, информация справа -->
+            <div class="exercise-view-desktop" style="display: flex; gap: 2rem;">
+                <!-- Левая колонка: картинки и видео -->
+                <div class="flex-shrink-0" style="width: 35%; max-width: 500px;">
+                    <div class="space-y-4">
+                        <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                        <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                            <div>
+                                <img :src="`/storage/${currentExercise.image_url}`" 
+                                     :alt="currentExercise.name"
+                                     class="w-full rounded-lg shadow-md"
+                                     style="object-fit: contain;">
+                            </div>
+                        </template>
+                        
+                        <!-- Второе изображение -->
+                        <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                            <div>
+                                <img :src="`/storage/${currentExercise.image_url_2}`" 
+                                     :alt="currentExercise.name"
+                                     class="w-full rounded-lg shadow-md"
+                                     style="object-fit: contain;">
+                            </div>
+                        </template>
+                        
+                        <!-- Системное видео -->
+                        <div x-show="currentExercise?.video_url">
+                            <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                    <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                            allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
+                                    <a :href="currentExercise?.video_url" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        Видео
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Описание -->
-            <div x-show="currentExercise?.description">
-                <h5 class="text-lg font-semibold text-gray-900 mb-2">Описание</h5>
-                <p class="text-gray-700" x-text="currentExercise?.description"></p>
-            </div>
-            
-            <!-- Группы мышц -->
-            <div x-show="currentExercise?.muscle_groups && currentExercise.muscle_groups.length > 0">
-                <h5 class="text-lg font-semibold text-gray-900 mb-2">Группы мышц</h5>
-                <div class="flex flex-wrap gap-2">
-                    <template x-for="muscle in currentExercise?.muscle_groups" :key="muscle">
-                        <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm" x-text="muscle"></span>
-                    </template>
-                </div>
-            </div>
-            
-            <!-- Инструкции -->
-            <div x-show="currentExercise?.instructions">
-                <h5 class="text-lg font-semibold text-gray-900 mb-2">Инструкции по выполнению</h5>
-                <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
-            </div>
-            
-            <!-- Видео (в конце) -->
-            <div x-show="currentExercise?.video_url">
-                <h5 class="text-lg font-semibold text-gray-900 mb-4">Видео упражнения</h5>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="aspect-video bg-black rounded-lg overflow-hidden">
-                        <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
-                                class="w-full h-full" 
-                                frameborder="0" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                allowfullscreen>
-                        </iframe>
+                
+                <!-- Правая колонка: информация -->
+                <div class="flex-1 space-y-4">
+                    <!-- Название для десктопа -->
+                    <h2 class="text-3xl font-bold text-gray-900" x-text="currentExercise?.name || 'Упражнение'"></h2>
+                    
+                    <p class="text-gray-600" x-text="currentExercise?.description || 'Без описания'"></p>
+                    
+                    <!-- Информация об упражнении -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">Категория</h3>
+                            <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-sm font-medium text-gray-500 mb-1">Оборудование</h3>
+                            <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.equipment"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Группы мышц -->
+                    <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Группы мышц</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" x-text="group"></span>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Инструкции -->
+                    <div x-show="currentExercise?.instructions">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Инструкции по выполнению</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Кнопка назад -->
-            <div class="flex justify-end mt-6">
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Назад к списку
-                </button>
+            <!-- Мобильная версия: всё по центру -->
+            <div class="exercise-view-mobile space-y-6">
+                <!-- Картинки по центру -->
+                <div class="flex flex-col items-center gap-4">
+                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                        <div class="w-full">
+                            <img :src="`/storage/${currentExercise.image_url}`" 
+                                 :alt="currentExercise.name"
+                                 class="w-full rounded-lg shadow-md mx-auto"
+                                 style="object-fit: contain; max-height: 400px;">
+                        </div>
+                    </template>
+                    
+                    <!-- Второе изображение -->
+                    <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                        <div class="w-full">
+                            <img :src="`/storage/${currentExercise.image_url_2}`" 
+                                 :alt="currentExercise.name"
+                                 class="w-full rounded-lg shadow-md mx-auto"
+                                 style="object-fit: contain; max-height: 400px;">
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- Описание -->
+                <div x-show="currentExercise?.description">
+                    <p class="text-gray-600 text-center" x-text="currentExercise?.description"></p>
+                </div>
+                
+                <!-- Информация об упражнении -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">Категория</h3>
+                        <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-500 mb-1">Оборудование</h3>
+                        <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.equipment"></p>
+                    </div>
+                </div>
+                
+                <!-- Группы мышц -->
+                <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Группы мышц</h3>
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" x-text="group"></span>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- Инструкции -->
+                <div x-show="currentExercise?.instructions">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Инструкции по выполнению</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
+                    </div>
+                </div>
+                
+                <!-- Системное видео -->
+                <div x-show="currentExercise?.video_url">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
+                            <a :href="currentExercise?.video_url" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                Видео
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

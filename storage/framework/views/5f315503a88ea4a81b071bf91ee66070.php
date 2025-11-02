@@ -237,15 +237,25 @@
     <script>
         // Устанавливаем тему до загрузки страницы
         (function() {
+            const applyTheme = () => {
+                const body = document.body;
+                if (!body) {
+                    return;
+                }
             const savedTheme = localStorage.getItem('theme') || 'light';
-            const body = document.body;
-            
             if (savedTheme === 'dark') {
                 body.classList.add('theme-dark');
                 body.classList.remove('theme-light');
             } else {
                 body.classList.add('theme-light');
                 body.classList.remove('theme-dark');
+                }
+            };
+
+            if (document.body) {
+                applyTheme();
+            } else {
+                document.addEventListener('DOMContentLoaded', applyTheme, { once: true });
             }
         })();
     </script>

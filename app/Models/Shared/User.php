@@ -128,6 +128,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Подписки тренера
+     */
+    public function trainerSubscriptions()
+    {
+        return $this->hasMany(\App\Models\TrainerSubscription::class, 'trainer_id');
+    }
+
+    /**
      * Проверка роли
      */
     public function isTrainer()

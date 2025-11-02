@@ -15,7 +15,7 @@ class WorkoutController extends BaseController
         
         if ($user->hasRole('trainer')) {
             $workouts = $user->trainerWorkouts()->with(['athlete', 'exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'workout_exercise.*')
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = $user->athletes()->get();
@@ -23,23 +23,39 @@ class WorkoutController extends BaseController
         } elseif ($user->hasRole('self-athlete')) {
             // Self-Athlete видит только свои тренировки
             $workouts = Workout::where('athlete_id', $user->id)->with(['exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'workout_exercise.*')
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = [$user]; // Self-Athlete сам себе спортсмен
             
         } else {
             $workouts = $user->workouts()->with(['trainer', 'exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'workout_exercise.*')
+                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = [];
         }
         
-        // Обрабатываем null значения в упражнениях (как у спортсмена)
+        // Обрабатываем null значения в упражнениях и применяем логику выбора изображений по полу
         $workouts->getCollection()->transform(function ($workout) {
             if ($workout->exercises) {
+                // Получаем пол спортсмена
+                $athlete = $workout->athlete ?? auth()->user();
+                $athleteGender = $athlete->gender ?? null;
+                
                 foreach ($workout->exercises as $exercise) {
+                    // Применяем логику выбора изображений в зависимости от пола
+                    if ($athleteGender === 'female') {
+                        // Для девушек: используем женские изображения, если они есть, иначе обычные
+                        if ($exercise->image_url_female) {
+                            $exercise->image_url = $exercise->image_url_female;
+                        }
+                        if ($exercise->image_url_female_2) {
+                            $exercise->image_url_2 = $exercise->image_url_female_2;
+                        }
+                    }
+                    // Для мужчин всегда используются обычные изображения (image_url, image_url_2)
+                    
                     if ($exercise->pivot) {
                         foreach (['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'] as $field) {
                             if (isset($exercise->pivot->$field) && 

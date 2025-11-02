@@ -68,10 +68,17 @@
                 @forelse($exercises as $exercise)
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
-                            @if($exercise->image_url)
-                                <img src="{{ asset('storage/' . $exercise->image_url) }}" 
+                            @php
+                                // Приоритет: сначала изображение для девушек, если его нет - основное
+                                $displayImage = ($exercise->image_url_female && trim($exercise->image_url_female) !== '') 
+                                    ? $exercise->image_url_female 
+                                    : ($exercise->image_url && trim($exercise->image_url) !== '' ? $exercise->image_url : null);
+                            @endphp
+                            @if($displayImage)
+                                <img src="{{ asset('storage/' . $displayImage) }}" 
                                      alt="{{ $exercise->getTranslated('name', 'ru') }}" 
-                                     class="w-16 h-16 object-cover rounded-lg border border-gray-200">
+                                     class="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs\'>Нет фото</div>'">
                             @else
                                 <div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs">
                                     Нет фото
@@ -450,6 +457,22 @@ function openCreateModal() {
 
 function openEditModal(id) {
     document.getElementById('modalTitle').textContent = 'Редактировать упражнение';
+    
+    // Очищаем форму и поля ввода файлов
+    document.getElementById('exerciseForm').reset();
+    document.getElementById('exerciseId').value = '';
+    
+    // Очищаем поля ввода файлов (они не очищаются через reset())
+    document.getElementById('image').value = '';
+    document.getElementById('image_2').value = '';
+    document.getElementById('image_female').value = '';
+    document.getElementById('image_female_2').value = '';
+    
+    // Скрываем все превью изображений перед загрузкой данных
+    document.getElementById('imagePreview').classList.add('hidden');
+    document.getElementById('imagePreview2').classList.add('hidden');
+    document.getElementById('imagePreviewFemale').classList.add('hidden');
+    document.getElementById('imagePreviewFemale2').classList.add('hidden');
     
     const editUrl = `{{ url('/exercises') }}/${id}/edit`;
     

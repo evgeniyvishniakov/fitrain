@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\BaseController;
 use App\Models\Trainer\Exercise;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ExerciseController extends BaseController
 {
@@ -48,13 +49,15 @@ class ExerciseController extends BaseController
             'description_uk' => 'nullable|string',
             'instructions_ru' => 'nullable|string',
             'instructions_uk' => 'nullable|string',
-            'category' => 'required|string|in:' . implode(',', array_keys(Exercise::CATEGORIES)),
-            'equipment' => 'nullable|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
+            'category' => ['required', 'string', Rule::in(array_keys(Exercise::CATEGORIES))],
+            'equipment' => ['nullable', 'string', Rule::in(array_keys(Exercise::EQUIPMENT))],
             'muscle_groups_ru' => 'nullable|array',
             'muscle_groups_uk' => 'nullable|array',
             'video_url' => 'nullable|url',
-            'image' => 'nullable|image|max:10240',
-            'image_2' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:15360',
+            'image_2' => 'nullable|image|max:15360',
+            'image_female' => 'nullable|image|max:15360',
+            'image_female_2' => 'nullable|image|max:15360',
             'fields_config' => 'nullable|array',
             'is_active' => 'nullable|in:0,1',
             'is_system' => 'nullable|in:0,1',
@@ -98,6 +101,16 @@ class ExerciseController extends BaseController
             $data['image_url_2'] = $path;
         }
         
+        if ($request->hasFile('image_female')) {
+            $path = $request->file('image_female')->store('exercises', 'public');
+            $data['image_url_female'] = $path;
+        }
+        
+        if ($request->hasFile('image_female_2')) {
+            $path = $request->file('image_female_2')->store('exercises', 'public');
+            $data['image_url_female_2'] = $path;
+        }
+        
         $exercise = Exercise::create($data);
         
         if (request()->expectsJson()) {
@@ -125,6 +138,8 @@ class ExerciseController extends BaseController
                 'video_url' => $exercise->video_url,
                 'image_url' => $exercise->image_url,
                 'image_url_2' => $exercise->image_url_2,
+                'image_url_female' => $exercise->image_url_female,
+                'image_url_female_2' => $exercise->image_url_female_2,
                 'is_active' => $exercise->is_active,
                 'is_system' => $exercise->is_system,
                 'fields_config' => $exercise->fields_config,
@@ -146,13 +161,15 @@ class ExerciseController extends BaseController
             'description_uk' => 'nullable|string',
             'instructions_ru' => 'nullable|string',
             'instructions_uk' => 'nullable|string',
-            'category' => 'required|string|in:' . implode(',', array_keys(Exercise::CATEGORIES)),
-            'equipment' => 'nullable|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
+            'category' => ['required', 'string', Rule::in(array_keys(Exercise::CATEGORIES))],
+            'equipment' => ['nullable', 'string', Rule::in(array_keys(Exercise::EQUIPMENT))],
             'muscle_groups_ru' => 'nullable|array',
             'muscle_groups_uk' => 'nullable|array',
             'video_url' => 'nullable|url',
-            'image' => 'nullable|image|max:10240',
-            'image_2' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:15360',
+            'image_2' => 'nullable|image|max:15360',
+            'image_female' => 'nullable|image|max:15360',
+            'image_female_2' => 'nullable|image|max:15360',
             'fields_config' => 'nullable|array',
             'is_active' => 'nullable|in:0,1',
             'is_system' => 'nullable|in:0,1',
@@ -202,6 +219,24 @@ class ExerciseController extends BaseController
             }
             $path = $request->file('image_2')->store('exercises', 'public');
             $data['image_url_2'] = $path;
+        }
+        
+        if ($request->hasFile('image_female')) {
+            // Удаляем старое
+            if ($exercise->image_url_female && \Storage::disk('public')->exists($exercise->image_url_female)) {
+                \Storage::disk('public')->delete($exercise->image_url_female);
+            }
+            $path = $request->file('image_female')->store('exercises', 'public');
+            $data['image_url_female'] = $path;
+        }
+        
+        if ($request->hasFile('image_female_2')) {
+            // Удаляем старое
+            if ($exercise->image_url_female_2 && \Storage::disk('public')->exists($exercise->image_url_female_2)) {
+                \Storage::disk('public')->delete($exercise->image_url_female_2);
+            }
+            $path = $request->file('image_female_2')->store('exercises', 'public');
+            $data['image_url_female_2'] = $path;
         }
         
         $exercise->update($data);

@@ -15,9 +15,9 @@ class CurrencySeeder extends Seeder
     {
         $currencies = [
             [
-                'code' => 'RUB',
-                'name' => 'Российский рубль',
-                'symbol' => '₽',
+                'code' => 'UAH',
+                'name' => 'Українська гривня',
+                'symbol' => '₴',
                 'symbol_position' => 'after',
                 'decimal_places' => 2,
                 'exchange_rate' => 1.0000,
@@ -31,18 +31,18 @@ class CurrencySeeder extends Seeder
                 'symbol' => '$',
                 'symbol_position' => 'before',
                 'decimal_places' => 2,
-                'exchange_rate' => 0.011,
+                'exchange_rate' => 0.027,
                 'is_active' => true,
                 'is_default' => false,
                 'sort_order' => 2
             ],
             [
-                'code' => 'UAH',
-                'name' => 'Українська гривня',
-                'symbol' => '₴',
+                'code' => 'EUR',
+                'name' => 'Euro',
+                'symbol' => '€',
                 'symbol_position' => 'after',
                 'decimal_places' => 2,
-                'exchange_rate' => 0.42,
+                'exchange_rate' => 0.025,
                 'is_active' => true,
                 'is_default' => false,
                 'sort_order' => 3

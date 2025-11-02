@@ -237,6 +237,7 @@ function workoutApp() {
         currentWorkout: null,
         search: '',
         status: '',
+        athleteFilter: '',
         itemsPerPage: 10,
         
         // Поля формы
@@ -451,7 +452,6 @@ function workoutApp() {
             }
         },
         // Методы для работы с упражнениями (скопированы из athlete/workouts.blade.php)
-        
         // Управление статусом упражнений
         setExerciseStatus(exerciseId, status) {
             // Проверяем текущий статус упражнения
@@ -839,6 +839,10 @@ function workoutApp() {
                 filtered = filtered.filter(w => w.status === this.status);
             }
             
+            if (this.athleteFilter) {
+                filtered = filtered.filter(w => w.athlete_id == this.athleteFilter);
+            }
+            
             return filtered;
         },
         
@@ -906,6 +910,10 @@ function workoutApp() {
                 'planned': '{{ __('common.planned') }}'
             };
             return labels[status] || status;
+        },
+        getAthleteName(athleteId) {
+            const athlete = @json($athletes ?? [])?.find(a => a.id == athleteId);
+            return athlete?.name || '{{ __('common.not_specified') }}';
         },
         // Обновление статуса тренировки
         async updateWorkoutStatus(workoutId, newStatus) {
@@ -1649,41 +1657,16 @@ function workoutApp() {
             
             let bodyHTML = '';
             
-            // Изображения
-            const hasImage1 = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
+            // Изображения - показываем только вторую картинку
             const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
-            const isImage2Gif = hasImage2 && exercise.image_url_2.toLowerCase().endsWith('.gif');
             
-            // Если вторая картинка - GIF, не показываем первую
-            const showImage1 = hasImage1 && !isImage2Gif;
-            
-            if (showImage1 || hasImage2) {
-                // Определяем количество колонок
-                const gridColumns = (showImage1 && hasImage2) ? '1fr 1fr' : '1fr';
-                bodyHTML += `<div style="display: grid; grid-template-columns: ${gridColumns}; gap: 16px; margin-bottom: 24px;">`;
-                
-                if (showImage1) {
-                    bodyHTML += `
-                        <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                            <img src="/storage/${exercise.image_url}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
-                            <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                                Фаза 1
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                if (hasImage2) {
-                    bodyHTML += `
-                        <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                            <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
-                            <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                                Фаза 2
-                            </div>
-                        </div>
-                    `;
-                }
-                
+            if (hasImage2) {
+                bodyHTML += `<div style="margin-bottom: 24px;">`;
+                bodyHTML += `
+                    <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                    </div>
+                `;
                 bodyHTML += '</div>';
             }
             
@@ -1886,7 +1869,6 @@ function workoutApp() {
         getExerciseStatusForList(workoutId, exerciseId) {
             return this.workoutProgress[workoutId]?.[exerciseId]?.status || null;
         },
-        
         // Загрузка данных подходов из workoutProgress
         loadSetsDataFromProgress(workoutId) {
             if (this.workoutProgress[workoutId]) {
@@ -1957,6 +1939,10 @@ function workoutApp() {
             });
             
             this.$watch('status', () => {
+                this.currentPage = 1;
+            });
+            
+            this.$watch('athleteFilter', () => {
                 this.currentPage = 1;
             });
         }
@@ -2357,7 +2343,6 @@ function workoutApp() {
                         gap: 1rem !important;
                     }
                 }
-                
             </style>
             <div class="filters-row">
                 <!-- Поиск -->
@@ -2379,6 +2364,19 @@ function workoutApp() {
                     </select>
                 </div>
                 
+                <!-- Фильтр спортсмена -->
+                @if(auth()->user()->hasRole('trainer'))
+                <div class="status-container">
+                    <select x-model="athleteFilter" 
+                            class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
+                        <option value="">{{ __('common.all_athletes') }}</option>
+                        @foreach($athletes ?? [] as $athlete)
+                            <option value="{{ $athlete->id }}">{{ $athlete->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+                
                 <!-- Кнопки -->
                 <div class="buttons-container">
                     @if(auth()->user()->hasRole('trainer'))
@@ -2392,7 +2390,7 @@ function workoutApp() {
         </div>
         
         <!-- Активные фильтры -->
-        <div x-show="search || status" class="mt-4 pt-4 border-t border-gray-100">
+        <div x-show="search || status || athleteFilter" class="mt-4 pt-4 border-t border-gray-100">
             <div class="flex flex-wrap gap-2">
                 <span class="text-sm text-gray-500">{{ __('common.active_filters') }}</span>
                 
@@ -2407,6 +2405,14 @@ function workoutApp() {
                     Статус: <span x-text="getStatusLabel(status)"></span>
                     <button @click="status = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
                 </span>
+                
+                @if(auth()->user()->hasRole('trainer'))
+                <span x-show="athleteFilter" 
+                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                    Спортсмен: <span x-text="getAthleteName(athleteFilter)"></span>
+                    <button @click="athleteFilter = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
+                </span>
+                @endif
             </div>
         </div>
     </div>
@@ -3002,7 +3008,6 @@ function workoutApp() {
                                 <div class="text-sm text-gray-700 bg-yellow-50 rounded-lg p-3 border border-yellow-200" x-text="currentWorkout ? (workoutProgress[currentWorkout.id]?.[exercise.exercise_id || exercise.id]?.athlete_comment || '') : ''"></div>
                             </div>
                             
-                            
                             <!-- Статус выполнения упражнения (для тренера) -->
                             <div class="mt-4 pt-4 border-t border-gray-200">
                                 <div class="exercise-status-section mb-3">
@@ -3221,15 +3226,16 @@ function workoutApp() {
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_categories') }}</option>
                     <option value="Грудь">{{ __('common.chest') }}</option>
-                    <option value="Спина">{{ __('common.back') }}</option>
+                    <option value="Спина">{{ __('common.back_muscles') }}</option>
                     <option value="Ноги(Бедра)">{{ __('common.legs_thighs') }}</option>
                     <option value="Ноги(Икры)">{{ __('common.legs_calves') }}</option>
+                    <option value="Ягодицы">{{ __('common.glutes') }}</option>
                     <option value="Плечи">{{ __('common.shoulders') }}</option>
-                    <option value="Руки(Трицепс)">Руки(Трицепс)</option>
-                    <option value="Руки(Бицепс)">Руки(Бицепс)</option>
-                    <option value="Руки(Предплечье)">Руки(Предплечье)</option>
+                    <option value="Руки(Трицепс)">{{ __('common.arms_triceps') }}</option>
+                    <option value="Руки(Бицепс)">{{ __('common.arms_biceps') }}</option>
+                    <option value="Руки(Предплечье)">{{ __('common.arms_forearm') }}</option>
                     <option value="Пресс">{{ __('common.abs') }}</option>
-                    <option value="Шея">Шея</option>
+                    <option value="Шея">{{ __('common.neck') }}</option>
                     <option value="Кардио">{{ __('common.cardio') }}</option>
                     <option value="Гибкость">{{ __('common.flexibility') }}</option>
                 </select>
@@ -3414,8 +3420,34 @@ function renderExercises() {
     }
     
     container.innerHTML = exercises.map(exercise => {
-        const hasImage = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
-        const imageUrl = hasImage ? `/storage/${exercise.image_url}` : '';
+        // Функция для получения изображения с приоритетом
+        function getDisplayImage(exercise) {
+            const isGlutes = exercise.category === 'Ягодицы';
+            
+            if (isGlutes) {
+                // Для категории "Ягодицы" - сначала женское
+                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                    return exercise.image_url_female;
+                }
+                // Если женского нет, проверяем мужское
+                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                    return exercise.image_url;
+                }
+            } else {
+                // Для остальных категорий - сначала мужское
+                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                    return exercise.image_url;
+                }
+                // Если мужского нет, проверяем женское
+                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                    return exercise.image_url_female;
+                }
+            }
+            return null;
+        }
+        
+        const displayImage = getDisplayImage(exercise);
+        const imageUrl = displayImage ? `/storage/${displayImage}` : '';
         
         // Экранируем специальные символы для безопасного использования в HTML атрибутах
         const escapeName = (exercise.name || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -3429,7 +3461,7 @@ function renderExercises() {
                  data-exercise-equipment="${escapeEquipment}"
                  style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 160px;"
                  onclick="toggleExercise(this, ${exercise.id})">
-                ${hasImage ? `
+                ${imageUrl ? `
                     <img src="${imageUrl}" 
                          alt="${escapeName}" 
                          style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
@@ -3515,7 +3547,8 @@ function toggleTemplate(element, id, name, exercises) {
 
 // Фильтрация упражнений
 function filterExercises() {
-    const searchTerm = document.getElementById('exercise-search').value.toLowerCase();
+    const searchInput = document.getElementById('exercise-search');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
     const category = document.getElementById('category-filter').value;
     const equipment = document.getElementById('equipment-filter').value;
     const container = document.getElementById('exercises-container');
@@ -3557,7 +3590,10 @@ function filterExercises() {
     // Фильтрация карточек упражнений
     let visibleCount = 0;
     Array.from(container.children).forEach(element => {
-        const name = element.dataset.exerciseName.toLowerCase();
+        const rawName = (element.dataset.exerciseName || '')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'");
+        const name = rawName.toLowerCase().trim();
         const elementCategory = element.dataset.exerciseCategory;
         const elementEquipment = element.dataset.exerciseEquipment;
 
@@ -3566,7 +3602,7 @@ function filterExercises() {
         const matchesEquipment = !equipment || elementEquipment === equipment;
 
         if (matchesSearch && matchesCategory && matchesEquipment) {
-            element.style.display = 'block';
+            element.style.display = 'flex';
             visibleCount++;
         } else {
             element.style.display = 'none';
@@ -4410,18 +4446,21 @@ async function showExerciseHistoryModal(exerciseId) {
                     const planText = formatPlan(workout.plan);
                     const factText = formatFact(workout.fact);
                     
-                    const factColor = workout.exercise_status === 'completed' ? '#15803d' : (workout.exercise_status === 'partial' ? '#c2410c' : '#dc2626');
-                    const factIcon = workout.exercise_status === 'completed' ? '✅' : (workout.exercise_status === 'partial' ? '⚠️' : '❌');
-                    const factLabel = workout.exercise_status === 'completed' ? 'Выполнено:' : (workout.exercise_status === 'partial' ? 'Частично:' : 'Факт:');
+                    // Определяем статус упражнения (может быть null, 'completed', 'partial', 'not_done')
+                    const exerciseStatus = workout.exercise_status || null;
+                    
+                    const factColor = exerciseStatus === 'completed' ? '#15803d' : (exerciseStatus === 'partial' ? '#c2410c' : '#dc2626');
+                    const factIcon = exerciseStatus === 'completed' ? '✅' : (exerciseStatus === 'partial' ? '⚠️' : '❌');
+                    const factLabel = exerciseStatus === 'completed' ? 'Выполнено:' : (exerciseStatus === 'partial' ? 'Частично:' : 'Факт:');
                     
                     // Определяем фон и границу в зависимости от статуса
                     let factBgColor = '#fef2f2'; // по умолчанию красный
                     let factBorderColor = '#fecaca';
                     
-                    if (workout.exercise_status === 'completed') {
+                    if (exerciseStatus === 'completed') {
                         factBgColor = '#f0fdf4'; // зеленый
                         factBorderColor = '#bbf7d0';
-                    } else if (workout.exercise_status === 'partial') {
+                    } else if (exerciseStatus === 'partial') {
                         factBgColor = '#fef3c7'; // желтый (bg-yellow-100)
                         factBorderColor = '#fde68a'; // желтый border (border-yellow-200)
                     }
@@ -4444,15 +4483,15 @@ async function showExerciseHistoryModal(exerciseId) {
                                 </div>
                             </div>
                             
-                            ${workout.fact ? `
+                            ${workout.fact && exerciseStatus ? `
                                 <div style="background: ${factBgColor}; border: 1px solid ${factBorderColor}; border-radius: 8px; padding: 12px; margin-bottom: 0;">
                                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                                         <span style="font-size: 13px; font-weight: 600; color: ${factColor};">${factIcon} ${factLabel}</span>
                                     </div>
-                                    <div style="font-size: 13px; color: #4b5563; margin-left: 20px; margin-bottom: ${workout.sets_details && workout.sets_details.length > 0 && workout.exercise_status === 'partial' ? '12px' : '0'};">
+                                    <div style="font-size: 13px; color: #4b5563; margin-left: 20px; margin-bottom: ${workout.sets_details && workout.sets_details.length > 0 && exerciseStatus === 'partial' ? '12px' : '0'};">
                                         ${factText}
                                     </div>
-                                    ${workout.sets_details && workout.sets_details.length > 0 && workout.exercise_status === 'partial' ? `
+                                    ${workout.sets_details && workout.sets_details.length > 0 && exerciseStatus === 'partial' ? `
                                         <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid ${factBorderColor};">
                                             <div style="font-size: 13px; font-weight: 600; color: ${factColor}; margin-bottom: 8px;">Детали подходов:</div>
                                             <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -4619,23 +4658,12 @@ function copyPlanToFields(exerciseId) {
         <!-- Контент с прокруткой -->
         <div style="padding: 20px; overflow-y: auto; flex: 1;">
             
-            <!-- Изображения -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                <div x-show="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null" style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <img :src="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null ? '/storage/' + exerciseDetailModal.exercise.image_url : ''" 
-                         :alt="exerciseDetailModal.exercise?.name"
-                         style="width: 100%; height: 280px; object-fit: cover;">
-                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                        Фаза 1
-                    </div>
-                </div>
-                <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <!-- Изображения - показываем только вторую картинку -->
+            <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
                          :alt="exerciseDetailModal.exercise?.name"
                          style="width: 100%; height: 280px; object-fit: cover;">
-                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                        Фаза 2
-                    </div>
                 </div>
             </div>
             

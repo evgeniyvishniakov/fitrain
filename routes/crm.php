@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Crm\Shared\DashboardController;
 use App\Http\Controllers\Crm\Auth\LoginController;
 use App\Http\Controllers\Crm\Auth\RegisterController;
+use App\Http\Controllers\Crm\Auth\TrainerRegisterController;
 use App\Http\Controllers\Crm\Trainer\TrainerController;
 use App\Http\Controllers\Crm\Athlete\AthleteController;
 use App\Http\Controllers\Crm\Trainer\WorkoutController;
@@ -29,10 +30,12 @@ Route::get("/", [DashboardController::class, "index"])->name("crm.dashboard");
 
 // Маршруты аутентификации
 Route::get("/login", [LoginController::class, "showLoginForm"])->name("crm.login");
-Route::post("/login", [LoginController::class, "login"]);
+Route::post("/login", [LoginController::class, "login"])->middleware('throttle:5,1');
 Route::post("/logout", [LoginController::class, "logout"])->name("crm.logout");
 
-// Регистрация перенесена на лендинг
+// Регистрация тренера
+Route::get("/register", [TrainerRegisterController::class, "showRegistrationForm"])->name("crm.trainer.register");
+Route::post("/register", [TrainerRegisterController::class, "register"])->middleware('throttle:3,1');
 
 // Защищенные маршруты
 Route::middleware(["auth"])->group(function () {

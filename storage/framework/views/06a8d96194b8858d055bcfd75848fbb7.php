@@ -88,6 +88,16 @@
                     Валюты
                 </a>
                 
+                <a href="<?php echo e(route('admin.subscriptions.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.subscriptions*') ? 'bg-gray-700 text-white' : ''); ?>">
+                    <i class="fas fa-credit-card mr-3"></i>
+                    Планы подписок
+                </a>
+                
+                <a href="<?php echo e(route('admin.trainer-subscriptions.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.trainer-subscriptions*') ? 'bg-gray-700 text-white' : ''); ?>">
+                    <i class="fas fa-user-tie mr-3"></i>
+                    Подписки тренеров
+                </a>
+                
                 <a href="<?php echo e(route('admin.exercises.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.exercises*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-dumbbell mr-3"></i>
                     Упражнения

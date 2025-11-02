@@ -136,6 +136,7 @@
             <!-- Статусы -->
             <div class="space-y-4">
                 <div>
+                    <input type="hidden" name="is_active" value="0">
                     <label class="flex items-center">
                         <input type="checkbox" name="is_active" value="1" 
                                {{ old('is_active', $currency->is_active) ? 'checked' : '' }}
@@ -148,6 +149,7 @@
                 </div>
 
                 <div>
+                    <input type="hidden" name="is_default" value="0">
                     <label class="flex items-center">
                         <input type="checkbox" name="is_default" value="1" 
                                {{ old('is_default', $currency->is_default) ? 'checked' : '' }}

@@ -489,37 +489,16 @@
                     
                     let bodyHTML = '';
                     
-                    // Изображения
-                    const hasImage1 = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
+                    // Изображения - показываем только вторую картинку
                     const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
                     
-                    if (hasImage1 || hasImage2) {
-                        // Определяем количество колонок
-                        const gridColumns = (hasImage1 && hasImage2) ? '1fr 1fr' : '1fr';
-                        bodyHTML += `<div style="display: grid; grid-template-columns: ${gridColumns}; gap: 16px; margin-bottom: 24px;">`;
-                        
-                    if (hasImage1) {
-                        bodyHTML += `
-                            <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                                <img src="/storage/${exercise.image_url}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
-                                <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                                    Фаза 1
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
                     if (hasImage2) {
+                        bodyHTML += `<div style="margin-bottom: 24px;">`;
                         bodyHTML += `
                             <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                                 <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
-                                <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                                    Фаза 2
-                                </div>
                             </div>
                         `;
-                    }
-                        
                         bodyHTML += '</div>';
                     }
                     
@@ -1846,23 +1825,12 @@ input[type="number"].no-spinner:hover {
         <!-- Контент с прокруткой -->
         <div style="padding: 20px; overflow-y: auto; flex: 1;">
             
-            <!-- Изображения -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-                <div x-show="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null" style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <img :src="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null ? '/storage/' + exerciseDetailModal.exercise.image_url : ''" 
-                         :alt="exerciseDetailModal.exercise?.name"
-                         style="width: 100%; height: 280px; object-fit: cover;">
-                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                        Фаза 1
-                    </div>
-                </div>
-                <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <!-- Изображения - показываем только вторую картинку -->
+            <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
                          :alt="exerciseDetailModal.exercise?.name"
                          style="width: 100%; height: 280px; object-fit: cover;">
-                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                        Фаза 2
-                    </div>
                 </div>
             </div>
             

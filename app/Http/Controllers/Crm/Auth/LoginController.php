@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Crm\Auth;
 use App\Http\Controllers\Crm\Shared\BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Language;
 
 class LoginController extends BaseController
 {
@@ -13,7 +14,8 @@ class LoginController extends BaseController
      */
     public function showLoginForm()
     {
-        return view('crm.auth.login');
+        $languages = Language::getActive();
+        return view('crm.auth.login', compact('languages'));
     }
 
     /**
@@ -27,14 +29,24 @@ class LoginController extends BaseController
         ]);
 
         if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            
+            // Проверяем, что пользователь активен
+            if (!$user->is_active) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => __('auth.account_deactivated'),
+                ]);
+            }
+
             $request->session()->regenerate();
             
             // Редирект в зависимости от роли
-            if (auth()->user()->hasRole('self-athlete')) {
+            if ($user->hasRole('self-athlete')) {
                 return redirect()->intended(route('crm.self-athlete.dashboard'));
-            } elseif (auth()->user()->hasRole('trainer')) {
+            } elseif ($user->hasRole('trainer')) {
                 return redirect()->intended(route('crm.trainer.dashboard'));
-            } elseif (auth()->user()->hasRole('athlete')) {
+            } elseif ($user->hasRole('athlete')) {
                 return redirect()->intended(route('crm.dashboard.main'));
             }
             
@@ -42,7 +54,7 @@ class LoginController extends BaseController
         }
 
         return back()->withErrors([
-            'email' => 'Неверные учетные данные.',
+            'email' => __('auth.invalid_credentials'),
         ]);
     }
 

@@ -43,7 +43,7 @@ class Language extends Model
     public static function getDefault()
     {
         return static::where('is_default', true)->first() 
-            ?? static::where('code', 'ru')->first()
+            ?? static::where('code', 'ua')->first()
             ?? static::first();
     }
 

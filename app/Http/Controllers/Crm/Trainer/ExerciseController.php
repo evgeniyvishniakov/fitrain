@@ -69,8 +69,8 @@ class ExerciseController extends BaseController
             'equipment' => 'nullable|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
-            'image' => 'nullable|image|max:10240',
-            'image_2' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:15360',
+            'image_2' => 'nullable|image|max:15360',
             'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);
@@ -140,8 +140,8 @@ class ExerciseController extends BaseController
             'equipment' => 'nullable|string|in:' . implode(',', array_keys(Exercise::EQUIPMENT)),
             'instructions' => 'nullable|string',
             'muscle_groups' => 'nullable|array',
-            'image' => 'nullable|image|max:10240',
-            'image_2' => 'nullable|image|max:10240',
+            'image' => 'nullable|image|max:15360',
+            'image_2' => 'nullable|image|max:15360',
             'video_url' => 'nullable|url',
             'fields_config' => 'nullable|array'
         ]);

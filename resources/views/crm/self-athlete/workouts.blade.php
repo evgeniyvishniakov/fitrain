@@ -1670,41 +1670,16 @@ function workoutApp() {
                     
                     let bodyHTML = '';
                     
-                    // Изображения
-                    const hasImage1 = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
+                    // Изображения - показываем только вторую картинку
                     const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
-                    const isImage2Gif = hasImage2 && exercise.image_url_2.toLowerCase().endsWith('.gif');
                     
-                    // Если вторая картинка - GIF, не показываем первую
-                    const showImage1 = hasImage1 && !isImage2Gif;
-                    
-                    if (showImage1 || hasImage2) {
-                        // Определяем количество колонок
-                        const gridColumns = (showImage1 && hasImage2) ? '1fr 1fr' : '1fr';
-                        bodyHTML += `<div style="display: grid; grid-template-columns: ${gridColumns}; gap: 16px; margin-bottom: 24px;">`;
-                        
-                        if (showImage1) {
-                            bodyHTML += `
-                                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                                    <img src="/storage/${exercise.image_url}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
-                                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                                        Фаза 1
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        
-                        if (hasImage2) {
-                            bodyHTML += `
-                                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                                    <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
-                                    <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 500;">
-                                        Фаза 2
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        
+                    if (hasImage2) {
+                        bodyHTML += `<div style="margin-bottom: 24px;">`;
+                        bodyHTML += `
+                            <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                            </div>
+                        `;
                         bodyHTML += '</div>';
                     }
                     
@@ -3280,18 +3255,19 @@ function workoutApp() {
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_categories') }}</option>
-                    <option value="Грудь">Грудь</option>
-                    <option value="Спина">Спина</option>
-                    <option value="Ноги(Бедра)">Ноги(Бедра)</option>
-                    <option value="Ноги(Икры)">Ноги(Икры)</option>
-                    <option value="Плечи">Плечи</option>
-                    <option value="Руки(Трицепс)">Руки(Трицепс)</option>
-                    <option value="Руки(Бицепс)">Руки(Бицепс)</option>
-                    <option value="Руки(Предплечье)">Руки(Предплечье)</option>
-                    <option value="Пресс">Пресс</option>
-                    <option value="Шея">Шея</option>
-                    <option value="Кардио">Кардио</option>
-                    <option value="Гибкость">Гибкость</option>
+                    <option value="Грудь">{{ __('common.chest') }}</option>
+                    <option value="Спина">{{ __('common.back_muscles') }}</option>
+                    <option value="Ноги(Бедра)">{{ __('common.legs_thighs') }}</option>
+                    <option value="Ноги(Икры)">{{ __('common.legs_calves') }}</option>
+                    <option value="Ягодицы">{{ __('common.glutes') }}</option>
+                    <option value="Плечи">{{ __('common.shoulders') }}</option>
+                    <option value="Руки(Трицепс)">{{ __('common.arms_triceps') }}</option>
+                    <option value="Руки(Бицепс)">{{ __('common.arms_biceps') }}</option>
+                    <option value="Руки(Предплечье)">{{ __('common.arms_forearm') }}</option>
+                    <option value="Пресс">{{ __('common.abs') }}</option>
+                    <option value="Шея">{{ __('common.neck') }}</option>
+                    <option value="Кардио">{{ __('common.cardio') }}</option>
+                    <option value="Гибкость">{{ __('common.flexibility') }}</option>
                 </select>
                 
                 <!-- Фильтр оборудования -->

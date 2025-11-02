@@ -16,10 +16,14 @@ input[type="email"],
 input[type="password"], 
 input[type="number"], 
 input[type="date"], 
-textarea, 
-select {
+textarea {
     cursor: text !important;
     caret-color: #ff0000 !important; /* ярко-красный курсор - всегда видно */
+    color: #000000 !important; /* черный текст */
+}
+
+select {
+    cursor: pointer !important;
     color: #000000 !important; /* черный текст */
 }
 
@@ -40,9 +44,15 @@ input[type="email"]:focus,
 input[type="password"]:focus, 
 input[type="number"]:focus, 
 input[type="date"]:focus, 
-textarea:focus, 
-select:focus {
+textarea:focus {
     cursor: text !important;
+    outline: none !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
+}
+
+select:focus {
+    cursor: pointer !important;
     outline: none !important;
     border-color: #4f46e5 !important;
     box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;

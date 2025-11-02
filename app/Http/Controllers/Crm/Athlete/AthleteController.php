@@ -225,11 +225,25 @@ class AthleteController extends BaseController
                 ->paginate(10);
             
             // Загружаем упражнения для каждой тренировки отдельно
-            $workouts->getCollection()->transform(function ($workout) {
+            $workouts->getCollection()->transform(function ($workout) use ($athlete) {
                 $workout->exercises = $workout->exercises()
-                    ->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'workout_exercise.*')
+                    ->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc')
-                    ->get();
+                    ->get()
+                    ->map(function ($exercise) use ($athlete) {
+                        // Применяем логику выбора изображений в зависимости от пола
+                        if ($athlete->gender === 'female') {
+                            // Для девушек: используем женские изображения, если они есть, иначе обычные
+                            if ($exercise->image_url_female) {
+                                $exercise->image_url = $exercise->image_url_female;
+                            }
+                            if ($exercise->image_url_female_2) {
+                                $exercise->image_url_2 = $exercise->image_url_female_2;
+                            }
+                        }
+                        // Для мужчин всегда используются обычные изображения (image_url, image_url_2)
+                        return $exercise;
+                    });
                 return $workout;
             });
             
@@ -747,6 +761,20 @@ class AthleteController extends BaseController
             ->with(['creator'])
             ->get()
             ->unique('id')
+            ->map(function ($exercise) use ($athlete) {
+                // Применяем логику выбора изображений в зависимости от пола
+                if ($athlete->gender === 'female') {
+                    // Для девушек: используем женские изображения, если они есть, иначе обычные
+                    if ($exercise->image_url_female) {
+                        $exercise->image_url = $exercise->image_url_female;
+                    }
+                    if ($exercise->image_url_female_2) {
+                        $exercise->image_url_2 = $exercise->image_url_female_2;
+                    }
+                }
+                // Для мужчин всегда используются обычные изображения (image_url, image_url_2)
+                return $exercise;
+            })
             ->sortBy('name')
             ->values();
             
@@ -783,7 +811,7 @@ class AthleteController extends BaseController
                 ->join('workouts', 'workout_exercise.workout_id', '=', 'workouts.id')
                 ->where('workouts.athlete_id', $athleteId)
                 ->where('workout_exercise.exercise_id', $exerciseId)
-                ->where('workouts.date', '<', now()->toDateString()) // Только ПРОШЛЫЕ даты
+                ->where('workouts.date', '<=', now()->toDateString()) // Учитываем тренировки до и включая сегодняшнюю дату
                 ->orderBy('workouts.date', 'desc')
                 ->orderBy('workouts.created_at', 'desc')
                 ->select('workouts.id', 'workouts.date', 'workouts.title', 'workouts.status')
@@ -917,7 +945,9 @@ class AthleteController extends BaseController
                 $workoutExerciseStatus = null;
                 
                 if ($workoutProgress) {
-                    $workoutExerciseStatus = $workoutProgress->status;
+                    $workoutExerciseStatus = $workoutProgress->status; // completed, partial, not_done
+                    
+                    \Log::info("Workout {$workout->id} exercise {$exerciseId} status: {$workoutExerciseStatus}");
                     
                     // Если есть детальные данные подходов
                     if ($workoutProgress->sets_data) {
@@ -962,7 +992,7 @@ class AthleteController extends BaseController
                     'plan' => $workoutPlan,
                     'fact' => $workoutFact,
                     'sets_details' => $workoutSetsDetails,
-                    'exercise_status' => $workoutExerciseStatus,
+                    'exercise_status' => $workoutExerciseStatus, // Может быть null, 'completed', 'partial', 'not_done'
                     'is_completed' => $workout->status === 'completed'
                 ];
             }

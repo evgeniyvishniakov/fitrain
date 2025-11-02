@@ -97,7 +97,7 @@
                                             <i class="fas fa-star"></i>
                                         </button>
                                         
-                                        <button onclick="toggleStatus({{ $currency->id }}, {{ $currency->is_active ? 'false' : 'true' }})" 
+                                        <button onclick="toggleStatus({{ $currency->id }})" 
                                                 class="text-{{ $currency->is_active ? 'yellow' : 'green' }}-600 hover:text-{{ $currency->is_active ? 'yellow' : 'green' }}-900" 
                                                 title="{{ $currency->is_active ? 'Деактивировать' : 'Активировать' }}">
                                             <i class="fas fa-{{ $currency->is_active ? 'pause' : 'play' }}"></i>
@@ -198,7 +198,7 @@
 <script>
     function setDefault(currencyId) {
         if (confirm('Установить эту валюту по умолчанию?')) {
-            fetch(`/admin/currencies/${currencyId}/set-default`, {
+            fetch(`/currencies/${currencyId}/set-default`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -220,23 +220,20 @@
         }
     }
 
-    function toggleStatus(currencyId, newStatus) {
-        fetch(`/admin/currencies/${currencyId}/toggle-status`, {
+    function toggleStatus(currencyId) {
+        fetch(`/currencies/${currencyId}/toggle-status`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                is_active: newStatus
-            })
+            }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 location.reload();
             } else {
-                alert('Ошибка: ' + data.error);
+                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
             }
         })
         .catch(error => {
@@ -247,7 +244,7 @@
 
     function deleteCurrency(currencyId, currencyName) {
         document.getElementById('currencyName').textContent = currencyName;
-        document.getElementById('deleteForm').action = `/admin/currencies/${currencyId}`;
+        document.getElementById('deleteForm').action = `/currencies/${currencyId}`;
         document.getElementById('deleteModal').classList.remove('hidden');
     }
 

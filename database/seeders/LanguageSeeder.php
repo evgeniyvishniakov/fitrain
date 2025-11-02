@@ -15,28 +15,28 @@ class LanguageSeeder extends Seeder
     {
         $languages = [
             [
+                'code' => 'ua',
+                'name' => 'Українська',
+                'native_name' => 'Українська',
+                'flag' => '🇺🇦',
+                'is_active' => true,
+                'is_default' => true,
+                'sort_order' => 1
+            ],
+            [
                 'code' => 'ru',
                 'name' => 'Русский',
                 'native_name' => 'Русский',
                 'flag' => '🇷🇺',
                 'is_active' => true,
-                'is_default' => true,
-                'sort_order' => 1
+                'is_default' => false,
+                'sort_order' => 2
             ],
             [
                 'code' => 'en',
                 'name' => 'English',
                 'native_name' => 'English',
                 'flag' => '🇺🇸',
-                'is_active' => true,
-                'is_default' => false,
-                'sort_order' => 2
-            ],
-            [
-                'code' => 'ua',
-                'name' => 'Українська',
-                'native_name' => 'Українська',
-                'flag' => '🇺🇦',
                 'is_active' => true,
                 'is_default' => false,
                 'sort_order' => 3

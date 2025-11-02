@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\CurrencyController;
+use App\Http\Controllers\Admin\SubscriptionController;
+use App\Http\Controllers\Admin\TrainerSubscriptionController;
 use App\Http\Controllers\Admin\ExerciseController;
 
 /*
@@ -70,13 +72,36 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/', [CurrencyController::class, 'index'])->name('index');
         Route::get('/create', [CurrencyController::class, 'create'])->name('create');
         Route::post('/', [CurrencyController::class, 'store'])->name('store');
-        Route::get('/{currency}', [CurrencyController::class, 'show'])->name('show');
+        Route::post('/update-rates', [CurrencyController::class, 'updateRates'])->name('update-rates');
+        Route::post('/{currency}/set-default', [CurrencyController::class, 'setDefault'])->name('set-default');
+        Route::post('/{currency}/toggle-status', [CurrencyController::class, 'toggleStatus'])->name('toggle-status');
         Route::get('/{currency}/edit', [CurrencyController::class, 'edit'])->name('edit');
         Route::put('/{currency}', [CurrencyController::class, 'update'])->name('update');
         Route::delete('/{currency}', [CurrencyController::class, 'destroy'])->name('destroy');
-        Route::post('/{currency}/set-default', [CurrencyController::class, 'setDefault'])->name('set-default');
-        Route::post('/{currency}/toggle-status', [CurrencyController::class, 'toggleStatus'])->name('toggle-status');
-        Route::post('/update-rates', [CurrencyController::class, 'updateRates'])->name('update-rates');
+        Route::get('/{currency}', [CurrencyController::class, 'show'])->name('show');
+    });
+    
+    // Управление планами подписок
+    Route::prefix('subscriptions')->name('admin.subscriptions.')->group(function () {
+        Route::get('/', [SubscriptionController::class, 'index'])->name('index');
+        Route::get('/create', [SubscriptionController::class, 'create'])->name('create');
+        Route::post('/', [SubscriptionController::class, 'store'])->name('store');
+        Route::post('/{subscription}/toggle-status', [SubscriptionController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/{subscription}/edit', [SubscriptionController::class, 'edit'])->name('edit');
+        Route::put('/{subscription}', [SubscriptionController::class, 'update'])->name('update');
+        Route::delete('/{subscription}', [SubscriptionController::class, 'destroy'])->name('destroy');
+        Route::get('/{subscription}', [SubscriptionController::class, 'show'])->name('show');
+    });
+    
+    // Управление подписками тренеров
+    Route::prefix('trainer-subscriptions')->name('admin.trainer-subscriptions.')->group(function () {
+        Route::get('/', [TrainerSubscriptionController::class, 'index'])->name('index');
+        Route::get('/create', [TrainerSubscriptionController::class, 'create'])->name('create');
+        Route::post('/', [TrainerSubscriptionController::class, 'store'])->name('store');
+        Route::get('/{trainerSubscription}/edit', [TrainerSubscriptionController::class, 'edit'])->name('edit');
+        Route::put('/{trainerSubscription}', [TrainerSubscriptionController::class, 'update'])->name('update');
+        Route::delete('/{trainerSubscription}', [TrainerSubscriptionController::class, 'destroy'])->name('destroy');
+        Route::get('/{trainerSubscription}', [TrainerSubscriptionController::class, 'show'])->name('show');
     });
     
     // Управление упражнениями

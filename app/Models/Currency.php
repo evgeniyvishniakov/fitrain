@@ -47,7 +47,7 @@ class Currency extends Model
     public static function getDefault()
     {
         return static::where('is_default', true)->first() 
-            ?? static::where('code', 'RUB')->first()
+            ?? static::where('code', 'UAH')->first()
             ?? static::first();
     }
 
