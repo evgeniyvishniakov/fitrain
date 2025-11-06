@@ -1478,8 +1478,14 @@ function workoutApp() {
 
             let html = '';
             
+            // Проверяем, что fieldsConfig является массивом, и удаляем дубликаты
+            if (!Array.isArray(fieldsConfig)) {
+                fieldsConfig = [];
+            }
+            const uniqueFieldsConfig = [...new Set(fieldsConfig)];
+            
             // Генерируем поля из конфигурации
-            fieldsConfig.forEach(field => {
+            uniqueFieldsConfig.forEach(field => {
                 if (fieldConfigs[field]) {
                     const config = fieldConfigs[field];
                     const colorClasses = getColorClasses(config.color);
@@ -3301,7 +3307,7 @@ function workoutApp() {
         
         <!-- Содержимое -->
         <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
-            <!-- Поиск и фильтры для шаблонов -->
+            <!-- Поиск для шаблонов -->
             <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
                 <!-- Поиск -->
                 <input type="text" 
@@ -3311,31 +3317,6 @@ function workoutApp() {
                        onkeyup="filterTemplates()"
                        onfocus="this.style.borderColor = '#4f46e5'"
                        onblur="this.style.borderColor = '#d1d5db'">
-                
-                <!-- Фильтр категории -->
-                <select id="template-category-filter" 
-                        onchange="filterTemplates()"
-                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
-                        onfocus="this.style.borderColor = '#4f46e5'"
-                        onblur="this.style.borderColor = '#d1d5db'">
-                    <option value="">Все категории</option>
-                    <option value="strength"><?php echo e(__('common.strength')); ?></option>
-                    <option value="cardio"><?php echo e(__('common.cardio')); ?></option>
-                    <option value="flexibility"><?php echo e(__('common.flexibility')); ?></option>
-                    <option value="mixed"><?php echo e(__('common.mixed')); ?></option>
-                </select>
-                
-                <!-- Фильтр сложности -->
-                <select id="template-difficulty-filter" 
-                        onchange="filterTemplates()"
-                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
-                        onfocus="this.style.borderColor = '#4f46e5'"
-                        onblur="this.style.borderColor = '#d1d5db'">
-                    <option value=""><?php echo e(__('common.all_levels')); ?></option>
-                    <option value="beginner"><?php echo e(__('common.beginner')); ?></option>
-                    <option value="intermediate"><?php echo e(__('common.intermediate')); ?></option>
-                    <option value="advanced"><?php echo e(__('common.advanced')); ?></option>
-                </select>
             </div>
             
             <div id="templates-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
@@ -3509,21 +3490,24 @@ function renderTemplates() {
     
     container.innerHTML = templates.map(template => {
         const exerciseCount = (template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises ? template.exercises.length : 0);
-        const duration = template.estimated_duration ? `${template.estimated_duration} <?php echo e(__('common.min')); ?>` : '<?php echo e(__('common.not_specified')); ?>';
-        const difficulty = template.difficulty_label || template.difficulty || '<?php echo e(__('common.not_specified')); ?>';
-        const category = template.category || '';
+        const exercises = (template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises : (template.exercises || []);
+        const exercisesList = exercises.slice(0, 5).map(ex => ex.name).join(', ');
+        const remainingCount = Math.max(0, exerciseCount - 5);
         
         return `
             <div class="template-item" 
-                 data-template-id="${template.id}" 
-                 data-template-category="${category}"
-                 data-template-difficulty="${template.difficulty || ''}"
-                 style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; hover:border-blue-300;" 
-                 onclick="toggleTemplate(this, ${template.id}, '${template.name}', ${JSON.stringify((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises : (template.exercises || [])).replace(/"/g, '&quot;')})">
-                <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${template.name}</h4>
-                <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exerciseCount} упражнений • ${duration}</p>
-                <p style="font-size: 12px; color: #9ca3af; margin-bottom: 8px;"><?php echo e(__('common.difficulty')); ?>: ${difficulty}</p>
-                <p style="font-size: 14px; color: #9ca3af;">${template.description || ''}</p>
+                 data-template-id="${template.id}"
+                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; transition: all 0.2s; background: white;" 
+                 onclick="toggleTemplate(this, ${template.id}, '${template.name}', ${JSON.stringify(exercises).replace(/"/g, '&quot;')})">
+                <h4 style="font-weight: 600; color: #111827; margin-bottom: 12px; font-size: 18px;">${template.name}</h4>
+                
+                <!-- Список упражнений -->
+                <div style="margin-bottom: 12px;">
+                    <p style="font-size: 13px; color: #6b7280; line-height: 1.6;">
+                        ${exercisesList || '<?php echo e(__('common.no_exercises')); ?>'}
+                        ${remainingCount > 0 ? `<span style="color: #9ca3af; font-style: italic;">+ ${remainingCount} <?php echo e(__('common.more')); ?>...</span>` : ''}
+                    </p>
+                </div>
             </div>
         `;
     }).join('');
@@ -3640,8 +3624,6 @@ function filterExercises() {
 // Фильтрация шаблонов
 function filterTemplates() {
     const searchTerm = document.getElementById('template-search').value.toLowerCase();
-    const categoryFilter = document.getElementById('template-category-filter').value.toLowerCase();
-    const difficultyFilter = document.getElementById('template-difficulty-filter').value.toLowerCase();
 
     const templateElements = document.querySelectorAll('#templates-container > .template-item');
     const noResults = document.getElementById('no-templates-results');
@@ -3649,15 +3631,10 @@ function filterTemplates() {
 
     templateElements.forEach(element => {
         const name = element.querySelector('h4').textContent.toLowerCase();
-        const description = element.querySelectorAll('p')[2] ? element.querySelectorAll('p')[2].textContent.toLowerCase() : '';
-        const category = element.dataset.templateCategory ? element.dataset.templateCategory.toLowerCase() : '';
-        const difficulty = element.dataset.templateDifficulty ? element.dataset.templateDifficulty.toLowerCase() : '';
 
-        const matchesSearch = name.includes(searchTerm) || description.includes(searchTerm);
-        const matchesCategory = !categoryFilter || category.includes(categoryFilter);
-        const matchesDifficulty = !difficultyFilter || difficulty.includes(difficultyFilter);
+        const matchesSearch = name.includes(searchTerm);
 
-        if (matchesSearch && matchesCategory && matchesDifficulty) {
+        if (matchesSearch) {
             element.style.display = 'block';
             visibleCount++;
         } else {
@@ -3923,8 +3900,14 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
 
     let html = '';
     
+    // Проверяем, что fieldsConfig является массивом, и удаляем дубликаты
+    if (!Array.isArray(fieldsConfig)) {
+        fieldsConfig = [];
+    }
+    const uniqueFieldsConfig = [...new Set(fieldsConfig)];
+    
     // Генерируем поля из конфигурации
-    fieldsConfig.forEach(field => {
+    uniqueFieldsConfig.forEach(field => {
         if (fieldConfigs[field]) {
             const config = fieldConfigs[field];
             const colorClasses = getColorClasses(config.color);

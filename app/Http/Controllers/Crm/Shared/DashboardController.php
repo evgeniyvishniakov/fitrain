@@ -34,7 +34,7 @@ class DashboardController extends BaseController
             return redirect()->route('crm.self-athlete.dashboard');
         }
         
-        // Если роль не определена, показываем общий дашборд
-        return view('crm.dashboard');
+        // Если роль не определена, отправляем на страницу входа
+        return redirect()->route('crm.login');
     }
 }

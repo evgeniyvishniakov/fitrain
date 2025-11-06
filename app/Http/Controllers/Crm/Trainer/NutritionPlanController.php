@@ -129,16 +129,37 @@ class NutritionPlanController extends Controller
                         (isset($dayData['proteins']) || isset($dayData['fats']) || 
                          isset($dayData['carbs']) || isset($dayData['notes']))) {
                         
-                        $nutritionDay = NutritionDay::create([
-                            'nutrition_plan_id' => $plan->id,
-                            'date' => $dayData['date'],
-                            'proteins' => $dayData['proteins'] ?? 0,
-                            'fats' => $dayData['fats'] ?? 0,
-                            'carbs' => $dayData['carbs'] ?? 0,
-                            'notes' => $dayData['notes'] ?? null
-                        ]);
-                        
-                        \Log::info('День питания создан с ID: ' . $nutritionDay->id);
+                        // Проверяем валидность даты - она должна принадлежать указанному месяцу
+                        $dateParts = explode('-', $dayData['date']);
+                        if (count($dateParts) === 3) {
+                            $dateYear = (int)$dateParts[0];
+                            $dateMonth = (int)$dateParts[1];
+                            $dateDay = (int)$dateParts[2];
+                            
+                            // Проверяем, что дата принадлежит указанному месяцу и году
+                            if ($dateYear === (int)$request->year && $dateMonth === (int)$request->month) {
+                                // Проверяем, что день не превышает максимальное количество дней в месяце
+                                $daysInMonth = (int)date('t', mktime(0, 0, 0, $dateMonth, 1, $dateYear));
+                                if ($dateDay >= 1 && $dateDay <= $daysInMonth) {
+                                    $nutritionDay = NutritionDay::create([
+                                        'nutrition_plan_id' => $plan->id,
+                                        'date' => $dayData['date'],
+                                        'proteins' => $dayData['proteins'] ?? 0,
+                                        'fats' => $dayData['fats'] ?? 0,
+                                        'carbs' => $dayData['carbs'] ?? 0,
+                                        'notes' => $dayData['notes'] ?? null
+                                    ]);
+                                    
+                                    \Log::info('День питания создан с ID: ' . $nutritionDay->id);
+                                } else {
+                                    \Log::warning("Пропущен день с невалидной датой: {$dayData['date']} (день $dateDay не существует в месяце $dateMonth)");
+                                }
+                            } else {
+                                \Log::warning("Пропущен день с датой из другого месяца: {$dayData['date']}");
+                            }
+                        } else {
+                            \Log::warning("Пропущен день с неправильным форматом даты: {$dayData['date']}");
+                        }
                     }
                 }
             } else {
@@ -148,7 +169,14 @@ class NutritionPlanController extends Controller
             DB::commit();
             \Log::info('Транзакция завершена успешно');
             
-            return response()->json($plan->load('nutritionDays'));
+            // Возвращаем структуру совместимую с фронтендом
+            $plan->load(['nutritionDays' => function($query) {
+                $query->orderBy('date');
+            }]);
+            $plan->nutrition_days = $plan->nutritionDays;
+            unset($plan->nutritionDays);
+            
+            return response()->json($plan);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Ошибка валидации: ' . json_encode($e->errors()));
@@ -176,6 +204,10 @@ class NutritionPlanController extends Controller
         if ($plan->trainer_id !== auth()->id()) {
             return response()->json(['error' => 'Доступ запрещен'], 403);
         }
+
+        // Преобразуем nutritionDays в nutrition_days для совместимости с фронтендом
+        $plan->nutrition_days = $plan->nutritionDays;
+        unset($plan->nutritionDays);
 
         return response()->json($plan);
     }

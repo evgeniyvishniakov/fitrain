@@ -941,6 +941,19 @@ function athletesApp() {
             return new Date(year, month, 0).getDate();
         },
         
+        // Надежный парсер: берет YYYY-MM-DD до 'T', чтобы избежать сдвигов по UTC
+        parseDateParts(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return null;
+            const onlyDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+            const parts = onlyDate.split('-');
+            if (parts.length !== 3) return null;
+            return {
+                y: parseInt(parts[0]),
+                m: parseInt(parts[1]),
+                d: parseInt(parts[2])
+            };
+        },
+        
         async saveNutritionPlanForm() {
             try {
                 const nutritionData = {
@@ -952,24 +965,27 @@ function athletesApp() {
                     days: []
                 };
                 
+                
                 // Собираем данные по дням - только заполненные
                 const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
                 for (let day = 1; day <= daysInMonth; day++) {
-                    const proteins = document.querySelector(`input[name="proteins_${day}"]`)?.value;
-                    const fats = document.querySelector(`input[name="fats_${day}"]`)?.value;
-                    const carbs = document.querySelector(`input[name="carbs_${day}"]`)?.value;
-                    const notes = document.querySelector(`input[name="notes_${day}"]`)?.value;
+                    const proteinsRaw = document.querySelector(`input[name="proteins_${day}"]`)?.value ?? '';
+                    const fatsRaw = document.querySelector(`input[name="fats_${day}"]`)?.value ?? '';
+                    const carbsRaw = document.querySelector(`input[name="carbs_${day}"]`)?.value ?? '';
+                    const notesRaw = document.querySelector(`input[name="notes_${day}"]`)?.value ?? '';
+
+                    const hasAny = (proteinsRaw !== '') || (fatsRaw !== '') || (carbsRaw !== '') || (notesRaw !== '');
+                    if (!hasAny) continue;
+
+                    const dateStr = `${this.nutritionYear}-${String(this.nutritionMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    nutritionData.days.push({
+                        date: dateStr,
+                        proteins: Number.isFinite(parseFloat(proteinsRaw)) ? parseFloat(proteinsRaw) : 0,
+                        fats: Number.isFinite(parseFloat(fatsRaw)) ? parseFloat(fatsRaw) : 0,
+                        carbs: Number.isFinite(parseFloat(carbsRaw)) ? parseFloat(carbsRaw) : 0,
+                        notes: notesRaw || ''
+                    });
                     
-                    // Добавляем день только если есть хотя бы одно заполненное поле
-                    if (proteins || fats || carbs || notes) {
-                        nutritionData.days.push({
-                            date: `${this.nutritionYear}-${String(this.nutritionMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-                            proteins: parseFloat(proteins) || 0,
-                            fats: parseFloat(fats) || 0,
-                            carbs: parseFloat(carbs) || 0,
-                            notes: notes || ''
-                        });
-                    }
                 }
                 
                 // Если нет заполненных дней, создаем план без дней
@@ -1157,7 +1173,9 @@ function athletesApp() {
             this.$nextTick(() => {
                 if (plan.nutrition_days) {
                     plan.nutrition_days.forEach(day => {
-                        const dayNumber = new Date(day.date).getDate();
+                        const parsed = this.parseDateParts(day.date);
+                        if (!parsed) return;
+                        const dayNumber = parsed.d;
                         const proteinsInput = document.querySelector(`input[name="proteins_${dayNumber}"]`);
                         const fatsInput = document.querySelector(`input[name="fats_${dayNumber}"]`);
                         const carbsInput = document.querySelector(`input[name="carbs_${dayNumber}"]`);
@@ -1219,6 +1237,93 @@ function athletesApp() {
         // Закрыть детальный просмотр
         closeDetailedNutritionPlan() {
             this.detailedNutritionPlan = null;
+        },
+        
+        // Получить отфильтрованные и отсортированные дни плана питания
+        get filteredNutritionDays() {
+            if (!this.detailedNutritionPlan || !this.detailedNutritionPlan.nutrition_days) {
+                return [];
+            }
+            
+            const planMonth = parseInt(this.detailedNutritionPlan.month);
+            const planYear = parseInt(this.detailedNutritionPlan.year);
+            const maxDaysInMonth = this.getDaysInMonth(planMonth, planYear);
+            
+            // Фильтруем дни, которые принадлежат текущему месяцу и году
+            const filtered = this.detailedNutritionPlan.nutrition_days.filter(day => {
+                const parsed = this.parseDateParts(day.date);
+                if (!parsed) return false;
+                const dayYear = parsed.y;
+                const dayMonth = parsed.m;
+                const dayDay = parsed.d;
+                
+                // Проверяем, что дата принадлежит указанному месяцу и году
+                if (dayYear !== planYear || dayMonth !== planMonth) {
+                    return false;
+                }
+                
+                // Проверяем, что день валидный (1 до максимального количества дней в месяце)
+                if (dayDay < 1 || dayDay > maxDaysInMonth) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            
+            // Сортируем по числу дня (не по дате, чтобы избежать проблем с часовыми поясами)
+            return filtered.sort((a, b) => {
+                const partsA = a.date.split('-');
+                const partsB = b.date.split('-');
+                const dayA = parseInt(partsA[2]);
+                const dayB = parseInt(partsB[2]);
+                return dayA - dayB;
+            });
+        },
+        
+        // Полный список дней месяца (1..maxDays) с подстановкой пустых значений для незаполненных
+        get fullMonthNutritionDays() {
+            if (!this.detailedNutritionPlan) {
+                return [];
+            }
+            const planMonth = parseInt(this.detailedNutritionPlan.month);
+            const planYear = parseInt(this.detailedNutritionPlan.year);
+            const maxDaysInMonth = this.getDaysInMonth(planMonth, planYear);
+            
+            // Карта существующих дней по строке даты YYYY-MM-DD (надежнее)
+            const byDate = {};
+            const rawDays = (this.detailedNutritionPlan.nutrition_days || []);
+            rawDays.forEach(d => {
+                const parsed = this.parseDateParts(d?.date);
+                if (!parsed) return;
+                const y = parsed.y;
+                const m = parsed.m;
+                const dd = parsed.d;
+                if (y === planYear && m === planMonth && dd >= 1 && dd <= maxDaysInMonth) {
+                    const key = `${y}-${String(m).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+                    byDate[key] = d;
+                }
+            });
+            
+            
+            const result = [];
+            for (let dayNum = 1; dayNum <= maxDaysInMonth; dayNum++) {
+                const dateStr = `${planYear}-${String(planMonth).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                if (byDate[dateStr]) {
+                    result.push(byDate[dateStr]);
+                } else {
+                    result.push({
+                        id: `placeholder-${dateStr}`,
+                        date: dateStr,
+                        proteins: 0,
+                        fats: 0,
+                        carbs: 0,
+                        calories: 0,
+                        notes: ''
+                    });
+                }
+            }
+            return result;
         },
         
         // Получить текущий вес
@@ -3608,7 +3713,7 @@ function athletesApp() {
     <!-- Форма создания спортсмена -->
     <div x-show="currentView === 'create'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Добавление спортсмена</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.adding_athlete') }}</h3>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 {{ __('common.back') }}
@@ -3620,31 +3725,31 @@ function athletesApp() {
                 <!-- Левая колонка -->
                 <div class="form-column-left">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }} *</label>
                         <input type="text" x-model="formName" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.email') }} *</label>
                         <input type="email" x-model="formEmail" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
         </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Пароль *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.password') }} *</label>
                         <div class="relative">
                             <input :type="showPassword ? 'text' : 'password'" x-model="formPassword" required
                                    class="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <div class="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
                                 <button type="button" @click="generatePassword()" 
                                         class="px-2 py-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
-                                        title="Сгенерировать пароль">
+                                        title="{{ __('common.generate_password') }}">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                     </svg>
                                 </button>
                                 <button type="button" @click="showPassword = !showPassword" 
                                         class="px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
-                                        title="Показать/скрыть пароль">
+                                        title="{{ __('common.show_hide_password') }}">
                                     <svg x-show="!showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -3657,21 +3762,21 @@ function athletesApp() {
 </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.phone') }}</label>
                         <input type="tel" x-model="formPhone"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.birth_date') }}</label>
                         <input type="date" x-model="formBirthDate"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.gender') }}</label>
                         <select x-model="formGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Выберите пол</option>
-                            <option value="male">Мужской</option>
-                            <option value="female">Женский</option>
+                            <option value="">{{ __('common.select_gender') }}</option>
+                            <option value="male">{{ __('common.male') }}</option>
+                            <option value="female">{{ __('common.female') }}</option>
                         </select>
                     </div>
                 </div>
@@ -3679,26 +3784,26 @@ function athletesApp() {
                 <!-- Правая колонка -->
                 <div class="form-column-right">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.sport_level') }}</label>
                         <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Выберите уровень</option>
-                            <option value="beginner">{{ __('common.novice') }}</option>
-                            <option value="intermediate">{{ __('common.amateur') }}</option>
-                            <option value="advanced">Продвинутый</option>
-                            <option value="professional">Профессионал</option>
+                            <option value="">{{ __('common.select_level') }}</option>
+                            <option value="beginner">{{ __('common.beginner') }}</option>
+                            <option value="intermediate">{{ __('common.intermediate') }}</option>
+                            <option value="advanced">{{ __('common.advanced') }}</option>
+                            <option value="professional">{{ __('common.professional') }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Цели</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
                         <textarea x-model="formGoals" rows="3"
                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  placeholder="Например: похудение, набор массы, подготовка к соревнованиям"></textarea>
+                                  placeholder="{{ __('common.goals_placeholder') }}"></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.status') }}</label>
                         <select x-model="formIsActive" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="1">Активный</option>
-                            <option value="0">Неактивный</option>
+                            <option value="1">{{ __('common.active') }}</option>
+                            <option value="0">{{ __('common.inactive') }}</option>
                         </select>
                     </div>
                     
@@ -3709,8 +3814,8 @@ function athletesApp() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                             <div>
-                                <h4 class="text-sm font-medium text-blue-800">Измерения спортсмена</h4>
-                                <p class="text-sm text-blue-600 mt-1">После создания спортсмена добавьте первое измерение с весом, ростом и другими параметрами в разделе "Измерения".</p>
+                                <h4 class="text-sm font-medium text-blue-800">{{ __('common.athlete_measurements') }}</h4>
+                                <p class="text-sm text-blue-600 mt-1">{{ __('common.athlete_measurements_info') }}</p>
                             </div>
                         </div>
                     </div>
@@ -3720,7 +3825,7 @@ function athletesApp() {
             <div class="flex justify-end space-x-3">
                 <button type="submit" 
                         class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Создать спортсмена
+                    {{ __('common.create_athlete') }}
                 </button>
                 <button type="button" @click="showList()" 
                         class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -3733,7 +3838,7 @@ function athletesApp() {
     <!-- Форма редактирования спортсмена -->
     <div x-show="currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Редактирование спортсмена</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.editing_athlete') }}</h3>
             <button @click="currentView = 'view'; activeTab = 'overview'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 {{ __('common.back') }}
@@ -3746,31 +3851,31 @@ function athletesApp() {
                     <!-- Левая колонка -->
                     <div class="form-column-left">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Имя *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }} *</label>
                             <input type="text" x-model="formName" required
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.email') }} *</label>
                             <input type="email" x-model="formEmail" required
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Пароль (оставьте пустым, чтобы не менять)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.password_leave_empty') }}</label>
                             <div class="relative">
                                 <input :type="showPassword ? 'text' : 'password'" x-model="formPassword"
                                        class="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <div class="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
                                     <button type="button" @click="generatePassword()" 
                                             class="px-2 py-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
-                                            title="Сгенерировать пароль">
+                                            title="{{ __('common.generate_password') }}">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                         </svg>
                                     </button>
                                     <button type="button" @click="showPassword = !showPassword" 
                                             class="px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
-                                            title="Показать/скрыть пароль">
+                                            title="{{ __('common.show_hide_password') }}">
                                         <svg x-show="!showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -3783,21 +3888,21 @@ function athletesApp() {
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Телефон</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.phone') }}</label>
                             <input type="tel" x-model="formPhone"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата рождения</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.birth_date') }}</label>
                             <input type="date" x-model="formBirthDate"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Пол</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.gender') }}</label>
                             <select x-model="formGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Выберите пол</option>
-                                <option value="male">Мужской</option>
-                                <option value="female">Женский</option>
+                                <option value="">{{ __('common.select_gender') }}</option>
+                                <option value="male">{{ __('common.male') }}</option>
+                                <option value="female">{{ __('common.female') }}</option>
                             </select>
                         </div>
                     </div>
@@ -3805,26 +3910,26 @@ function athletesApp() {
                     <!-- Правая колонка -->
                     <div class="form-column-right">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Спортивный уровень</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.sport_level') }}</label>
                             <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Выберите уровень</option>
-                                <option value="beginner">{{ __('common.novice') }}</option>
-                                <option value="intermediate">{{ __('common.amateur') }}</option>
-                                <option value="advanced">Продвинутый</option>
-                                <option value="professional">Профессионал</option>
+                                <option value="">{{ __('common.select_level') }}</option>
+                                <option value="beginner">{{ __('common.beginner') }}</option>
+                                <option value="intermediate">{{ __('common.intermediate') }}</option>
+                                <option value="advanced">{{ __('common.advanced') }}</option>
+                                <option value="professional">{{ __('common.professional') }}</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Цели</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
                             <textarea x-model="formGoals" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                      placeholder="Например: похудение, набор массы, подготовка к соревнованиям"></textarea>
+                                      placeholder="{{ __('common.goals_placeholder') }}"></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.status') }}</label>
                             <select x-model="formIsActive" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="1">Активный</option>
-                                <option value="0">Неактивный</option>
+                                <option value="1">{{ __('common.active') }}</option>
+                                <option value="0">{{ __('common.inactive') }}</option>
                             </select>
                         </div>
                         
@@ -4417,19 +4522,19 @@ function athletesApp() {
                         <!-- Статистика -->
                         <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
                             <div class="bg-red-50 rounded-lg p-4 text-center" style="flex: 1;">
-                                <div class="text-2xl font-bold text-red-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
+                                <div class="text-2xl font-bold text-red-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
                                 <div class="text-sm text-red-800">{{ __('common.total_calories') }}</div>
                             </div>
                             <div class="bg-blue-50 rounded-lg p-4 text-center" style="flex: 1;">
-                                <div class="text-2xl font-bold text-blue-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
+                                <div class="text-2xl font-bold text-blue-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
                                 <div class="text-sm text-blue-800">{{ __('common.total_proteins_g') }}</div>
                             </div>
                             <div class="bg-yellow-50 rounded-lg p-4 text-center" style="flex: 1;">
-                                <div class="text-2xl font-bold text-yellow-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
+                                <div class="text-2xl font-bold text-yellow-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
                                 <div class="text-sm text-yellow-800">{{ __('common.total_carbs_g') }}</div>
                             </div>
                             <div class="bg-green-50 rounded-lg p-4 text-center" style="flex: 1;">
-                                <div class="text-2xl font-bold text-green-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
+                                <div class="text-2xl font-bold text-green-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
                                 <div class="text-sm text-green-800">{{ __('common.total_fats_g') }}</div>
                             </div>
                         </div>
@@ -4448,9 +4553,9 @@ function athletesApp() {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-300">
-                                    <template x-for="day in (detailedNutritionPlan.nutrition_days || [])" :key="day.id">
+                                    <template x-for="day in fullMonthNutritionDays" :key="day.id">
                                         <tr>
-                                            <td class="px-3 py-2 text-sm font-medium text-gray-900" x-text="new Date(day.date).getDate()"></td>
+                                            <td class="px-3 py-2 text-sm font-medium text-gray-900" x-text="(() => { const p = parseDateParts(day.date); return p ? p.d : '-'; })()"></td>
                                             <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.proteins || 0).toFixed(1)"></td>
                                             <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1)"></td>
                                             <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1)"></td>
@@ -4463,7 +4568,7 @@ function athletesApp() {
                         </div>
                         
                         <!-- Пустое состояние для дней -->
-                        <div x-show="!detailedNutritionPlan.nutrition_days || detailedNutritionPlan.nutrition_days.length === 0" class="text-center py-8 text-gray-500">
+                        <div x-show="!filteredNutritionDays || filteredNutritionDays.length === 0" class="text-center py-8 text-gray-500">
                             <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>

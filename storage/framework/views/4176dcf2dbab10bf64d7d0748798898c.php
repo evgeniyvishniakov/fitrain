@@ -1,99 +1,97 @@
-@extends("crm.layouts.app")
+<?php $__env->startSection("title", "Упражнения"); ?>
+<?php $__env->startSection("page-title", "Упражнения"); ?>
 
-@section("title", "Упражнения")
-@section("page-title", "Упражнения")
-
-@section("sidebar")
-    <a href="{{ route("crm.dashboard.main") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+<?php $__env->startSection("sidebar"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
         Дашборд
     </a>
-    <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
         Календарь
     </a>
-    <a href="{{ route("crm.athlete.workouts") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.workouts")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
         Тренировки
     </a>
-    <a href="{{ route("crm.athlete.exercises") }}" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.exercises")); ?>" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
         Упражнения
     </a>
-    <a href="{{ route("crm.athlete.progress") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.progress")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
         Прогресс
     </a>
-    <a href="{{ route("crm.nutrition.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.nutrition.index")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
         Дневник питания
     </a>
-    <a href="{{ route('crm.athlete.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.athlete.settings')); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
         Настройки
     </a>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section("mobile-menu")
-    <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link">
+<?php $__env->startSection("mobile-menu"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
         Дашборд
     </a>
-    <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?>">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
         Календарь
     </a>
-    <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.workouts")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
         Тренировки
     </a>
-    <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link active">
+    <a href="<?php echo e(route("crm.athlete.exercises")); ?>" class="mobile-nav-link active">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
         Упражнения
     </a>
-    <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.progress")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
         Прогресс
     </a>
-    <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.nutrition.index")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
         Дневник питания
     </a>
-    <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
+    <a href="<?php echo e(route('crm.athlete.settings')); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
         Настройки
     </a>
-@endsection
+<?php $__env->stopSection(); ?>
 
 <script>
 // SPA функциональность для упражнений спортсмена (только просмотр)
@@ -152,22 +150,22 @@ function exerciseApp() {
         getEquipmentTranslation(equipment) {
             if (!equipment) return '';
             const translations = {
-                'Штанга': '{{ __('common.barbell') }}',
-                'Гриф': '{{ __('common.barbell_bar') }}',
-                'Трап-гриф': '{{ __('common.trap_bar') }}',
-                'EZ-гриф': '{{ __('common.ez_bar') }}',
-                'Отягощения': '{{ __('common.weight_plate') }}',
-                'Гантели': '{{ __('common.dumbbells') }}',
-                'Гири': '{{ __('common.kettlebells') }}',
-                'Собственный вес': '{{ __('common.body_weight') }}',
-                'Тренажер': '{{ __('common.machines') }}',
-                'Машина Смита': '{{ __('common.smith_machine') }}',
-                'Кроссовер / Блок': '{{ __('common.crossover_block') }}',
-                'Скакалка': '{{ __('common.jump_rope') }}',
-                'Турник': '{{ __('common.pull_up_bar') }}',
-                'Брусья': '{{ __('common.parallel_bars') }}',
-                'Скамейка': '{{ __('common.bench') }}',
-                'Резина / Экспандер': '{{ __('common.resistance_band') }}'
+                'Штанга': '<?php echo e(__('common.barbell')); ?>',
+                'Гриф': '<?php echo e(__('common.barbell_bar')); ?>',
+                'Трап-гриф': '<?php echo e(__('common.trap_bar')); ?>',
+                'EZ-гриф': '<?php echo e(__('common.ez_bar')); ?>',
+                'Отягощения': '<?php echo e(__('common.weight_plate')); ?>',
+                'Гантели': '<?php echo e(__('common.dumbbells')); ?>',
+                'Гири': '<?php echo e(__('common.kettlebells')); ?>',
+                'Собственный вес': '<?php echo e(__('common.body_weight')); ?>',
+                'Тренажер': '<?php echo e(__('common.machines')); ?>',
+                'Машина Смита': '<?php echo e(__('common.smith_machine')); ?>',
+                'Кроссовер / Блок': '<?php echo e(__('common.crossover_block')); ?>',
+                'Скакалка': '<?php echo e(__('common.jump_rope')); ?>',
+                'Турник': '<?php echo e(__('common.pull_up_bar')); ?>',
+                'Брусья': '<?php echo e(__('common.parallel_bars')); ?>',
+                'Скамейка': '<?php echo e(__('common.bench')); ?>',
+                'Резина / Экспандер': '<?php echo e(__('common.resistance_band')); ?>'
             };
             return translations[equipment] || equipment;
         },
@@ -329,7 +327,7 @@ function exerciseApp() {
 }
 </script>
 
-@section("content")
+<?php $__env->startSection("content"); ?>
 <style>
     .exercise-grid {
         display: grid;
@@ -425,20 +423,20 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="category"
                             class="w-full px-4 py-3 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_categories') }}</option>
-                        <option value="Грудь">{{ __('common.chest') }}</option>
-                        <option value="Спина">{{ __('common.back_muscles') }}</option>
-                        <option value="Ноги(Бедра)">{{ __('common.legs_thighs') }}</option>
-                        <option value="Ноги(Икры)">{{ __('common.legs_calves') }}</option>
-                        <option value="Ягодицы">{{ __('common.glutes') }}</option>
-                        <option value="Плечи">{{ __('common.shoulders') }}</option>
-                        <option value="Руки(Бицепс)">{{ __('common.arms_biceps') }}</option>
-                        <option value="Руки(Трицепс)">{{ __('common.arms_triceps') }}</option>
-                        <option value="Руки(Предплечье)">{{ __('common.arms_forearm') }}</option>
-                        <option value="Пресс">{{ __('common.abs') }}</option>
-                        <option value="Шея">{{ __('common.neck') }}</option>
-                        <option value="Кардио">{{ __('common.cardio') }}</option>
-                        <option value="Гибкость">{{ __('common.flexibility') }}</option>
+                        <option value=""><?php echo e(__('common.all_categories')); ?></option>
+                        <option value="Грудь"><?php echo e(__('common.chest')); ?></option>
+                        <option value="Спина"><?php echo e(__('common.back_muscles')); ?></option>
+                        <option value="Ноги(Бедра)"><?php echo e(__('common.legs_thighs')); ?></option>
+                        <option value="Ноги(Икры)"><?php echo e(__('common.legs_calves')); ?></option>
+                        <option value="Ягодицы"><?php echo e(__('common.glutes')); ?></option>
+                        <option value="Плечи"><?php echo e(__('common.shoulders')); ?></option>
+                        <option value="Руки(Бицепс)"><?php echo e(__('common.arms_biceps')); ?></option>
+                        <option value="Руки(Трицепс)"><?php echo e(__('common.arms_triceps')); ?></option>
+                        <option value="Руки(Предплечье)"><?php echo e(__('common.arms_forearm')); ?></option>
+                        <option value="Пресс"><?php echo e(__('common.abs')); ?></option>
+                        <option value="Шея"><?php echo e(__('common.neck')); ?></option>
+                        <option value="Кардио"><?php echo e(__('common.cardio')); ?></option>
+                        <option value="Гибкость"><?php echo e(__('common.flexibility')); ?></option>
                     </select>
                 </div>
                 
@@ -446,7 +444,7 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="equipment"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_equipment') }}</option>
+                        <option value=""><?php echo e(__('common.all_equipment')); ?></option>
                         <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment).filter(eq => eq && eq !== 'null'))).sort()" :key="eq">
                             <option :value="eq" x-text="getEquipmentTranslation(eq)"></option>
                         </template>
@@ -457,9 +455,9 @@ function exerciseApp() {
                 <div class="filter-container">
                     <select x-model="exerciseType"
                             class="w-full px-4 py-3 text-sm text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_exercises') }}</option>
-                        <option value="system">{{ __('common.system_exercises') }}</option>
-                        <option value="custom">{{ __('common.user_exercises') }}</option>
+                        <option value=""><?php echo e(__('common.all_exercises')); ?></option>
+                        <option value="system"><?php echo e(__('common.system_exercises')); ?></option>
+                        <option value="custom"><?php echo e(__('common.user_exercises')); ?></option>
                     </select>
                 </div>
             </div>
@@ -840,5 +838,7 @@ function openVideoModal(url, title) {
 }
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
+
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/athlete/exercises.blade.php ENDPATH**/ ?>

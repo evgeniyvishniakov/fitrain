@@ -1,30 +1,30 @@
-﻿@extends("crm.layouts.app")
+﻿
 
-@section("title", __('common.dashboard'))
-@section("page-title", __('common.dashboard'))
+<?php $__env->startSection("title", __('common.dashboard')); ?>
+<?php $__env->startSection("page-title", __('common.dashboard')); ?>
 
 <script>
 function dashboardCalendar() {
     return {
-        currentDate: '{{ now()->format('Y-m-d') }}',
-        monthWorkouts: @json($monthWorkouts),
+        currentDate: '<?php echo e(now()->format('Y-m-d')); ?>',
+        monthWorkouts: <?php echo json_encode($monthWorkouts, 15, 512) ?>,
         
         get currentMonthYear() {
             const date = new Date(this.currentDate);
             const monthNames = {
                 'ru': {
-                    0: '{{ __('common.january') }}',
-                    1: '{{ __('common.february') }}',
-                    2: '{{ __('common.march') }}',
-                    3: '{{ __('common.april') }}',
-                    4: '{{ __('common.may') }}',
-                    5: '{{ __('common.june') }}',
-                    6: '{{ __('common.july') }}',
-                    7: '{{ __('common.august') }}',
-                    8: '{{ __('common.september') }}',
-                    9: '{{ __('common.october') }}',
-                    10: '{{ __('common.november') }}',
-                    11: '{{ __('common.december') }}'
+                    0: '<?php echo e(__('common.january')); ?>',
+                    1: '<?php echo e(__('common.february')); ?>',
+                    2: '<?php echo e(__('common.march')); ?>',
+                    3: '<?php echo e(__('common.april')); ?>',
+                    4: '<?php echo e(__('common.may')); ?>',
+                    5: '<?php echo e(__('common.june')); ?>',
+                    6: '<?php echo e(__('common.july')); ?>',
+                    7: '<?php echo e(__('common.august')); ?>',
+                    8: '<?php echo e(__('common.september')); ?>',
+                    9: '<?php echo e(__('common.october')); ?>',
+                    10: '<?php echo e(__('common.november')); ?>',
+                    11: '<?php echo e(__('common.december')); ?>'
                 }
             };
             const month = monthNames['ru'][date.getMonth()];
@@ -65,7 +65,7 @@ function dashboardCalendar() {
                     date: dayString,
                     day: dayNum,
                     isCurrentMonth: currentDay.getMonth() === month,
-                    isToday: dayString === '{{ now()->format('Y-m-d') }}',
+                    isToday: dayString === '<?php echo e(now()->format('Y-m-d')); ?>',
                     workouts: dayWorkouts
                 });
                 
@@ -90,7 +90,7 @@ function dashboardCalendar() {
         },
         
         goToToday() {
-            this.currentDate = '{{ now()->format('Y-m-d') }}';
+            this.currentDate = '<?php echo e(now()->format('Y-m-d')); ?>';
             this.loadWorkouts();
         },
         
@@ -134,99 +134,113 @@ function dashboardCalendar() {
 }
 </script>
 
-@section("sidebar")
-    <a href="{{ route("crm.dashboard.main") }}" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2">
+<?php $__env->startSection("sidebar"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        {{ __('common.dashboard') }}
+        <?php echo e(__('common.dashboard')); ?>
+
     </a>
-    <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        {{ __('common.calendar') }}
+        <?php echo e(__('common.calendar')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.workouts") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.workouts")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        {{ __('common.workouts') }}
+        <?php echo e(__('common.workouts')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.exercises") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.exercises")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        {{ __('common.exercises') }}
+        <?php echo e(__('common.exercises')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.progress") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.progress")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        {{ __('common.progress') }}
+        <?php echo e(__('common.progress')); ?>
+
     </a>
-    <a href="{{ route("crm.nutrition.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.nutrition.index")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        {{ __('common.nutrition') }}
+        <?php echo e(__('common.nutrition')); ?>
+
     </a>
-    <a href="{{ route('crm.athlete.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.athlete.settings')); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        {{ __('common.settings') }}
-    </a>
-@endsection
+        <?php echo e(__('common.settings')); ?>
 
-@section("mobile-menu")
-    <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link active">
+    </a>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection("mobile-menu"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="mobile-nav-link active">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        {{ __('common.dashboard') }}
+        <?php echo e(__('common.dashboard')); ?>
+
     </a>
-    <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?>">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        {{ __('common.calendar') }}
+        <?php echo e(__('common.calendar')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.workouts")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        {{ __('common.workouts') }}
+        <?php echo e(__('common.workouts')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.exercises")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        {{ __('common.exercises') }}
+        <?php echo e(__('common.exercises')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.progress")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        {{ __('common.progress') }}
+        <?php echo e(__('common.progress')); ?>
+
     </a>
-    <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.nutrition.index")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        {{ __('common.nutrition') }}
+        <?php echo e(__('common.nutrition')); ?>
+
     </a>
-    <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
+    <a href="<?php echo e(route('crm.athlete.settings')); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        {{ __('common.settings') }}
-    </a>
-@endsection
+        <?php echo e(__('common.settings')); ?>
 
-@section("content")
+    </a>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection("content"); ?>
 <div class="space-y-6 fade-in-up">
 
     <!-- Статистика -->
@@ -239,8 +253,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.total_workouts') }}</div>
-                <div class="stat-value">{{ $totalWorkouts ?? 0 }}</div>
+                <div class="stat-label"><?php echo e(__('common.total_workouts')); ?></div>
+                <div class="stat-value"><?php echo e($totalWorkouts ?? 0); ?></div>
             </div>
         </div>
 
@@ -252,8 +266,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.planned') }}</div>
-                <div class="stat-value">{{ $plannedWorkouts ?? 0 }}</div>
+                <div class="stat-label"><?php echo e(__('common.planned')); ?></div>
+                <div class="stat-value"><?php echo e($plannedWorkouts ?? 0); ?></div>
             </div>
         </div>
 
@@ -265,8 +279,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.completed') }}</div>
-                <div class="stat-value">{{ $completedWorkouts ?? 0 }}</div>
+                <div class="stat-label"><?php echo e(__('common.completed')); ?></div>
+                <div class="stat-value"><?php echo e($completedWorkouts ?? 0); ?></div>
             </div>
         </div>
 
@@ -279,22 +293,26 @@ function dashboardCalendar() {
             </div>
             <div class="stat-content">
                 <div class="stat-label">
-                    @if($lastOrNextWorkout)
-                        @if($lastOrNextWorkout->status === 'completed')
-                            {{ __('common.last_workout') }}
-                        @else
-                            {{ __('common.next_workout') }}
-                        @endif
-                    @else
-                        {{ __('common.workouts') }}
-                    @endif
+                    <?php if($lastOrNextWorkout): ?>
+                        <?php if($lastOrNextWorkout->status === 'completed'): ?>
+                            <?php echo e(__('common.last_workout')); ?>
+
+                        <?php else: ?>
+                            <?php echo e(__('common.next_workout')); ?>
+
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <?php echo e(__('common.workouts')); ?>
+
+                    <?php endif; ?>
                 </div>
                 <div class="stat-value">
-                    @if($lastOrNextWorkout)
-                        {{ \Carbon\Carbon::parse($lastOrNextWorkout->date)->format('d.m') }}
-                    @else
+                    <?php if($lastOrNextWorkout): ?>
+                        <?php echo e(\Carbon\Carbon::parse($lastOrNextWorkout->date)->format('d.m')); ?>
+
+                    <?php else: ?>
                         0
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -306,7 +324,7 @@ function dashboardCalendar() {
         <!-- Календарь -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">{{ __('common.calendar') }}</h3>
+                <h3 class="text-base font-semibold text-gray-900"><?php echo e(__('common.calendar')); ?></h3>
                 <div class="flex items-center space-x-1">
                     <button @click="previousMonth()" class="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,13 +344,13 @@ function dashboardCalendar() {
             <!-- Компактный календарь -->
             <div class="calendar-grid">
                 <!-- Дни недели -->
-                <div class="calendar-header-cell">{{ __('common.monday') }}</div>
-                <div class="calendar-header-cell">{{ __('common.tuesday') }}</div>
-                <div class="calendar-header-cell">{{ __('common.wednesday') }}</div>
-                <div class="calendar-header-cell">{{ __('common.thursday') }}</div>
-                <div class="calendar-header-cell">{{ __('common.friday') }}</div>
-                <div class="calendar-header-cell">{{ __('common.saturday') }}</div>
-                <div class="calendar-header-cell">{{ __('common.sunday') }}</div>
+                <div class="calendar-header-cell"><?php echo e(__('common.monday')); ?></div>
+                <div class="calendar-header-cell"><?php echo e(__('common.tuesday')); ?></div>
+                <div class="calendar-header-cell"><?php echo e(__('common.wednesday')); ?></div>
+                <div class="calendar-header-cell"><?php echo e(__('common.thursday')); ?></div>
+                <div class="calendar-header-cell"><?php echo e(__('common.friday')); ?></div>
+                <div class="calendar-header-cell"><?php echo e(__('common.saturday')); ?></div>
+                <div class="calendar-header-cell"><?php echo e(__('common.sunday')); ?></div>
                 
                 <!-- Дни месяца (динамические) -->
                 <template x-for="day in calendarDays" :key="day.date">
@@ -370,55 +388,59 @@ function dashboardCalendar() {
         <!-- Ближайшие тренировки -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-base font-semibold text-gray-900">{{ __('common.upcoming_workouts') }}</h3>
-                <a href="{{ route('crm.athlete.workouts') }}" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                    {{ __('common.all') }}
+                <h3 class="text-base font-semibold text-gray-900"><?php echo e(__('common.upcoming_workouts')); ?></h3>
+                <a href="<?php echo e(route('crm.athlete.workouts')); ?>" class="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                    <?php echo e(__('common.all')); ?>
+
                 </a>
             </div>
             
-            @if($upcomingWorkouts->count() > 0)
+            <?php if($upcomingWorkouts->count() > 0): ?>
                 <div class="space-y-2">
-                    @foreach($upcomingWorkouts->take(4) as $workout)
+                    <?php $__currentLoopData = $upcomingWorkouts->take(4); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $workout): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div class="flex items-center space-x-3 flex-1 min-w-0">
                                 <div class="w-3 h-3 rounded-full 
-                                    {{ $workout->status === 'completed' ? 'bg-green-500' : 
-                                       ($workout->status === 'planned' ? 'bg-blue-500' : 'bg-red-500') }}">
+                                    <?php echo e($workout->status === 'completed' ? 'bg-green-500' : 
+                                       ($workout->status === 'planned' ? 'bg-blue-500' : 'bg-red-500')); ?>">
                                 </div>
                                 <div class="flex items-center space-x-3 min-w-0 flex-1">
-                                    <span class="text-base font-medium text-gray-900 truncate">{{ $workout->title }}</span>
+                                    <span class="text-base font-medium text-gray-900 truncate"><?php echo e($workout->title); ?></span>
                                     <span class="text-sm text-gray-500 whitespace-nowrap">
-                                        {{ \Carbon\Carbon::parse($workout->date)->format('d.m') }}
-                                        @if($workout->time)
-                                            {{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : '' }}
-                                        @endif
+                                        <?php echo e(\Carbon\Carbon::parse($workout->date)->format('d.m')); ?>
+
+                                        <?php if($workout->time): ?>
+                                            <?php echo e($workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : ''); ?>
+
+                                        <?php endif; ?>
                                     </span>
                                 </div>
                             </div>
                             <span class="px-3 py-1.5 rounded-full text-sm font-semibold ml-3 whitespace-nowrap
-                                {{ $workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
-                                   ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800') }}">
-                                {{ $workout->status === 'completed' ? __('common.completed_status') : 
-                                   ($workout->status === 'planned' ? __('common.planned_status') : __('common.cancelled_status')) }}
+                                <?php echo e($workout->status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                   ($workout->status === 'planned' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800')); ?>">
+                                <?php echo e($workout->status === 'completed' ? __('common.completed_status') : 
+                                   ($workout->status === 'planned' ? __('common.planned_status') : __('common.cancelled_status'))); ?>
+
                             </span>
                         </div>
-                    @endforeach
-                    @if($upcomingWorkouts->count() > 4)
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php if($upcomingWorkouts->count() > 4): ?>
                         <div class="text-center pt-1">
-                            <span class="text-xs text-gray-500">+{{ $upcomingWorkouts->count() - 4 }} еще</span>
+                            <span class="text-xs text-gray-500">+<?php echo e($upcomingWorkouts->count() - 4); ?> еще</span>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
-            @else
+            <?php else: ?>
                 <div class="text-center py-4">
                     <div class="text-gray-400 mb-1">
                         <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <p class="text-gray-500 text-xs">{{ __('common.no_workouts') }}</p>
+                    <p class="text-gray-500 text-xs"><?php echo e(__('common.no_workouts')); ?></p>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 
@@ -431,8 +453,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.total_measurements') }}</div>
-                <div class="stat-value">{{ $totalMeasurements }}</div>
+                <div class="stat-label"><?php echo e(__('common.total_measurements')); ?></div>
+                <div class="stat-value"><?php echo e($totalMeasurements); ?></div>
             </div>
         </div>
 
@@ -443,8 +465,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.last_measurement') }}</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : '—' }}</div>
+                <div class="stat-label"><?php echo e(__('common.last_measurement')); ?></div>
+                <div class="stat-value"><?php echo e($lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : '—'); ?></div>
             </div>
         </div>
 
@@ -455,8 +477,8 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.current_weight') }}</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->weight . ' ' . __('common.kg') : '—' }}</div>
+                <div class="stat-label"><?php echo e(__('common.current_weight')); ?></div>
+                <div class="stat-value"><?php echo e($lastMeasurement ? $lastMeasurement->weight . ' ' . __('common.kg') : '—'); ?></div>
             </div>
         </div>
 
@@ -468,7 +490,7 @@ function dashboardCalendar() {
             </div>
             <div class="stat-content">
                 <div class="stat-label flex items-center gap-1">
-                    <span>{{ __('common.bmi') }}</span>
+                    <span><?php echo e(__('common.bmi')); ?></span>
                     <!-- Иконка знака вопроса с подсказкой -->
                     <div class="relative group">
                         <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="currentColor" viewBox="0 0 20 20">
@@ -476,17 +498,17 @@ function dashboardCalendar() {
                         </svg>
                         <!-- Всплывающая подсказка -->
                         <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                            <div class="font-semibold mb-2">{{ __('common.bmi_tooltip') }}</div>
+                            <div class="font-semibold mb-2"><?php echo e(__('common.bmi_tooltip')); ?></div>
                             <div class="space-y-1">
-                                <div class="flex justify-between"><span class="text-blue-300">{{ __('common.less_than_18_5') }}:</span> <span>{{ __('common.underweight') }}</span></div>
-                                <div class="flex justify-between"><span class="text-green-300">{{ __('common.18_5_to_24_9') }}:</span> <span>{{ __('common.normal_weight') }}</span></div>
-                                <div class="flex justify-between"><span class="text-yellow-300">{{ __('common.25_to_29_9') }}:</span> <span>{{ __('common.overweight') }}</span></div>
-                                <div class="flex justify-between"><span class="text-red-300">{{ __('common.30_and_more') }}:</span> <span>{{ __('common.obesity') }}</span></div>
+                                <div class="flex justify-between"><span class="text-blue-300"><?php echo e(__('common.less_than_18_5')); ?>:</span> <span><?php echo e(__('common.underweight')); ?></span></div>
+                                <div class="flex justify-between"><span class="text-green-300"><?php echo e(__('common.18_5_to_24_9')); ?>:</span> <span><?php echo e(__('common.normal_weight')); ?></span></div>
+                                <div class="flex justify-between"><span class="text-yellow-300"><?php echo e(__('common.25_to_29_9')); ?>:</span> <span><?php echo e(__('common.overweight')); ?></span></div>
+                                <div class="flex justify-between"><span class="text-red-300"><?php echo e(__('common.30_and_more')); ?>:</span> <span><?php echo e(__('common.obesity')); ?></span></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                @php
+                <?php
                     $bmi = null;
                     $bmiCategory = ['text' => '—', 'color' => 'text-gray-500'];
                     if ($lastMeasurement && $lastMeasurement->weight && auth()->user()->height) {
@@ -501,139 +523,140 @@ function dashboardCalendar() {
                             $bmiCategory = ['text' => __('common.obesity'), 'color' => 'text-red-600'];
                         }
                     }
-                @endphp
-                <div class="stat-value {{ $bmiCategory['color'] }}">{{ $bmi ? number_format($bmi, 1) : '—' }}</div>
+                ?>
+                <div class="stat-value <?php echo e($bmiCategory['color']); ?>"><?php echo e($bmi ? number_format($bmi, 1) : '—'); ?></div>
             </div>
         </div>
     </div>
 
     <!-- Последнее измерение и график веса -->
-    @if($lastMeasurement)
+    <?php if($lastMeasurement): ?>
     <div class="measurement-chart-row">
         <!-- Карточка последнего измерения -->
         <div class="measurement-detail-card">
             <div class="card hover:shadow-lg transition-shadow duration-200 h-full">
                 <div class="card-header">
                     <div class="flex items-center justify-between">
-                        <h4 class="card-title text-lg">{{ $lastMeasurement->measurement_date->format('d.m.Y') }}</h4>
+                        <h4 class="card-title text-lg"><?php echo e($lastMeasurement->measurement_date->format('d.m.Y')); ?></h4>
                     </div>
                 </div>
                 <div class="card-body">
                     <!-- Основные параметры -->
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div class="text-center p-3 bg-blue-50 rounded-lg">
-                            <div class="text-xl font-bold text-blue-600">{{ $lastMeasurement->weight ?? '—' }}</div>
-                            <div class="text-xs text-blue-800">{{ __('common.weight') }} ({{ __('common.kg') }})</div>
+                            <div class="text-xl font-bold text-blue-600"><?php echo e($lastMeasurement->weight ?? '—'); ?></div>
+                            <div class="text-xs text-blue-800"><?php echo e(__('common.weight')); ?> (<?php echo e(__('common.kg')); ?>)</div>
                         </div>
                         <div class="text-center p-3 rounded-lg" 
-                             @if($bmi && $bmiColor === 'blue') style="background-color: #dbeafe;"
-                             @elseif($bmi && $bmiColor === 'green') style="background-color: #dcfce7;"
-                             @elseif($bmi && $bmiColor === 'yellow') style="background-color: #fef3c7;"
-                             @elseif($bmi && $bmiColor === 'red') style="background-color: #fee2e2;"
-                             @else style="background-color: #f3f4f6;"
-                             @endif>
+                             <?php if($bmi && $bmiColor === 'blue'): ?> style="background-color: #dbeafe;"
+                             <?php elseif($bmi && $bmiColor === 'green'): ?> style="background-color: #dcfce7;"
+                             <?php elseif($bmi && $bmiColor === 'yellow'): ?> style="background-color: #fef3c7;"
+                             <?php elseif($bmi && $bmiColor === 'red'): ?> style="background-color: #fee2e2;"
+                             <?php else: ?> style="background-color: #f3f4f6;"
+                             <?php endif; ?>>
                             <div class="text-xl font-bold" 
-                                 @if($bmi && $bmiColor === 'blue') style="color: #2563eb;"
-                                 @elseif($bmi && $bmiColor === 'green') style="color: #059669;"
-                                 @elseif($bmi && $bmiColor === 'yellow') style="color: #d97706;"
-                                 @elseif($bmi && $bmiColor === 'red') style="color: #dc2626;"
-                                 @else style="color: #6b7280;"
-                                 @endif>{{ $bmi ? (fmod($bmi, 1) == 0 ? number_format($bmi, 0) : number_format($bmi, 1)) : '—' }}</div>
+                                 <?php if($bmi && $bmiColor === 'blue'): ?> style="color: #2563eb;"
+                                 <?php elseif($bmi && $bmiColor === 'green'): ?> style="color: #059669;"
+                                 <?php elseif($bmi && $bmiColor === 'yellow'): ?> style="color: #d97706;"
+                                 <?php elseif($bmi && $bmiColor === 'red'): ?> style="color: #dc2626;"
+                                 <?php else: ?> style="color: #6b7280;"
+                                 <?php endif; ?>><?php echo e($bmi ? (fmod($bmi, 1) == 0 ? number_format($bmi, 0) : number_format($bmi, 1)) : '—'); ?></div>
                             <div class="text-xs" 
-                                 @if($bmi && $bmiColor === 'blue') style="color: #2563eb;"
-                                 @elseif($bmi && $bmiColor === 'green') style="color: #059669;"
-                                 @elseif($bmi && $bmiColor === 'yellow') style="color: #d97706;"
-                                 @elseif($bmi && $bmiColor === 'red') style="color: #dc2626;"
-                                 @else style="color: #6b7280;"
-                                 @endif>{{ __('common.bmi') }}</div>
+                                 <?php if($bmi && $bmiColor === 'blue'): ?> style="color: #2563eb;"
+                                 <?php elseif($bmi && $bmiColor === 'green'): ?> style="color: #059669;"
+                                 <?php elseif($bmi && $bmiColor === 'yellow'): ?> style="color: #d97706;"
+                                 <?php elseif($bmi && $bmiColor === 'red'): ?> style="color: #dc2626;"
+                                 <?php else: ?> style="color: #6b7280;"
+                                 <?php endif; ?>><?php echo e(__('common.bmi')); ?></div>
                         </div>
                     </div>
                     
                     <!-- Объемы тела -->
-                    @if($lastMeasurement->chest || $lastMeasurement->waist || $lastMeasurement->hips || $lastMeasurement->bicep || $lastMeasurement->thigh || $lastMeasurement->neck)
+                    <?php if($lastMeasurement->chest || $lastMeasurement->waist || $lastMeasurement->hips || $lastMeasurement->bicep || $lastMeasurement->thigh || $lastMeasurement->neck): ?>
                     <div class="mt-4 pt-4 pb-4 border-t border-b border-gray-200">
-                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes') }}</h5>
+                        <h5 class="text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.body_volumes')); ?></h5>
                         <div class="grid grid-cols-2 gap-2 text-sm">
-                            @if($lastMeasurement->chest)
+                            <?php if($lastMeasurement->chest): ?>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.chest') }}:</span>
-                                <span class="font-medium">{{ fmod($lastMeasurement->chest, 1) == 0 ? number_format($lastMeasurement->chest, 0) : number_format($lastMeasurement->chest, 1) }} см</span>
+                                <span class="text-gray-500"><?php echo e(__('common.chest')); ?>:</span>
+                                <span class="font-medium"><?php echo e(fmod($lastMeasurement->chest, 1) == 0 ? number_format($lastMeasurement->chest, 0) : number_format($lastMeasurement->chest, 1)); ?> см</span>
                             </div>
-                            @endif
-                            @if($lastMeasurement->waist)
+                            <?php endif; ?>
+                            <?php if($lastMeasurement->waist): ?>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.waist') }}:</span>
-                                <span class="font-medium">{{ fmod($lastMeasurement->waist, 1) == 0 ? number_format($lastMeasurement->waist, 0) : number_format($lastMeasurement->waist, 1) }} см</span>
+                                <span class="text-gray-500"><?php echo e(__('common.waist')); ?>:</span>
+                                <span class="font-medium"><?php echo e(fmod($lastMeasurement->waist, 1) == 0 ? number_format($lastMeasurement->waist, 0) : number_format($lastMeasurement->waist, 1)); ?> см</span>
                             </div>
-                            @endif
-                            @if($lastMeasurement->hips)
+                            <?php endif; ?>
+                            <?php if($lastMeasurement->hips): ?>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.hips') }}:</span>
-                                <span class="font-medium">{{ fmod($lastMeasurement->hips, 1) == 0 ? number_format($lastMeasurement->hips, 0) : number_format($lastMeasurement->hips, 1) }} см</span>
+                                <span class="text-gray-500"><?php echo e(__('common.hips')); ?>:</span>
+                                <span class="font-medium"><?php echo e(fmod($lastMeasurement->hips, 1) == 0 ? number_format($lastMeasurement->hips, 0) : number_format($lastMeasurement->hips, 1)); ?> см</span>
                             </div>
-                            @endif
-                            @if($lastMeasurement->bicep)
+                            <?php endif; ?>
+                            <?php if($lastMeasurement->bicep): ?>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.bicep') }}:</span>
-                                <span class="font-medium">{{ fmod($lastMeasurement->bicep, 1) == 0 ? number_format($lastMeasurement->bicep, 0) : number_format($lastMeasurement->bicep, 1) }} см</span>
+                                <span class="text-gray-500"><?php echo e(__('common.bicep')); ?>:</span>
+                                <span class="font-medium"><?php echo e(fmod($lastMeasurement->bicep, 1) == 0 ? number_format($lastMeasurement->bicep, 0) : number_format($lastMeasurement->bicep, 1)); ?> см</span>
                             </div>
-                            @endif
-                            @if($lastMeasurement->thigh)
+                            <?php endif; ?>
+                            <?php if($lastMeasurement->thigh): ?>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.thigh') }}:</span>
-                                <span class="font-medium">{{ fmod($lastMeasurement->thigh, 1) == 0 ? number_format($lastMeasurement->thigh, 0) : number_format($lastMeasurement->thigh, 1) }} см</span>
+                                <span class="text-gray-500"><?php echo e(__('common.thigh')); ?>:</span>
+                                <span class="font-medium"><?php echo e(fmod($lastMeasurement->thigh, 1) == 0 ? number_format($lastMeasurement->thigh, 0) : number_format($lastMeasurement->thigh, 1)); ?> см</span>
                             </div>
-                            @endif
-                            @if($lastMeasurement->neck)
+                            <?php endif; ?>
+                            <?php if($lastMeasurement->neck): ?>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.neck') }}:</span>
-                                <span class="font-medium">{{ fmod($lastMeasurement->neck, 1) == 0 ? number_format($lastMeasurement->neck, 0) : number_format($lastMeasurement->neck, 1) }} см</span>
+                                <span class="text-gray-500"><?php echo e(__('common.neck')); ?>:</span>
+                                <span class="font-medium"><?php echo e(fmod($lastMeasurement->neck, 1) == 0 ? number_format($lastMeasurement->neck, 0) : number_format($lastMeasurement->neck, 1)); ?> см</span>
                             </div>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
-                    @endif
+                    <?php endif; ?>
                     
                     <!-- Дополнительные параметры -->
                     <div class="mt-4">
-                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_parameters') }}</h5>
+                        <h5 class="text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.additional_parameters')); ?></h5>
                         <div class="grid grid-cols-2 gap-2 text-sm mb-4">
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.fat_percentage') }}:</span>
-                                <span class="font-medium">{{ $lastMeasurement->body_fat_percentage ? (fmod($lastMeasurement->body_fat_percentage, 1) == 0 ? number_format($lastMeasurement->body_fat_percentage, 0) : number_format($lastMeasurement->body_fat_percentage, 1)) . '%' : '—' }}</span>
+                                <span class="text-gray-500"><?php echo e(__('common.fat_percentage')); ?>:</span>
+                                <span class="font-medium"><?php echo e($lastMeasurement->body_fat_percentage ? (fmod($lastMeasurement->body_fat_percentage, 1) == 0 ? number_format($lastMeasurement->body_fat_percentage, 0) : number_format($lastMeasurement->body_fat_percentage, 1)) . '%' : '—'); ?></span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.muscles') }}:</span>
-                                <span class="font-medium">{{ $lastMeasurement->muscle_mass ? (fmod($lastMeasurement->muscle_mass, 1) == 0 ? number_format($lastMeasurement->muscle_mass, 0) : number_format($lastMeasurement->muscle_mass, 1)) . ' кг' : '—' }}</span>
+                                <span class="text-gray-500"><?php echo e(__('common.muscles')); ?>:</span>
+                                <span class="font-medium"><?php echo e($lastMeasurement->muscle_mass ? (fmod($lastMeasurement->muscle_mass, 1) == 0 ? number_format($lastMeasurement->muscle_mass, 0) : number_format($lastMeasurement->muscle_mass, 1)) . ' кг' : '—'); ?></span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.water') }}:</span>
-                                <span class="font-medium">{{ $lastMeasurement->water_percentage ? (fmod($lastMeasurement->water_percentage, 1) == 0 ? number_format($lastMeasurement->water_percentage, 0) : number_format($lastMeasurement->water_percentage, 1)) . '%' : '—' }}</span>
+                                <span class="text-gray-500"><?php echo e(__('common.water')); ?>:</span>
+                                <span class="font-medium"><?php echo e($lastMeasurement->water_percentage ? (fmod($lastMeasurement->water_percentage, 1) == 0 ? number_format($lastMeasurement->water_percentage, 0) : number_format($lastMeasurement->water_percentage, 1)) . '%' : '—'); ?></span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.pulse') }}:</span>
-                                <span class="font-medium">{{ $lastMeasurement->resting_heart_rate ? round($lastMeasurement->resting_heart_rate) . ' ' . __('common.bpm') : '—' }}</span>
+                                <span class="text-gray-500"><?php echo e(__('common.pulse')); ?>:</span>
+                                <span class="font-medium"><?php echo e($lastMeasurement->resting_heart_rate ? round($lastMeasurement->resting_heart_rate) . ' ' . __('common.bpm') : '—'); ?></span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-500">{{ __('common.pressure') }}:</span>
+                                <span class="text-gray-500"><?php echo e(__('common.pressure')); ?>:</span>
                                 <span class="font-medium">
-                                    @if($lastMeasurement->blood_pressure_systolic && $lastMeasurement->blood_pressure_diastolic)
-                                        {{ round($lastMeasurement->blood_pressure_systolic) }}/{{ round($lastMeasurement->blood_pressure_diastolic) }}
-                                    @else
+                                    <?php if($lastMeasurement->blood_pressure_systolic && $lastMeasurement->blood_pressure_diastolic): ?>
+                                        <?php echo e(round($lastMeasurement->blood_pressure_systolic)); ?>/<?php echo e(round($lastMeasurement->blood_pressure_diastolic)); ?>
+
+                                    <?php else: ?>
                                         —
-                                    @endif
+                                    <?php endif; ?>
                                 </span>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Комментарии -->
-                    @if($lastMeasurement->notes)
+                    <?php if($lastMeasurement->notes): ?>
                     <div class="mt-4 pt-4 border-t border-gray-200">
-                        <h5 class="text-sm font-medium text-gray-700 mb-1">{{ __('common.comments') }}</h5>
-                        <p class="text-sm text-gray-600">{{ $lastMeasurement->notes }}</p>
+                        <h5 class="text-sm font-medium text-gray-700 mb-1"><?php echo e(__('common.comments')); ?></h5>
+                        <p class="text-sm text-gray-600"><?php echo e($lastMeasurement->notes); ?></p>
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -641,14 +664,14 @@ function dashboardCalendar() {
         <!-- График веса -->
         <div class="chart-card">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 h-full">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.weight_dynamics') }}</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.weight_dynamics')); ?></h3>
                 <div class="h-80">
                     <canvas id="weightChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
-    @endif
+    <?php endif; ?>
 
     <!-- Статистика питания -->
     <div class="stats-container" x-data="nutritionStats()" x-init="loadNutritionPlans()">
@@ -660,7 +683,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.calories_today') }}</div>
+                <div class="stat-label"><?php echo e(__('common.calories_today')); ?></div>
                 <div class="stat-value" x-text="getTodayCalories()"></div>
             </div>
         </div>
@@ -672,7 +695,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.proteins_today') }} ({{ __('common.g') }})</div>
+                <div class="stat-label"><?php echo e(__('common.proteins_today')); ?> (<?php echo e(__('common.g')); ?>)</div>
                 <div class="stat-value" x-text="getTodayProteins()"></div>
             </div>
         </div>
@@ -684,7 +707,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.carbs_today') }} ({{ __('common.g') }})</div>
+                <div class="stat-label"><?php echo e(__('common.carbs_today')); ?> (<?php echo e(__('common.g')); ?>)</div>
                 <div class="stat-value" x-text="getTodayCarbs()"></div>
             </div>
         </div>
@@ -696,7 +719,7 @@ function dashboardCalendar() {
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.fats_today') }} ({{ __('common.g') }})</div>
+                <div class="stat-label"><?php echo e(__('common.fats_today')); ?> (<?php echo e(__('common.g')); ?>)</div>
                 <div class="stat-value" x-text="getTodayFats()"></div>
             </div>
         </div>
@@ -954,7 +977,7 @@ function dashboardCalendar() {
 
 </style>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function nutritionStats() {
@@ -1024,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('weightChart');
     if (ctx) {
         // Получаем данные измерений
-        const measurements = @json($athlete->measurements()->latest('measurement_date')->take(10)->get());
+        const measurements = <?php echo json_encode($athlete->measurements()->latest('measurement_date')->take(10)->get(), 15, 512) ?>;
         
         if (measurements.length > 0) {
             // Сортируем по дате
@@ -1032,18 +1055,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Подготавливаем данные
             const monthNames = {
-                0: '{{ __('common.january') }}',
-                1: '{{ __('common.february') }}',
-                2: '{{ __('common.march') }}',
-                3: '{{ __('common.april') }}',
-                4: '{{ __('common.may') }}',
-                5: '{{ __('common.june') }}',
-                6: '{{ __('common.july') }}',
-                7: '{{ __('common.august') }}',
-                8: '{{ __('common.september') }}',
-                9: '{{ __('common.october') }}',
-                10: '{{ __('common.november') }}',
-                11: '{{ __('common.december') }}'
+                0: '<?php echo e(__('common.january')); ?>',
+                1: '<?php echo e(__('common.february')); ?>',
+                2: '<?php echo e(__('common.march')); ?>',
+                3: '<?php echo e(__('common.april')); ?>',
+                4: '<?php echo e(__('common.may')); ?>',
+                5: '<?php echo e(__('common.june')); ?>',
+                6: '<?php echo e(__('common.july')); ?>',
+                7: '<?php echo e(__('common.august')); ?>',
+                8: '<?php echo e(__('common.september')); ?>',
+                9: '<?php echo e(__('common.october')); ?>',
+                10: '<?php echo e(__('common.november')); ?>',
+                11: '<?php echo e(__('common.december')); ?>'
             };
             
             const labels = sortedMeasurements.map(m => {
@@ -1059,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '{{ __('common.weight_kg') }}',
+                        label: '<?php echo e(__('common.weight_kg')); ?>',
                         data: weightData,
                         borderColor: '#3B82F6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -1108,10 +1131,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } else {
             // Показываем сообщение, если нет данных
-            ctx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-500">{{ __('common.no_data_to_display') }}</div>';
+            ctx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-500"><?php echo e(__('common.no_data_to_display')); ?></div>';
         }
     }
 });
 </script>
-@endpush
-@endsection
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/athlete/dashboard.blade.php ENDPATH**/ ?>

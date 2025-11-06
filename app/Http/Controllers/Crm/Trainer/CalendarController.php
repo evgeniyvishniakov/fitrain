@@ -20,10 +20,11 @@ class CalendarController extends Controller
         
         // Получаем тренировки для тренера
         if ($user->hasRole('trainer')) {
-            // Тренер видит все тренировки (пока что все, потом можно добавить фильтрацию по trainer_id)
+            // Тренер видит только свои тренировки
             $workouts = Workout::with(['athlete', 'trainer', 'exercises' => function($query) {
                     $query->orderBy('workout_exercise.order_index', 'asc');
                 }])
+                ->where('trainer_id', $user->id)
                 ->whereBetween('date', [
                     $date->copy()->startOfMonth()->format('Y-m-d'),
                     $date->copy()->endOfMonth()->format('Y-m-d')
@@ -100,7 +101,8 @@ class CalendarController extends Controller
             ->whereBetween('date', [$startDate, $endDate]);
             
         if ($user->hasRole('trainer')) {
-            // Тренер видит все тренировки (пока что все, потом можно добавить фильтрацию по trainer_id)
+            // Тренер видит только свои тренировки
+            $query->where('trainer_id', $user->id);
             if ($athleteId) {
                 $query->where('athlete_id', $athleteId);
             }

@@ -127,7 +127,7 @@ class TrainerController extends BaseController
                     return [
                         'id' => $workout->id,
                         'title' => $workout->title,
-                        'date' => $workout->date,
+                        'date' => \Carbon\Carbon::parse($workout->date)->format('Y-m-d'), // Форматируем дату без времени
                         'time' => $workout->time,
                         'status' => $workout->status,
                         'athlete_name' => $trainer->name // Self-Athlete сам себе спортсмен
@@ -154,7 +154,7 @@ class TrainerController extends BaseController
                     return [
                         'id' => $workout->id,
                         'title' => $workout->title,
-                        'date' => $workout->date,
+                        'date' => \Carbon\Carbon::parse($workout->date)->format('Y-m-d'), // Форматируем дату без времени
                         'time' => $workout->time,
                         'status' => $workout->status,
                         'athlete_name' => $workout->athlete ? $workout->athlete->name : 'Неизвестно'
@@ -343,15 +343,16 @@ class TrainerController extends BaseController
                 'trainer_id' => auth()->id(),
             ]);
             
-            // Назначаем роль спортсмену
+            // Назначаем роль спортсмену (гарантированно)
             try {
-                $athleteRole = \Spatie\Permission\Models\Role::where('name', 'athlete')->first();
-                if ($athleteRole) {
-                    $athlete->assignRole($athleteRole);
-                }
+                $athleteRole = \Spatie\Permission\Models\Role::firstOrCreate([
+                    'name' => 'athlete',
+                    'guard_name' => 'web',
+                ]);
+                // Привязываем только эту роль (без дубликатов)
+                $athlete->syncRoles(['athlete']);
             } catch (\Exception $e) {
-                // Если не удалось назначить роль, продолжаем без неё
-                \Log::warning('Не удалось назначить роль athlete: ' . $e->getMessage());
+                \Log::error('Ошибка назначения роли athlete новому спортсмену: ' . $e->getMessage());
             }
             
             return response()->json([

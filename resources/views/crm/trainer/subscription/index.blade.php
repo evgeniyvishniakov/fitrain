@@ -26,7 +26,7 @@
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        {{ __('common.clients') }}
+        {{ __('common.athletes') }}
     </a>
     <a href="{{ route('crm.trainer.subscription') }}" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        {{ __('common.clients') }}
+        {{ __('common.athletes') }}
     </a>
     <a href="{{ route('crm.trainer.subscription') }}" class="mobile-nav-link active">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,9 +86,9 @@
 @section("content")
 <div class="space-y-6">
     @if($currentSubscription)
-        <!-- Текущий план -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div class="flex items-center justify-between mb-6">
+    <!-- Текущий план -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">{{ __('common.current_plan') }}</h3>
                 <span class="px-3 py-1 
                     @if($currentSubscription->status === 'trial') bg-blue-100 text-blue-800
@@ -107,13 +107,13 @@
                         {{ ucfirst($currentSubscription->status) }}
                     @endif
                 </span>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-6">
-                <div class="text-center">
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="text-center">
                     <div class="text-2xl font-bold text-indigo-600">
                         {{ $currentSubscription->plan->name ?? __('common.not_specified') }}
-                    </div>
+            </div>
                     <div class="text-gray-600 mt-1">{{ __('common.subscription_plan') }}</div>
                 </div>
                 <div class="text-center">
@@ -173,7 +173,7 @@
             <div class="space-y-4">
                 @foreach($subscriptionHistory as $subscription)
                     <div class="flex items-center justify-between py-4 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
-                        <div class="flex items-center">
+                <div class="flex items-center">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center mr-4
                                 @if($subscription->status === 'trial') bg-blue-100
                                 @elseif($subscription->status === 'active') bg-green-100
@@ -186,15 +186,15 @@
                                     </svg>
                                 @elseif($subscription->status === 'active' || $subscription->status === 'expired')
                                     <svg class="w-5 h-5 {{ $subscription->status === 'active' ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
                                 @else
                                     <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 @endif
-                            </div>
-                            <div>
+                    </div>
+                    <div>
                                 <div class="font-medium text-gray-900">
                                     @if($subscription->is_trial)
                                         {{ __('common.trial') }} {{ __('common.subscription') }}
@@ -205,9 +205,9 @@
                                 <div class="text-sm text-gray-600">
                                     {{ $subscription->start_date->format('d.m.Y') }} - {{ $subscription->expires_date->format('d.m.Y') }}
                                 </div>
-                            </div>
-                        </div>
-                        <div class="text-right">
+                    </div>
+                </div>
+                <div class="text-right">
                             <div class="font-medium text-gray-900">
                                 @if($subscription->currency)
                                     {{ $subscription->currency->format($subscription->price) }}
@@ -231,7 +231,7 @@
                                 @endif
                             </div>
                         </div>
-                    </div>
+                </div>
                 @endforeach
             </div>
         </div>

@@ -41,13 +41,26 @@ class LoginController extends BaseController
 
             $request->session()->regenerate();
             
+            // Автовыдача роли athlete для пользователей тренера без роли
+            try {
+                if ($user->trainer_id && !($user->hasRole('trainer') || $user->hasRole('self-athlete') || $user->hasRole('athlete'))) {
+                    $athleteRole = \Spatie\Permission\Models\Role::firstOrCreate([
+                        'name' => 'athlete',
+                        'guard_name' => 'web',
+                    ]);
+                    $user->assignRole('athlete');
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Auto-assign athlete role failed: ' . $e->getMessage());
+            }
+
             // Редирект в зависимости от роли
             if ($user->hasRole('self-athlete')) {
                 return redirect()->intended(route('crm.self-athlete.dashboard'));
             } elseif ($user->hasRole('trainer')) {
                 return redirect()->intended(route('crm.trainer.dashboard'));
             } elseif ($user->hasRole('athlete')) {
-                return redirect()->intended(route('crm.dashboard.main'));
+                return redirect()->intended(route('crm.athlete.dashboard'));
             }
             
             return redirect()->intended(route('crm.dashboard.main'));

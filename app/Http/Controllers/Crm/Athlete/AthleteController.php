@@ -49,7 +49,17 @@ class AthleteController extends BaseController
             ->where('date', '<=', now()->endOfMonth()->addMonth()->toDateString())
             ->orderBy('date', 'asc')
             ->orderBy('time', 'asc')
-            ->get() ?? collect();
+            ->get()
+            ->map(function($workout) {
+                return [
+                    'id' => $workout->id,
+                    'title' => $workout->title,
+                    'date' => \Carbon\Carbon::parse($workout->date)->format('Y-m-d'), // Форматируем дату без времени
+                    'time' => $workout->time,
+                    'status' => $workout->status,
+                    'trainer_name' => $workout->trainer->name ?? 'Тренер'
+                ];
+            }) ?? collect();
         
         
         $recentWorkouts = $athlete->workouts()->with('trainer')->latest()->take(5)->get();
@@ -131,7 +141,7 @@ class AthleteController extends BaseController
                 return [
                     'id' => $workout->id,
                     'title' => $workout->title,
-                    'date' => $workout->date,
+                    'date' => \Carbon\Carbon::parse($workout->date)->format('Y-m-d'), // Форматируем дату без времени
                     'time' => $workout->time,
                     'status' => $workout->status,
                     'trainer_name' => $workout->trainer->name ?? 'Тренер'

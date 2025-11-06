@@ -21,12 +21,17 @@ class NutritionDay extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
         'proteins' => 'decimal:2',
         'fats' => 'decimal:2',
         'carbs' => 'decimal:2',
         'calories' => 'decimal:2',
     ];
+
+    /**
+     * Формат сериализации дат модели
+     */
+    protected $dateFormat = 'Y-m-d';
 
     /**
      * Связь с планом питания

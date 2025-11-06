@@ -50,10 +50,6 @@ class WorkoutTemplateController extends BaseController
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category' => 'required|string|in:' . implode(',', array_keys(WorkoutTemplate::CATEGORIES)),
-            'difficulty' => 'required|string|in:' . implode(',', array_keys(WorkoutTemplate::DIFFICULTY_LEVELS)),
-            'estimated_duration' => 'nullable|integer|min:1',
             'exercises' => 'nullable|array',
             'exercises.*.id' => 'required|exists:exercises,id',
             'exercises.*.name' => 'nullable|string',
@@ -63,10 +59,10 @@ class WorkoutTemplateController extends BaseController
 
         $template = WorkoutTemplate::create([
             'name' => $request->name,
-            'description' => $request->description,
-            'category' => $request->category,
-            'difficulty' => $request->difficulty,
-            'estimated_duration' => $request->estimated_duration,
+            'description' => null,
+            'category' => 'mixed', // Дефолтное значение
+            'difficulty' => 'beginner', // Дефолтное значение
+            'estimated_duration' => 60, // Дефолтное значение
             'exercises' => $request->exercises ?? [],
             'created_by' => auth()->id(),
             'is_public' => false
@@ -74,7 +70,7 @@ class WorkoutTemplateController extends BaseController
 
         return response()->json([
             'success' => true,
-            'message' => 'Шаблон тренировки создан',
+            'message' => 'Шаблон упражнений создан',
             'template' => $template->load('creator')
         ]);
     }
@@ -106,10 +102,6 @@ class WorkoutTemplateController extends BaseController
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category' => 'required|string|in:' . implode(',', array_keys(WorkoutTemplate::CATEGORIES)),
-            'difficulty' => 'required|string|in:' . implode(',', array_keys(WorkoutTemplate::DIFFICULTY_LEVELS)),
-            'estimated_duration' => 'nullable|integer|min:1',
             'exercises' => 'nullable|array',
             'exercises.*.id' => 'required|exists:exercises,id',
             'exercises.*.name' => 'nullable|string',
@@ -119,17 +111,12 @@ class WorkoutTemplateController extends BaseController
 
         $template->update([
             'name' => $request->name,
-            'description' => $request->description,
-            'category' => $request->category,
-            'difficulty' => $request->difficulty,
-            'estimated_duration' => $request->estimated_duration,
-            'exercises' => $request->exercises ?? [],
-            'is_public' => false
+            'exercises' => $request->exercises ?? []
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Шаблон тренировки обновлен',
+            'message' => 'Шаблон упражнений обновлен',
             'template' => $template->load('creator')
         ]);
     }
@@ -141,7 +128,7 @@ class WorkoutTemplateController extends BaseController
 
         return response()->json([
             'success' => true,
-            'message' => 'Шаблон тренировки удален из базы данных'
+            'message' => 'Шаблон упражнений удален из базы данных'
         ]);
     }
 

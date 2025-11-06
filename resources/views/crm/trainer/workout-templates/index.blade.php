@@ -5,6 +5,18 @@
 
 <style>
 [x-cloak] { display: none !important; }
+
+.template-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 1024px) {
+    .template-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 </style>
 
 <script>
@@ -18,17 +30,11 @@ function templatesApp() {
         })),
         currentTemplate: null,
         search: '',
-        category: '',
-        difficulty: '',
         currentPage: 1,
         itemsPerPage: 4,
         
         // Поля формы
         formName: '',
-        formDescription: '',
-        formCategory: '',
-        formDifficulty: '',
-        formDuration: 60,
         formExercises: [],
         
         // Работа с упражнениями
@@ -47,14 +53,6 @@ function templatesApp() {
             this.$watch('search', () => {
                 this.currentPage = 1;
             });
-            
-            this.$watch('category', () => {
-                this.currentPage = 1;
-            });
-            
-            this.$watch('difficulty', () => {
-                this.currentPage = 1;
-            });
         },
         
         // Навигация
@@ -67,10 +65,6 @@ function templatesApp() {
             this.currentView = 'create';
             this.currentTemplate = null;
             this.formName = '';
-            this.formDescription = '';
-            this.formCategory = '';
-            this.formDifficulty = '';
-            this.formDuration = 60;
             this.formExercises = [];
             this.selectedExercises = [];
             this.exerciseSearch = '';
@@ -82,10 +76,6 @@ function templatesApp() {
             this.currentView = 'edit';
             this.currentTemplate = this.templates.find(t => t.id === templateId);
             this.formName = this.currentTemplate.name;
-            this.formDescription = this.currentTemplate.description || '';
-            this.formCategory = this.currentTemplate.category;
-            this.formDifficulty = this.currentTemplate.difficulty;
-            this.formDuration = this.currentTemplate.estimated_duration || 60;
             this.formExercises = this.currentTemplate ? (this.currentTemplate.valid_exercises || this.currentTemplate.exercises || []) : [];
             this.selectedExercises = this.currentTemplate ? (this.currentTemplate.valid_exercises || this.currentTemplate.exercises || []) : [];
             this.exerciseSearch = '';
@@ -111,17 +101,8 @@ function templatesApp() {
             
             if (this.search) {
                 filtered = filtered.filter(t => 
-                    t.name.toLowerCase().includes(this.search.toLowerCase()) ||
-                    (t.description && t.description.toLowerCase().includes(this.search.toLowerCase()))
+                    t.name.toLowerCase().includes(this.search.toLowerCase())
                 );
-            }
-            
-            if (this.category) {
-                filtered = filtered.filter(t => t.category === this.category);
-            }
-            
-            if (this.difficulty) {
-                filtered = filtered.filter(t => t.difficulty === this.difficulty);
             }
             
             return filtered;
@@ -185,10 +166,6 @@ function templatesApp() {
             try {
                 const templateData = {
                     name: this.formName,
-                    description: this.formDescription,
-                    category: this.formCategory,
-                    difficulty: this.formDifficulty,
-                    estimated_duration: this.formDuration,
                     exercises: this.selectedExercises
                 };
                 
@@ -227,10 +204,6 @@ function templatesApp() {
                     
                     // Очищаем форму
                     this.formName = '';
-                    this.formDescription = '';
-                    this.formCategory = '';
-                    this.formDifficulty = '';
-                    this.formDuration = 60;
                     this.selectedExercises = [];
                     
                 } else {
@@ -657,20 +630,70 @@ function templatesApp() {
                 </div>
                 
                 <div id="exercises-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
-                    ${exercises.map(exercise => `
-                        <div style="
-                            border: 1px solid #e5e7eb;
-                            border-radius: 8px;
-                            padding: 16px;
-                            cursor: pointer;
-                            transition: all 0.2s;
-                        " 
-                        onclick="toggleExercise(this, ${exercise.id}, '${exercise.name}', '${exercise.category}', '${exercise.equipment}')">
-                            <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${exercise.name}</h4>
-                            <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exercise.category}</p>
-                            <p style="font-size: 14px; color: #9ca3af;">${exercise.equipment}</p>
-                        </div>
-                    `).join('')}
+                    ${exercises.map(exercise => {
+                        // Функция для получения изображения с приоритетом
+                        function getDisplayImage(exercise) {
+                            const isGlutes = exercise.category === 'Ягодицы';
+                            
+                            if (isGlutes) {
+                                // Для категории "Ягодицы" - сначала женское
+                                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                                    return exercise.image_url_female;
+                                }
+                                // Если женского нет, проверяем мужское
+                                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                                    return exercise.image_url;
+                                }
+                            } else {
+                                // Для остальных категорий - сначала мужское
+                                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                                    return exercise.image_url;
+                                }
+                                // Если мужского нет, проверяем женское
+                                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                                    return exercise.image_url_female;
+                                }
+                            }
+                            return null;
+                        }
+                        
+                        const displayImage = getDisplayImage(exercise);
+                        const imageUrl = displayImage ? `/storage/${displayImage}` : '';
+                        
+                        // Экранируем специальные символы
+                        const escapeName = (exercise.name || '').replace(/'/g, "\\'");
+                        const escapeCategory = (exercise.category || '').replace(/'/g, "\\'");
+                        const escapeEquipment = (exercise.equipment || '').replace(/'/g, "\\'");
+                        
+                        return `
+                            <div style="
+                                border: 1px solid #e5e7eb;
+                                border-radius: 10px;
+                                padding: 16px;
+                                cursor: pointer;
+                                background: white;
+                                display: flex;
+                                flex-direction: row;
+                                align-items: flex-start;
+                                gap: 14px;
+                                max-width: 100%;
+                                box-sizing: border-box;
+                                min-height: 160px;
+                            " 
+                            onclick="toggleExercise(this, ${exercise.id}, '${escapeName}', '${escapeCategory}', '${escapeEquipment}')">
+                                ${imageUrl ? `
+                                    <img src="${imageUrl}" 
+                                         alt="${escapeName}" 
+                                         style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                                ` : ''}
+                                <div style="flex: 1; min-width: 0;">
+                                    <h4 style="font-weight: 600; color: #111827; margin-bottom: 5px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</h4>
+                                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 3px;">${exercise.category}</p>
+                                    <p style="font-size: 13px; color: #9ca3af;">${exercise.equipment}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
                 
                 <!-- Сообщение о пустых результатах -->
@@ -790,8 +813,8 @@ function toggleExercise(element, id, name, category, equipment) {
                 const matchesSearch = !searchTerm || name.includes(searchTerm);
                 const matchesCategory = !category || elementCategory === category;
                 const matchesEquipment = !equipment || elementEquipment === equipment;
-                card.style.display = (matchesSearch && matchesCategory && matchesEquipment) ? 'block' : 'none';
-                if (card.style.display === 'block') visibleCount++;
+                card.style.display = (matchesSearch && matchesCategory && matchesEquipment) ? 'flex' : 'none';
+                if (card.style.display === 'flex') visibleCount++;
             });
 
             // Показываем/скрываем сообщение о пустых результатах
@@ -953,29 +976,6 @@ function removeExerciseFromAlpine(exerciseId) {
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
-                <!-- Фильтр категории -->
-                <div class="filter-container">
-                    <select x-model="category" 
-                            class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_categories') }}</option>
-                        <option value="strength">Силовая</option>
-                        <option value="cardio">Кардио</option>
-                        <option value="flexibility">Гибкость</option>
-                        <option value="mixed">Смешанная</option>
-                    </select>
-                </div>
-                
-                <!-- Фильтр сложности -->
-                <div class="filter-container">
-                    <select x-model="difficulty" 
-                            class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_difficulties') }}</option>
-                        <option value="beginner">{{ __('common.beginner') }}</option>
-                        <option value="intermediate">{{ __('common.intermediate') }}</option>
-                        <option value="advanced">{{ __('common.advanced') }}</option>
-                    </select>
-                </div>
-                
                 <!-- Кнопки -->
                 <div class="buttons-container">
                     @if(auth()->user()->hasRole('trainer'))
@@ -989,20 +989,12 @@ function removeExerciseFromAlpine(exerciseId) {
         </div>
         
         <!-- Активные фильтры -->
-        <div x-show="search || category || difficulty" class="mt-4 pt-4 border-t border-gray-100">
+        <div x-show="search" class="mt-4 pt-4 border-t border-gray-100">
             <div class="flex flex-wrap gap-2">
                 <span class="text-sm text-gray-500">Активные фильтры:</span>
                 <span x-show="search" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {{ __('common.search') }}: "<span x-text="search"></span>"
                     <button @click="search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
-                </span>
-                <span x-show="category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {{ __('common.category') }}: <span x-text="getCategoryLabel(category)"></span>
-                    <button @click="category = ''" class="ml-1 text-green-600 hover:text-green-800">×</button>
-                </span>
-                <span x-show="difficulty" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    {{ __('common.difficulty') }}: <span x-text="getDifficultyLabel(difficulty)"></span>
-                    <button @click="difficulty = ''" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
                 </span>
             </div>
         </div>
@@ -1010,28 +1002,27 @@ function removeExerciseFromAlpine(exerciseId) {
 
     <!-- Список шаблонов -->
     <div x-show="currentView === 'list'" class="space-y-6">
-        <div x-show="paginatedTemplates.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div x-show="paginatedTemplates.length > 0" class="template-grid">
             <template x-for="template in paginatedTemplates" :key="template.id">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-6">
                     <!-- Заголовок -->
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-4">
                                 <span x-text="template.name"></span>
-                                <span class="text-gray-500 font-normal" x-text="'(' + ((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) + ' {{ __('common.exercises_count') }})'"></span>
                             </h3>
-                            <p class="text-gray-600 mb-4" x-text="template.description || '{{ __('common.no_description') }}'"></p>
                             
-                            <!-- Теги -->
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="getCategoryLabel(template.category)"></span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="getDifficultyLabel(template.difficulty)"></span>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" x-text="(template.estimated_duration || 60) + ' {{ __('common.min') }}'"></span>
-                            </div>
-                            
-                            <!-- Создатель -->
-                            <div class="text-sm text-gray-500" x-show="template.created_by?.name">
-                                <span x-text="template.created_by?.name"></span>
+                            <!-- Список упражнений -->
+                            <div class="space-y-2 mb-4">
+                                <template x-for="(exercise, index) in ((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises : (template.exercises || [])).slice(0, 5)" :key="exercise.id">
+                                    <div class="flex items-center text-sm text-gray-700">
+                                        <span class="text-indigo-600 mr-2">•</span>
+                                        <span x-text="exercise.name"></span>
+                                    </div>
+                                </template>
+                                <div x-show="((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) > 5" class="text-sm text-gray-500 italic">
+                                    + <span x-text="((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) - 5"></span> {{ __('common.more') }}...
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1059,8 +1050,8 @@ function removeExerciseFromAlpine(exerciseId) {
             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <span class="text-3xl text-gray-400">📋</span>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет шаблонов</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">Создайте свой первый шаблон тренировки для быстрого планирования занятий.</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ __('common.no_templates') }}</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ __('common.create_workout_template') }}</p>
             @if(auth()->user()->hasRole('trainer'))
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -1122,82 +1113,11 @@ function removeExerciseFromAlpine(exerciseId) {
             <div class="space-y-6">
                 <!-- Название -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.template_name') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.template_name') }} *</label>
                     <input type="text" 
                            x-model="formName" 
                            required
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                </div>
-                
-                <!-- Три поля в одну строку -->
-                <div class="flex flex-col md:flex-row gap-6 flex-form-row" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <style>
-                        /* Мобильные (< 640px) - в колонку */
-                        @media (max-width: 639px) {
-                            .flex-form-row { flex-direction: column !important; }
-                        }
-                        /* Планшеты (640px - 767px) - в колонку */
-                        @media (min-width: 640px) and (max-width: 767px) {
-                            .flex-form-row { flex-direction: column !important; }
-                        }
-                        /* Планшеты (768px - 1023px) - в линию */
-                        @media (min-width: 768px) and (max-width: 1023px) {
-                            .flex-form-row { flex-direction: row !important; }
-                        }
-                        /* Ноутбуки (1024px - 1279px) - в линию */
-                        @media (min-width: 1024px) and (max-width: 1279px) {
-                            .flex-form-row { flex-direction: row !important; }
-                        }
-                        /* Десктопы (1280px+) - в линию */
-                        @media (min-width: 1280px) {
-                            .flex-form-row { flex-direction: row !important; }
-                        }
-                    </style>
-                    <!-- Категория -->
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.category') }} *</label>
-                        <select x-model="formCategory" 
-                                required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">{{ __('common.select_category') }}</option>
-                            <option value="strength">{{ __('common.strength') }}</option>
-                            <option value="cardio">{{ __('common.cardio') }}</option>
-                            <option value="flexibility">{{ __('common.flexibility') }}</option>
-                            <option value="mixed">{{ __('common.mixed') }}</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Сложность -->
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.difficulty') }} *</label>
-                        <select x-model="formDifficulty" 
-                                required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="">{{ __('common.select_difficulty') }}</option>
-                            <option value="beginner">{{ __('common.beginner') }}</option>
-                            <option value="intermediate">{{ __('common.intermediate') }}</option>
-                            <option value="advanced">{{ __('common.advanced') }}</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Длительность -->
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.duration') }} ({{ __('common.min') }}) *</label>
-                        <input type="number" 
-                               x-model="formDuration" 
-                               min="15" 
-                               max="300" 
-                               required
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    </div>
-                </div>
-                
-                <!-- Описание -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
-                    <textarea x-model="formDescription" 
-                              rows="4"
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
                 </div>
                 
                 <!-- Выбор упражнений -->
