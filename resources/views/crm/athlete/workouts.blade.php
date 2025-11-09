@@ -1002,7 +1002,7 @@
                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
-                                        <span>{{ \Carbon\Carbon::parse($workout->date)->format('d.m.Y') }}</span>
+                                        <span>{{ optional($workout->date)->format('d.m.Y') }}</span>
                                     </div>
                                     <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1171,7 +1171,7 @@
                     <div style="margin-bottom: 8px;">
                         <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.date') }}</span>
                     </div>
-                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : ''"></p>
+                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout ? new Date(currentWorkout.date + 'T00:00:00').toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : ''"></p>
                 </div>
                 
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;" x-show="currentWorkout?.time">

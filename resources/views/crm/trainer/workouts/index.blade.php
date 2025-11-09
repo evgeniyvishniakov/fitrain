@@ -333,17 +333,19 @@ function workoutApp() {
             this.formDescription = this.currentWorkout.description || '';
             this.formAthleteId = this.currentWorkout.athlete_id;
             // Форматируем дату для input[type="date"]
-            if (this.currentWorkout.date) {
+            if (this.currentWorkout.date_for_input) {
+                this.formDate = this.currentWorkout.date_for_input;
+            } else if (this.currentWorkout.date) {
                 // Если дата уже в формате YYYY-MM-DD, используем её как есть
                 if (typeof this.currentWorkout.date === 'string' && this.currentWorkout.date.match(/^\d{4}-\d{2}-\d{2}$/)) {
                     this.formDate = this.currentWorkout.date;
                 } else {
                     // Иначе извлекаем дату из ISO строки
-                    const dateStr = this.currentWorkout.date.toString();
+                    const dateStr = (this.currentWorkout.date_iso || this.currentWorkout.date || '').toString();
                     if (dateStr.includes('T')) {
                         this.formDate = dateStr.split('T')[0];
                     } else {
-                        const date = new Date(this.currentWorkout.date);
+                        const date = new Date(dateStr);
                         this.formDate = date.toISOString().split('T')[0];
                     }
                 }
@@ -1114,40 +1116,47 @@ function workoutApp() {
                         // Редактирование - обновляем существующую
                         const index = this.workouts.findIndex(w => w.id === this.currentWorkout.id);
                         if (index !== -1) {
-                            // Обновляем упражнения с сохранением fields_config
-                            const updatedExercises = exercises.map(exercise => {
-                                // Находим оригинальное упражнение для получения fields_config
-                                // Ищем по exercise_id, так как в this.workouts у нас id != exercise_id
-                                const originalExercise = this.workouts[index].exercises?.find(ex => ex.exercise_id === exercise.exercise_id);
+                            if (result.workout) {
+                                this.workouts[index] = result.workout;
+                                if (this.currentWorkout && this.currentWorkout.id === result.workout.id) {
+                                    this.currentWorkout = result.workout;
+                                }
+                            } else {
+                                // Обновляем упражнения с сохранением fields_config
+                                const updatedExercises = exercises.map(exercise => {
+                                    const originalExercise = this.workouts[index].exercises?.find(ex => ex.exercise_id === exercise.exercise_id);
+                                    
+                                    return {
+                                        id: exercise.exercise_id,
+                                        exercise_id: exercise.exercise_id,
+                                        name: exercise.name,
+                                        category: originalExercise?.category || '',
+                                        fields_config: originalExercise?.fields_config,
+                                        pivot: {
+                                            sets: exercise.sets,
+                                            reps: exercise.reps,
+                                            weight: exercise.weight,
+                                            rest: exercise.rest,
+                                            time: exercise.time,
+                                            distance: exercise.distance,
+                                            tempo: exercise.tempo,
+                                            notes: exercise.notes
+                                        }
+                                    };
+                                });
                                 
-                                return {
-                                    id: exercise.exercise_id, // Это правильный ID из базы данных
-                                    exercise_id: exercise.exercise_id, // Сохраняем exercise_id для поиска
-                                    name: exercise.name,
-                                    category: originalExercise?.category || '',
-                                    fields_config: originalExercise?.fields_config,
-                                    pivot: {
-                                        sets: exercise.sets,
-                                        reps: exercise.reps,
-                                        weight: exercise.weight,
-                                        rest: exercise.rest,
-                                        time: exercise.time,
-                                        distance: exercise.distance,
-                                        tempo: exercise.tempo,
-                                        notes: exercise.notes
-                                    }
+                                this.workouts[index] = { 
+                                    ...this.currentWorkout, 
+                                    ...workoutData,
+                                    exercises: updatedExercises,
+                                    formatted_date: this.formatDate(workoutData.date),
+                                    date_for_input: workoutData.date,
+                                    date_iso: workoutData.date ? `${workoutData.date}T00:00:00` : null
                                 };
-                            });
-                            
-                            this.workouts[index] = { 
-                                ...this.currentWorkout, 
-                                ...workoutData,
-                                exercises: updatedExercises
-                            };
-                            
-                            // Обновляем currentWorkout если мы сейчас просматриваем эту тренировку
-                            if (this.currentWorkout && this.currentWorkout.id === this.workouts[index].id) {
-                                this.currentWorkout = this.workouts[index];
+                                
+                                if (this.currentWorkout && this.currentWorkout.id === this.workouts[index].id) {
+                                    this.currentWorkout = this.workouts[index];
+                                }
                             }
                             
                             // Загружаем прогресс для всех тренировок
@@ -1155,7 +1164,18 @@ function workoutApp() {
                         }
                     } else {
                         // Создание - добавляем новую
-                        this.workouts.unshift(result.workout);
+                        if (result.workout) {
+                            this.workouts.unshift(result.workout);
+                        } else {
+                            this.workouts.unshift({
+                                ...workoutData,
+                                id: result.workout_id || Date.now(),
+                                formatted_date: this.formatDate(workoutData.date),
+                                date_for_input: workoutData.date,
+                                date_iso: workoutData.date ? `${workoutData.date}T00:00:00` : null,
+                                exercises: exercises
+                            });
+                        }
                     }
                     
                     // Переключаемся на список
@@ -1561,29 +1581,77 @@ function workoutApp() {
             return '';
         },
         
-        // Форматирование даты для отображения
+        // Вспомогательный метод для разбора даты
+        parseDateComponents(value) {
+            if (!value) return null;
+            
+            if (typeof value === 'string') {
+                // Берём только первую часть до пробела/буквы T
+                const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (match) {
+                    return {
+                        year: parseInt(match[1], 10),
+                        month: parseInt(match[2], 10),
+                        day: parseInt(match[3], 10),
+                    };
+                }
+            } else if (value instanceof Date && !isNaN(value)) {
+                return {
+                    year: value.getFullYear(),
+                    month: value.getMonth() + 1,
+                    day: value.getDate(),
+                };
+            }
+            
+            return null;
+        },
+        
+        // Форматирование даты для отображения (без сдвига по часовому поясу)
         formatDate(dateString) {
             if (!dateString) return '';
             
-            // Если дата уже в формате YYYY-MM-DD, просто форматируем её
-            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = dateString.split('-');
-                return `${day}.${month}.${year}`;
-            }
-            
-            // Если дата в формате YYYY-MM-DDTHH:mm:ss.sssZ (ISO), используем локальную дату
             if (typeof dateString === 'string' && dateString.includes('T')) {
-                // Создаем объект Date и используем локальную дату
                 const date = new Date(dateString);
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${day}.${month}.${year}`;
+                if (!isNaN(date)) {
+                    return date.toLocaleDateString('ru-RU');
+                }
             }
             
-            // Иначе используем стандартное форматирование
-            const date = new Date(dateString);
-            return date.toLocaleDateString('ru-RU');
+            const parts = this.parseDateComponents(dateString);
+            if (!parts) return '';
+            
+            const day = String(parts.day).padStart(2, '0');
+            const month = String(parts.month).padStart(2, '0');
+            const year = String(parts.year);
+            return `${day}.${month}.${year}`;
+        },
+        
+        formatDateWithOptions(dateString, options = {}) {
+            if (!dateString) return '';
+            
+            if (typeof dateString === 'string' && dateString.includes('T')) {
+                const date = new Date(dateString);
+                if (!isNaN(date)) {
+                    try {
+                        return date.toLocaleDateString('ru-RU', options);
+                    } catch (e) {
+                        // noop fallback below
+                    }
+                }
+            }
+            
+            const parts = this.parseDateComponents(dateString);
+            if (!parts) return '';
+            
+            const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+            try {
+                return date.toLocaleDateString('ru-RU', options);
+            } catch (e) {
+                const day = String(parts.day).padStart(2, '0');
+                const month = String(parts.month).padStart(2, '0');
+                const year = String(parts.year);
+                return `${day}.${month}.${year}`;
+            }
         },
         
         // Методы для работы с видео модальным окном
@@ -2455,7 +2523,7 @@ function workoutApp() {
                         <div class="flex-1 flex items-center gap-6 text-sm text-gray-600">
                             <span class="flex-shrink-0">
                                 <span class='font-medium text-gray-700'>{{ __('common.date') }}:</span>
-                                <span x-text="formatDate(workout.date)" class="text-gray-900 font-semibold"></span>
+                                <span x-text="workout.formatted_date || formatDate(workout.date)" class="text-gray-900 font-semibold"></span>
                             </span>
                             <span class="flex-shrink-0">
                                 <span class='font-medium text-gray-700'>{{ __('common.time') }}:</span>
@@ -2826,7 +2894,7 @@ function workoutApp() {
                     <div class="mb-2">
                         <span class="text-sm font-medium text-gray-500">{{ __('common.date') }}</span>
                     </div>
-                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout ? new Date(currentWorkout.date).toLocaleDateString('ru-RU') : ''"></p>
+                    <p class="text-lg font-semibold text-gray-900" x-text="currentWorkout?.formatted_date || formatDate(currentWorkout?.date)"></p>
                 </div>
                 
                 <div class="bg-gray-50 rounded-xl p-4" x-show="currentWorkout?.time">
@@ -4087,6 +4155,32 @@ async function loadExerciseHistory(exerciseId) {
         if (data.success && data.has_history) {
             console.log(`История упражнения ${exerciseId}:`, data);
             
+            const helperFormatDateWithOptions = (value, options = {}) => {
+                if (!value) return '';
+                
+                if (typeof value === 'string' && value.includes('T')) {
+                    const date = new Date(value);
+                    if (!isNaN(date)) {
+                        try {
+                            return date.toLocaleDateString('ru-RU', options);
+                        } catch (e) {
+                            // fallback to manual parsing below
+                        }
+                    }
+                }
+                
+                const match = value.toString().match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (!match) return '';
+                const year = parseInt(match[1], 10);
+                const month = parseInt(match[2], 10);
+                const day = parseInt(match[3], 10);
+                try {
+                    return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('ru-RU', options);
+                } catch (e) {
+                    return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
+                }
+            };
+            
             // Автозаполняем поля значениями из последней тренировки
             const fieldsToFill = data.plan;
             
@@ -4109,7 +4203,7 @@ async function loadExerciseHistory(exerciseId) {
                     existingHint.remove();
                 }
                 
-                const date = new Date(data.workout_date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                let formattedDate = helperFormatDateWithOptions(data.workout_date, { day: '2-digit', month: '2-digit' }) || '—';
                 
                 // Получаем разрешённые поля для упражнения
                 const allowedFields = data.fields_config || [];
@@ -4147,7 +4241,7 @@ async function loadExerciseHistory(exerciseId) {
                             <svg style="width: 16px; height: 16px; color: #2563eb; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            <span style="font-size: 12px; font-weight: 600; color: #1e40af;">С прошлого раза (${date})</span>
+                            <span style="font-size: 12px; font-weight: 600; color: #1e40af;">С прошлого раза (${formattedDate})</span>
                         </div>
                         <div style="font-size: 12px; color: #374151;">
                             📋 <span style="font-weight: 500;">План:</span> ${planText || 'не указан'}
@@ -4420,11 +4514,11 @@ async function showExerciseHistoryModal(exerciseId) {
             
             if (allWorkouts.length > 0) {
                 workoutsHTML = allWorkouts.map((workout, index) => {
-                    const workoutDate = new Date(workout.workout_date).toLocaleDateString('ru-RU', { 
+                    let workoutDate = helperFormatDateWithOptions(workout.workout_date, { 
                         day: '2-digit', 
                         month: '2-digit', 
                         year: 'numeric' 
-                    });
+                    }) || '—';
                     
                     const planText = formatPlan(workout.plan);
                     const factText = formatFact(workout.fact);

@@ -37,7 +37,8 @@ class WorkoutController extends BaseController
         }
         
         // Обрабатываем null значения в упражнениях и применяем логику выбора изображений по полу
-        $workouts->getCollection()->transform(function ($workout) {
+        $controller = $this;
+        $workouts->getCollection()->transform(function ($workout) use ($controller) {
             if ($workout->exercises) {
                 // Получаем пол спортсмена
                 $athlete = $workout->athlete ?? auth()->user();
@@ -67,7 +68,7 @@ class WorkoutController extends BaseController
                     }
                 }
             }
-            return $workout;
+            return $controller->prepareWorkoutForFrontend($workout);
         });
         
         // Определяем view в зависимости от роли пользователя
@@ -169,7 +170,7 @@ class WorkoutController extends BaseController
         return response()->json([
             'success' => true,
             'message' => 'Тренировка создана',
-            'workout' => $workout
+            'workout' => $this->formatWorkoutForResponse($workout)
         ]);
     }
     
@@ -317,7 +318,7 @@ class WorkoutController extends BaseController
         return response()->json([
             'success' => true,
             'message' => 'Тренировка обновлена',
-            'workout' => $workout
+            'workout' => $this->formatWorkoutForResponse($workout)
         ]);
     }
     
@@ -391,7 +392,7 @@ class WorkoutController extends BaseController
         return response()->json([
             'success' => true,
             'message' => 'Статус тренировки обновлен',
-            'workout' => $workout
+            'workout' => $this->formatWorkoutForResponse($workout)
         ]);
     }
 
@@ -419,5 +420,19 @@ class WorkoutController extends BaseController
             $athlete->decrement('used_sessions');
             $workout->update(['is_counted' => false]);
         }
+    }
+
+    protected function prepareWorkoutForFrontend(Workout $workout): Workout
+    {
+        $workout->formatted_date = optional($workout->date)->format('d.m.Y');
+        $workout->date_for_input = optional($workout->date)->format('Y-m-d');
+        $workout->date_iso = optional($workout->date)->toIso8601String();
+
+        return $workout;
+    }
+
+    protected function formatWorkoutForResponse(Workout $workout): array
+    {
+        return $this->prepareWorkoutForFrontend($workout)->toArray();
     }
 }
