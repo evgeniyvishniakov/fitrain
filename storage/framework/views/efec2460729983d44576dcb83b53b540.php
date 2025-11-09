@@ -2669,7 +2669,7 @@ function athletesApp() {
                             <div class="flex-1">
                                 <div class="flex items-center flex-wrap gap-4">
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
-                                    <span x-show="athlete.age" class="text-sm text-gray-500" x-text="'<?php echo e(__('common.age')); ?>: ' + athlete.age + ' <?php echo e(__('common.years')); ?>'"></span>
+                                    <!-- Возраст скрыт по запросу -->
                                     <span x-show="athlete.current_weight" class="text-sm text-gray-500" x-text="'<?php echo e(__('common.weight')); ?>: ' + formatNumber(athlete.current_weight, ' <?php echo e(__('common.weight_change_kg')); ?>')"></span>
                                     <span x-show="athlete.current_height" class="text-sm text-gray-500" x-text="'<?php echo e(__('common.height')); ?>: ' + formatNumber(athlete.current_height, ' см')"></span>
                                 </div>
@@ -2725,7 +2725,7 @@ function athletesApp() {
                                 <div>
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
                                     <div class="flex flex-wrap gap-2 text-sm text-gray-500 mt-1">
-                                        <span x-show="athlete.age" x-text="'<?php echo e(__('common.age')); ?>: ' + athlete.age + ' <?php echo e(__('common.years')); ?>'"></span>
+                                        <!-- Возраст скрыт по запросу -->
                                         <span x-show="athlete.current_weight" x-text="'<?php echo e(__('common.weight')); ?>: ' + formatNumber(athlete.current_weight, ' <?php echo e(__('common.weight_change_kg')); ?>')"></span>
                                         <span x-show="athlete.current_height" x-text="'<?php echo e(__('common.height')); ?>: ' + formatNumber(athlete.current_height, ' см')"></span>
                                     </div>
@@ -3087,7 +3087,7 @@ function athletesApp() {
                                 <div class="athlete-profile-data text-sm text-gray-500 mt-2">
                                     <div class="athlete-profile-item">
                                         <span class="athlete-profile-label"><?php echo e(__('common.age')); ?>:</span>
-                                        <span class="athlete-profile-value" x-text="currentAthlete?.age || '—'"></span>
+                                        <span class="athlete-profile-value" x-text="currentAthlete?.age ? `${currentAthlete.age} <?php echo e(__('common.age_years')); ?>` : '—'"></span>
                                     </div>
                                     <div class="athlete-profile-item">
                                         <span class="athlete-profile-label"><?php echo e(__('common.weight')); ?>:</span>
@@ -3098,6 +3098,10 @@ function athletesApp() {
                                         <span class="athlete-profile-label"><?php echo e(__('common.height')); ?>:</span>
                                         <span class="athlete-profile-value" x-show="!loadingAthleteData" x-text="getCurrentHeight()"></span>
                                         <span class="athlete-profile-value animate-pulse bg-gray-200 rounded" x-show="loadingAthleteData" style="width: 60px; height: 16px;"></span>
+                                    </div>
+                                    <div class="athlete-profile-item">
+                                        <span class="athlete-profile-label"><?php echo e(__('common.sport_level')); ?>:</span>
+                                        <span class="athlete-profile-value" x-text="getSportLevelLabel(currentAthlete?.sport_level) || '<?php echo e(__('common.not_specified')); ?>'"></span>
                                     </div>
                                 </div>
                             </div>
@@ -3319,7 +3323,7 @@ function athletesApp() {
                                             <label class="text-sm font-medium text-gray-500"><?php echo e(__('common.sport_level')); ?></label>
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" 
-                                                      x-text="currentAthlete?.sport_level || '<?php echo e(__('common.not_specified')); ?>'"></span>
+                                                      x-text="getSportLevelLabel(currentAthlete?.sport_level) || '<?php echo e(__('common.not_specified')); ?>'"></span>
                                             </div>
                                         </div>
                                         <div>

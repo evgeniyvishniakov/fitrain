@@ -54,7 +54,7 @@ return [
     
     // Тренировки
     'workout' => 'Тренировка',
-    'workouts' => 'Тренировоки',
+    'workouts' => 'Тренировки',
     'exercise' => 'Упражнение',
     'exercises' => 'Упражнения',
     'training' => 'Тренировка',
@@ -143,7 +143,7 @@ return [
     'in_progress_status' => 'В процессе',
     
     // Модальное окно
-    'workouts_on' => 'Тренировоки на',
+    'workouts_on' => 'Тренировки на',
     'close' => 'Закрыть',
     'participant' => 'Участник',
     'time_not_specified' => 'Время не указано',
@@ -213,7 +213,7 @@ return [
     'workout_status' => 'Статус тренировки',
     
     // Тренировки
-    'athlete_workouts' => 'Тренировоки спортсмена',
+    'athlete_workouts' => 'Тренировки спортсмена',
     'workout_list' => 'Список тренировок',
     'workout_view' => 'Просмотр тренировки',
     'start_workout' => 'Начать тренировку',
@@ -921,7 +921,7 @@ return [
     'bmi_obese' => '30 и более: Ожирение',
     'your_bmi' => 'Ваш ИМТ',
     'measurement_records' => 'Записей измерений',
-    'athlete_workouts' => 'Тренировоки спортсмена',
+    'athlete_workouts' => 'Тренировки спортсмена',
     'workouts_count' => 'тренировок',
     'chest_triceps' => 'Грудь, трипецс',
     'completed' => 'Завершена',
@@ -1142,7 +1142,7 @@ return [
     'resting_heart_rate_label' => 'Пульс',
     'blood_pressure_label' => 'Давление',
     'comments_label' => 'Комментарии',
-    'workouts_tab' => 'Тренировоки',
+    'workouts_tab' => 'Тренировки',
     'workout_title' => 'Название тренировки',
     'workout_date' => 'Дата тренировки',
     'workout_time' => 'Время тренировки',
@@ -1218,7 +1218,7 @@ return [
     'planned' => 'Запланирована',
     'cancelled' => 'Отменена',
     'trainer_comments' => 'Комментарии тренера...',
-    'athlete_workouts' => 'Тренировоки спортсмена',
+    'athlete_workouts' => 'Тренировки спортсмена',
     'workouts_count' => 'тренировок',
     'no_measurements' => 'Нет измерений',
     'add_first_measurement' => 'Добавьте первое измерение для отслеживания прогресса',
