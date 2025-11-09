@@ -503,7 +503,7 @@
                             </div>
                         `;
                     }
-
+                    
                     // Изображения - показываем только вторую картинку
                     const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
                     
@@ -639,7 +639,7 @@
 
                     return exercise.name || '';
                 },
-
+                
                 getYouTubeEmbedUrl(url) {
                     if (!url) return '';
                     
@@ -1902,7 +1902,7 @@ input[type="number"].no-spinner:hover {
 
                 </button>
             </div>
-
+            
             <!-- Изображения - показываем только вторую картинку -->
             <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">

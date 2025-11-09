@@ -830,25 +830,25 @@ class AthleteController extends BaseController
                     $trainerVideosByExercise[$video->exercise_id][] = $videoData;
                 }
             }
-
+            
             // Получаем все упражнения из тренировок спортсмена через промежуточную таблицу
             $exercises = Exercise::whereHas('workouts', function($query) use ($athlete) {
-                    $query->where('athlete_id', $athlete->id);
-                })
-                ->with(['creator'])
-                ->get()
-                ->unique('id')
+                $query->where('athlete_id', $athlete->id);
+            })
+            ->with(['creator'])
+            ->get()
+            ->unique('id')
                 ->map(function ($exercise) use ($athlete, $exerciseTrainerMap, $trainerVideosByTrainer, $trainerVideosByExercise) {
-                    // Применяем логику выбора изображений в зависимости от пола
-                    if ($athlete->gender === 'female') {
-                        // Для девушек: используем женские изображения, если они есть, иначе обычные
-                        if ($exercise->image_url_female) {
-                            $exercise->image_url = $exercise->image_url_female;
-                        }
-                        if ($exercise->image_url_female_2) {
-                            $exercise->image_url_2 = $exercise->image_url_female_2;
-                        }
+                // Применяем логику выбора изображений в зависимости от пола
+                if ($athlete->gender === 'female') {
+                    // Для девушек: используем женские изображения, если они есть, иначе обычные
+                    if ($exercise->image_url_female) {
+                        $exercise->image_url = $exercise->image_url_female;
                     }
+                    if ($exercise->image_url_female_2) {
+                        $exercise->image_url_2 = $exercise->image_url_female_2;
+                    }
+                }
 
                     $trainerId = $exerciseTrainerMap->get($exercise->id);
                     $trainerVideo = null;
@@ -869,10 +869,10 @@ class AthleteController extends BaseController
                         $exercise->trainer_video = null;
                     }
 
-                    return $exercise;
-                })
-                ->sortBy('name')
-                ->values();
+                return $exercise;
+            })
+            ->sortBy('name')
+            ->values();
             
             return response()->json([
                 'success' => true,
