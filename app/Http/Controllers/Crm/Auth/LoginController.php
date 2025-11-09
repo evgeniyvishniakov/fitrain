@@ -14,6 +14,24 @@ class LoginController extends BaseController
      */
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            if ($user->hasRole('self-athlete')) {
+                return redirect()->route('crm.self-athlete.dashboard');
+            }
+
+            if ($user->hasRole('trainer')) {
+                return redirect()->route('crm.trainer.dashboard');
+            }
+
+            if ($user->hasRole('athlete')) {
+                return redirect()->route('crm.athlete.dashboard');
+            }
+
+            return redirect()->route('crm.dashboard.main');
+        }
+
         $languages = Language::getActive();
         return view('crm.auth.login', compact('languages'));
     }
