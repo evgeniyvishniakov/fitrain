@@ -173,12 +173,16 @@ class AthleteController extends BaseController
                 'height' => 'nullable|numeric|min:50|max:250',
                 'birth_date' => 'nullable|date|before:today',
                 'gender' => 'nullable|in:male,female',
-                'sport_level' => 'nullable|in:beginner,intermediate,advanced',
+                'sport_level' => 'nullable|in:beginner,intermediate,advanced,professional,amateur,pro',
                 'goals' => 'nullable|array',
                 'goals.*' => 'in:weight_loss,muscle_gain,muscle_tone,endurance,strength,flexibility',
             ]);
             
             $data = $request->all();
+
+            if (isset($data['sport_level'])) {
+                $data['sport_level'] = $this->normalizeSportLevel($data['sport_level']);
+            }
             
             // Обработка целей
             if (isset($data['goals'])) {
@@ -1114,5 +1118,19 @@ class AthleteController extends BaseController
                 'message' => 'Ошибка: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function normalizeSportLevel(?string $level): ?string
+    {
+        if (!$level) {
+            return $level;
+        }
+
+        $mapping = [
+            'amateur' => 'intermediate',
+            'pro' => 'advanced',
+        ];
+
+        return $mapping[$level] ?? $level;
     }
 }

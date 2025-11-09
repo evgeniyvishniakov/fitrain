@@ -71,6 +71,23 @@ class TrainerController extends BaseController
         
         return 0;
     }
+
+    /**
+     * Приводит старые значения уровня спортсмена к актуальным
+     */
+    private function normalizeSportLevel(?string $level): ?string
+    {
+        if (!$level) {
+            return $level;
+        }
+
+        $mapping = [
+            'amateur' => 'intermediate',
+            'pro' => 'advanced',
+        ];
+
+        return $mapping[$level] ?? $level;
+    }
     
     public function dashboard()
     {
@@ -310,7 +327,7 @@ class TrainerController extends BaseController
                 'gender' => 'nullable|in:male,female,other',
                 'weight' => 'nullable|numeric|min:0',
                 'height' => 'nullable|numeric|min:0',
-                'sport_level' => 'nullable|in:beginner,intermediate,advanced',
+                'sport_level' => 'nullable|in:beginner,intermediate,advanced,professional,amateur,pro',
                 'goals' => 'nullable|array',
                 'health_restrictions' => 'nullable|string',
                 'is_active' => 'nullable|boolean',
@@ -340,7 +357,7 @@ class TrainerController extends BaseController
                 'gender' => $request->gender,
                 'weight' => $request->weight,
                 'height' => $request->height,
-                'sport_level' => $request->sport_level,
+                'sport_level' => $this->normalizeSportLevel($request->sport_level),
                 'goals' => $request->goals ? json_encode($request->goals) : null,
                 'health_restrictions' => $request->health_restrictions ? json_encode([['type' => 'Общие ограничения', 'description' => $request->health_restrictions]]) : null,
                 'is_active' => $request->is_active ?? true,
@@ -430,6 +447,7 @@ class TrainerController extends BaseController
             'gender' => 'nullable|in:male,female,other',
             'birth_date' => 'nullable|date',
             'password' => 'nullable|string|min:8',
+            'sport_level' => 'nullable|in:beginner,intermediate,advanced,professional,amateur,pro',
         ]);
         
         $updateData = $request->all();
@@ -442,6 +460,10 @@ class TrainerController extends BaseController
             unset($updateData['password']);
         }
         
+        if (array_key_exists('sport_level', $updateData)) {
+            $updateData['sport_level'] = $this->normalizeSportLevel($updateData['sport_level']);
+        }
+
         $athlete->update($updateData);
         
         // Всегда возвращаем JSON для AJAX запросов
