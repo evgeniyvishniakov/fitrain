@@ -3070,7 +3070,7 @@ function athletesApp() {
                                 <div class="athlete-profile-data text-sm text-gray-500 mt-2">
                                     <div class="athlete-profile-item">
                                         <span class="athlete-profile-label">{{ __('common.age') }}:</span>
-                                        <span class="athlete-profile-value" x-text="currentAthlete?.age ? `${currentAthlete.age} {{ __('common.age_years') }}` : '—'"></span>
+                                        <span class="athlete-profile-value" x-text="currentAthlete?.age ? currentAthlete.age + ' {{ __('common.age_years') }}' : '—'"></span>
                                     </div>
                                     <div class="athlete-profile-item">
                                         <span class="athlete-profile-label">{{ __('common.weight') }}:</span>
@@ -3286,7 +3286,7 @@ function athletesApp() {
                                         </div>
                                         <div>
                                             <label class="text-sm font-medium text-gray-500">Возраст</label>
-                                            <div class="text-gray-900 font-semibold" x-text="(currentAthlete?.age || '—') + ' {{ __('common.age_years') }}'"></div>
+                                            <div class="text-gray-900 font-semibold" x-text="currentAthlete?.age ? currentAthlete.age + ' {{ __('common.age_years') }}' : '—'"></div>
                                         </div>
                                     </div>
                                 </div>

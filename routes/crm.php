@@ -68,6 +68,7 @@ Route::middleware(["auth"])->group(function () {
         // Тренировки только для тренеров (управление)
         Route::post("/workouts", [WorkoutController::class, "store"])->name("crm.workouts.store");
         Route::put("/workouts/{id}", [WorkoutController::class, "update"])->name("crm.workouts.update");
+        Route::post("/workouts/{id}/duplicate", [WorkoutController::class, "duplicate"])->name("crm.workouts.duplicate");
         Route::patch("/workouts/{id}/status", [WorkoutController::class, "updateStatus"])->name("crm.workouts.update-status");
         Route::delete("/workouts/{id}", [WorkoutController::class, "destroy"])->name("crm.workouts.destroy");
         

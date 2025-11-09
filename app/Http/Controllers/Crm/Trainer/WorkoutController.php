@@ -321,6 +321,29 @@ class WorkoutController extends BaseController
             'workout' => $this->formatWorkoutForResponse($workout)
         ]);
     }
+
+    public function duplicate($id)
+    {
+        if (!auth()->user()->hasRole('trainer') && !auth()->user()->hasRole('self-athlete')) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        $originalWorkout = Workout::with(['exercises' => function ($query) {
+            $query->select('exercises.*', 'workout_exercise.*')
+                ->orderBy('workout_exercise.order_index', 'asc');
+        }])->findOrFail($id);
+
+        if (auth()->user()->hasRole('trainer') && $originalWorkout->trainer_id !== auth()->id()) {
+            abort(403, 'Доступ запрещен');
+        } elseif (auth()->user()->hasRole('self-athlete') && $originalWorkout->athlete_id !== auth()->id()) {
+            abort(403, 'Доступ запрещен');
+        }
+
+        return response()->json([
+            'success' => true,
+            'workout' => $this->formatWorkoutForResponse($originalWorkout)
+        ]);
+    }
     
     public function destroy($id)
     {
