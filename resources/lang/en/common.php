@@ -493,6 +493,7 @@ return [
     'timezone_changed' => 'Timezone successfully changed',
     // Trainer workouts
     'all_statuses' => 'All statuses',
+    'all_workouts_filter' => 'All workouts',
     'planned' => 'Planned',
     'completed' => 'Completed',
     'cancelled' => 'Cancelled',
@@ -656,6 +657,7 @@ return [
     'equipment_required' => 'Equipment *',
     'description' => 'Description',
     'execution_instructions' => 'Execution instructions',
+    'add_video' => 'Add video',
     'add_video_to_exercise' => 'Add video to exercise',
     'video_title' => 'Video title',
     'video_description' => 'Video description',

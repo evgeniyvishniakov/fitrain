@@ -919,6 +919,18 @@ function exerciseApp() {
                 }
                 
                 if (result.success) {
+                    // Обновляем текущее видео
+                    this.currentUserVideo = result.video;
+                    
+                    // Обновляем кэш пользовательских видео для этого упражнения
+                    this.userVideos[this.currentExercise.id] = result.video;
+                    
+                    // Обновляем текущее упражнение, чтобы видео сразу отображалось
+                    if (this.currentExercise) {
+                        // Обновляем объект упражнения, чтобы видео отображалось
+                        this.currentExercise = { ...this.currentExercise };
+                    }
+                    
                     // Показываем уведомление об успехе
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
@@ -927,9 +939,6 @@ function exerciseApp() {
                             message: result.message
                         }
                     }));
-                    
-                    // Обновляем текущее видео
-                    this.currentUserVideo = result.video;
                     
                     // Переключаемся на просмотр
                     this.showView(this.currentExercise.id);
@@ -984,6 +993,20 @@ function exerciseApp() {
                 }
                 
                 if (result.success) {
+                    // Удаляем из кэша пользовательских видео
+                    delete this.userVideos[this.currentExercise.id];
+                    
+                    // Очищаем поля
+                    this.currentUserVideo = null;
+                    this.userVideoUrl = '';
+                    this.userVideoTitle = '';
+                    this.userVideoDescription = '';
+                    
+                    // Обновляем текущее упражнение, чтобы видео исчезло из просмотра
+                    if (this.currentExercise) {
+                        this.currentExercise = { ...this.currentExercise };
+                    }
+                    
                     // Показываем уведомление об успехе
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
@@ -992,12 +1015,6 @@ function exerciseApp() {
                             message: result.message
                         }
                     }));
-                    
-                    // Очищаем поля
-                    this.currentUserVideo = null;
-                    this.userVideoUrl = '';
-                    this.userVideoTitle = '';
-                    this.userVideoDescription = '';
                     
                     // Переключаемся на просмотр
                     this.showView(this.currentExercise.id);
@@ -1958,20 +1975,30 @@ function exerciseApp() {
                 {{ __('common.back_to_list') }}
             </button>
             
-            <!-- Кнопка избранного -->
-            <button @click.stop="toggleFavorite(currentExercise?.id)" 
-                    class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
-                    :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                    :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
-                <!-- Заполненная звезда (в избранном) -->
-                <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                </svg>
-                <!-- Пустая звезда (не в избранном) -->
-                <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                </svg>
-            </button>
+            <!-- Кнопки избранного и добавления видео -->
+            <div class="flex items-center space-x-2">
+                <!-- Кнопка избранного -->
+                <button @click.stop="toggleFavorite(currentExercise?.id)" 
+                        class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                        :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                        :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                    <!-- Заполненная звезда (в избранном) -->
+                    <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    <!-- Пустая звезда (не в избранном) -->
+                    <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                    </svg>
+                </button>
+                
+                <!-- Кнопка добавления видео -->
+                <button x-show="currentExercise && currentExercise.is_system"
+                        @click="showAddVideo(currentExercise.id)" 
+                        class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                    {{ __('common.add_video') }}
+                </button>
+            </div>
         </div>
         
         <div x-show="currentExercise" class="space-y-6">
@@ -2003,8 +2030,32 @@ function exerciseApp() {
                             </div>
                         </template>
                         
-                        <!-- Системное видео -->
-                        <div x-show="currentExercise?.video_url">
+                        <!-- Пользовательское видео (приоритет) -->
+                        <div x-show="userVideos[currentExercise?.id]?.video_url">
+                            <p class="text-xs text-gray-500 mb-1 font-medium">Ваше видео</p>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                    <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                            allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <div x-show="!isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="text-center py-4">
+                                    <a :href="userVideos[currentExercise?.id]?.video_url" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        Видео
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Системное видео (если нет пользовательского) -->
+                        <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url">
                             <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
                             <div class="bg-gray-50 rounded-lg p-2">
                                 <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
@@ -2128,9 +2179,35 @@ function exerciseApp() {
                     </div>
                 </div>
                 
-                <!-- Системное видео -->
-                <div x-show="currentExercise?.video_url">
+                <!-- Пользовательское видео (приоритет) -->
+                <div x-show="userVideos[currentExercise?.id]?.video_url">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
+                    <p class="text-xs text-gray-500 mb-1 text-center">Ваше видео</p>
+                    <div class="bg-gray-50 rounded-lg p-2">
+                        <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div x-show="!isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="text-center py-4">
+                            <a :href="userVideos[currentExercise?.id]?.video_url" 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                Видео
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Системное видео (если нет пользовательского) -->
+                <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
+                    <p class="text-xs text-gray-500 mb-1 text-center">Системное видео</p>
                     <div class="bg-gray-50 rounded-lg p-2">
                         <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
@@ -2164,11 +2241,6 @@ function exerciseApp() {
                         @click="deleteExercise(currentExercise.id)" 
                         class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
                     Удалить
-                </button>
-                <button x-show="currentExercise && currentExercise.is_system"
-                        @click="showAddVideo(currentExercise.id)" 
-                        class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                    {{ __('common.add_video') }}
                 </button>
             </div>
         </div>

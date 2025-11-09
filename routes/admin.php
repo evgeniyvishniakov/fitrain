@@ -119,6 +119,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/clear-cache', [SystemController::class, 'clearCache'])->name('clear-cache');
         Route::post('/optimize', [SystemController::class, 'optimize'])->name('optimize');
         Route::get('/logs', [SystemController::class, 'logs'])->name('logs');
-        Route::post('/backup', [SystemController::class, 'backup'])->name('backup');
+        Route::post('/backup-db', [SystemController::class, 'backupDb'])->name('backup-db');
+        Route::post('/backup-files', [SystemController::class, 'backupFiles'])->name('backup-files');
+        Route::get('/backup/download/{filename}', [SystemController::class, 'downloadBackup'])->name('backup.download');
+        Route::delete('/backup/delete/{filename}', [SystemController::class, 'deleteBackup'])->name('backup.delete');
     });
 });

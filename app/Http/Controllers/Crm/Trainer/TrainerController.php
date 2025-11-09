@@ -162,12 +162,16 @@ class TrainerController extends BaseController
                 });
             
             // Ближайшие тренировки (сегодня и завтра)
-            $today = now()->format('Y-m-d');
-            $tomorrow = now()->addDay()->format('Y-m-d');
+            $today = now()->startOfDay();
+            $tomorrow = now()->addDay()->startOfDay();
+            $dayAfterTomorrow = now()->addDays(2)->startOfDay();
             
             $upcomingWorkouts = $trainer->trainerWorkouts()
                 ->with('athlete:id,name')
-                ->whereIn('date', [$today, $tomorrow])
+                ->where(function($query) use ($today, $tomorrow) {
+                    $query->whereDate('date', '>=', $today)
+                          ->whereDate('date', '<=', $tomorrow);
+                })
                 ->where('status', '!=', 'cancelled')
                 ->orderBy('date')
                 ->orderBy('time')

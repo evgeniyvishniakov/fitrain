@@ -218,15 +218,26 @@
             </div>
             
             <?php
-                $today = now()->format('Y-m-d');
-                $tomorrow = now()->addDay()->format('Y-m-d');
-                $todayWorkouts = isset($upcomingWorkouts) ? $upcomingWorkouts->where('date', $today) : collect();
-                $tomorrowWorkouts = isset($upcomingWorkouts) ? $upcomingWorkouts->where('date', $tomorrow) : collect();
+                $today = now()->startOfDay();
+                $tomorrow = now()->addDay()->startOfDay();
+                
+                $todayWorkouts = isset($upcomingWorkouts) ? $upcomingWorkouts->filter(function($workout) use ($today) {
+                    $workoutDate = \Carbon\Carbon::parse($workout->date)->startOfDay();
+                    return $workoutDate->equalTo($today);
+                }) : collect();
+                
+                $tomorrowWorkouts = isset($upcomingWorkouts) ? $upcomingWorkouts->filter(function($workout) use ($tomorrow) {
+                    $workoutDate = \Carbon\Carbon::parse($workout->date)->startOfDay();
+                    return $workoutDate->equalTo($tomorrow);
+                }) : collect();
                 
                 // Если нет тренировок на завтра, но есть на послезавтра, показываем их как "Завтра"
                 if($tomorrowWorkouts->count() == 0 && isset($upcomingWorkouts)) {
-                    $nextDay = now()->addDays(2)->format('Y-m-d');
-                    $tomorrowWorkouts = $upcomingWorkouts->where('date', $nextDay);
+                    $nextDay = now()->addDays(2)->startOfDay();
+                    $tomorrowWorkouts = $upcomingWorkouts->filter(function($workout) use ($nextDay) {
+                        $workoutDate = \Carbon\Carbon::parse($workout->date)->startOfDay();
+                        return $workoutDate->equalTo($nextDay);
+                    });
                 }
             ?>
             
@@ -237,25 +248,14 @@
                             <div class="space-y-2">
                                 <?php $__currentLoopData = $todayWorkouts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $workout): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <div class="workout-item">
-                                        <!-- Аватар спортсмена -->
-                                        <div class="workout-avatar">
-                                            <?php if($workout->athlete && $workout->athlete->avatar): ?>
-                                                <img src="<?php echo e($workout->athlete->avatar); ?>" alt="<?php echo e($workout->athlete->name); ?>" class="avatar-img">
-                                            <?php else: ?>
-                                                <div class="avatar-placeholder">
-                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                    </svg>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        
                                         <!-- Основная информация -->
                                         <div class="workout-content">
                                             <div class="workout-title"><?php echo e($workout->title); ?></div>
                                             <div class="workout-info-row">
                                                 <span class="workout-date"><?php echo e(__('common.date')); ?>: <?php echo e(\Carbon\Carbon::parse($workout->date)->format('d.m.Y')); ?></span>
+                                                <span class="workout-separator">•</span>
                                                 <span class="workout-time"><?php echo e(__('common.time')); ?>: <?php echo e($workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : __('common.time_not_specified')); ?></span>
+                                                <span class="workout-separator">•</span>
                                                 <span class="workout-participant"><?php echo e(__('common.participant')); ?>: <?php echo e($workout->athlete ? $workout->athlete->name : __('common.athlete_not_specified')); ?></span>
                                             </div>
                                         </div>
@@ -278,32 +278,22 @@
                         <div class="workout-day-group">
                             <?php
                                 $tomorrowDate = $tomorrowWorkouts->first()->date;
-                                $isActuallyTomorrow = $tomorrowDate === $tomorrow;
-                                $dayTitle = $isActuallyTomorrow ? __('common.tomorrow') : \Carbon\Carbon::parse($tomorrowDate)->format('d.m');
+                                $tomorrowDateCarbon = \Carbon\Carbon::parse($tomorrowDate)->startOfDay();
+                                $isActuallyTomorrow = $tomorrowDateCarbon->equalTo($tomorrow);
+                                $dayTitle = $isActuallyTomorrow ? __('common.tomorrow') : $tomorrowDateCarbon->format('d.m');
                             ?>
                             <h4 class="workout-day-title"><?php echo e($dayTitle); ?></h4>
                             <div class="space-y-2">
                                 <?php $__currentLoopData = $tomorrowWorkouts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $workout): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <div class="workout-item">
-                                        <!-- Аватар спортсмена -->
-                                        <div class="workout-avatar">
-                                            <?php if($workout->athlete && $workout->athlete->avatar): ?>
-                                                <img src="<?php echo e($workout->athlete->avatar); ?>" alt="<?php echo e($workout->athlete->name); ?>" class="avatar-img">
-                                            <?php else: ?>
-                                                <div class="avatar-placeholder">
-                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                    </svg>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                        
                                         <!-- Основная информация -->
                                         <div class="workout-content">
                                             <div class="workout-title"><?php echo e($workout->title); ?></div>
                                             <div class="workout-info-row">
                                                 <span class="workout-date"><?php echo e(__('common.date')); ?>: <?php echo e(\Carbon\Carbon::parse($workout->date)->format('d.m.Y')); ?></span>
+                                                <span class="workout-separator">•</span>
                                                 <span class="workout-time"><?php echo e(__('common.time')); ?>: <?php echo e($workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : __('common.time_not_specified')); ?></span>
+                                                <span class="workout-separator">•</span>
                                                 <span class="workout-participant"><?php echo e(__('common.participant')); ?>: <?php echo e($workout->athlete ? $workout->athlete->name : __('common.athlete_not_specified')); ?></span>
                                             </div>
                                         </div>
@@ -804,7 +794,7 @@ window.onclick = function(event) {
 /* Стили для секции ближайших тренировок */
 .workout-item {
     display: flex !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: space-between !important;
     padding: 0.75rem !important;
     background-color: #f9fafb !important;
@@ -819,8 +809,9 @@ window.onclick = function(event) {
 
 .workout-content {
     display: flex !important;
-    align-items: center !important;
-    gap: 0.75rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
     flex: 1 !important;
     min-width: 0 !important;
 }
@@ -838,17 +829,34 @@ window.onclick = function(event) {
     font-size: 1rem !important;
     font-weight: 500 !important;
     color: #111827 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    flex: 1 !important;
-    min-width: 0 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    width: 100% !important;
+    margin-bottom: 0.25rem !important;
 }
 
-.workout-date {
+.workout-info-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+    font-size: 0.875rem !important;
+    color: #6b7280 !important;
+}
+
+.workout-date,
+.workout-time,
+.workout-participant {
     font-size: 0.875rem !important;
     color: #6b7280 !important;
     white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+.workout-separator {
+    color: #9ca3af !important;
+    margin: 0 0.25rem !important;
     flex-shrink: 0 !important;
 }
 

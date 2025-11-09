@@ -2479,6 +2479,25 @@ function athletesApp() {
     <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
+                /* Статистика спортсмена - в один ряд на десктопе */
+                .athlete-stats-container {
+                    display: grid !important;
+                    grid-template-columns: 1fr !important;
+                    gap: 1.5rem !important;
+                }
+                
+                @media (min-width: 768px) {
+                    .athlete-stats-container {
+                        display: flex !important;
+                        flex-direction: row !important;
+                        gap: 1.5rem !important;
+                    }
+                    
+                    .athlete-stats-container > div {
+                        flex: 1 !important;
+                    }
+                }
+                
                 .filters-row {
                     display: flex !important;
                     flex-direction: column !important;
@@ -3098,20 +3117,20 @@ function athletesApp() {
                     <div class="p-6">
                         <!-- Вкладка "Обзор" -->
                         <div x-show="activeTab === 'overview'" class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                                <div class="bg-green-50 rounded-lg p-4 text-center">
+                            <div class="athlete-stats-container grid grid-cols-1 md:flex md:flex-row md:gap-6">
+                                <div class="bg-green-50 rounded-lg p-4 text-center flex-1">
                                     <div class="text-2xl font-bold text-green-600" x-text="currentAthlete?.progress?.length || 0"></div>
                                     <div class="text-sm text-green-800">{{ __('common.measurement_records_label') }}</div>
                                 </div>
-                                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                <div class="bg-blue-50 rounded-lg p-4 text-center flex-1">
                                     <div class="text-2xl font-bold text-blue-600" x-text="(currentAthlete?.workouts || []).filter(workout => workout.status === 'completed').length"></div>
                                     <div class="text-sm text-blue-800">{{ __('common.workouts') }}</div>
                                 </div>
-                                <div class="bg-orange-50 rounded-lg p-4 text-center">
+                                <div class="bg-orange-50 rounded-lg p-4 text-center flex-1">
                                     <div class="text-2xl font-bold text-orange-600" x-text="(currentAthlete?.finance?.total_sessions || 0) - (currentAthlete?.workouts || []).filter(workout => workout.status === 'completed').length"></div>
                                     <div class="text-sm text-orange-800">{{ __('common.remaining') }}</div>
                                 </div>
-                                <div class="bg-purple-50 rounded-lg p-4 text-center">
+                                <div class="bg-purple-50 rounded-lg p-4 text-center flex-1">
                                     <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.is_active ? '{{ __('common.yes') }}' : '{{ __('common.no') }}'"></div>
                                     <div class="text-sm text-purple-800">{{ __('common.active') }}</div>
                                 </div>

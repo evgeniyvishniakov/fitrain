@@ -9,6 +9,7 @@ use App\Models\Trainer\Workout;
 use App\Models\Trainer\Exercise;
 use App\Models\Trainer\Progress;
 use App\Models\Trainer\Nutrition;
+use App\Models\UserExerciseVideo;
 use Illuminate\Http\Request;
 
 class AthleteController extends BaseController
@@ -233,17 +234,18 @@ class AthleteController extends BaseController
                 ->orderBy('date', 'desc')
                 ->orderBy('time', 'desc')
                 ->paginate(10);
+
+            $trainerVideosCache = [];
             
             // Загружаем упражнения для каждой тренировки отдельно
-            $workouts->getCollection()->transform(function ($workout) use ($athlete) {
+            $workouts->getCollection()->transform(function ($workout) use ($athlete, &$trainerVideosCache) {
                 $workout->exercises = $workout->exercises()
                     ->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc')
                     ->get()
-                    ->map(function ($exercise) use ($athlete) {
+                    ->map(function ($exercise) use ($athlete, $workout, &$trainerVideosCache) {
                         // Применяем логику выбора изображений в зависимости от пола
                         if ($athlete->gender === 'female') {
-                            // Для девушек: используем женские изображения, если они есть, иначе обычные
                             if ($exercise->image_url_female) {
                                 $exercise->image_url = $exercise->image_url_female;
                             }
@@ -251,7 +253,38 @@ class AthleteController extends BaseController
                                 $exercise->image_url_2 = $exercise->image_url_female_2;
                             }
                         }
-                        // Для мужчин всегда используются обычные изображения (image_url, image_url_2)
+
+                        $trainerId = $workout->trainer_id ?? optional($workout->trainer)->id;
+                        $exerciseId = $exercise->exercise_id ?? $exercise->id;
+
+                        $trainerVideo = null;
+
+                        if ($trainerId) {
+                            if (!array_key_exists($trainerId, $trainerVideosCache)) {
+                                $trainerVideosCache[$trainerId] = UserExerciseVideo::where('user_id', $trainerId)
+                                    ->where('is_active', true)
+                                    ->get()
+                                    ->keyBy('exercise_id');
+                            }
+
+                            $videoModel = $trainerVideosCache[$trainerId][$exerciseId] ?? null;
+
+                            if ($videoModel) {
+                                $trainerVideo = [
+                                    'url' => $videoModel->video_url,
+                                    'title' => $videoModel->title,
+                                    'description' => $videoModel->description,
+                                    'trainer_id' => $videoModel->user_id,
+                                ];
+
+                                if (empty($exercise->video_url) || $exercise->video_url === 'null') {
+                                    $exercise->video_url = $videoModel->video_url;
+                                }
+                            }
+                        }
+
+                        $exercise->trainer_video = $trainerVideo;
+
                         return $exercise;
                     });
                 return $workout;
@@ -704,10 +737,9 @@ class AthleteController extends BaseController
                 return redirect()->back()->with('success', __('common.profile_updated_successfully'));
             }
             
-            // Если это запрос на обновление настроек языка и валюты
+            // Если это запрос на обновление настроек языка
             $validated = $request->validate([
                 'language_code' => 'required|string|exists:languages,code',
-                'currency_code' => 'required|string|exists:currencies,code',
             ]);
 
             $athlete->update($validated);
@@ -717,17 +749,18 @@ class AthleteController extends BaseController
                 session(['locale' => $request->get('language_code')]);
             }
 
-            if ($request->expectsJson()) {
+            // Если это AJAX запрос, возвращаем JSON
+            if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Настройки языка и валюты обновлены'
+                    'message' => 'Настройки языка обновлены'
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Настройки языка и валюты обновлены');
+            return redirect()->back()->with('success', 'Настройки языка обновлены');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
-            if ($request->expectsJson()) {
+            if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'errors' => $e->errors()
@@ -735,7 +768,7 @@ class AthleteController extends BaseController
             }
             throw $e;
         } catch (\Exception $e) {
-            if ($request->expectsJson()) {
+            if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ошибка при сохранении: ' . $e->getMessage()
@@ -764,29 +797,82 @@ class AthleteController extends BaseController
         try {
             $athlete = auth()->user();
             
+            // Определяем тренеров, которые назначали упражнения спортсмену
+            $exerciseTrainerMap = \DB::table('workout_exercise')
+                ->join('workouts', 'workout_exercise.workout_id', '=', 'workouts.id')
+                ->where('workouts.athlete_id', $athlete->id)
+                ->select('workout_exercise.exercise_id', 'workouts.trainer_id')
+                ->get()
+                ->groupBy('exercise_id')
+                ->map(function ($items) {
+                    return $items->pluck('trainer_id')->filter()->unique()->first();
+                });
+
+            $trainerIds = $exerciseTrainerMap->filter()->unique()->values()->all();
+
+            $trainerVideosByTrainer = [];
+            $trainerVideosByExercise = [];
+
+            if (!empty($trainerIds)) {
+                $videos = UserExerciseVideo::whereIn('user_id', $trainerIds)
+                    ->where('is_active', true)
+                    ->get();
+
+                foreach ($videos as $video) {
+                    $videoData = [
+                        'url' => $video->video_url,
+                        'title' => $video->title,
+                        'description' => $video->description,
+                        'trainer_id' => $video->user_id,
+                    ];
+
+                    $trainerVideosByTrainer[$video->user_id][$video->exercise_id] = $videoData;
+                    $trainerVideosByExercise[$video->exercise_id][] = $videoData;
+                }
+            }
+
             // Получаем все упражнения из тренировок спортсмена через промежуточную таблицу
             $exercises = Exercise::whereHas('workouts', function($query) use ($athlete) {
-                $query->where('athlete_id', $athlete->id);
-            })
-            ->with(['creator'])
-            ->get()
-            ->unique('id')
-            ->map(function ($exercise) use ($athlete) {
-                // Применяем логику выбора изображений в зависимости от пола
-                if ($athlete->gender === 'female') {
-                    // Для девушек: используем женские изображения, если они есть, иначе обычные
-                    if ($exercise->image_url_female) {
-                        $exercise->image_url = $exercise->image_url_female;
+                    $query->where('athlete_id', $athlete->id);
+                })
+                ->with(['creator'])
+                ->get()
+                ->unique('id')
+                ->map(function ($exercise) use ($athlete, $exerciseTrainerMap, $trainerVideosByTrainer, $trainerVideosByExercise) {
+                    // Применяем логику выбора изображений в зависимости от пола
+                    if ($athlete->gender === 'female') {
+                        // Для девушек: используем женские изображения, если они есть, иначе обычные
+                        if ($exercise->image_url_female) {
+                            $exercise->image_url = $exercise->image_url_female;
+                        }
+                        if ($exercise->image_url_female_2) {
+                            $exercise->image_url_2 = $exercise->image_url_female_2;
+                        }
                     }
-                    if ($exercise->image_url_female_2) {
-                        $exercise->image_url_2 = $exercise->image_url_female_2;
+
+                    $trainerId = $exerciseTrainerMap->get($exercise->id);
+                    $trainerVideo = null;
+
+                    if ($trainerId && isset($trainerVideosByTrainer[$trainerId][$exercise->id])) {
+                        $trainerVideo = $trainerVideosByTrainer[$trainerId][$exercise->id];
+                    } elseif (isset($trainerVideosByExercise[$exercise->id])) {
+                        $trainerVideo = $trainerVideosByExercise[$exercise->id][0] ?? null;
                     }
-                }
-                // Для мужчин всегда используются обычные изображения (image_url, image_url_2)
-                return $exercise;
-            })
-            ->sortBy('name')
-            ->values();
+
+                    if ($trainerVideo) {
+                        $exercise->trainer_video = $trainerVideo;
+
+                        if (empty($exercise->video_url) || $exercise->video_url === 'null') {
+                            $exercise->video_url = $trainerVideo['url'];
+                        }
+                    } else {
+                        $exercise->trainer_video = null;
+                    }
+
+                    return $exercise;
+                })
+                ->sortBy('name')
+                ->values();
             
             return response()->json([
                 'success' => true,

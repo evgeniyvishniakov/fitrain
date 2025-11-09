@@ -186,6 +186,28 @@ function calendarApp() {
                 'cancelled': '{{ __('common.cancelled_status') }}'
             };
             return texts[status] || status;
+        },
+        
+        // Форматирование даты для отображения (без учета часового пояса)
+        formatDate(dateString) {
+            if (!dateString) return '';
+            
+            // Если дата уже в формате YYYY-MM-DD, просто форматируем её
+            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = dateString.split('-');
+                return `${day}.${month}.${year}`;
+            }
+            
+            // Если дата в формате YYYY-MM-DDTHH:mm:ss.sssZ (ISO), извлекаем только дату без времени
+            if (typeof dateString === 'string' && dateString.includes('T')) {
+                const datePart = dateString.split('T')[0];
+                if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const [year, month, day] = datePart.split('-');
+                    return `${day}.${month}.${year}`;
+                }
+            }
+            
+            return dateString;
         }
     }
 }
@@ -380,7 +402,7 @@ function calendarApp() {
                                 </svg>
                                 <div>
                                     <div class="text-xs text-gray-500">{{ __('common.date') }}</div>
-                                    <div class="font-semibold" x-text="new Date(currentWorkoutDetails.date).toLocaleDateString('ru-RU')"></div>
+                                    <div class="font-semibold" x-text="formatDate(currentWorkoutDetails.date)"></div>
                                 </div>
                             </div>
                             

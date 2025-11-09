@@ -93,7 +93,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 1rem;
             flex-shrink: 0;
         }
         
@@ -204,8 +203,90 @@
             background-color: #4b5563 !important;
         }
         
+        /* Базовый цвет для серого текста */
         .theme-dark .text-gray-500 {
             color: #9ca3af !important;
+        }
+        
+        /* Белые блоки в темной теме должны стать темными */
+        .theme-dark .bg-white {
+            background-color: #374151 !important;
+        }
+        
+        /* Заголовки на темных блоках должны быть светлыми */
+        .theme-dark .bg-white .text-gray-900,
+        .theme-dark .bg-white h1,
+        .theme-dark .bg-white h2,
+        .theme-dark .bg-white h3,
+        .theme-dark .bg-white h4,
+        .theme-dark .bg-white h5,
+        .theme-dark .bg-white h6 {
+            color: #f9fafb !important;
+        }
+        
+        /* Текст на темных блоках - более светлый для лучшей видимости */
+        .theme-dark .bg-white .text-gray-600 {
+            color: #d1d5db !important;
+        }
+        
+        .theme-dark .bg-white .text-gray-500 {
+            color: #d1d5db !important;
+        }
+        
+        /* Поля ввода в темной теме */
+        .theme-dark input[type="text"],
+        .theme-dark input[type="email"],
+        .theme-dark input[type="password"],
+        .theme-dark input[type="number"],
+        .theme-dark input[type="date"],
+        .theme-dark input[type="time"],
+        .theme-dark input[type="tel"],
+        .theme-dark textarea {
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+            border-color: #4b5563 !important;
+        }
+        
+        .theme-dark input[type="text"]:focus,
+        .theme-dark input[type="email"]:focus,
+        .theme-dark input[type="password"]:focus,
+        .theme-dark input[type="number"]:focus,
+        .theme-dark input[type="date"]:focus,
+        .theme-dark input[type="time"]:focus,
+        .theme-dark input[type="tel"]:focus,
+        .theme-dark textarea:focus {
+            border-color: #6366f1 !important;
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+        }
+        
+        /* Селекты в темной теме */
+        .theme-dark select {
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+            border-color: #4b5563 !important;
+        }
+        
+        .theme-dark select:focus {
+            border-color: #6366f1 !important;
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+        }
+        
+        .theme-dark select option {
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+        }
+        
+        /* Кнопки в темной теме */
+        .theme-dark .bg-indigo-600,
+        .theme-dark .bg-indigo-500 {
+            background-color: #4f46e5 !important;
+        }
+        
+        .theme-dark .bg-indigo-600:hover,
+        .theme-dark .bg-indigo-500:hover {
+            background-color: #4338ca !important;
         }
         
         .theme-dark .text-gray-900 {
@@ -218,6 +299,268 @@
         
         .theme-dark .hover\:bg-gray-50:hover {
             background-color: #4b5563 !important;
+        }
+        
+        /* Границы в темной теме */
+        .theme-dark .border-gray-100,
+        .theme-dark .border-gray-200,
+        .theme-dark .border-gray-300 {
+            border-color: #4b5563 !important;
+        }
+        
+        /* Фон серых элементов */
+        .theme-dark .bg-gray-50 {
+            background-color: #374151 !important;
+        }
+        
+        .theme-dark .bg-gray-100 {
+            background-color: #4b5563 !important;
+        }
+        
+        /* Текст в карточках спортсменов - должен быть виден в темной теме */
+        .theme-dark .text-gray-500 {
+            color: #d1d5db !important;
+        }
+        
+        /* Данные профиля спортсмена (возраст, вес, рост) */
+        .theme-dark .athlete-profile-data,
+        .theme-dark .athlete-profile-data .text-gray-500,
+        .theme-dark .athlete-profile-value {
+            color: #d1d5db !important;
+        }
+        
+        /* Информация в карточках спортсменов */
+        .theme-dark .bg-white .text-gray-500,
+        .theme-dark .bg-white span.text-gray-500 {
+            color: #d1d5db !important;
+        }
+        
+        /* Кнопки "Назад" и "Редактировать" в темной теме */
+        .theme-dark button.bg-gray-50,
+        .theme-dark button.bg-white {
+            background-color: #4b5563 !important;
+            color: #f9fafb !important;
+            border-color: #6b7280 !important;
+        }
+        
+        .theme-dark button.bg-gray-50:hover,
+        .theme-dark button.bg-white:hover {
+            background-color: #6b7280 !important;
+        }
+        
+        .theme-dark button.text-gray-700 {
+            color: #f9fafb !important;
+        }
+        
+        /* Кнопки с border-gray-300 в темной теме */
+        .theme-dark button.border-gray-300 {
+            border-color: #6b7280 !important;
+        }
+        
+        /* Labels (названия полей) в темной теме */
+        .theme-dark label.text-gray-700,
+        .theme-dark .text-gray-700.label,
+        .theme-dark label {
+            color: #d1d5db !important;
+        }
+        
+        /* Поля просмотра (bg-gray-50 с text-gray-900) в темной теме */
+        .theme-dark .bg-gray-50.text-gray-900,
+        .theme-dark .bg-gray-50[data-field] {
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+            border-color: #4b5563 !important;
+        }
+        
+        /* Выбранные элементы языка/валюты в темной теме */
+        .theme-dark .bg-blue-50 {
+            background-color: #1e3a5f !important;
+        }
+        
+        .theme-dark .bg-blue-50 .text-gray-900 {
+            color: #f9fafb !important;
+        }
+        
+        .theme-dark .bg-blue-50 .text-gray-500 {
+            color: #d1d5db !important;
+        }
+        
+        .theme-dark .border-blue-500 {
+            border-color: #3b82f6 !important;
+        }
+        
+        /* Заголовок месяца в календаре в темной теме */
+        .theme-dark .calendar-header h2.text-gray-900,
+        .theme-dark .bg-white h2.text-gray-900,
+        .theme-dark .bg-white span.text-gray-700[x-text*="currentMonthYear"],
+        .theme-dark .bg-white .text-gray-700[x-text*="currentMonthYear"] {
+            color: #f9fafb !important;
+        }
+        
+        /* Заголовки "Календар" и "Найближчі тренування" в темной теме */
+        .theme-dark .bg-white h3.text-gray-900 {
+            color: #f9fafb !important;
+        }
+        
+        /* Поля упражнений в тренировке - более яркие цвета в темной теме */
+        .theme-dark .text-indigo-900,
+        .theme-dark .text-green-900,
+        .theme-dark .text-purple-900,
+        .theme-dark .text-orange-900 {
+            color: #ffffff !important;
+        }
+        
+        .theme-dark .text-indigo-800 {
+            color: #c7d2fe !important;
+        }
+        
+        .theme-dark .text-green-800 {
+            color: #6ee7b7 !important;
+        }
+        
+        /* Статус "выполнено" в темной теме - более яркий текст */
+        .theme-dark .bg-green-100.text-green-800,
+        .theme-dark .bg-green-50.text-green-700 {
+            color: #34d399 !important;
+            background-color: #064e3b !important;
+        }
+        
+        .theme-dark .bg-green-100 {
+            background-color: #064e3b !important;
+        }
+        
+        /* Все элементы с bg-green-100 и text-green-800 в темной теме */
+        .theme-dark [class*="bg-green-100"][class*="text-green-800"] {
+            color: #34d399 !important;
+            background-color: #064e3b !important;
+        }
+        
+        .theme-dark .text-purple-800 {
+            color: #d8b4fe !important;
+        }
+        
+        .theme-dark .text-orange-800 {
+            color: #fdba74 !important;
+        }
+        
+        /* Фон полей упражнений в темной теме - используем селекторы по классам градиента */
+        .theme-dark [class*="from-indigo-50"][class*="to-blue-50"] {
+            background: transparent !important;
+        }
+        
+        .theme-dark [class*="from-green-50"][class*="to-emerald-50"] {
+            background: transparent !important;
+        }
+        
+        .theme-dark [class*="from-purple-50"][class*="to-violet-50"] {
+            background: transparent !important;
+        }
+        
+        .theme-dark [class*="from-orange-50"][class*="to-amber-50"] {
+            background: transparent !important;
+        }
+        
+        /* Поля в развернутых подходах (sets-fields-grid) - убираем заливку и делаем текст светлее */
+        .theme-dark .sets-fields-grid [class*="from-purple-50"][class*="to-violet-50"],
+        .theme-dark .sets-fields-grid [class*="from-green-50"][class*="to-emerald-50"],
+        .theme-dark .sets-fields-grid [class*="from-orange-50"][class*="to-amber-50"] {
+            background: transparent !important;
+        }
+        
+        .theme-dark .sets-fields-grid .text-purple-900,
+        .theme-dark .sets-fields-grid .text-green-900,
+        .theme-dark .sets-fields-grid .text-orange-900 {
+            color: #ffffff !important;
+        }
+        
+        .theme-dark .sets-fields-grid .text-purple-800,
+        .theme-dark .sets-fields-grid .text-green-800,
+        .theme-dark .sets-fields-grid .text-orange-800 {
+            color: #e0e7ff !important;
+        }
+        
+        /* Текст "Згорнуты", "Вкажіть, що саме виконав" и "Підхід 1 з 3" - делаем светлее */
+        .theme-dark .text-yellow-700 {
+            color: #fbbf24 !important;
+        }
+        
+        .theme-dark .text-yellow-800 {
+            color: #fcd34d !important;
+        }
+        
+        /* Убираем заливку для желтых блоков подходов */
+        .theme-dark [class*="from-yellow-50"][class*="to-amber-50"] {
+            background: transparent !important;
+        }
+        
+        /* Границы полей упражнений в темной теме */
+        .theme-dark .border-indigo-200 {
+            border-color: #4f46e5 !important;
+        }
+        
+        .theme-dark .border-green-200 {
+            border-color: #10b981 !important;
+        }
+        
+        .theme-dark .border-purple-200 {
+            border-color: #a855f7 !important;
+        }
+        
+        .theme-dark .border-orange-200 {
+            border-color: #f97316 !important;
+        }
+        
+        .theme-dark .border-yellow-200 {
+            border-color: #fbbf24 !important;
+        }
+        
+        /* Иконки в полях упражнений в темной теме */
+        .theme-dark .text-indigo-600 {
+            color: #818cf8 !important;
+        }
+        
+        .theme-dark .text-green-600 {
+            color: #34d399 !important;
+        }
+        
+        .theme-dark .text-purple-600 {
+            color: #c084fc !important;
+        }
+        
+        .theme-dark .text-orange-600 {
+            color: #fb923c !important;
+        }
+        
+        .theme-dark .text-yellow-600 {
+            color: #fbbf24 !important;
+        }
+        
+        /* Группы мышц в карточках упражнений - делаем светлее */
+        .theme-dark .text-black {
+            color: #f9fafb !important;
+        }
+        
+        .theme-dark .text-gray-500 {
+            color: #d1d5db !important;
+        }
+        
+        /* Текст инструкций и описания упражнений в темной теме */
+        .theme-dark .text-gray-600,
+        .theme-dark .text-gray-700 {
+            color: #e5e7eb !important;
+        }
+        
+        .theme-dark .bg-gray-50 .text-gray-700 {
+            color: #f9fafb !important;
+        }
+        
+        /* Поля ввода в профиле - более темный фон */
+        .theme-dark .bg-white input,
+        .theme-dark .bg-white textarea,
+        .theme-dark .bg-white select {
+            background-color: #374151 !important;
+            color: #f9fafb !important;
+            border-color: #4b5563 !important;
         }
         
         /* Стили для модального окна */

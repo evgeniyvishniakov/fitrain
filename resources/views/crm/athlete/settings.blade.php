@@ -295,38 +295,38 @@ function athleteSettingsApp() {
         
         <!-- Режим просмотра -->
         <div x-show="!isEditing">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+            <div class="profile-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="name">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="name">
                         {{ $athlete->name }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.email') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="email">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="email">
                         {{ $athlete->email }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.phone') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="phone">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="phone">
                         {{ $athlete->phone ?? __('common.not_specified') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.age') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="age">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="age">
                         {{ $athlete->age ?? __('common.not_specified') }} {{ __('common.years') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.gender') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="gender">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="gender">
                         @if($athlete->gender === 'male')
                             {{ __('common.male') }}
                         @elseif($athlete->gender === 'female')
@@ -339,21 +339,21 @@ function athleteSettingsApp() {
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.height') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="height">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="height">
                         {{ $athlete->height ? $athlete->height . ' ' . __('common.cm') : __('common.not_specified') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.birth_date') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="birth_date">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="birth_date">
                         {{ $athlete->birth_date ? $athlete->birth_date->format('d.m.Y') : __('common.not_specified') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.sport_level') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="sport_level">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="sport_level">
                         @if($athlete->sport_level === 'beginner')
                             {{ __('common.beginner') }}
                         @elseif($athlete->sport_level === 'intermediate')
@@ -368,7 +368,7 @@ function athleteSettingsApp() {
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="goals">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="goals">
                         @if($athlete->goals && count($athlete->goals) > 0)
                             {{ implode(', ', array_map(function($goal) {
                                 return match($goal) {
@@ -403,7 +403,7 @@ function athleteSettingsApp() {
             <form @submit.prevent="saveProfile" class="space-y-6">
                 @csrf
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+                <div class="profile-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
                     <!-- Имя -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }} *</label>
@@ -614,9 +614,9 @@ function athleteSettingsApp() {
         </div>
     </div>
 
-    <!-- Настройки языка и валюты -->
+    <!-- Настройки языка -->
     <div x-show="!isEditing" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.language') }} и {{ __('common.currency') }}</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.language') }}</h2>
         
         
         <div class="space-y-6">
@@ -624,7 +624,6 @@ function athleteSettingsApp() {
             
             <!-- Скрытые поля для значений -->
             <input type="hidden" id="language_code_hidden" name="language_code" value="{{ $athlete->language_code ?? 'ru' }}">
-            <input type="hidden" id="currency_code_hidden" name="currency_code" value="{{ $athlete->currency_code ?? 'RUB' }}">
             
             <!-- Язык -->
             <div class="space-y-4">
@@ -654,34 +653,6 @@ function athleteSettingsApp() {
                 </div>
             </div>
 
-            <!-- Валюта -->
-            <div class="space-y-4">
-                <h3 class="text-base font-medium text-gray-900">
-                    <i class="fas fa-dollar-sign mr-2"></i>{{ __('common.currency') }}
-                </h3>
-                <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
-                    @foreach(\App\Models\Currency::getActive() as $currency)
-                        <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 {{ ($athlete->currency_code ?? 'RUB') === $currency->code ? 'border-blue-500 bg-blue-50' : 'border-gray-200' }}" onclick="updateCurrencyCode('{{ $currency->code }}')" style="flex: 1; min-width: 200px; max-width: 300px;">
-                            <input type="radio" name="currency_radio" value="{{ $currency->code }}" 
-                                   {{ ($athlete->currency_code ?? 'RUB') === $currency->code ? 'checked' : '' }}
-                                   class="sr-only" onchange="updateCurrencyCode('{{ $currency->code }}')">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-lg font-medium">{{ $currency->symbol }}</span>
-                                <div>
-                                    <div class="font-medium text-gray-900">{{ $currency->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $currency->code }}</div>
-                                </div>
-                            </div>
-                            @if(($athlete->currency_code ?? 'RUB') === $currency->code)
-                                <div class="absolute top-2 right-2">
-                                    <i class="fas fa-check-circle text-blue-500"></i>
-                                </div>
-                            @endif
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
         </div>
     </div>
 
@@ -700,66 +671,56 @@ function athleteSettingsApp() {
             saveSettings('language');
         }
 
-        function updateCurrencyCode(code) {
-            document.getElementById('currency_code_hidden').value = code;
-            // Обновляем визуальное состояние
-            document.querySelectorAll('label[onclick*="updateCurrencyCode"]').forEach(label => {
-                label.classList.remove('border-blue-500', 'bg-blue-50');
-                label.classList.add('border-gray-200');
-            });
-            event.target.closest('label').classList.remove('border-gray-200');
-            event.target.closest('label').classList.add('border-blue-500', 'bg-blue-50');
-            
-            // Автоматически сохраняем настройки
-            saveSettings('currency');
-        }
-
         async function saveSettings(type) {
             const languageCode = document.getElementById('language_code_hidden').value;
-            const currencyCode = document.getElementById('currency_code_hidden').value;
-            
             
             try {
                 const formData = new FormData();
                 formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
                 formData.append('_method', 'PUT');
                 formData.append('language_code', languageCode);
-                formData.append('currency_code', currencyCode);
                 
                 const response = await fetch('{{ route("crm.athlete.settings.update") }}', {
                     method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
                     body: formData
                 });
                 
                 if (response.ok) {
-                    
                     // Показываем соответствующее уведомление
                     if (type === 'language') {
                         showSuccess('{{ __('common.language_updated') }}', '{{ __('common.interface_language_changed') }}');
                         // Перезагружаем страницу только при смене языка
                         setTimeout(() => {
                             window.location.reload();
-                        }, 1500);
-                    } else if (type === 'currency') {
-                        showSuccess('Валюта обновлена', 'Валюта успешно изменена');
-                        // При смене валюты не перезагружаем страницу
+                        }, 1000);
                     } else {
                         showSuccess('Настройки сохранены', 'Настройки успешно обновлены');
-                        // Перезагружаем страницу через небольшую задержку
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
                     }
                 } else {
-                    showError('Ошибка сохранения', 'Не удалось сохранить настройки');
+                    const result = await response.json().catch(() => ({}));
+                    showError('Ошибка сохранения', result.message || 'Не удалось сохранить настройки');
                 }
             } catch (error) {
+                console.error('Ошибка при сохранении:', error);
                 showError('Ошибка сохранения', 'Произошла ошибка при сохранении настроек');
             }
         }
 
     </script>
 
+    <style>
+        /* Мобильная версия для полей профиля */
+        @media (max-width: 767px) {
+            .profile-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 16px !important;
+            }
+        }
+    </style>
 
 </div>
 @endsection

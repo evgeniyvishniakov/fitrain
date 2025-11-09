@@ -5,129 +5,6 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Информация о системе -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">
-            <i class="fas fa-info-circle mr-2"></i>Информация о системе
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-500">PHP версия</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['php_version'] }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Laravel версия</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['laravel_version'] }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Сервер</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['server'] }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Лимит памяти</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['memory_limit'] }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Максимальное время выполнения</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['max_execution_time'] }} сек</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Максимальный размер загрузки</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['upload_max_filesize'] }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Дисковое пространство -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">
-            <i class="fas fa-hdd mr-2"></i>Дисковое пространство
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Всего места</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['disk_space']['total'] }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Использовано</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['disk_space']['used'] }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Свободно</label>
-                <p class="mt-1 text-sm text-gray-900">{{ $systemInfo['disk_space']['free'] }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500">Заполнено</label>
-                <div class="mt-1">
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $systemInfo['disk_space']['percentage'] }}%"></div>
-                    </div>
-                    <p class="text-sm text-gray-900 mt-1">{{ $systemInfo['disk_space']['percentage'] }}%</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Статус кэша -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">
-            <i class="fas fa-memory mr-2"></i>Статус кэша
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span class="text-sm text-gray-700">Конфигурация</span>
-                @if($cacheStatus['config'])
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <i class="fas fa-check mr-1"></i>Кэширована
-                    </span>
-                @else
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <i class="fas fa-times mr-1"></i>Не кэширована
-                    </span>
-                @endif
-            </div>
-            
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span class="text-sm text-gray-700">Маршруты</span>
-                @if($cacheStatus['routes'])
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <i class="fas fa-check mr-1"></i>Кэшированы
-                    </span>
-                @else
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <i class="fas fa-times mr-1"></i>Не кэшированы
-                    </span>
-                @endif
-            </div>
-            
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span class="text-sm text-gray-700">Сервисы</span>
-                @if($cacheStatus['services'])
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <i class="fas fa-check mr-1"></i>Кэшированы
-                    </span>
-                @else
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <i class="fas fa-times mr-1"></i>Не кэшированы
-                    </span>
-                @endif
-            </div>
-            
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span class="text-sm text-gray-700">Пакеты</span>
-                @if($cacheStatus['packages'])
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <i class="fas fa-check mr-1"></i>Кэшированы
-                    </span>
-                @else
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <i class="fas fa-times mr-1"></i>Не кэшированы
-                    </span>
-                @endif
-            </div>
-        </div>
-    </div>
-
     <!-- Системные действия -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Кэш -->
@@ -166,15 +43,89 @@
                         </span>
                     @endif
                 </a>
-                
-                <form method="POST" action="{{ route('admin.system.backup') }}" class="inline">
-                    @csrf
-                    <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                        <i class="fas fa-database mr-2"></i>Создать резервную копию
-                    </button>
-                </form>
             </div>
         </div>
+    </div>
+
+    <!-- Резервное копирование -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-database mr-2"></i>Резервное копирование
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <form method="POST" action="{{ route('admin.system.backup-db') }}" class="inline">
+                @csrf
+                <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    <i class="fas fa-database mr-2"></i>Резервная копия БД
+                </button>
+            </form>
+            
+            <form method="POST" action="{{ route('admin.system.backup-files') }}" class="inline">
+                @csrf
+                <input type="hidden" name="include_images" value="0">
+                <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    <i class="fas fa-folder mr-2"></i>Резервная копия файлов (без картинок)
+                </button>
+            </form>
+            
+            <form method="POST" action="{{ route('admin.system.backup-files') }}" class="inline">
+                @csrf
+                <input type="hidden" name="include_images" value="1">
+                <button type="submit" class="w-full flex items-center justify-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                    <i class="fas fa-images mr-2"></i>Резервная копия с картинками
+                </button>
+            </form>
+        </div>
+
+        <!-- Список резервных копий -->
+        @if(count($backups) > 0)
+            <div class="mt-6">
+                <h4 class="text-md font-semibold text-gray-900 mb-3">
+                    <i class="fas fa-list mr-2"></i>Последние резервные копии
+                </h4>
+                <div class="space-y-2">
+                    @foreach($backups as $backup)
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                <div class="flex-shrink-0">
+                                    @if($backup['type'] === 'db')
+                                        <i class="fas fa-database text-purple-600"></i>
+                                    @else
+                                        <i class="fas fa-folder text-indigo-600"></i>
+                                    @endif
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $backup['name'] }}</p>
+                                    <p class="text-xs text-gray-500">
+                                        {{ $backup['size_formatted'] }} • {{ $backup['created_at'] }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="ml-3 flex items-center space-x-2 flex-shrink-0">
+                                <a href="{{ route('admin.system.backup.download', ['filename' => $backup['name']]) }}" 
+                                   class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-download mr-1"></i>Скачать
+                                </a>
+                                <form method="POST" action="{{ route('admin.system.backup.delete', ['filename' => $backup['name']]) }}" 
+                                      class="inline"
+                                      onsubmit="return confirm('Вы уверены, что хотите удалить резервную копию {{ $backup['name'] }}? Это действие нельзя отменить.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                        <i class="fas fa-trash mr-1"></i>Удалить
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @else
+            <div class="mt-6 text-center py-4 text-gray-500">
+                <i class="fas fa-inbox text-3xl mb-2"></i>
+                <p>Резервные копии отсутствуют</p>
+            </div>
+        @endif
     </div>
 
     <!-- Предупреждения -->
@@ -200,19 +151,6 @@
     </div>
 </div>
 @endsection
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

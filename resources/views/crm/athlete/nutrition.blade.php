@@ -97,7 +97,7 @@
 
 @section('content')
 <div class="min-h-screen ">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 py-8">
         <!-- Описание -->
     
         <div x-data="nutritionApp()" x-init="loadNutritionPlans()" x-cloak>
@@ -209,7 +209,13 @@
 </div>
 
 <!-- Модальное окно детального просмотра плана питания -->
-<div x-data="{ detailedNutritionPlan: null }" x-show="detailedNutritionPlan" x-cloak x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; display: none !important;">
+<div x-data="{ 
+    detailedNutritionPlan: null,
+    hasNotes(plan) {
+        if (!plan || !plan.nutrition_days) return false;
+        return plan.nutrition_days.some(day => day.notes && day.notes.trim() !== '');
+    }
+}" x-show="detailedNutritionPlan" x-cloak x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; display: none !important;">
     <div class="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[85vh] overflow-hidden">
         <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${detailedNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>
@@ -220,7 +226,7 @@
             </button>
         </div>
         
-        <div class="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+        <div class="p-5 overflow-y-auto max-h-[calc(85vh-120px)]">
             <template x-if="detailedNutritionPlan">
                 <div>
                     <!-- Описание плана -->
@@ -257,9 +263,18 @@
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.day') }}</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.proteins') }} ({{ __('common.g') }})</th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.fats') }} ({{ __('common.g') }})</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.carbs') }} ({{ __('common.g') }})</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300 carbs-header">
+                                        <span class="carbs-full">{{ __('common.carbs') }} ({{ __('common.g') }})</span>
+                                        <span class="carbs-short" style="display: none;">
+                                            @if(app()->getLocale() === 'ua')
+                                                Вугл. ({{ __('common.g') }})
+                                            @else
+                                                Углев. ({{ __('common.g') }})
+                                            @endif
+                                        </span>
+                                    </th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
+                                    <th x-show="hasNotes(detailedNutritionPlan)" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-300">
@@ -270,7 +285,7 @@
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1)"></td>
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1)"></td>
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.calories || 0).toFixed(1)"></td>
-                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
+                                        <td x-show="hasNotes(detailedNutritionPlan)" class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -379,6 +394,36 @@ function nutritionApp() {
 /* Скрыть элементы с x-cloak до инициализации Alpine.js */
 [x-cloak] {
     display: none !important;
+}
+
+/* Мобильная версия для карточек статистики питания */
+@media (max-width: 767px) {
+    div.stats-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    div.stats-container .stat-card {
+        min-width: auto !important;
+        max-width: none !important;
+        padding: 16px !important;
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 12px !important;
+        flex: 0 0 auto !important;
+        width: 100% !important;
+    }
+    
+    /* Сокращение "Углеводы" на мобильной версии */
+    .carbs-header .carbs-full {
+        display: none !important;
+    }
+    
+    .carbs-header .carbs-short {
+        display: inline !important;
+    }
 }
 </style>
 @endsection

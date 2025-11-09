@@ -299,35 +299,35 @@ function athleteSettingsApp() {
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="name">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="name">
                         {{ $athlete->name }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.email') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="email">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="email">
                         {{ $athlete->email }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.phone') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="phone">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="phone">
                         {{ $athlete->phone ?? __('common.not_specified') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.age') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="age">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="age">
                         {{ $athlete->age ?? __('common.not_specified') }} {{ __('common.years') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.gender') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="gender">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="gender">
                         @if($athlete->gender === 'male')
                             {{ __('common.male') }}
                         @elseif($athlete->gender === 'female')
@@ -340,21 +340,21 @@ function athleteSettingsApp() {
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.height') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="height">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="height">
                         {{ $athlete->height ? $athlete->height . ' ' . __('common.cm') : __('common.not_specified') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.birth_date') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="birth_date">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="birth_date">
                         {{ $athlete->birth_date ? $athlete->birth_date->format('d.m.Y') : __('common.not_specified') }}
                     </div>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.sport_level') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="sport_level">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="sport_level">
                         @if($athlete->sport_level === 'beginner')
                             {{ __('common.beginner') }}
                         @elseif($athlete->sport_level === 'intermediate')
@@ -369,7 +369,7 @@ function athleteSettingsApp() {
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
-                    <div class="bg-gray-50 rounded-lg px-4 py-3 text-gray-900" data-field="goals">
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900" data-field="goals">
                         @if($athlete->goals && count($athlete->goals) > 0)
                             {{ implode(', ', array_map(function($goal) {
                                 return match($goal) {

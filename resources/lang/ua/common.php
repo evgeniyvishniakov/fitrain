@@ -492,6 +492,7 @@ return [
     'timezone_changed' => 'Часовий пояс успішно змінено',
     // Тренування тренера
     'all_statuses' => 'Всі статуси',
+    'all_workouts_filter' => 'Всі тренування',
     'planned' => 'Заплановано',
     'completed' => 'Завершено',
     'cancelled' => 'Скасовано',
@@ -653,6 +654,7 @@ return [
     'equipment_required' => 'Обладнання *',
     'description' => 'Опис',
     'execution_instructions' => 'Інструкції з виконання',
+    'add_video' => 'Додати відео',
     'add_video_to_exercise' => 'Додати відео до вправи',
     'video_title' => 'Назва відео',
     'video_description' => 'Опис відео',

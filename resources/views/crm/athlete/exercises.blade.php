@@ -319,6 +319,38 @@ function exerciseApp() {
             return url.includes('youtube.com') || url.includes('youtu.be');
         },
         
+        // Наличие видео у упражнения (системного или тренерского)
+        hasVideo(exercise) {
+            return this.getVideoUrl(exercise) !== '';
+        },
+
+        // Получение актуального URL видео с приоритетом видео тренера
+        getVideoUrl(exercise) {
+            if (!exercise) return '';
+
+            const trainerVideo = exercise.trainer_video || null;
+            const trainerUrl = trainerVideo ? (trainerVideo.url || trainerVideo.video_url || '') : '';
+            const candidate = trainerUrl || exercise.video_url;
+
+            if (!candidate || candidate === 'null') {
+                return '';
+            }
+
+            return candidate;
+        },
+
+        // Название видео (если тренер указал своё название)
+        getVideoTitle(exercise) {
+            if (!exercise) return '';
+
+            const trainerVideo = exercise.trainer_video || null;
+            if (trainerVideo && trainerVideo.title) {
+                return trainerVideo.title;
+            }
+
+            return exercise.name || '';
+        },
+
         // Открытие модального окна для видео
         openVideoModal(url, title) {
             window.dispatchEvent(new CustomEvent('open-video-modal', {
@@ -524,8 +556,8 @@ function exerciseApp() {
                                         :title="'Нажмите чтобы открыть: ' + exercise.name">
                                         <span x-text="exercise.name"></span>
                                     </h3>
-                                    <button x-show="exercise.video_url" 
-                                            @click.stop="openVideoModal(exercise.video_url, exercise.name)"
+                                    <button x-show="hasVideo(exercise)" 
+                                            @click.stop="openVideoModal(getVideoUrl(exercise), getVideoTitle(exercise))"
                                             class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
                                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -635,17 +667,17 @@ function exerciseApp() {
                         </template>
                         
                         <!-- Системное видео -->
-                        <div x-show="currentExercise?.video_url">
+                        <div x-show="hasVideo(currentExercise)">
                             <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
                             <div class="bg-gray-50 rounded-lg p-2">
-                                <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                                    <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                <div x-show="isYouTubeUrl(getVideoUrl(currentExercise))" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                    <iframe :src="getYouTubeEmbedUrl(getVideoUrl(currentExercise))" 
                                             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
                                             allowfullscreen>
                                     </iframe>
                                 </div>
-                                <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
-                                    <a :href="currentExercise?.video_url" 
+                                <div x-show="!isYouTubeUrl(getVideoUrl(currentExercise))" class="text-center py-4">
+                                    <a :href="getVideoUrl(currentExercise)" 
                                        target="_blank" 
                                        rel="noopener noreferrer"
                                        class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
@@ -760,17 +792,17 @@ function exerciseApp() {
                 </div>
                 
                 <!-- Системное видео -->
-                <div x-show="currentExercise?.video_url">
+                <div x-show="hasVideo(currentExercise)">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
                     <div class="bg-gray-50 rounded-lg p-2">
-                        <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                            <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                        <div x-show="isYouTubeUrl(getVideoUrl(currentExercise))" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                            <iframe :src="getYouTubeEmbedUrl(getVideoUrl(currentExercise))" 
                                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
                                     allowfullscreen>
                             </iframe>
                         </div>
-                        <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
-                            <a :href="currentExercise?.video_url" 
+                        <div x-show="!isYouTubeUrl(getVideoUrl(currentExercise))" class="text-center py-4">
+                            <a :href="getVideoUrl(currentExercise)" 
                                target="_blank" 
                                rel="noopener noreferrer"
                                class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
