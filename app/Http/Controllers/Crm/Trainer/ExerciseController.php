@@ -275,6 +275,17 @@ class ExerciseController extends BaseController
               ->orWhere('trainer_id', auth()->id()); // + свои пользовательские
         })->get();
 
+        $favoriteIds = DB::table('favorite_exercises')
+            ->where('user_id', auth()->id())
+            ->pluck('exercise_id')
+            ->toArray();
+
+        $exercises->transform(function ($exercise) use ($favoriteIds) {
+            $exercise->is_favorite = in_array($exercise->id, $favoriteIds, true);
+            $exercise->exercise_type = $exercise->is_system ? 'system' : 'custom';
+            return $exercise;
+        });
+
         return response()->json([
             'success' => true,
             'exercises' => $exercises

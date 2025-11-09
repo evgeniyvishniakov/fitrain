@@ -3292,6 +3292,18 @@ function workoutApp() {
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_equipment') }}</option>
                 </select>
+
+                <!-- Фильтр типа упражнений -->
+                <select id="type-filter"
+                        onchange="filterExercises()"
+                        style="min-width: 160px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor = '#4f46e5'"
+                        onblur="this.style.borderColor = '#d1d5db'">
+                    <option value="">{{ __('common.all_exercises') }}</option>
+                    <option value="system">{{ __('common.system_exercises') }}</option>
+                    <option value="custom">{{ __('common.user_exercises') }}</option>
+                    <option value="favorite">{{ __('common.favorite_exercises') }}</option>
+                </select>
                                         </div>
             
             <div id="exercises-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%;">
@@ -3426,11 +3438,19 @@ async function loadExercises() {
         
         const data = await response.json();
         if (data.success) {
-            exercises = data.exercises;
+            exercises = (data.exercises || []).map(exercise => {
+                const exerciseType = exercise.exercise_type || (exercise.is_system ? 'system' : 'custom');
+                return {
+                    ...exercise,
+                    exercise_type: exerciseType,
+                    is_favorite: !!exercise.is_favorite
+                };
+            });
             renderExercises();
-        } else {
+            filterExercises();
         }
     } catch (error) {
+        console.error('Ошибка загрузки упражнений:', error);
     }
 }
 
@@ -3461,30 +3481,60 @@ function renderExercises() {
     }
     
     container.innerHTML = exercises.map(exercise => {
-        const hasImage = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
-        const imageUrl = hasImage ? `/storage/${exercise.image_url}` : '';
+        function getDisplayImage(exercise) {
+            const isGlutes = exercise.category === 'Ягодицы';
+            
+            if (isGlutes) {
+                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                    return exercise.image_url_female;
+                }
+                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                    return exercise.image_url;
+                }
+            } else {
+                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
+                    return exercise.image_url;
+                }
+                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
+                    return exercise.image_url_female;
+                }
+            }
+            return null;
+        }
+
+        const displayImage = getDisplayImage(exercise);
+        const imageUrl = displayImage ? `/storage/${displayImage}` : '';
         
         // Экранируем специальные символы для безопасного использования в HTML атрибутах
+        const displayCategory = (exercise.category && exercise.category !== 'null') ? exercise.category : '';
+        const displayEquipment = (exercise.equipment && exercise.equipment !== 'null') ? exercise.equipment : '';
+
         const escapeName = (exercise.name || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const escapeCategory = (exercise.category || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-        const escapeEquipment = (exercise.equipment || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const escapeCategory = displayCategory.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const escapeEquipment = displayEquipment.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const exerciseType = exercise.exercise_type || (exercise.is_system ? 'system' : 'custom');
+        const isFavorite = !!exercise.is_favorite;
         
         return `
             <div data-exercise-id="${exercise.id}" 
                  data-exercise-name="${escapeName}" 
                  data-exercise-category="${escapeCategory}" 
                  data-exercise-equipment="${escapeEquipment}"
-                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 160px;"
+                 data-exercise-type="${exerciseType}"
+                 data-exercise-favorite="${isFavorite ? '1' : '0'}"
+                 style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 180px;"
                  onclick="toggleExercise(this, ${exercise.id})">
-                ${hasImage ? `
+                ${imageUrl ? `
                     <img src="${imageUrl}" 
                          alt="${escapeName}" 
                          style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
                 ` : ''}
                 <div style="flex: 1; min-width: 0;">
-                    <div style="font-weight: 600; color: #111827; margin-bottom: 5px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
-                    <div style="font-size: 13px; color: #6b7280; margin-bottom: 3px;">${exercise.category}</div>
-                    <div style="font-size: 13px; color: #9ca3af;">${exercise.equipment}</div>
+                    <div style="font-weight: 600; color: #111827; margin-bottom: 6px; font-size: 16px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                        ${displayCategory ? `<span style="display:inline-flex; align-items:center; padding:4px 12px; background:#f3f4f6; border-radius:9999px; font-size:12px; font-weight:500; color:#1f2937;">${displayCategory}</span>` : ''}
+                        ${displayEquipment ? `<span style="display:inline-flex; align-items:center; padding:4px 12px; background:#e2e8f0; border-radius:9999px; font-size:12px; font-weight:500; color:#334155;">${displayEquipment}</span>` : ''}
+                    </div>
                 </div>
             </div>
         `;
@@ -3565,20 +3615,27 @@ function filterExercises() {
     const searchTerm = document.getElementById('exercise-search').value.toLowerCase().trim();
     const categoryFilter = document.getElementById('category-filter').value.toLowerCase().trim();
     let equipmentFilter = document.getElementById('equipment-filter').value.toLowerCase().trim();
+    const typeFilter = document.getElementById('type-filter').value.toLowerCase().trim();
     
     // Динамически заполняем список оборудования по выбранной категории
     const equipmentSelect = document.getElementById('equipment-filter');
     const prevValue = equipmentFilter;
     const equipmentSet = new Set();
     (exercises || []).forEach(ex => {
-        if (!categoryFilter || ex.category.toLowerCase() === categoryFilter) {
+        const exCategory = (ex.category || '').toLowerCase();
+        const exType = (ex.exercise_type || (ex.is_system ? 'system' : 'custom')).toLowerCase();
+        const matchesTypeFilter = !typeFilter
+            || (typeFilter === 'favorite' ? !!ex.is_favorite
+                : exType === typeFilter);
+
+        if ((!categoryFilter || exCategory === categoryFilter) && matchesTypeFilter) {
             if (ex.equipment && ex.equipment !== 'null' && ex.equipment !== null) {
                 equipmentSet.add(ex.equipment);
             }
         }
     });
     const currentOptions = Array.from(equipmentSelect.options).map(o => o.value);
-    const desiredOptions = [''].concat(Array.from(equipmentSet).sort());
+    const desiredOptions = [''].concat(Array.from(equipmentSet).map(eq => eq.toLowerCase()).sort());
     if (JSON.stringify(currentOptions) !== JSON.stringify(desiredOptions)) {
         equipmentSelect.innerHTML = '';
         const emptyOpt = document.createElement('option');
@@ -3592,7 +3649,7 @@ function filterExercises() {
             equipmentSelect.appendChild(opt);
         });
         // Восстанавливаем значение, если оно по-прежнему доступно
-        if (desiredOptions.map(o => o.toLowerCase()).includes(prevValue)) {
+        if (desiredOptions.includes(prevValue)) {
             equipmentSelect.value = prevValue;
         } else {
             equipmentSelect.value = '';
@@ -3611,8 +3668,6 @@ function filterExercises() {
     const exerciseElements = document.querySelectorAll('#exercises-container > div[data-exercise-id]');
     const noResults = document.getElementById('no-results');
     let visibleCount = 0;
-    
-    
 
     exerciseElements.forEach(element => {
         const exerciseId = parseInt(element.dataset.exerciseId);
@@ -3620,15 +3675,16 @@ function filterExercises() {
         const name = (element.dataset.exerciseName || '').toLowerCase().trim();
         const category = (element.dataset.exerciseCategory || '').toLowerCase().trim();
         const equipment = (element.dataset.exerciseEquipment || '').toLowerCase().trim();
+        const elementType = (element.dataset.exerciseType || '').toLowerCase().trim();
+        const elementFavorite = element.dataset.exerciseFavorite === '1';
 
         const matchesSearch = !searchTerm || name.includes(searchTerm);
         const matchesCategory = !categoryFilter || category === categoryFilter || category.includes(categoryFilter);
         const matchesEquipment = !equipmentFilter || equipment === equipmentFilter || equipment.includes(equipmentFilter);
+        const matchesType = !typeFilter || (typeFilter === 'favorite' ? elementFavorite : elementType === typeFilter);
         const isNotSelected = !selectedExerciseIds.includes(exerciseId);
-        
-        
 
-        if (matchesSearch && matchesCategory && matchesEquipment && isNotSelected) {
+        if (matchesSearch && matchesCategory && matchesEquipment && matchesType && isNotSelected) {
             element.style.display = 'flex';
             visibleCount++;
         } else {
@@ -3636,8 +3692,6 @@ function filterExercises() {
         }
     });
     
-    
-
     // Показываем/скрываем сообщение о пустых результатах
     if (visibleCount === 0) {
         noResults.style.display = 'block';
