@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\BaseController;
 use App\Models\Shared\User;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -147,11 +148,21 @@ class UserController extends BaseController
                 ->with('error', 'Нельзя удалить самого себя');
         }
 
-        $user->delete();
+        try {
+            $user->delete();
 
-        return redirect()
-            ->route('admin.users.index')
-            ->with('success', 'Пользователь успешно удален');
+            return redirect()
+                ->route('admin.users.index')
+                ->with('success', 'Пользователь успешно удален');
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return redirect()
+                    ->route('admin.users.index')
+                    ->with('error', 'Невозможно удалить пользователя: к нему привязаны записи в системе (тренировки, шаблоны или другие данные). Удалите или переназначьте связанные данные и повторите попытку.');
+            }
+
+            throw $e;
+        }
     }
 
     /**

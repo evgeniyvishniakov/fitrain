@@ -153,13 +153,13 @@
                                     </a>
                                     
                                     @if($user->id !== auth()->id())
-                                        <button onclick="toggleStatus({{ $user->id }}, {{ $user->is_active ? 'false' : 'true' }})" 
+                                        <button onclick="toggleStatus('{{ route('admin.users.toggle-status', $user) }}', {{ $user->is_active ? 'false' : 'true' }})" 
                                                 class="text-{{ $user->is_active ? 'yellow' : 'green' }}-600 hover:text-{{ $user->is_active ? 'yellow' : 'green' }}-900" 
                                                 title="{{ $user->is_active ? 'Деактивировать' : 'Активировать' }}">
                                             <i class="fas fa-{{ $user->is_active ? 'pause' : 'play' }}"></i>
                                         </button>
                                         
-                                        <button onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')" 
+                                        <button onclick="deleteUser('{{ route('admin.users.destroy', $user) }}', '{{ $user->name }}')" 
                                                 class="text-red-600 hover:text-red-900" title="Удалить">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -225,8 +225,8 @@
 
 @section('scripts')
 <script>
-    function toggleStatus(userId, newStatus) {
-        fetch(`/admin/users/${userId}/toggle-status`, {
+    function toggleStatus(actionUrl, newStatus) {
+        fetch(actionUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -250,9 +250,9 @@
         });
     }
 
-    function deleteUser(userId, userName) {
+    function deleteUser(actionUrl, userName) {
         document.getElementById('userName').textContent = userName;
-        document.getElementById('deleteForm').action = `/admin/users/${userId}`;
+        document.getElementById('deleteForm').action = actionUrl;
         document.getElementById('deleteModal').classList.remove('hidden');
     }
 
