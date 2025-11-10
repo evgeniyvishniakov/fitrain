@@ -73,6 +73,7 @@ class User extends Authenticatable
         'medical_documents' => 'array',
         'profile_modules' => 'array',
         'is_active' => 'boolean',
+        'last_activity_at' => 'datetime',
     ];
 
     /**

@@ -647,6 +647,7 @@ return [
     'role_trainer' => 'Trainer',
     'role_athlete' => 'Athlete',
     'role_self_athlete' => 'Self-athlete',
+    'last_activity' => 'Last activity',
     'completed' => 'Completed',
     'not_completed' => 'Not completed',
     'partially_completed' => 'Partially',

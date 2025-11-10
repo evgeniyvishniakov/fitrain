@@ -95,6 +95,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Дата регистрации
                         </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {{ __('common.last_activity') }}
+                        </th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Действия
                         </th>
@@ -137,6 +140,9 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ $user->created_at->format('d.m.Y H:i') }}
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ $user->last_activity_at ? $user->last_activity_at->format('d.m.Y H:i') : '—' }}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center justify-end space-x-2">
                                     <a href="{{ route('admin.users.show', $user) }}" class="text-blue-600 hover:text-blue-900" title="Просмотр">
@@ -163,7 +169,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
+                            <td colspan="6" class="px-6 py-12 text-center">
                                 <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
                                 <p class="text-gray-500">Пользователи не найдены</p>
                             </td>

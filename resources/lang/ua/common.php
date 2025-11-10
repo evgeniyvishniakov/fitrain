@@ -630,6 +630,7 @@ return [
     'role_trainer' => 'Тренер',
     'role_athlete' => 'Спортсмен',
     'role_self_athlete' => 'Індивідуальний спортсмен',
+    'last_activity' => 'Остання активність',
     'completed' => 'Виконано',
     'not_completed' => 'Не виконано',
     'partially_completed' => 'Частково',

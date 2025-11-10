@@ -66,6 +66,10 @@
                         <p class="mt-1 text-sm text-gray-900">{{ $user->created_at->format('d.m.Y H:i') }}</p>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-500">{{ __('common.last_activity') }}</label>
+                        <p class="mt-1 text-sm text-gray-900">{{ $user->last_activity_at ? $user->last_activity_at->format('d.m.Y H:i') : '—' }}</p>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-500">Последнее обновление</label>
                         <p class="mt-1 text-sm text-gray-900">{{ $user->updated_at->format('d.m.Y H:i') }}</p>
                     </div>
