@@ -6,6 +6,17 @@
 <script src="{{ asset('js/notifications.js') }}"></script>
 <script src="{{ asset('js/workout-drag-drop.js') }}"></script>
 
+<style>
+    @media (hover: hover) and (pointer: fine) {
+        [x-data*="workoutApp"] select,
+        #exerciseModal select,
+        #templateModal select {
+            cursor: pointer !important;
+            font-weight: 400 !important;
+        }
+    }
+</style>
+
 <!-- Drag and Drop функциональность для упражнений -->
 <script>
 // Функции drag and drop уже доступны глобально из workout-drag-drop.js
@@ -3264,6 +3275,12 @@ function workoutApp() {
                         min-width: 0 !important;
                     }
                 }
+                
+                @media (min-width: 641px) {
+                    #exerciseModal select {
+                        cursor: pointer !important;
+                    }
+                }
             </style>
             <div class="exercise-filters-row" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
                 <!-- Поиск -->
@@ -3278,7 +3295,7 @@ function workoutApp() {
                 <!-- Фильтр категории -->
                 <select id="category-filter" 
                         onchange="filterExercises()"
-                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s;"
+                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s; cursor: pointer;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_categories') }}</option>
@@ -3300,7 +3317,7 @@ function workoutApp() {
                 <!-- Фильтр оборудования -->
                 <select id="equipment-filter" 
                         onchange="filterExercises()"
-                        style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
+                        style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s; cursor: pointer;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_equipment') }}</option>
@@ -3309,7 +3326,7 @@ function workoutApp() {
                 <!-- Фильтр типа упражнений -->
                 <select id="type-filter"
                         onchange="filterExercises()"
-                        style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
+                        style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; outline: none; background: white; transition: border-color 0.2s; cursor: pointer;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_exercises') }}</option>
@@ -3319,7 +3336,14 @@ function workoutApp() {
                 </select>
                                         </div>
             
-            <div id="exercises-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%;">
+            <style>
+                @media (max-width: 640px) {
+                    #exerciseModal .exercise-cards-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            </style>
+            <div id="exercises-container" class="exercise-cards-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; width: 100%;">
                 <p style="color: black;">{{ __('common.loading_exercises') }}</p>
                                     </div>
             
