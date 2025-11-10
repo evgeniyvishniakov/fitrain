@@ -3,6 +3,15 @@
 @section('title', 'Создать пользователя')
 @section('page-title', 'Создать пользователя')
 
+@php
+    $roleLabels = [
+        'admin' => __('common.role_admin'),
+        'trainer' => __('common.role_trainer'),
+        'athlete' => __('common.role_athlete'),
+        'self-athlete' => __('common.role_self_athlete'),
+    ];
+@endphp
+
 @section('content')
 <div class="max-w-2xl mx-auto">
     <div class="bg-white rounded-xl shadow-sm">
@@ -92,7 +101,7 @@
                     <option value="">Выберите роль</option>
                     @foreach($roles as $role)
                         <option value="{{ $role->name }}" {{ old('role') == $role->name ? 'selected' : '' }}>
-                            {{ ucfirst($role->name) }}
+                            {{ $roleLabels[$role->name] ?? ucfirst($role->name) }}
                         </option>
                     @endforeach
                 </select>
@@ -133,16 +142,20 @@
         </h4>
         <div class="space-y-2 text-sm text-blue-800">
             <div class="flex items-center">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-3">Admin</span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-3">{{ $roleLabels['admin'] }}</span>
                 <span>Полный доступ к админ панели и управлению системой</span>
             </div>
             <div class="flex items-center">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-3">Trainer</span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-3">{{ $roleLabels['trainer'] }}</span>
                 <span>Управление спортсменами, создание тренировок и программ</span>
             </div>
             <div class="flex items-center">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-3">Athlete</span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-3">{{ $roleLabels['athlete'] }}</span>
                 <span>Просмотр тренировок, отслеживание прогресса</span>
+            </div>
+            <div class="flex items-center">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-3">{{ $roleLabels['self-athlete'] }}</span>
+                <span>Доступ к тренировкам и прогрессу без привязки к тренеру</span>
             </div>
         </div>
     </div>

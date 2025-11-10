@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Админ панель') - FitTrain</title>
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo $__env->yieldContent('title', 'Админ панель'); ?> - FitTrain</title>
     
     <style>
         .status-active {
@@ -68,37 +68,37 @@
                     <p class="text-gray-400 text-xs uppercase tracking-wider">Основное</p>
                 </div>
                 
-                <a href="{{ route('admin.dashboard.main') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.dashboard*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.dashboard.main')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.dashboard*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-tachometer-alt mr-3"></i>
                     Дашборд
                 </a>
                 
-                <a href="{{ route('admin.users.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.users*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.users.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.users*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-users mr-3"></i>
                     Пользователи
                 </a>
                 
-                <a href="{{ route('admin.languages.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.languages*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.languages.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.languages*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-language mr-3"></i>
                     Языки
                 </a>
                 
-                <a href="{{ route('admin.currencies.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.currencies*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.currencies.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.currencies*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-dollar-sign mr-3"></i>
                     Валюты
                 </a>
                 
-                <a href="{{ route('admin.subscriptions.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.subscriptions*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.subscriptions.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.subscriptions*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-credit-card mr-3"></i>
                     Планы подписок
                 </a>
                 
-                <a href="{{ route('admin.trainer-subscriptions.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.trainer-subscriptions*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.trainer-subscriptions.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.trainer-subscriptions*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-user-tie mr-3"></i>
                     Подписки тренеров
                 </a>
                 
-                <a href="{{ route('admin.exercises.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.exercises*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.exercises.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.exercises*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-dumbbell mr-3"></i>
                     Упражнения
                 </a>
@@ -107,7 +107,7 @@
                     <p class="text-gray-400 text-xs uppercase tracking-wider">Аналитика</p>
                 </div>
                 
-                <a href="{{ route('admin.statistics.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.statistics*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.statistics.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.statistics*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-chart-bar mr-3"></i>
                     Статистика
                 </a>
@@ -116,7 +116,7 @@
                     <p class="text-gray-400 text-xs uppercase tracking-wider">Система</p>
                 </div>
                 
-                <a href="{{ route('admin.system.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.system*') ? 'bg-gray-700 text-white' : '' }}">
+                <a href="<?php echo e(route('admin.system.index')); ?>" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white <?php echo e(request()->routeIs('admin.system*') ? 'bg-gray-700 text-white' : ''); ?>">
                     <i class="fas fa-cogs mr-3"></i>
                     Система
                 </a>
@@ -132,7 +132,7 @@
                         <button id="sidebar-toggle" class="text-gray-500 hover:text-gray-700 lg:hidden">
                             <i class="fas fa-bars text-xl"></i>
                         </button>
-                        <h2 class="text-2xl font-semibold text-gray-800 ml-4">@yield('page-title', 'Админ панель')</h2>
+                        <h2 class="text-2xl font-semibold text-gray-800 ml-4"><?php echo $__env->yieldContent('page-title', 'Админ панель'); ?></h2>
                     </div>
                     
                     <div class="flex items-center space-x-4">
@@ -148,7 +148,7 @@
                         <div class="relative">
                             <div class="flex items-center space-x-3">
                                 <div class="text-right">
-                                    <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
+                                    <p class="text-sm font-medium text-gray-900"><?php echo e(auth()->user()->name); ?></p>
                                     <p class="text-xs text-gray-500">Администратор</p>
                                 </div>
                                 <img class="h-8 w-8 rounded-full bg-gray-300" src="https://via.placeholder.com/32" alt="Avatar">
@@ -156,8 +156,8 @@
                         </div>
                         
                         <!-- Logout -->
-                        <form method="POST" action="{{ route('admin.logout') }}" class="inline">
-                            @csrf
+                        <form method="POST" action="<?php echo e(route('admin.logout')); ?>" class="inline">
+                            <?php echo csrf_field(); ?>
                             <button type="submit" class="text-gray-500 hover:text-gray-700">
                                 <i class="fas fa-sign-out-alt text-xl"></i>
                             </button>
@@ -167,23 +167,25 @@
             </header>
             
             <!-- Flash Messages -->
-            @if(session('success'))
+            <?php if(session('success')): ?>
                 <div class="flash-message bg-green-100 border border-green-400 text-green-700 px-4 py-3 mx-6 mt-4 rounded">
                     <i class="fas fa-check-circle mr-2"></i>
-                    {{ session('success') }}
+                    <?php echo e(session('success')); ?>
+
                 </div>
-            @endif
+            <?php endif; ?>
             
-            @if(session('error'))
+            <?php if(session('error')): ?>
                 <div class="flash-message bg-red-100 border border-red-400 text-red-700 px-4 py-3 mx-6 mt-4 rounded">
                     <i class="fas fa-exclamation-circle mr-2"></i>
-                    {{ session('error') }}
+                    <?php echo e(session('error')); ?>
+
                 </div>
-            @endif
+            <?php endif; ?>
             
             <!-- Page Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-                @yield('content')
+                <?php echo $__env->yieldContent('content'); ?>
             </main>
         </div>
     </div>
@@ -214,6 +216,7 @@
         }
     </script>
     
-    @yield('scripts')
+    <?php echo $__env->yieldContent('scripts'); ?>
 </body>
 </html>
+<?php /**PATH D:\OSPanel\domains\fitrain\resources\views/admin/layouts/app.blade.php ENDPATH**/ ?>

@@ -3,6 +3,15 @@
 @section('title', 'Редактировать: ' . $user->name)
 @section('page-title', 'Редактировать пользователя')
 
+@php
+    $roleLabels = [
+        'admin' => __('common.role_admin'),
+        'trainer' => __('common.role_trainer'),
+        'athlete' => __('common.role_athlete'),
+        'self-athlete' => __('common.role_self_athlete'),
+    ];
+@endphp
+
 @section('content')
 <div class="max-w-2xl mx-auto">
     <div class="bg-white rounded-xl shadow-sm">
@@ -92,7 +101,7 @@
                     <option value="">Выберите роль</option>
                     @foreach($roles as $role)
                         <option value="{{ $role->name }}" {{ old('role', $user->roles->first()?->name) == $role->name ? 'selected' : '' }}>
-                            {{ ucfirst($role->name) }}
+                            {{ $roleLabels[$role->name] ?? ucfirst($role->name) }}
                         </option>
                     @endforeach
                 </select>

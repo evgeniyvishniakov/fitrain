@@ -3,6 +3,15 @@
 @section('title', 'Пользователь: ' . $user->name)
 @section('page-title', 'Просмотр пользователя')
 
+@php
+    $roleLabels = [
+        'admin' => __('common.role_admin'),
+        'trainer' => __('common.role_trainer'),
+        'athlete' => __('common.role_athlete'),
+        'self-athlete' => __('common.role_self_athlete'),
+    ];
+@endphp
+
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
     <!-- Заголовок и действия -->
@@ -77,7 +86,7 @@
                                     @elseif($role->name === 'trainer') bg-blue-100 text-blue-800
                                     @elseif($role->name === 'athlete') bg-green-100 text-green-800
                                     @else bg-gray-100 text-gray-800 @endif">
-                                    {{ ucfirst($role->name) }}
+                                    {{ $roleLabels[$role->name] ?? ucfirst($role->name) }}
                                 </span>
                                 <span class="ml-3 text-sm text-gray-600">{{ $role->description ?? 'Роль пользователя' }}</span>
                             </div>
