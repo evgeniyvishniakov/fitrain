@@ -3438,7 +3438,20 @@ function workoutApp() {
         <!-- Содержимое -->
         <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
             <!-- Поиск и фильтры -->
-            <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+            <style>
+                @media (max-width: 640px) {
+                    #exerciseModal .exercise-filters-row {
+                        display: grid !important;
+                        gap: 12px !important;
+                        width: 100% !important;
+                    }
+                    #exerciseModal .exercise-filters-row > * {
+                        width: 100% !important;
+                        min-width: 0 !important;
+                    }
+                }
+            </style>
+            <div class="exercise-filters-row" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
                 <!-- Поиск -->
                 <input type="text" 
                        id="exercise-search" 
@@ -3455,19 +3468,6 @@ function workoutApp() {
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value=""><?php echo e(__('common.all_categories')); ?></option>
-                    <option value="Грудь"><?php echo e(__('common.chest')); ?></option>
-                    <option value="Спина"><?php echo e(__('common.back_muscles')); ?></option>
-                    <option value="Ноги(Бедра)"><?php echo e(__('common.legs_thighs')); ?></option>
-                    <option value="Ноги(Икры)"><?php echo e(__('common.legs_calves')); ?></option>
-                    <option value="Ягодицы"><?php echo e(__('common.glutes')); ?></option>
-                    <option value="Плечи"><?php echo e(__('common.shoulders')); ?></option>
-                    <option value="Руки(Трицепс)"><?php echo e(__('common.arms_triceps')); ?></option>
-                    <option value="Руки(Бицепс)"><?php echo e(__('common.arms_biceps')); ?></option>
-                    <option value="Руки(Предплечье)"><?php echo e(__('common.arms_forearm')); ?></option>
-                    <option value="Пресс"><?php echo e(__('common.abs')); ?></option>
-                    <option value="Шея"><?php echo e(__('common.neck')); ?></option>
-                    <option value="Кардио"><?php echo e(__('common.cardio')); ?></option>
-                    <option value="Гибкость"><?php echo e(__('common.flexibility')); ?></option>
                 </select>
                 
                 <!-- Фильтр оборудования -->
@@ -3558,12 +3558,24 @@ function workoutApp() {
 <script>
 // Глобальные переменные для модальных окон
 let exercises = [];
+let exerciseCategories = [];
+let exerciseEquipments = [];
 let templates = [];
 let selectedTemplate = null;
 
 // Функции для работы с модальными окнами
 function openExerciseModal() {
     document.getElementById('exerciseModal').style.display = 'block';
+    const searchInput = document.getElementById('exercise-search');
+    const categorySelect = document.getElementById('category-filter');
+    const equipmentSelect = document.getElementById('equipment-filter');
+    const typeSelect = document.getElementById('type-filter');
+
+    if (searchInput) searchInput.value = '';
+    if (categorySelect) categorySelect.value = '';
+    if (equipmentSelect) equipmentSelect.value = '';
+    if (typeSelect) typeSelect.value = '';
+
     loadExercises();
     // Применяем фильтрацию после загрузки упражнений
     setTimeout(() => {
@@ -3607,6 +3619,7 @@ async function loadExercises() {
                     is_favorite: !!exercise.is_favorite
                 };
             });
+            populateExerciseFilters();
             renderExercises();
             filterExercises();
         } else {
@@ -3711,6 +3724,54 @@ function renderExercises() {
     
     // Применяем фильтрацию после рендеринга
     filterExercises();
+}
+
+function populateExerciseFilters() {
+    const categorySelect = document.getElementById('category-filter');
+    const equipmentSelect = document.getElementById('equipment-filter');
+
+    if (!categorySelect || !equipmentSelect) {
+        return;
+    }
+
+    const categorySet = new Set();
+    const equipmentSet = new Set();
+
+    (exercises || []).forEach(ex => {
+        if (ex.category && ex.category !== 'null') {
+            categorySet.add(ex.category);
+        }
+        if (ex.equipment && ex.equipment !== 'null' && ex.equipment !== null) {
+            equipmentSet.add(ex.equipment);
+        }
+    });
+
+    exerciseCategories = Array.from(categorySet).sort((a, b) => a.localeCompare(b, 'ru'));
+    exerciseEquipments = Array.from(equipmentSet).sort((a, b) => a.localeCompare(b, 'ru'));
+
+    categorySelect.innerHTML = '';
+    const defaultCategory = document.createElement('option');
+    defaultCategory.value = '';
+    defaultCategory.textContent = '<?php echo e(__('common.all_categories')); ?>';
+    categorySelect.appendChild(defaultCategory);
+    exerciseCategories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+    });
+
+    equipmentSelect.innerHTML = '';
+    const defaultEquipment = document.createElement('option');
+    defaultEquipment.value = '';
+    defaultEquipment.textContent = '<?php echo e(__('common.all_equipment')); ?>';
+    equipmentSelect.appendChild(defaultEquipment);
+    exerciseEquipments.forEach(eq => {
+        const option = document.createElement('option');
+        option.value = eq;
+        option.textContent = eq;
+        equipmentSelect.appendChild(option);
+    });
 }
 
 // Отображение шаблонов

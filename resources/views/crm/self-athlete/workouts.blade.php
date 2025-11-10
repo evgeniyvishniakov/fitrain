@@ -3252,7 +3252,20 @@ function workoutApp() {
         <!-- Содержимое -->
         <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
             <!-- Поиск и фильтры -->
-            <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+            <style>
+                @media (max-width: 640px) {
+                    #exerciseModal .exercise-filters-row {
+                        display: grid !important;
+                        gap: 12px !important;
+                        width: 100% !important;
+                    }
+                    #exerciseModal .exercise-filters-row > * {
+                        width: 100% !important;
+                        min-width: 0 !important;
+                    }
+                }
+            </style>
+            <div class="exercise-filters-row" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
                 <!-- Поиск -->
                 <input type="text" 
                        id="exercise-search" 
@@ -3287,7 +3300,7 @@ function workoutApp() {
                 <!-- Фильтр оборудования -->
                 <select id="equipment-filter" 
                         onchange="filterExercises()"
-                        style="min-width: 150px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
+                        style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_equipment') }}</option>
@@ -3296,7 +3309,7 @@ function workoutApp() {
                 <!-- Фильтр типа упражнений -->
                 <select id="type-filter"
                         onchange="filterExercises()"
-                        style="min-width: 160px; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
+                        style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-weight: 600; outline: none; background: white; transition: border-color 0.2s;"
                         onfocus="this.style.borderColor = '#4f46e5'"
                         onblur="this.style.borderColor = '#d1d5db'">
                     <option value="">{{ __('common.all_exercises') }}</option>

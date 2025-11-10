@@ -1,7 +1,5 @@
-@extends("crm.layouts.app")
-
-@section("title", __('common.workout_templates'))
-@section("page-title", __('common.workout_templates'))
+<?php $__env->startSection("title", __('common.workout_templates')); ?>
+<?php $__env->startSection("page-title", __('common.workout_templates')); ?>
 
 <style>
 [x-cloak] { display: none !important; }
@@ -24,10 +22,10 @@
 function templatesApp() {
     return {
         currentView: 'list', // list, create, edit, view
-        templates: @json(\App\Models\Trainer\WorkoutTemplate::active()->with('creator')->get()->map(function($template) {
+        templates: <?php echo json_encode(\App\Models\Trainer\WorkoutTemplate::active()->with('creator')->get()->map(function($template) {
             $template->valid_exercises = $template->valid_exercises;
             return $template;
-        })),
+        }), 15, 512) ?>,
         currentTemplate: null,
         search: '',
         currentPage: 1,
@@ -198,7 +196,7 @@ function templatesApp() {
                     const result = await response.json();
                     
                     // Показываем уведомление об успехе
-                    this.showSuccessMessage('{{ __('common.template_saved') }}');
+                    this.showSuccessMessage('<?php echo e(__('common.template_saved')); ?>');
                     
                     if (method === 'POST' && result.template) {
                         // Если это создание нового шаблона, добавляем его в список
@@ -220,25 +218,25 @@ function templatesApp() {
                     
                 } else {
                     const error = await response.json();
-                    this.showErrorMessage('{{ __('common.template_saving_error') }}');
+                    this.showErrorMessage('<?php echo e(__('common.template_saving_error')); ?>');
                 }
             } catch (error) {
-                this.showErrorMessage('{{ __('common.template_saving_general_error') }}');
+                this.showErrorMessage('<?php echo e(__('common.template_saving_general_error')); ?>');
             }
         },
         
         // Удаление
         deleteTemplate(id) {
             const template = this.templates.find(t => t.id === id);
-            const templateName = template ? template.name : '{{ __('common.this_template') }}';
+            const templateName = template ? template.name : '<?php echo e(__('common.this_template')); ?>';
             
             // Показываем модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: '{{ __('common.delete_template_title') }}',
-                    message: `{{ __('common.are_you_sure_delete_template') }} "${templateName}"? {{ __('common.this_action_cannot_be_undone') }}`,
-                    confirmText: '{{ __('common.delete') }}',
-                    cancelText: '{{ __('common.cancel') }}',
+                    title: '<?php echo e(__('common.delete_template_title')); ?>',
+                    message: `<?php echo e(__('common.are_you_sure_delete_template')); ?> "${templateName}"? <?php echo e(__('common.this_action_cannot_be_undone')); ?>`,
+                    confirmText: '<?php echo e(__('common.delete')); ?>',
+                    cancelText: '<?php echo e(__('common.cancel')); ?>',
                     onConfirm: () => this.performDelete(id),
                 }
             }));
@@ -258,7 +256,7 @@ function templatesApp() {
                     this.templates = this.templates.filter(t => t.id !== id);
                     
                     // Показываем уведомление об успехе
-                    this.showSuccessMessage('{{ __('common.template_deleted') }}');
+                    this.showSuccessMessage('<?php echo e(__('common.template_deleted')); ?>');
                     
                     // Если удалили все шаблоны на текущей странице, переходим на предыдущую
                     if (this.paginatedTemplates.length === 0 && this.currentPage > 1) {
@@ -266,29 +264,29 @@ function templatesApp() {
                     }
                 } else {
                     const error = await response.json();
-                    this.showErrorMessage('{{ __('common.template_deleting_error') }}');
+                    this.showErrorMessage('<?php echo e(__('common.template_deleting_error')); ?>');
                 }
             } catch (error) {
-                this.showErrorMessage('{{ __('common.template_deleting_general_error') }}');
+                this.showErrorMessage('<?php echo e(__('common.template_deleting_general_error')); ?>');
             }
         },
         
         // Вспомогательные методы
         getCategoryLabel(category) {
             const categories = {
-                'strength': '{{ __('common.strength') }}',
-                'cardio': '{{ __('common.cardio') }}',
-                'flexibility': '{{ __('common.flexibility') }}',
-                'mixed': '{{ __('common.mixed') }}'
+                'strength': '<?php echo e(__('common.strength')); ?>',
+                'cardio': '<?php echo e(__('common.cardio')); ?>',
+                'flexibility': '<?php echo e(__('common.flexibility')); ?>',
+                'mixed': '<?php echo e(__('common.mixed')); ?>'
             };
             return categories[category] || category;
         },
         
         getDifficultyLabel(difficulty) {
             const difficulties = {
-                'beginner': '{{ __('common.beginner') }}',
-                'intermediate': '{{ __('common.intermediate') }}',
-                'advanced': '{{ __('common.advanced') }}'
+                'beginner': '<?php echo e(__('common.beginner')); ?>',
+                'intermediate': '<?php echo e(__('common.intermediate')); ?>',
+                'advanced': '<?php echo e(__('common.advanced')); ?>'
             };
             return difficulties[difficulty] || difficulty;
         },
@@ -414,7 +412,7 @@ function templatesApp() {
             modal.innerHTML = `
                 <div style="background: white; border-radius: 8px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 80%; max-height: 80%; width: 100%; overflow: hidden;">
                     <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="font-size: 18px; font-weight: 600; color: #111827;">{{ __('common.select_exercises') }}</h3>
+                        <h3 style="font-size: 18px; font-weight: 600; color: #111827;"><?php echo e(__('common.select_exercises')); ?></h3>
                         <button onclick="document.getElementById('js-exercise-modal').remove()" style="color: #6b7280; background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
                     </div>
                     <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
@@ -430,8 +428,8 @@ function templatesApp() {
                         </div>
                     </div>
                     <div style="padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px;">
-                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">{{ __('common.cancel') }}</button>
-                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;">{{ __('common.done') }}</button>
+                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;"><?php echo e(__('common.cancel')); ?></button>
+                        <button onclick="document.getElementById('js-exercise-modal').remove()" style="padding: 8px 16px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer;"><?php echo e(__('common.done')); ?></button>
                     </div>
                 </div>
             `;
@@ -479,7 +477,7 @@ function templatesApp() {
             window.dispatchEvent(new CustomEvent('show-notification', {
                 detail: {
                     type: 'success',
-                    title: '{{ __('common.success') }}',
+                    title: '<?php echo e(__('common.success')); ?>',
                     message: message
                 }
             }));
@@ -499,7 +497,7 @@ function templatesApp() {
             window.dispatchEvent(new CustomEvent('show-notification', {
                 detail: {
                     type: 'info',
-                    title: '{{ __('common.information') }}',
+                    title: '<?php echo e(__('common.information')); ?>',
                     message: message
                 }
             }));
@@ -509,7 +507,7 @@ function templatesApp() {
             window.dispatchEvent(new CustomEvent('show-notification', {
                 detail: {
                     type: 'warning',
-                    title: '{{ __('common.warning') }}',
+                    title: '<?php echo e(__('common.warning')); ?>',
                     message: message
                 }
             }));
@@ -634,7 +632,7 @@ function templatesApp() {
                     <!-- Поиск -->
                     <input type="text" 
                            id="exercise-search" 
-                           placeholder="{{ __('common.search_exercises') }}" 
+                           placeholder="<?php echo e(__('common.search_exercises')); ?>" 
                            style="
                                flex: 1;
                                min-width: 200px;
@@ -664,7 +662,7 @@ function templatesApp() {
                             "
                             onfocus="this.style.borderColor = '#4f46e5'"
                             onblur="this.style.borderColor = '#d1d5db'">
-                        <option value="">{{ __('common.all_categories') }}</option>
+                        <option value=""><?php echo e(__('common.all_categories')); ?></option>
                     </select>
                     
                     <!-- Фильтр оборудования -->
@@ -683,7 +681,7 @@ function templatesApp() {
                             "
                             onfocus="this.style.borderColor = '#4f46e5'"
                             onblur="this.style.borderColor = '#d1d5db'">
-                        <option value="">{{ __('common.all_equipment') }}</option>
+                        <option value=""><?php echo e(__('common.all_equipment')); ?></option>
                     </select>
 
                     <!-- Фильтр типа упражнений -->
@@ -702,10 +700,10 @@ function templatesApp() {
                             "
                             onfocus="this.style.borderColor = '#4f46e5'"
                             onblur="this.style.borderColor = '#d1d5db'">
-                        <option value="">{{ __('common.all_exercises') }}</option>
-                        <option value="system">{{ __('common.system_exercises') }}</option>
-                        <option value="custom">{{ __('common.user_exercises') }}</option>
-                        <option value="favorite">{{ __('common.favorite_exercises') }}</option>
+                        <option value=""><?php echo e(__('common.all_exercises')); ?></option>
+                        <option value="system"><?php echo e(__('common.system_exercises')); ?></option>
+                        <option value="custom"><?php echo e(__('common.user_exercises')); ?></option>
+                        <option value="favorite"><?php echo e(__('common.favorite_exercises')); ?></option>
                     </select>
                 </div>
                 
@@ -808,7 +806,7 @@ function templatesApp() {
                     border: 1px solid #d1d5db;
                     border-radius: 6px;
                     cursor: pointer;
-                ">{{ __('common.cancel') }}</button>
+                "><?php echo e(__('common.cancel')); ?></button>
                 <button onclick="saveSelectedExercises()" style="
                     padding: 8px 16px;
                     background: #4f46e5;
@@ -816,7 +814,7 @@ function templatesApp() {
                     border: none;
                     border-radius: 6px;
                     cursor: pointer;
-                ">{{ __('common.done') }}</button>
+                "><?php echo e(__('common.done')); ?></button>
             </div>
         </div>
     `;
@@ -896,7 +894,7 @@ function toggleExercise(element, id, name, category, equipment) {
                     equipmentSelect.innerHTML = '';
                     const emptyOpt = document.createElement('option');
                     emptyOpt.value = '';
-                    emptyOpt.textContent = '{{ __('common.all_equipment') }}';
+                    emptyOpt.textContent = '<?php echo e(__('common.all_equipment')); ?>';
                     equipmentSelect.appendChild(emptyOpt);
                     desiredOptions.slice(1).forEach(eq => {
                         const opt = document.createElement('option');
@@ -974,7 +972,7 @@ function toggleExercise(element, id, name, category, equipment) {
             categorySelect.innerHTML = '';
             const defaultCategory = document.createElement('option');
             defaultCategory.value = '';
-            defaultCategory.textContent = '{{ __('common.all_categories') }}';
+            defaultCategory.textContent = '<?php echo e(__('common.all_categories')); ?>';
             categorySelect.appendChild(defaultCategory);
             categoryOptions.forEach(category => {
                 const option = document.createElement('option');
@@ -986,7 +984,7 @@ function toggleExercise(element, id, name, category, equipment) {
             equipmentSelect.innerHTML = '';
             const defaultEquipment = document.createElement('option');
             defaultEquipment.value = '';
-            defaultEquipment.textContent = '{{ __('common.all_equipment') }}';
+            defaultEquipment.textContent = '<?php echo e(__('common.all_equipment')); ?>';
             equipmentSelect.appendChild(defaultEquipment);
             equipmentOptions.forEach(eq => {
                 const option = document.createElement('option');
@@ -1092,11 +1090,11 @@ function removeExerciseFromAlpine(exerciseId) {
 
 </script>
 
-@section("header-actions")
+<?php $__env->startSection("header-actions"); ?>
     <!-- Кнопка добавления перенесена в строку с фильтрами -->
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section("content")
+<?php $__env->startSection("content"); ?>
 <div x-data="templatesApp()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
@@ -1151,18 +1149,19 @@ function removeExerciseFromAlpine(exerciseId) {
                 <div class="search-container">
                     <input type="text" 
                            x-model="search" 
-                           placeholder="{{ __('common.search_templates') }}" 
+                           placeholder="<?php echo e(__('common.search_templates')); ?>" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
                 <!-- Кнопки -->
                 <div class="buttons-container">
-                    @if(auth()->user()->hasRole('trainer'))
+                    <?php if(auth()->user()->hasRole('trainer')): ?>
                         <button @click="showCreate()" 
                                 class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                            {{ __('common.add_template') }}
+                            <?php echo e(__('common.add_template')); ?>
+
                         </button>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1172,7 +1171,7 @@ function removeExerciseFromAlpine(exerciseId) {
             <div class="flex flex-wrap gap-2">
                 <span class="text-sm text-gray-500">Активные фильтры:</span>
                 <span x-show="search" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ __('common.search') }}: "<span x-text="search"></span>"
+                    <?php echo e(__('common.search')); ?>: "<span x-text="search"></span>"
                     <button @click="search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
                 </span>
             </div>
@@ -1200,7 +1199,7 @@ function removeExerciseFromAlpine(exerciseId) {
                                     </div>
                                 </template>
                                 <div x-show="((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) > 5" class="text-sm text-gray-500 italic">
-                                    + <span x-text="((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) - 5"></span> {{ __('common.more') }}...
+                                    + <span x-text="((template.valid_exercises && template.valid_exercises.length > 0) ? template.valid_exercises.length : (template.exercises || []).length) - 5"></span> <?php echo e(__('common.more')); ?>...
                                 </div>
                             </div>
                         </div>
@@ -1209,16 +1208,19 @@ function removeExerciseFromAlpine(exerciseId) {
                     <!-- Кнопки -->
                     <div class="flex space-x-2">
                         <button @click="showView(template.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                            {{ __('common.view') }}
+                            <?php echo e(__('common.view')); ?>
+
                         </button>
-                        @if(auth()->user()->hasRole('trainer'))
+                        <?php if(auth()->user()->hasRole('trainer')): ?>
                             <button @click="showEdit(template.id)" class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                {{ __('common.edit') }}
+                                <?php echo e(__('common.edit')); ?>
+
                             </button>
                             <button @click="deleteTemplate(template.id)" class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                {{ __('common.delete') }}
+                                <?php echo e(__('common.delete')); ?>
+
                             </button>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </template>
@@ -1229,14 +1231,15 @@ function removeExerciseFromAlpine(exerciseId) {
             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <span class="text-3xl text-gray-400">📋</span>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ __('common.no_templates') }}</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ __('common.create_workout_template') }}</p>
-            @if(auth()->user()->hasRole('trainer'))
+            <h3 class="text-xl font-semibold text-gray-900 mb-2"><?php echo e(__('common.no_templates')); ?></h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto"><?php echo e(__('common.create_workout_template')); ?></p>
+            <?php if(auth()->user()->hasRole('trainer')): ?>
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    {{ __('common.create_first_template') }}
+                    <?php echo e(__('common.create_first_template')); ?>
+
                 </button>
-            @endif
+            <?php endif; ?>
         </div>
         
         <!-- Пагинация -->
@@ -1279,12 +1282,13 @@ function removeExerciseFromAlpine(exerciseId) {
     <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '{{ __('common.create_template') }}' : '{{ __('common.edit_template') }}'"></h2>
+                <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '<?php echo e(__('common.create_template')); ?>' : '<?php echo e(__('common.edit_template')); ?>'"></h2>
                 <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новый шаблон тренировки' : 'Внесите изменения в шаблон'"></p>
             </div>
             <button type="button" @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.back_to_list') }}
+                <?php echo e(__('common.back_to_list')); ?>
+
             </button>
         </div>
         
@@ -1292,7 +1296,7 @@ function removeExerciseFromAlpine(exerciseId) {
             <div class="space-y-6">
                 <!-- Название -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.template_name') }} *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.template_name')); ?> *</label>
                     <input type="text" 
                            x-model="formName" 
                            required
@@ -1302,7 +1306,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 <!-- Выбор упражнений -->
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">{{ __('common.exercises_in_template') }}</h3>
+                        <h3 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.exercises_in_template')); ?></h3>
                         <div class="flex space-x-2">
                             <button type="button"
                                     onclick="openSimpleModal()"
@@ -1310,7 +1314,8 @@ function removeExerciseFromAlpine(exerciseId) {
                                 <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                 </svg>
-                                {{ __('common.add_exercises') }}
+                                <?php echo e(__('common.add_exercises')); ?>
+
                             </button>
                         </div>
                     </div>
@@ -1341,7 +1346,7 @@ function removeExerciseFromAlpine(exerciseId) {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
                         <p>Нет упражнений в шаблоне</p>
-                        <p class="text-sm">{{ __('common.click_add_exercises_to_select') }}</p>
+                        <p class="text-sm"><?php echo e(__('common.click_add_exercises_to_select')); ?></p>
                     </div>
                 </div>
             </div>
@@ -1351,11 +1356,12 @@ function removeExerciseFromAlpine(exerciseId) {
                 <button type="button" 
                         @click="showList()" 
                         class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    {{ __('common.cancel') }}
+                    <?php echo e(__('common.cancel')); ?>
+
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    <span x-text="currentView === 'create' ? '{{ __('common.create') }}' : '{{ __('common.save') }}'"></span>
+                    <span x-text="currentView === 'create' ? '<?php echo e(__('common.create')); ?>' : '<?php echo e(__('common.save')); ?>'"></span>
                 </button>
             </div>
         </form>
@@ -1371,7 +1377,8 @@ function removeExerciseFromAlpine(exerciseId) {
                 </div>
                 <button @click="showList()" 
                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    {{ __('common.back_to_list') }}
+                    <?php echo e(__('common.back_to_list')); ?>
+
                 </button>
             </div>
         </div>
@@ -1389,7 +1396,7 @@ function removeExerciseFromAlpine(exerciseId) {
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h3 class="text-sm font-medium text-gray-500 mb-1">Длительность</h3>
-                    <p class="text-lg font-semibold text-gray-900" x-text="(currentTemplate?.estimated_duration || 60) + ' {{ __('common.minutes') }}'"></p>
+                    <p class="text-lg font-semibold text-gray-900" x-text="(currentTemplate?.estimated_duration || 60) + ' <?php echo e(__('common.minutes')); ?>'"></p>
                 </div>
             </div>
             
@@ -1426,7 +1433,7 @@ function removeExerciseFromAlpine(exerciseId) {
     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <!-- Заголовок -->
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">{{ __('common.select_exercises') }}</h3>
+            <h3 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.select_exercises')); ?></h3>
             <button @click="closeExerciseModal()" 
                     class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1442,12 +1449,12 @@ function removeExerciseFromAlpine(exerciseId) {
                 <div class="flex flex-col md:flex-row gap-4">
                     <input type="text" 
                            x-model="exerciseSearch" 
-                           placeholder="{{ __('common.search_exercises') }}" 
+                           placeholder="<?php echo e(__('common.search_exercises')); ?>" 
                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     
                     <select x-model="exerciseCategory" 
                             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">{{ __('common.all_categories') }}</option>
+                        <option value=""><?php echo e(__('common.all_categories')); ?></option>
                         <template x-for="category in exerciseCategoryOptions" :key="category">
                             <option :value="category" x-text="category"></option>
                         </template>
@@ -1455,7 +1462,7 @@ function removeExerciseFromAlpine(exerciseId) {
                     
                     <select x-model="exerciseEquipment" 
                             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">{{ __('common.all_equipment') }}</option>
+                        <option value=""><?php echo e(__('common.all_equipment')); ?></option>
                         <template x-for="equipment in exerciseEquipmentOptions" :key="equipment">
                             <option :value="equipment" x-text="equipment"></option>
                         </template>
@@ -1463,10 +1470,10 @@ function removeExerciseFromAlpine(exerciseId) {
 
                     <select x-model="exerciseTypeFilter"
                             class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">{{ __('common.all_exercises') }}</option>
-                        <option value="system">{{ __('common.system_exercises') }}</option>
-                        <option value="custom">{{ __('common.user_exercises') }}</option>
-                        <option value="favorite">{{ __('common.favorite_exercises') }}</option>
+                        <option value=""><?php echo e(__('common.all_exercises')); ?></option>
+                        <option value="system"><?php echo e(__('common.system_exercises')); ?></option>
+                        <option value="custom"><?php echo e(__('common.user_exercises')); ?></option>
+                        <option value="favorite"><?php echo e(__('common.favorite_exercises')); ?></option>
                     </select>
                 </div>
             </div>
@@ -1507,14 +1514,17 @@ function removeExerciseFromAlpine(exerciseId) {
         <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
             <button @click="closeExerciseModal()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">
-                {{ __('common.cancel') }}
+                <?php echo e(__('common.cancel')); ?>
+
             </button>
             <button @click="closeExerciseModal()" 
                     class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700">
-                {{ __('common.done') }}
+                <?php echo e(__('common.done')); ?>
+
             </button>
         </div>
     </div>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/trainer/workout-templates/index.blade.php ENDPATH**/ ?>
