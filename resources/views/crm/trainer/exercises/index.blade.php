@@ -68,6 +68,44 @@ function exerciseApp() {
             }
             return isVideoMedia(path);
         },
+
+        hasUserVideo(exercise) {
+            if (!exercise || !exercise.id) return false;
+            return !!(this.userVideos && this.userVideos[exercise.id] && this.userVideos[exercise.id].video_url);
+        },
+
+        hasExerciseVideo(exercise) {
+            if (!exercise) return false;
+            const primary = this.getDisplayImage(exercise);
+            const secondary = this.getDisplayImage2(exercise);
+            if (this.isVideoFile(primary)) return true;
+            if (this.isVideoFile(secondary)) return true;
+            if (exercise.video_url) return true;
+            return false;
+        },
+
+        shouldShowPrimaryImage(exercise) {
+            if (!exercise) return false;
+            const primary = this.getDisplayImage(exercise);
+            if (!primary) return false;
+            if (this.isVideoFile(primary)) return false;
+            const secondary = this.getDisplayImage2(exercise);
+            if (secondary && this.isVideoFile(secondary)) return false;
+            if (secondary && typeof secondary === 'string' && secondary.toLowerCase().endsWith('.gif')) return false;
+            if (exercise.video_url) return false;
+            if (this.hasUserVideo(exercise)) return false;
+            return true;
+        },
+
+        shouldShowSecondaryImage(exercise) {
+            if (!exercise) return false;
+            const secondary = this.getDisplayImage2(exercise);
+            if (!secondary) return false;
+            if (this.isVideoFile(secondary)) return false;
+            if (exercise.video_url) return false;
+            if (this.hasUserVideo(exercise)) return false;
+            return true;
+        },
         
         // Поля для пользовательского видео
         userVideoUrl: '',
@@ -2407,7 +2445,7 @@ function exerciseApp() {
                 <div class="flex-shrink-0" style="width: 35%; max-width: 500px;">
                     <div class="space-y-4">
                         <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                        <template x-if="getDisplayImage(currentExercise) && !isVideoFile(getDisplayImage(currentExercise)) && !isVideoFile(getDisplayImage2(currentExercise)) && !(getDisplayImage2(currentExercise) && getDisplayImage2(currentExercise).toLowerCase().endsWith('.gif'))">
+                        <template x-if="shouldShowPrimaryImage(currentExercise)">
                             <div>
                                 <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
                                      :alt="currentExercise.name"
@@ -2425,7 +2463,7 @@ function exerciseApp() {
                         </template>
                         
                         <!-- Второе изображение -->
-                        <template x-if="getDisplayImage2(currentExercise) && !isVideoFile(getDisplayImage2(currentExercise))">
+                        <template x-if="shouldShowSecondaryImage(currentExercise)">
                             <div>
                                 <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
                                      :alt="currentExercise.name"
@@ -2536,7 +2574,7 @@ function exerciseApp() {
                 <!-- Картинки по центру -->
                 <div class="flex flex-col items-center gap-4">
                     <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                    <template x-if="getDisplayImage(currentExercise) && !isVideoFile(getDisplayImage(currentExercise)) && !isVideoFile(getDisplayImage2(currentExercise)) && !(getDisplayImage2(currentExercise) && getDisplayImage2(currentExercise).toLowerCase().endsWith('.gif'))">
+                    <template x-if="shouldShowPrimaryImage(currentExercise)">
                         <div class="w-full">
                             <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
                                  :alt="currentExercise.name"
@@ -2554,7 +2592,7 @@ function exerciseApp() {
                     </template>
                     
                     <!-- Второе изображение -->
-                    <template x-if="getDisplayImage2(currentExercise) && !isVideoFile(getDisplayImage2(currentExercise))">
+                    <template x-if="shouldShowSecondaryImage(currentExercise)">
                         <div class="w-full">
                             <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
                                  :alt="currentExercise.name"

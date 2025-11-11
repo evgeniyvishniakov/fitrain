@@ -9,6 +9,12 @@
 
 @section("content")
 <script>
+const VIDEO_EXT_REGEXP = /\.(mp4|webm|mov|m4v)$/i;
+
+function isVideoMedia(path = '') {
+    return VIDEO_EXT_REGEXP.test((path || '').toString().toLowerCase());
+}
+
 // SPA функциональность для упражнений
 function exerciseApp() {
     return {
@@ -43,6 +49,65 @@ function exerciseApp() {
         favoriteIds: @json($favoriteIds ?? []),
         currentPage: 1,
         itemsPerPage: 10,
+
+        cleanMediaPath(path) {
+            if (path === null || path === undefined) return null;
+            if (typeof path !== 'string') {
+                path = path?.toString?.() ?? '';
+            }
+            const trimmed = path.trim();
+            if (!trimmed || trimmed === 'null' || trimmed === 'undefined') {
+                return null;
+            }
+            return trimmed;
+        },
+
+        getPrimaryMedia(exercise) {
+            if (!exercise) return null;
+            return this.cleanMediaPath(exercise.image_url);
+        },
+
+        getSecondaryMedia(exercise) {
+            if (!exercise) return null;
+            return this.cleanMediaPath(exercise.image_url_2);
+        },
+
+        isVideoFile(path) {
+            if (!path) return false;
+            return isVideoMedia(path);
+        },
+
+        hasUserVideo(exercise) {
+            if (!exercise || !exercise.id) return false;
+            return !!(this.userVideos && this.userVideos[exercise.id] && this.userVideos[exercise.id].video_url);
+        },
+
+        shouldShowPrimaryImage(exercise, options = {}) {
+            const { suppressWhenHasVideo = true } = options;
+            const primary = this.getPrimaryMedia(exercise);
+            if (!primary) return false;
+            if (this.isVideoFile(primary)) return false;
+            const secondary = this.getSecondaryMedia(exercise);
+            if (secondary && this.isVideoFile(secondary) && suppressWhenHasVideo) return false;
+            if (secondary && secondary.toLowerCase().endsWith('.gif') && suppressWhenHasVideo) return false;
+            if (suppressWhenHasVideo) {
+                if (exercise && exercise.video_url) return false;
+                if (this.hasUserVideo(exercise)) return false;
+            }
+            return true;
+        },
+
+        shouldShowSecondaryImage(exercise, options = {}) {
+            const { suppressWhenHasVideo = true } = options;
+            const secondary = this.getSecondaryMedia(exercise);
+            if (!secondary) return false;
+            if (this.isVideoFile(secondary)) return false;
+            if (suppressWhenHasVideo) {
+                if (exercise && exercise.video_url) return false;
+                if (this.hasUserVideo(exercise)) return false;
+            }
+            return true;
+        },
         
         // Поля для пользовательского видео
         userVideoUrl: '',
@@ -1711,11 +1776,17 @@ function exerciseApp() {
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-4 md:p-6" @click="showView(exercise.id)">
                     <!-- Мобильная версия -->
                     <div class="flex md:hidden gap-4">
-                        <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" 
-                             class="flex-shrink-0 w-24">
-                            <img :src="`/storage/${exercise.image_url}`" 
-                                 :alt="exercise.name"
-                                 class="w-full h-32 object-contain rounded-lg">
+                        <div x-show="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false }) || (getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise)))" class="flex-shrink-0 w-24">
+                            <template x-if="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false })">
+                                <img :src="`/storage/${getPrimaryMedia(exercise)}`" 
+                                     :alt="exercise.name"
+                                     class="w-full h-32 object-contain rounded-lg">
+                            </template>
+                            <template x-if="getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise))">
+                                <video :src="`/storage/${getPrimaryMedia(exercise)}`" 
+                                       class="w-full h-32 object-contain rounded-lg"
+                                       autoplay loop muted playsinline style="pointer-events: none;"></video>
+                            </template>
                         </div>
                         <div class="flex items-center flex-1">
                             <h3 class="text-lg font-semibold text-gray-900 cursor-pointer">
@@ -1728,11 +1799,19 @@ function exerciseApp() {
                     <div class="hidden md:block">
                         <div style="display: flex; gap: 1rem;">
                             <!-- Картинка слева -->
-                            <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null && exercise.image_url !== undefined && exercise.image_url !== 'undefined'" style="flex: 0 0 25%; max-width: 25%;">
-                                <img :src="`/storage/${exercise.image_url}`" 
-                                     :alt="exercise.name"
-                                     class="w-full h-full object-cover rounded-lg"
-                                     style="max-height: 200px;">
+                            <div x-show="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false }) || (getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise)))" style="flex: 0 0 25%; max-width: 25%;">
+                                <template x-if="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false })">
+                                    <img :src="`/storage/${getPrimaryMedia(exercise)}`" 
+                                         :alt="exercise.name"
+                                         class="w-full h-full object-cover rounded-lg"
+                                         style="max-height: 200px;">
+                                </template>
+                                <template x-if="getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise))">
+                                    <video :src="`/storage/${getPrimaryMedia(exercise)}`" 
+                                           class="w-full h-full object-cover rounded-lg"
+                                           style="max-height: 200px; pointer-events: none;"
+                                           autoplay loop muted playsinline></video>
+                                </template>
                             </div>
                             
                             <!-- Информация справа -->
@@ -2379,23 +2458,39 @@ function exerciseApp() {
                 <!-- Левая колонка: картинки и видео -->
                 <div class="flex-shrink-0" style="width: 35%; max-width: 500px;">
                     <div class="space-y-4">
-                        <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                        <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                        <!-- Главное изображение (скрывается если есть видео) -->
+                        <template x-if="shouldShowPrimaryImage(currentExercise)">
                             <div>
-                                <img :src="`/storage/${currentExercise.image_url}`" 
+                                <img :src="`/storage/${getPrimaryMedia(currentExercise)}`" 
                                      :alt="currentExercise.name"
                                      class="w-full rounded-lg shadow-md"
                                      style="object-fit: contain;">
                             </div>
                         </template>
+                        <template x-if="getPrimaryMedia(currentExercise) && isVideoFile(getPrimaryMedia(currentExercise))">
+                            <div>
+                                <video :src="`/storage/${getPrimaryMedia(currentExercise)}`"
+                                       class="w-full rounded-lg shadow-md"
+                                       style="object-fit: contain; pointer-events: none;"
+                                       autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                            </div>
+                        </template>
                         
                         <!-- Второе изображение -->
-                        <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                        <template x-if="shouldShowSecondaryImage(currentExercise)">
                             <div>
-                                <img :src="`/storage/${currentExercise.image_url_2}`" 
+                                <img :src="`/storage/${getSecondaryMedia(currentExercise)}`" 
                                      :alt="currentExercise.name"
                                      class="w-full rounded-lg shadow-md"
                                      style="object-fit: contain;">
+                            </div>
+                        </template>
+                        <template x-if="getSecondaryMedia(currentExercise) && isVideoFile(getSecondaryMedia(currentExercise))">
+                            <div>
+                                <video :src="`/storage/${getSecondaryMedia(currentExercise)}`"
+                                       class="w-full rounded-lg shadow-md"
+                                       style="object-fit: contain; pointer-events: none;"
+                                       autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
                             </div>
                         </template>
                         
@@ -2468,23 +2563,39 @@ function exerciseApp() {
             <div class="exercise-view-mobile space-y-6">
                 <!-- Картинки по центру -->
                 <div class="flex flex-col items-center gap-4">
-                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                    <template x-if="currentExercise?.image_url && currentExercise.image_url !== 'null' && currentExercise.image_url !== null && currentExercise.image_url !== undefined && currentExercise.image_url !== 'undefined' && !(currentExercise?.image_url_2 && currentExercise.image_url_2.toLowerCase().endsWith('.gif'))">
+                    <!-- Главное изображение (скрывается если есть видео) -->
+                    <template x-if="shouldShowPrimaryImage(currentExercise)">
                         <div class="w-full">
-                            <img :src="`/storage/${currentExercise.image_url}`" 
+                            <img :src="`/storage/${getPrimaryMedia(currentExercise)}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md mx-auto"
                                  style="object-fit: contain; max-height: 400px;">
                         </div>
                     </template>
+                    <template x-if="getPrimaryMedia(currentExercise) && isVideoFile(getPrimaryMedia(currentExercise))">
+                        <div class="w-full">
+                            <video :src="`/storage/${getPrimaryMedia(currentExercise)}`" 
+                                   class="w-full rounded-lg shadow-md mx-auto"
+                                   style="object-fit: contain; max-height: 400px; pointer-events: none;"
+                                   autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                        </div>
+                    </template>
                     
                     <!-- Второе изображение -->
-                    <template x-if="currentExercise?.image_url_2 && currentExercise.image_url_2 !== 'null' && currentExercise.image_url_2 !== null && currentExercise.image_url_2 !== undefined && currentExercise.image_url_2 !== 'undefined'">
+                    <template x-if="shouldShowSecondaryImage(currentExercise)">
                         <div class="w-full">
-                            <img :src="`/storage/${currentExercise.image_url_2}`" 
+                            <img :src="`/storage/${getSecondaryMedia(currentExercise)}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md mx-auto"
                                  style="object-fit: contain; max-height: 400px;">
+                        </div>
+                    </template>
+                    <template x-if="getSecondaryMedia(currentExercise) && isVideoFile(getSecondaryMedia(currentExercise))">
+                        <div class="w-full">
+                            <video :src="`/storage/${getSecondaryMedia(currentExercise)}`" 
+                                   class="w-full rounded-lg shadow-md mx-auto"
+                                   style="object-fit: contain; max-height: 400px; pointer-events: none;"
+                                   autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
                         </div>
                     </template>
                 </div>

@@ -83,8 +83,184 @@
     </a>
 @endsection
 
+<script>
+(function () {
+    if (window.__fitrainDashboardMenuSetup) return;
+    window.__fitrainDashboardMenuSetup = true;
+
+    const edgeThreshold = 80;
+    const menuSwipeThreshold = 60;
+    const menuCloseEdgeGuard = 60;
+    const maxVerticalDeviation = 80;
+
+    let touchStartX = null;
+    let touchStartY = null;
+    let menuGesture = null;
+    let menuGestureHandled = false;
+    let menuIsOpen = false;
+    let menuObserver = null;
+
+    const getMenu = () => document.getElementById('mobile-menu');
+
+    const syncMenuState = () => {
+        const menu = getMenu();
+        menuIsOpen = !!(menu && menu.classList.contains('open'));
+    };
+
+    const setupMenuObserver = () => {
+        const menu = getMenu();
+        if (!menu || menuObserver) return;
+        menuObserver = new MutationObserver(syncMenuState);
+        menuObserver.observe(menu, { attributes: true, attributeFilter: ['class'] });
+    };
+
+    const getMobileMenuWidth = () => {
+        const menu = getMenu();
+        if (!menu) return 0;
+        const content = menu.querySelector('.mobile-menu-content');
+        return content ? content.offsetWidth || 0 : menu.offsetWidth || 0;
+    };
+
+    const openMobileMenu = () => {
+        const menu = getMenu();
+        if (menu && !menu.classList.contains('open')) {
+            menu.classList.add('open');
+            menuIsOpen = true;
+        }
+    };
+
+    const closeMobileMenuIfOpen = () => {
+        const menu = getMenu();
+        if (menu && menu.classList.contains('open')) {
+            menu.classList.remove('open');
+            menuIsOpen = false;
+        }
+    };
+
+    const preventEvent = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.stopImmediatePropagation) {
+            event.stopImmediatePropagation();
+        }
+    };
+
+    const handleTouchStart = (event) => {
+        if (event.touches.length !== 1) return;
+
+        syncMenuState();
+
+        const touch = event.touches[0];
+        const startX = touch.clientX;
+        const startY = touch.clientY;
+        const menu = getMenu();
+        const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
+        const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
+        const isMenuToggle = event.target.closest('.mobile-menu-btn');
+        const isMenuClose = event.target.closest('.mobile-menu-close');
+
+        menuGesture = null;
+        menuGestureHandled = false;
+
+        if (isMenuToggle || isMenuClose) {
+            touchStartX = null;
+            touchStartY = null;
+            return;
+        }
+
+        if (menuIsOpen) {
+            if (startX <= menuCloseEdgeGuard) {
+                preventEvent(event);
+                touchStartX = null;
+                touchStartY = null;
+                return;
+            }
+            const menuWidth = getMobileMenuWidth();
+            if (targetInsideMenu || startX <= menuWidth + menuCloseEdgeGuard) {
+                touchStartX = null;
+                touchStartY = null;
+                menuGestureHandled = true;
+                return;
+            }
+            menuGesture = 'close';
+        } else {
+            if (startX > edgeThreshold) {
+                touchStartX = null;
+                touchStartY = null;
+                return;
+            }
+            menuGesture = 'open';
+        }
+
+        touchStartX = startX;
+        touchStartY = startY;
+        preventEvent(event);
+    };
+
+    const handleTouchMove = (event) => {
+        if (touchStartX === null) return;
+        if (!menuGesture) return;
+        if (menuGestureHandled) return;
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - (touchStartY ?? 0);
+        if (Math.abs(deltaY) > maxVerticalDeviation) return;
+
+        if (menuGesture === 'open' && deltaX > menuSwipeThreshold) {
+            openMobileMenu();
+            menuGestureHandled = true;
+        } else if (menuGesture === 'close' && (touchStartX - touch.clientX) > menuSwipeThreshold) {
+            closeMobileMenuIfOpen();
+            menuGestureHandled = true;
+        }
+
+        if (!menuGestureHandled) {
+            preventEvent(event);
+        }
+    };
+
+    const handleTouchEnd = (event) => {
+        if (touchStartX !== null && menuGesture && !menuGestureHandled && event.changedTouches.length === 1) {
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - (touchStartY ?? 0);
+            if (Math.abs(deltaY) <= maxVerticalDeviation) {
+                if (menuGesture === 'open' && deltaX > menuSwipeThreshold) {
+                    openMobileMenu();
+                } else if (menuGesture === 'close' && (touchStartX - touch.clientX) > menuSwipeThreshold) {
+                    closeMobileMenuIfOpen();
+                }
+            }
+        }
+
+        touchStartX = null;
+        touchStartY = null;
+        menuGesture = null;
+        menuGestureHandled = false;
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+
+    setupMenuObserver();
+    syncMenuState();
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            setupMenuObserver();
+            syncMenuState();
+        } else if (menuObserver) {
+            menuObserver.disconnect();
+            menuObserver = null;
+        }
+    });
+})();
+</script>
+
 @section("content")
-<div class="space-y-6">
+<div id="trainer-subscription-root" class="space-y-6">
     @if($currentSubscription)
     <!-- Текущий план -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

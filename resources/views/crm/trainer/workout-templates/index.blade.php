@@ -32,6 +32,27 @@ function templatesApp() {
         search: '',
         currentPage: 1,
         itemsPerPage: 4,
+        touchStartX: null,
+        touchStartY: null,
+        touchHandlersSetup: false,
+        touchStartTime: null,
+        maxVerticalDeviation: 80,
+        edgeThreshold: 80,
+        swipeHandled: false,
+        swipeActivationThreshold: 120,
+        swipeVisualLimit: 140,
+        swipeTargetElement: null,
+        swipeAnimationTimeout: null,
+        boundTouchStart: null,
+        boundTouchMove: null,
+        boundTouchEnd: null,
+        menuGesture: null,
+        menuGestureHandled: false,
+        menuSwipeThreshold: 60,
+        menuIsOpen: false,
+        menuObserver: null,
+        menuCloseEdgeGuard: 60,
+        popStateLocked: false,
         
         // Поля формы
         formName: '',
@@ -54,17 +75,361 @@ function templatesApp() {
         // Инициализация
         init() {
             // Инициализация компонента
-            
+            this.setupTouchHandlers();
+            this.syncMenuState();
+            this.setupMenuObserver();
             // Сбрасываем пагинацию при изменении фильтров
             this.$watch('search', () => {
                 this.currentPage = 1;
             });
         },
         
+        setupTouchHandlers() {
+            if (this.touchHandlersSetup) return;
+            this.touchHandlersSetup = true;
+            this.boundTouchStart = this.handleTouchStart.bind(this);
+            this.boundTouchMove = this.handleTouchMove.bind(this);
+            this.boundTouchEnd = this.handleTouchEnd.bind(this);
+            const container = document.getElementById('templates-root');
+            if (container && window.CSS && CSS.supports('touch-action', 'pan-y')) {
+                container.style.touchAction = 'pan-y';
+            }
+            document.addEventListener('touchstart', this.boundTouchStart, { passive: false, capture: true });
+            document.addEventListener('touchmove', this.boundTouchMove, { passive: false, capture: true });
+            document.addEventListener('touchend', this.boundTouchEnd, { passive: false, capture: true });
+        },
+        
+        getSwipeTargetElement() {
+            if (this.currentView === 'view') {
+                return document.getElementById('trainer-template-view-section');
+            }
+            if (this.currentView === 'create' || this.currentView === 'edit') {
+                return document.getElementById('trainer-template-form-section');
+            }
+            return null;
+        },
+        
+        applySwipeTransform(distance) {
+            const target = this.swipeTargetElement;
+            if (!target) return;
+            const clamped = Math.max(0, Math.min(distance, this.swipeVisualLimit));
+            target.style.transform = `translateX(${clamped}px)`;
+        },
+        
+        resetSwipeTransform(immediate = false, targetElement = null) {
+            const target = targetElement || this.swipeTargetElement;
+            if (!target) return;
+            if (immediate) {
+                target.style.transition = '';
+                target.style.transform = '';
+                return;
+            }
+            target.style.transition = 'transform 0.2s ease';
+            requestAnimationFrame(() => {
+                target.style.transform = 'translateX(0px)';
+            });
+            setTimeout(() => {
+                target.style.transition = '';
+                target.style.transform = '';
+            }, 200);
+        },
+        
+        clearSwipeAnimationTimeout() {
+            if (this.swipeAnimationTimeout) {
+                clearTimeout(this.swipeAnimationTimeout);
+                this.swipeAnimationTimeout = null;
+            }
+        },
+        
+        handleTouchStart(event) {
+            if (event.touches.length !== 1) return;
+            if (this.isAnyModalOpen()) return;
+            this.syncMenuState();
+            
+            const touch = event.touches[0];
+            const startX = touch.clientX;
+            const startY = touch.clientY;
+            const nearEdge = startX <= this.edgeThreshold;
+            const menu = document.getElementById('mobile-menu');
+            const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
+            const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
+            const isMenuToggle = event.target.closest('.mobile-menu-btn');
+            const isMenuClose = event.target.closest('.mobile-menu-close');
+            const menuOpen = this.menuIsOpen;
+            
+            this.menuGesture = null;
+            this.menuGestureHandled = false;
+            
+            if (isMenuToggle || isMenuClose) {
+                return;
+            }
+            
+            if (this.currentView === 'list') {
+                if (menuOpen) {
+                    if (startX <= this.menuCloseEdgeGuard) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        this.touchStartX = null;
+                        this.touchStartY = null;
+                        return;
+                    }
+                    const menuWidth = this.getMobileMenuWidth();
+                    if (targetInsideMenu || startX <= menuWidth + this.menuCloseEdgeGuard) {
+                        this.touchStartX = null;
+                        this.touchStartY = null;
+                        this.menuGestureHandled = true;
+                        return;
+                    }
+                    this.menuGesture = 'close';
+                } else {
+                    if (!nearEdge) return;
+                    this.menuGesture = 'open';
+                }
+                
+                this.clearSwipeAnimationTimeout();
+                this.swipeHandled = false;
+                this.touchStartX = startX;
+                this.touchStartY = startY;
+                this.touchStartTime = performance.now();
+                this.swipeTargetElement = null;
+                
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+                return;
+            }
+            
+            if (!['create', 'edit', 'view'].includes(this.currentView)) return;
+            if (!nearEdge) return;
+            
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.swipeHandled = false;
+            this.touchStartX = startX;
+            this.touchStartY = startY;
+            this.touchStartTime = performance.now();
+            this.swipeTargetElement = this.getSwipeTargetElement();
+            if (this.swipeTargetElement) {
+                this.swipeTargetElement.style.transition = 'transform 0s';
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.stopImmediatePropagation) {
+                event.stopImmediatePropagation();
+            }
+        },
+        
+        handleTouchMove(event) {
+            if (this.touchStartX === null) return;
+            if (this.isAnyModalOpen()) return;
+            if (this.currentView === 'list') {
+                if (!this.menuGesture) return;
+                if (this.menuGestureHandled) return;
+                const touch = event.touches[0];
+                const deltaX = touch.clientX - this.touchStartX;
+                const deltaY = touch.clientY - (this.touchStartY ?? 0);
+                if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+                if (this.menuGesture === 'open' && deltaX > this.menuSwipeThreshold) {
+                    this.openMobileMenu();
+                    this.menuGestureHandled = true;
+                } else if (this.menuGesture === 'close' && (this.touchStartX - touch.clientX) > this.menuSwipeThreshold) {
+                    this.closeMobileMenuIfOpen();
+                    this.menuGestureHandled = true;
+                }
+                if (!this.menuGestureHandled) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.stopImmediatePropagation) {
+                        event.stopImmediatePropagation();
+                    }
+                }
+                return;
+            }
+            
+            if (!['create', 'edit', 'view'].includes(this.currentView)) return;
+            const touch = event.touches[0];
+            const deltaX = Math.max(0, touch.clientX - this.touchStartX);
+            const deltaY = touch.clientY - (this.touchStartY ?? 0);
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+            if (this.swipeTargetElement) {
+                this.applySwipeTransform(deltaX);
+            }
+            if (deltaX > this.swipeActivationThreshold && !this.swipeHandled) {
+                this.handleSwipeRight(event, this.swipeTargetElement);
+                return;
+            }
+            if (event && this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+            }
+        },
+        
+        handleTouchEnd(event) {
+            if (this.currentView === 'list') {
+                if (this.menuGesture && !this.menuGestureHandled && event.changedTouches.length === 1) {
+                    const touch = event.changedTouches[0];
+                    const deltaX = touch.clientX - this.touchStartX;
+                    const deltaY = touch.clientY - (this.touchStartY ?? 0);
+                    if (Math.abs(deltaY) <= this.maxVerticalDeviation) {
+                        if (this.menuGesture === 'open' && deltaX > this.menuSwipeThreshold) {
+                            this.openMobileMenu();
+                        } else if (this.menuGesture === 'close' && (this.touchStartX - touch.clientX) > this.menuSwipeThreshold) {
+                            this.closeMobileMenuIfOpen();
+                        }
+                    }
+                }
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            
+            if (this.touchStartX === null || event.changedTouches.length !== 1) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            const targetElement = this.swipeTargetElement;
+            if (this.swipeHandled) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeHandled = false;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const startX = this.touchStartX;
+            const startY = this.touchStartY ?? 0;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            const duration = performance.now() - (this.touchStartTime ?? performance.now());
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+            
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (startX > this.edgeThreshold) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (deltaX > this.swipeActivationThreshold && duration < 600) {
+                this.handleSwipeRight(event, targetElement);
+                return;
+            }
+            this.resetSwipeTransform(false, targetElement);
+            this.swipeTargetElement = null;
+        },
+        
+        handleSwipeRight(event, targetElement = null) {
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+            }
+            this.swipeHandled = true;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            const target = targetElement || this.swipeTargetElement || this.getSwipeTargetElement();
+            if (target) {
+                this.swipeTargetElement = target;
+                target.style.transition = 'transform 0.18s ease';
+                requestAnimationFrame(() => {
+                    target.style.transform = 'translateX(100%)';
+                });
+                this.swipeAnimationTimeout = setTimeout(() => {
+                    this.showList();
+                    this.resetSwipeTransform(true, target);
+                    this.swipeTargetElement = null;
+                    this.swipeAnimationTimeout = null;
+                }, 180);
+            } else {
+                this.showList();
+            }
+        },
+        
+        syncMenuState() {
+            const menu = document.getElementById('mobile-menu');
+            this.menuIsOpen = !!(menu && menu.classList.contains('open'));
+        },
+        
+        setupMenuObserver() {
+            const menu = document.getElementById('mobile-menu');
+            if (!menu || this.menuObserver) return;
+            this.menuObserver = new MutationObserver(() => {
+                this.syncMenuState();
+            });
+            this.menuObserver.observe(menu, { attributes: true, attributeFilter: ['class'] });
+        },
+        
+        getMobileMenuWidth() {
+            const menu = document.getElementById('mobile-menu');
+            if (!menu) return 0;
+            const content = menu.querySelector('.mobile-menu-content');
+            return content ? content.offsetWidth || 0 : menu.offsetWidth || 0;
+        },
+        
+        openMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && !menu.classList.contains('open')) {
+                menu.classList.add('open');
+                this.menuIsOpen = true;
+            }
+        },
+        
+        closeMobileMenuIfOpen() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+                this.menuIsOpen = false;
+            }
+        },
+        
+        isMobileMenuOpen() {
+            return this.menuIsOpen;
+        },
+        
+        isAnyModalOpen() {
+            return !!this.showExerciseModal;
+        },
+        
+        closeGlobalMobileMenu() {
+            this.closeMobileMenuIfOpen();
+        },
+        
         // Навигация
         showList() {
             this.currentView = 'list';
             this.currentTemplate = null;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+            this.swipeHandled = false;
         },
         
         showCreate() {
@@ -79,6 +444,14 @@ function templatesApp() {
             this.exerciseTypeFilter = '';
             this.exerciseCategoryOptions = [];
             this.exerciseEquipmentOptions = [];
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+            this.swipeHandled = false;
         },
         
         showEdit(templateId) {
@@ -96,6 +469,14 @@ function templatesApp() {
             
             // Обновляем отображение выбранных упражнений
             this.updateSelectedExercisesDisplay(this.selectedExercises);
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+            this.swipeHandled = false;
         },
         
         showView(templateId) {
@@ -105,6 +486,14 @@ function templatesApp() {
             if (this.currentTemplate) {
                 this.currentTemplate.valid_exercises = this.currentTemplate.valid_exercises || this.currentTemplate.exercises || [];
             }
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+            this.swipeHandled = false;
         },
         
         // Фильтрация
@@ -1097,10 +1486,10 @@ function removeExerciseFromAlpine(exerciseId) {
 @endsection
 
 @section("content")
-<div x-data="templatesApp()" x-cloak class="space-y-6">
+<div id="templates-root" x-data="templatesApp()" x-init="init()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
-    <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-template-list-section" x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
                 .filters-row {
@@ -1276,7 +1665,7 @@ function removeExerciseFromAlpine(exerciseId) {
     </div>
 
     <!-- Форма создания/редактирования -->
-    <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-template-form-section" x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '{{ __('common.create_template') }}' : '{{ __('common.edit_template') }}'"></h2>
@@ -1362,7 +1751,7 @@ function removeExerciseFromAlpine(exerciseId) {
     </div>
 
     <!-- Просмотр шаблона -->
-    <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-template-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
