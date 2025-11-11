@@ -3139,11 +3139,6 @@ function workoutApp() {
             <h3 class="text-xl font-semibold text-gray-900">
                 <span x-text="currentWorkout?.id ? '<?php echo e(__('common.edit_workout')); ?>' : '<?php echo e(__('common.create_workout')); ?>'"></span>
             </h3>
-            <button @click="showList()" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                <?php echo e(__('common.back_to_list')); ?>
-
-            </button>
         </div>
         
         <form @submit.prevent="saveWorkout()" class="space-y-6">
@@ -3298,11 +3293,15 @@ function workoutApp() {
             </div>
 
             <!-- Кнопки -->
-            <div class="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div class="flex items-center justify-between gap-4 pt-6 border-t border-gray-200 flex-wrap">
                 <button type="button" 
                         @click="showList()" 
-                        class="inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    Отмена
+                        data-swipe-ignore="true"
+                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    <span class="back-button-label"><?php echo e(__('common.back_to_list')); ?></span>
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
