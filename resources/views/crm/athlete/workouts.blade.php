@@ -1519,18 +1519,18 @@ function renderMediaElement(path, altText = '', options = {}) {
     <!-- Просмотр тренировки -->
     <div id="athlete-workout-view-section" x-show="currentView === 'view'" x-cloak x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6">
-            <div x-show="lastSaved" class="text-sm text-green-600 mb-4">
+            <div x-show="lastSaved" class="text-sm text-green-600">
                 💾 {{ __('common.last_saved') }}: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
             </div>
         </div>
         
         <div x-show="currentWorkout" class="space-y-6">
             <!-- Заголовок и статус -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
-                <h4 style="font-size: 24px; font-weight: 700; color: #111827; margin: 0;" x-text="currentWorkout?.title"></h4>
+            <div class="workout-view-title-section mb-6">
+                <h4 class="text-2xl font-bold text-gray-900 leading-tight flex-1 min-w-0" x-text="currentWorkout?.title"></h4>
                 
                 <!-- Выпадающий список статуса -->
-                <div class="relative" x-data="{ statusDropdownOpen: false }">
+                <div class="relative flex-shrink-0 ml-auto" x-data="{ statusDropdownOpen: false }">
                     <button @click="statusDropdownOpen = !statusDropdownOpen" 
                             class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border hover:bg-gray-50 transition-colors"
                             :style="{
@@ -2160,6 +2160,21 @@ input[type="number"].no-spinner:hover {
     .exercise-status-section {
         flex-direction: column !important;
         align-items: flex-start !important;
+    }
+}
+
+/* Заголовок тренировки и статус в просмотре */
+.workout-view-title-section {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+    flex-wrap: wrap !important;
+}
+@media (min-width: 768px) {
+    .workout-view-title-section {
+        align-items: center !important;
     }
 }
 

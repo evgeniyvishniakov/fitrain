@@ -15,6 +15,17 @@
             font-weight: 400 !important;
         }
     }
+
+    .back-button-label {
+        display: none;
+    }
+
+    @media (min-width: 768px) {
+        .back-button-label {
+            display: inline;
+            margin-left: 0.5rem;
+        }
+    }
 </style>
 
 <!-- Drag and Drop функциональность для упражнений -->
@@ -376,6 +387,10 @@ function workoutApp() {
             if (event.touches.length !== 1) return;
             if (this.isAnyModalOpen()) return;
             if (this.popStateLocked) return;
+
+            if (event.target.closest('[data-swipe-ignore="true"]')) {
+                return;
+            }
 
             const touch = event.touches[0];
             const startX = touch.clientX;
@@ -2700,18 +2715,19 @@ function workoutApp() {
                     }
                 }
                 
-                /* Заголовок тренировки - колонка на мобилке, ряд на десктопе */
+                /* Заголовок тренировки и статус в один ряд */
                 .workout-title-section {
                     display: flex !important;
-                    flex-direction: column !important;
-                    gap: 0.5rem !important;
+                    flex-direction: row !important;
+                    align-items: flex-start !important;
+                    justify-content: space-between !important;
+                    gap: 0.75rem !important;
+                    flex-wrap: wrap !important;
                 }
                 
                 @media (min-width: 768px) {
                     .workout-title-section {
-                        flex-direction: row !important;
                         align-items: center !important;
-                        justify-content: space-between !important;
                     }
                 }
                 .filters-row > div {
@@ -3291,7 +3307,7 @@ function workoutApp() {
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="translate-x-full"
          class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 will-change-transform">
-        <div class="flex items-center justify-between mb-6">
+        <div class="hidden md:flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">{{ __('common.view_workout') }}</h3>
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -3302,10 +3318,10 @@ function workoutApp() {
         <div x-show="currentWorkout" class="space-y-6">
             <!-- Заголовок и статус -->
             <div class="workout-title-section">
-                <h4 class="text-2xl font-bold text-gray-900" x-text="currentWorkout?.title"></h4>
+                <h4 class="text-2xl font-bold text-gray-900 leading-tight flex-1 min-w-0" x-text="currentWorkout?.title"></h4>
                 
                 <!-- Выпадающий список статуса -->
-                <div class="relative" x-data="{ statusDropdownOpen: false }">
+                <div class="relative flex-shrink-0 ml-auto" x-data="{ statusDropdownOpen: false }">
                     <button @click="statusDropdownOpen = !statusDropdownOpen" 
                             class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border hover:bg-gray-50 transition-colors"
                             :style="{
@@ -3727,9 +3743,12 @@ function workoutApp() {
             
             <!-- Действия -->
             <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
-                    ← Назад к списку
+                <button type="button" @click="showList()" data-swipe-ignore="true"
+                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    <span class="back-button-label">{{ __('common.back_to_list') }}</span>
                 </button>
                 @if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete'))
                     <div class="flex space-x-2">
