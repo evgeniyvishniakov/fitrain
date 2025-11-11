@@ -411,7 +411,6 @@ function exerciseApp() {
 
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
-            if (this.isAnyModalOpen()) return;
             if (this.popStateLocked) return;
 
             const touch = event.touches[0];
@@ -513,7 +512,6 @@ function exerciseApp() {
                 return;
             }
             if (this.currentView !== 'view') return;
-            if (this.isAnyModalOpen()) return;
             const touch = event.touches[0];
             const deltaX = Math.max(0, touch.clientX - this.touchStartX);
             const deltaY = touch.clientY - (this.touchStartY ?? 0);

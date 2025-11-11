@@ -122,10 +122,19 @@ function exerciseApp() {
         boundTouchStart: null,
         boundTouchMove: null,
         boundTouchEnd: null,
+        menuGesture: null,
+        menuGestureHandled: false,
+        menuSwipeThreshold: 60,
+        menuIsOpen: false,
+        menuObserver: null,
+        menuCloseEdgeGuard: 60,
+        popStateLocked: false,
         
         // Инициализация
         async init() {
             this.setupTouchHandlers();
+            this.syncMenuState();
+            this.setupMenuObserver();
             await this.loadExercises();
             
             // Сбрасываем пагинацию при изменении фильтров
@@ -170,10 +179,12 @@ function exerciseApp() {
             this.boundTouchMove = this.handleTouchMove.bind(this);
             this.boundTouchEnd = this.handleTouchEnd.bind(this);
             const container = document.getElementById('athlete-exercises-root');
-            if (!container) return;
-            container.addEventListener('touchstart', this.boundTouchStart, { passive: false });
-            container.addEventListener('touchmove', this.boundTouchMove, { passive: false });
-            container.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+            if (container && window.CSS && CSS.supports('touch-action', 'pan-y')) {
+                container.style.touchAction = 'pan-y';
+            }
+            document.addEventListener('touchstart', this.boundTouchStart, { passive: false, capture: true });
+            document.addEventListener('touchmove', this.boundTouchMove, { passive: false, capture: true });
+            document.addEventListener('touchend', this.boundTouchEnd, { passive: false, capture: true });
         },
 
         getSwipeTargetElement() {
@@ -215,31 +226,149 @@ function exerciseApp() {
             }
         },
 
+        syncMenuState() {
+            const menu = document.getElementById('mobile-menu');
+            this.menuIsOpen = !!(menu && menu.classList.contains('open'));
+        },
+
+        setupMenuObserver() {
+            const menu = document.getElementById('mobile-menu');
+            if (!menu || this.menuObserver) return;
+            this.menuObserver = new MutationObserver(() => {
+                this.syncMenuState();
+            });
+            this.menuObserver.observe(menu, { attributes: true, attributeFilter: ['class'] });
+        },
+
+        getMobileMenuWidth() {
+            const menu = document.getElementById('mobile-menu');
+            if (!menu) return 0;
+            const content = menu.querySelector('.mobile-menu-content');
+            return content ? content.offsetWidth || 0 : menu.offsetWidth || 0;
+        },
+
+        openMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && !menu.classList.contains('open')) {
+                menu.classList.add('open');
+                this.menuIsOpen = true;
+            }
+        },
+
+        closeMobileMenuIfOpen() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+                this.menuIsOpen = false;
+            }
+        },
+
+        isMobileMenuOpen() {
+            return this.menuIsOpen;
+        },
+
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
+            if (this.popStateLocked) return;
+
+            const touch = event.touches[0];
+            const startX = touch.clientX;
+            const startY = touch.clientY;
+            const nearEdge = startX <= this.edgeThreshold;
+            const menu = document.getElementById('mobile-menu');
+            const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
+            const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
+            const isMenuToggle = event.target.closest('.mobile-menu-btn');
+            const isMenuClose = event.target.closest('.mobile-menu-close');
+            const menuOpen = this.isMobileMenuOpen();
+            this.menuGesture = null;
+            this.menuGestureHandled = false;
+
+            if (isMenuToggle || isMenuClose) {
+                return;
+            }
+
+            if (this.currentView === 'list') {
+                if (menuOpen) {
+                    const guard = this.menuCloseEdgeGuard;
+                    const menuWidth = this.getMobileMenuWidth();
+                    if (startX <= guard) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        this.menuGesture = null;
+                        this.menuGestureHandled = false;
+                        return;
+                    }
+                    if (targetInsideMenu || startX <= menuWidth + guard) {
+                        this.menuGesture = null;
+                        this.menuGestureHandled = false;
+                        return;
+                    }
+                    this.menuGesture = 'close';
+                } else {
+                    if (!nearEdge) {
+                        return;
+                    }
+                    this.menuGesture = 'open';
+                }
+
+                this.clearSwipeAnimationTimeout();
+                this.swipeHandled = false;
+                this.touchStartX = startX;
+                this.touchStartY = startY;
+                this.touchStartTime = performance.now();
+                this.swipeTargetElement = null;
+
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+                return;
+            }
+
             if (this.currentView !== 'view') return;
+            if (!nearEdge) return;
+
             this.closeMobileMenuIfOpen();
             this.clearSwipeAnimationTimeout();
             this.swipeHandled = false;
-            this.touchStartX = event.touches[0].clientX;
-            this.touchStartY = event.touches[0].clientY;
+            this.touchStartX = startX;
+            this.touchStartY = startY;
             this.touchStartTime = performance.now();
-            if (this.touchStartX <= this.edgeThreshold) {
-                this.swipeTargetElement = this.getSwipeTargetElement();
-                if (this.swipeTargetElement) {
-                    this.swipeTargetElement.style.transition = 'transform 0s';
-                }
-            } else {
-                this.swipeTargetElement = null;
+            this.swipeTargetElement = this.getSwipeTargetElement();
+            if (this.swipeTargetElement) {
+                this.swipeTargetElement.style.transition = 'transform 0s';
             }
-            if (this.touchStartX <= this.edgeThreshold) {
-                event.preventDefault();
-                event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.stopImmediatePropagation) {
+                event.stopImmediatePropagation();
             }
         },
 
         handleTouchMove(event) {
             if (this.touchStartX === null) return;
+            if (this.popStateLocked) return;
+            if (this.currentView === 'list') {
+                if (!this.menuGesture) return;
+                if (this.menuGestureHandled) return;
+                const touch = event.touches[0];
+                const deltaX = touch.clientX - this.touchStartX;
+                const deltaY = touch.clientY - (this.touchStartY ?? 0);
+                if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+                if (this.menuGesture === 'open' && deltaX > this.menuSwipeThreshold) {
+                    this.openMobileMenu();
+                    this.menuGestureHandled = true;
+                } else if (this.menuGesture === 'close' && (this.touchStartX - touch.clientX) > this.menuSwipeThreshold) {
+                    this.closeMobileMenuIfOpen();
+                    this.menuGestureHandled = true;
+                }
+                return;
+            }
             if (this.currentView !== 'view') return;
             const touch = event.touches[0];
             const deltaX = Math.max(0, touch.clientX - this.touchStartX);
@@ -259,6 +388,37 @@ function exerciseApp() {
         },
 
         handleTouchEnd(event) {
+            if (this.popStateLocked) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeTargetElement = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+            if (this.currentView === 'list') {
+                if (this.menuGesture && !this.menuGestureHandled && event.changedTouches.length === 1) {
+                    const touch = event.changedTouches[0];
+                    const deltaX = touch.clientX - this.touchStartX;
+                    const deltaY = touch.clientY - (this.touchStartY ?? 0);
+                    if (Math.abs(deltaY) <= this.maxVerticalDeviation) {
+                        if (this.menuGesture === 'open' && deltaX > this.menuSwipeThreshold) {
+                            this.openMobileMenu();
+                        } else if (this.menuGesture === 'close' && (this.touchStartX - touch.clientX) > this.menuSwipeThreshold) {
+                            this.closeMobileMenuIfOpen();
+                        }
+                    }
+                }
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+
             if (this.touchStartX === null || event.changedTouches.length !== 1) {
                 this.resetSwipeTransform(true);
                 this.swipeTargetElement = null;
@@ -330,13 +490,6 @@ function exerciseApp() {
             }
         },
 
-        closeMobileMenuIfOpen() {
-            const menu = document.getElementById('mobile-menu');
-            if (menu && menu.classList.contains('open')) {
-                menu.classList.remove('open');
-            }
-        },
-        
         // Перевод оборудования на текущий язык
         getEquipmentTranslation(equipment) {
             if (!equipment) return '';
@@ -366,6 +519,7 @@ function exerciseApp() {
             this.clearSwipeAnimationTimeout();
             this.resetSwipeTransform(true);
             this.swipeTargetElement = null;
+            this.closeMobileMenuIfOpen();
             this.currentView = 'list';
             this.currentExercise = null;
         },
