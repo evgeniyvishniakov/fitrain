@@ -238,6 +238,15 @@ document.head.appendChild(style);
 function workoutApp() {
     return {
         currentView: 'list', // list, create, edit, view
+        touchStartX: null,
+        touchStartY: null,
+        touchHandlersSetup: false,
+        touchStartTime: null,
+        swipeThreshold: 60,
+        maxVerticalDeviation: 80,
+        edgeThreshold: 80,
+        boundTouchStart: null,
+        boundTouchEnd: null,
         workouts: <?php echo json_encode($workouts->items(), 15, 512) ?>,
         totalWorkouts: <?php echo e($workouts->total()); ?>,
         
@@ -258,6 +267,10 @@ function workoutApp() {
         formDescription: '',
         formStatus: 'planned',
         isProcessing: false,
+        
+        init() {
+            this.setupTouchHandlers();
+        },
         
         // Функциональность заполнения упражнений для тренера
         exerciseStatuses: {}, // Хранение статусов упражнений
@@ -281,6 +294,101 @@ function workoutApp() {
         exerciseDetailModal: {
             isOpen: false,
             exercise: null
+        },
+
+        isVideoFile(path) {
+            if (!path || path === 'null' || path === null) {
+                return false;
+            }
+            return isVideoMedia(path);
+        },
+
+        setupTouchHandlers() {
+            if (this.touchHandlersSetup) return;
+            this.touchHandlersSetup = true;
+            this.boundTouchStart = this.handleTouchStart.bind(this);
+            this.boundTouchEnd = this.handleTouchEnd.bind(this);
+            const container = document.getElementById('workout-root');
+            if (!container) return;
+            container.addEventListener('touchstart', this.boundTouchStart, { passive: false });
+            container.addEventListener('touchmove', this.boundTouchMove.bind(this), { passive: false });
+            container.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+        },
+
+        handleTouchStart(event) {
+            if (event.touches.length !== 1) return;
+            if (this.currentView !== 'view') return;
+            if (this.isAnyModalOpen()) return;
+            this.touchStartX = event.touches[0].clientX;
+            this.touchStartY = event.touches[0].clientY;
+            this.touchStartTime = performance.now();
+            if (this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchMove(event) {
+            if (this.touchStartX === null) return;
+            if (this.currentView !== 'view') return;
+            if (this.isAnyModalOpen()) return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchEnd(event) {
+            if (this.touchStartX === null || event.changedTouches.length !== 1) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const startX = this.touchStartX;
+            const startY = this.touchStartY ?? 0;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            const duration = performance.now() - (this.touchStartTime ?? performance.now());
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+            if (startX > this.edgeThreshold) return;
+            if (deltaX > this.swipeThreshold && duration < 600) {
+                this.handleSwipeRight(event);
+            }
+        },
+
+        handleSwipeRight(event) {
+            if (this.currentView !== 'view') return;
+            if (this.isAnyModalOpen()) return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            this.showList();
+        },
+
+        isAnyModalOpen() {
+            if (this.showExerciseModal) return true;
+            if (this.showTemplateModal) return true;
+            if (this.exerciseDetailModal?.isOpen) return true;
+            if (this.videoModal?.isOpen) return true;
+            if (this.domModalVisible('exerciseModal')) return true;
+            if (this.domModalVisible('templateModal')) return true;
+            if (this.domModalVisible('simple-exercise-modal')) return true;
+            if (document.getElementById('js-exercise-modal')) return true;
+            return false;
+        },
+
+        domModalVisible(id) {
+            const el = document.getElementById(id);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none';
         },
 
         // Навигация
@@ -1863,10 +1971,13 @@ function workoutApp() {
             const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
             
             if (hasImage2) {
+                const mediaHtml = renderMediaElement(`/storage/${exercise.image_url_2}`, exercise.name || '', {
+                    style: 'width: 100%; height: 350px; object-fit: contain;'
+                });
                 bodyHTML += `<div style="margin-bottom: 24px;">`;
                 bodyHTML += `
                     <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                        ${mediaHtml}
                     </div>
                 `;
                 bodyHTML += '</div>';
@@ -2132,6 +2243,7 @@ function workoutApp() {
         
         // Инициализация
         init() {
+            this.setupTouchHandlers();
             // Загружаем прогресс для всех тренировок при загрузке страницы
             this.loadAllWorkoutProgress();
             
@@ -2269,7 +2381,7 @@ function workoutApp() {
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection("content"); ?>
-<div x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
+<div id="workout-root" x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
     
 
     <!-- Фильтры и поиск -->
@@ -3087,10 +3199,17 @@ function workoutApp() {
                                     <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null" 
                                          @click="openExerciseDetailModal(exercise)"
                                          class="cursor-pointer hover:opacity-80 transition-opacity">
-                                        <img :src="(exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null) ? '/storage/' + exercise.image_url : ''" 
-                                             :alt="exercise.name"
-                                             class="w-12 h-12 object-cover rounded-lg shadow-sm"
-                                             onerror="this.parentElement.style.display='none'">
+                                        <template x-if="!isVideoFile(exercise.image_url)">
+                                            <img :src="'/storage/' + exercise.image_url" 
+                                                 :alt="exercise.name"
+                                                 class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                 onerror="this.parentElement.style.display='none'">
+                                        </template>
+                                        <template x-if="isVideoFile(exercise.image_url)">
+                                            <video :src="'/storage/' + exercise.image_url"
+                                                   class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                   autoplay loop muted playsinline></video>
+                                        </template>
                                     </div>
                                     
                                     <!-- Название упражнения (кликабельно) -->
@@ -3674,6 +3793,28 @@ async function loadTemplates() {
 }
 
 // Отображение упражнений
+function isVideoMedia(path = '') {
+    return /\.(mp4|webm|mov|m4v)$/i.test((path || '').toLowerCase());
+}
+
+function renderMediaElement(path, altText = '', options = {}) {
+    if (!path) return '';
+    const { className = '', style = '', attributes = '' } = options;
+    const classAttr = className ? ` class="${className}"` : '';
+    const extraAttr = attributes ? ` ${attributes}` : '';
+    const baseStyle = style ? style.trim() : '';
+    const safeAlt = (altText || '').replace(/"/g, '&quot;');
+    
+    if (isVideoMedia(path)) {
+        const combinedStyle = [baseStyle, 'pointer-events: none;'].filter(Boolean).join(' ');
+        const styleAttr = combinedStyle ? ` style="${combinedStyle}"` : '';
+        return `<video src="${path}"${classAttr}${styleAttr}${extraAttr} autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>`;
+    }
+    
+    const styleAttr = baseStyle ? ` style="${baseStyle}"` : '';
+    return `<img src="${path}" alt="${safeAlt}"${classAttr}${styleAttr}${extraAttr}>`;
+}
+
 function renderExercises() {
     const container = document.getElementById('exercises-container');
     if (exercises.length === 0) {
@@ -3730,11 +3871,7 @@ function renderExercises() {
                  data-exercise-favorite="${isFavorite ? '1' : '0'}"
                  style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 180px;"
                  onclick="toggleExercise(this, ${exercise.id})">
-                ${imageUrl ? `
-                    <img src="${imageUrl}" 
-                         alt="${escapeName}" 
-                         style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
-                ` : ''}
+                ${imageUrl ? renderMediaElement(imageUrl, escapeName, { style: 'width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;' }) : ''}
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 600; color: #111827; margin-bottom: 6px; font-size: 16px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
@@ -5019,9 +5156,16 @@ function copyPlanToFields(exerciseId) {
             <!-- Изображения - показываем только вторую картинку -->
             <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
-                         :alt="exerciseDetailModal.exercise?.name"
-                         style="width: 100%; height: 280px; object-fit: cover;">
+                    <template x-if="!isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
+                        <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
+                             :alt="exerciseDetailModal.exercise?.name"
+                             style="width: 100%; height: 280px; object-fit: cover;">
+                    </template>
+                    <template x-if="isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
+                        <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"
+                               style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
+                               autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                    </template>
                 </div>
             </div>
             

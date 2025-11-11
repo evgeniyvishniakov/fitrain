@@ -108,9 +108,24 @@ function exerciseApp() {
         exerciseType: '',
         currentPage: 1,
         itemsPerPage: 10,
+        touchStartX: null,
+        touchStartY: null,
+        touchHandlersSetup: false,
+        touchStartTime: null,
+        maxVerticalDeviation: 80,
+        edgeThreshold: 80,
+        swipeHandled: false,
+        swipeActivationThreshold: 120,
+        swipeVisualLimit: 140,
+        swipeTargetElement: null,
+        swipeAnimationTimeout: null,
+        boundTouchStart: null,
+        boundTouchMove: null,
+        boundTouchEnd: null,
         
         // Инициализация
         async init() {
+            this.setupTouchHandlers();
             await this.loadExercises();
             
             // Сбрасываем пагинацию при изменении фильтров
@@ -148,6 +163,180 @@ function exerciseApp() {
             }
         },
         
+        setupTouchHandlers() {
+            if (this.touchHandlersSetup) return;
+            this.touchHandlersSetup = true;
+            this.boundTouchStart = this.handleTouchStart.bind(this);
+            this.boundTouchMove = this.handleTouchMove.bind(this);
+            this.boundTouchEnd = this.handleTouchEnd.bind(this);
+            const container = document.getElementById('athlete-exercises-root');
+            if (!container) return;
+            container.addEventListener('touchstart', this.boundTouchStart, { passive: false });
+            container.addEventListener('touchmove', this.boundTouchMove, { passive: false });
+            container.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+        },
+
+        getSwipeTargetElement() {
+            if (this.currentView === 'view') {
+                return document.getElementById('athlete-exercise-view-section');
+            }
+            return null;
+        },
+
+        applySwipeTransform(distance) {
+            const target = this.swipeTargetElement;
+            if (!target) return;
+            const clamped = Math.max(0, Math.min(distance, this.swipeVisualLimit));
+            target.style.transform = `translateX(${clamped}px)`;
+        },
+
+        resetSwipeTransform(immediate = false, targetElement = null) {
+            const target = targetElement || this.swipeTargetElement;
+            if (!target) return;
+            if (immediate) {
+                target.style.transition = '';
+                target.style.transform = '';
+                return;
+            }
+            target.style.transition = 'transform 0.2s ease';
+            requestAnimationFrame(() => {
+                target.style.transform = 'translateX(0px)';
+            });
+            setTimeout(() => {
+                target.style.transition = '';
+                target.style.transform = '';
+            }, 200);
+        },
+
+        clearSwipeAnimationTimeout() {
+            if (this.swipeAnimationTimeout) {
+                clearTimeout(this.swipeAnimationTimeout);
+                this.swipeAnimationTimeout = null;
+            }
+        },
+
+        handleTouchStart(event) {
+            if (event.touches.length !== 1) return;
+            if (this.currentView !== 'view') return;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.swipeHandled = false;
+            this.touchStartX = event.touches[0].clientX;
+            this.touchStartY = event.touches[0].clientY;
+            this.touchStartTime = performance.now();
+            if (this.touchStartX <= this.edgeThreshold) {
+                this.swipeTargetElement = this.getSwipeTargetElement();
+                if (this.swipeTargetElement) {
+                    this.swipeTargetElement.style.transition = 'transform 0s';
+                }
+            } else {
+                this.swipeTargetElement = null;
+            }
+            if (this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchMove(event) {
+            if (this.touchStartX === null) return;
+            if (this.currentView !== 'view') return;
+            const touch = event.touches[0];
+            const deltaX = Math.max(0, touch.clientX - this.touchStartX);
+            const deltaY = touch.clientY - (this.touchStartY ?? 0);
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+            if (this.swipeTargetElement) {
+                this.applySwipeTransform(deltaX);
+            }
+            if (deltaX > this.swipeActivationThreshold && !this.swipeHandled) {
+                this.handleSwipeRight(event, this.swipeTargetElement);
+                return;
+            }
+            if (event && this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchEnd(event) {
+            if (this.touchStartX === null || event.changedTouches.length !== 1) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            const targetElement = this.swipeTargetElement;
+            if (this.swipeHandled) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeHandled = false;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const startX = this.touchStartX;
+            const startY = this.touchStartY ?? 0;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            const duration = performance.now() - (this.touchStartTime ?? performance.now());
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (startX > this.edgeThreshold) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (deltaX > this.swipeActivationThreshold && duration < 600) {
+                this.handleSwipeRight(event, targetElement);
+                return;
+            }
+            this.resetSwipeTransform(false, targetElement);
+            this.swipeTargetElement = null;
+        },
+
+        handleSwipeRight(event, targetElement = null) {
+            if (this.currentView !== 'view') return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            this.swipeHandled = true;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            const target = targetElement || this.swipeTargetElement || this.getSwipeTargetElement();
+            if (target) {
+                this.swipeTargetElement = target;
+                target.style.transition = 'transform 0.18s ease';
+                requestAnimationFrame(() => {
+                    target.style.transform = 'translateX(100%)';
+                });
+                this.swipeAnimationTimeout = setTimeout(() => {
+                    this.showList();
+                    this.resetSwipeTransform(true, target);
+                    this.swipeTargetElement = null;
+                    this.swipeAnimationTimeout = null;
+                }, 180);
+            } else {
+                this.showList();
+            }
+        },
+
+        closeMobileMenuIfOpen() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            }
+        },
+
         // Перевод оборудования на текущий язык
         getEquipmentTranslation(equipment) {
             if (!equipment) return '';
@@ -174,11 +363,17 @@ function exerciseApp() {
         
         // Навигация
         showList() {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
             this.currentView = 'list';
             this.currentExercise = null;
         },
         
         showView(exerciseId) {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
             this.currentView = 'view';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
         },
@@ -418,7 +613,7 @@ function exerciseApp() {
     }
 </style>
 
-<div x-data="exerciseApp()" x-init="init()" x-cloak class="space-y-6">
+<div id="athlete-exercises-root" x-data="exerciseApp()" x-init="init()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
     <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -628,7 +823,7 @@ function exerciseApp() {
     </div>
 
     <!-- ПРОСМОТР УПРАЖНЕНИЯ -->
-    <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="athlete-exercise-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <!-- Кнопки сверху -->
         <div class="flex items-center justify-between mb-6">
             <button @click="showList()" 

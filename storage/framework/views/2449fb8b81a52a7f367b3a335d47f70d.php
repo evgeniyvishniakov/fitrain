@@ -1,17 +1,16 @@
-@extends('admin.layouts.app')
-@php use Illuminate\Support\Str; @endphp
+<?php use Illuminate\Support\Str; ?>
 
-@section('title', 'Упражнения')
-@section('page-title', 'Управление упражнениями')
+<?php $__env->startSection('title', 'Упражнения'); ?>
+<?php $__env->startSection('page-title', 'Управление упражнениями'); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <!-- Фильтры -->
     <div class="bg-white rounded-xl shadow-sm p-6">
         <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Поиск</label>
-                <input type="text" name="search" value="{{ request('search') }}"
+                <input type="text" name="search" value="<?php echo e(request('search')); ?>"
                        class="filter-input block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                        placeholder="Название упражнения">
             </div>
@@ -19,26 +18,26 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Категория</label>
                 <select name="category" class="filter-select block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все</option>
-                    @foreach(\App\Models\Trainer\Exercise::CATEGORIES as $key => $label)
-                        <option value="{{ $key }}" {{ request('category') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
+                    <?php $__currentLoopData = \App\Models\Trainer\Exercise::CATEGORIES; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($key); ?>" <?php echo e(request('category') == $key ? 'selected' : ''); ?>><?php echo e($label); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование</label>
                 <select name="equipment" class="filter-select block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все</option>
-                    @foreach(\App\Models\Trainer\Exercise::EQUIPMENT as $key => $label)
-                        <option value="{{ $key }}" {{ request('equipment') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
+                    <?php $__currentLoopData = \App\Models\Trainer\Exercise::EQUIPMENT; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($key); ?>" <?php echo e(request('equipment') == $key ? 'selected' : ''); ?>><?php echo e($label); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Тип</label>
                 <select name="is_system" class="filter-select block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     <option value="">Все</option>
-                    <option value="1" {{ request('is_system') == '1' ? 'selected' : '' }}>Системные</option>
-                    <option value="0" {{ request('is_system') == '0' ? 'selected' : '' }}>Пользовательские</option>
+                    <option value="1" <?php echo e(request('is_system') == '1' ? 'selected' : ''); ?>>Системные</option>
+                    <option value="0" <?php echo e(request('is_system') == '0' ? 'selected' : ''); ?>>Пользовательские</option>
                 </select>
             </div>
         </form>
@@ -46,7 +45,7 @@
 
     <!-- Кнопка создания -->
     <div class="flex justify-between items-center">
-        <div class="text-sm text-gray-600" id="exercisesCount">Всего: <span class="font-semibold">{{ $exercises->total() }}</span></div>
+        <div class="text-sm text-gray-600" id="exercisesCount">Всего: <span class="font-semibold"><?php echo e($exercises->total()); ?></span></div>
         <button onclick="openCreateModal()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
             ➕ Создать упражнение
         </button>
@@ -66,62 +65,62 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-                @forelse($exercises as $exercise)
+                <?php $__empty_1 = true; $__currentLoopData = $exercises; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $exercise): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
-                            @php
+                            <?php
                                 // Приоритет: сначала изображение для девушек, если его нет - основное
                                 $displayImage = ($exercise->image_url_female && trim($exercise->image_url_female) !== '') 
                                     ? $exercise->image_url_female 
                                     : ($exercise->image_url && trim($exercise->image_url) !== '' ? $exercise->image_url : null);
-                            @endphp
-                            @if($displayImage)
-                                @php
+                            ?>
+                            <?php if($displayImage): ?>
+                                <?php
                                     $isVideoPreview = Str::of($displayImage)->lower()->endsWith(['.mp4', '.webm', '.mov', '.m4v']);
-                                @endphp
-                                @if($isVideoPreview)
-                                    <video src="{{ asset('storage/' . $displayImage) }}"
+                                ?>
+                                <?php if($isVideoPreview): ?>
+                                    <video src="<?php echo e(asset('storage/' . $displayImage)); ?>"
                                            class="w-16 h-16 object-cover rounded-lg border border-gray-200"
                                            autoplay muted loop playsinline></video>
-                                @else
-                                    <img src="{{ asset('storage/' . $displayImage) }}" 
-                                         alt="{{ $exercise->getTranslated('name', 'ru') }}" 
+                                <?php else: ?>
+                                    <img src="<?php echo e(asset('storage/' . $displayImage)); ?>" 
+                                         alt="<?php echo e($exercise->getTranslated('name', 'ru')); ?>" 
                                          class="w-16 h-16 object-cover rounded-lg border border-gray-200"
                                          onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs\'>Нет фото</div>'">
-                                @endif
-                            @else
+                                <?php endif; ?>
+                            <?php else: ?>
                                 <div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs">
                                     Нет фото
                                 </div>
-                            @endif
+                            <?php endif; ?>
                         </td>
                         <td class="px-6 py-4 text-sm">
-                            <div class="font-medium text-sm">🇷🇺 {{ $exercise->getTranslated('name', 'ru') }}</div>
-                            @if(isset($exercise->translations['ua']['name']) && !empty($exercise->translations['ua']['name']))
-                                <div class="text-gray-600 text-sm mt-1">🇺🇦 {{ $exercise->translations['ua']['name'] }}</div>
-                            @endif
+                            <div class="font-medium text-sm">🇷🇺 <?php echo e($exercise->getTranslated('name', 'ru')); ?></div>
+                            <?php if(isset($exercise->translations['ua']['name']) && !empty($exercise->translations['ua']['name'])): ?>
+                                <div class="text-gray-600 text-sm mt-1">🇺🇦 <?php echo e($exercise->translations['ua']['name']); ?></div>
+                            <?php endif; ?>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{{ $exercise->category }}</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"><?php echo e($exercise->category); ?></span>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs">{{ $exercise->equipment ?? '—' }}</span>
+                            <span class="px-2 py-1 bg-teal-100 text-teal-800 rounded-full text-xs"><?php echo e($exercise->equipment ?? '—'); ?></span>
                         </td>
                         <td class="px-6 py-4">
-                            @if($exercise->is_system)
+                            <?php if($exercise->is_system): ?>
                                 <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Системное</span>
-                            @else
+                            <?php else: ?>
                                 <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">Польз.</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex space-x-3">
-                                <button onclick="openEditModal({{ $exercise->id }})" 
+                                <button onclick="openEditModal(<?php echo e($exercise->id); ?>)" 
                                         class="text-blue-600 hover:text-blue-900 text-xl transition-transform hover:scale-110" 
                                         title="Редактировать">
                                     ✏️
                                 </button>
-                                <button onclick="deleteExercise({{ $exercise->id }})" 
+                                <button onclick="deleteExercise(<?php echo e($exercise->id); ?>)" 
                                         class="text-red-600 hover:text-red-900 text-xl transition-transform hover:scale-110" 
                                         title="Удалить">
                                     🗑️
@@ -129,19 +128,19 @@
                             </div>
                         </td>
                     </tr>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                             <div class="text-4xl mb-3">🏋️</div>
                             <p>Упражнения не найдены</p>
                         </td>
                     </tr>
-                @endforelse
+                <?php endif; ?>
             </tbody>
         </table>
-        @if($exercises->hasPages())
-            <div class="px-6 py-4 border-t" id="paginationContainer">{{ $exercises->links() }}</div>
-        @endif
+        <?php if($exercises->hasPages()): ?>
+            <div class="px-6 py-4 border-t" id="paginationContainer"><?php echo e($exercises->links()); ?></div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -154,7 +153,7 @@
         </div>
         
         <form id="exerciseForm" class="p-6 space-y-6">
-            @csrf
+            <?php echo csrf_field(); ?>
             <input type="hidden" id="exerciseId" name="id">
             
             <!-- Основная информация -->
@@ -246,18 +245,18 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>
                     <select name="category" id="category" required class="w-full px-3 py-2 border rounded-lg">
                         <option value="">Выберите категорию</option>
-                        @foreach(\App\Models\Trainer\Exercise::CATEGORIES as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = \App\Models\Trainer\Exercise::CATEGORIES; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($key); ?>"><?php echo e($label); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Оборудование</label>
                     <select name="equipment" id="equipment" class="w-full px-3 py-2 border rounded-lg">
                         <option value="">Выберите оборудование</option>
-                        @foreach(\App\Models\Trainer\Exercise::EQUIPMENT as $key => $label)
-                            <option value="{{ $key }}">{{ $label }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = \App\Models\Trainer\Exercise::EQUIPMENT; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($key); ?>"><?php echo e($label); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
@@ -313,12 +312,12 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Поля для ввода данных</label>
                 <p class="text-xs text-gray-500 mb-3">Выберите какие поля будут доступны при добавлении этого упражнения в тренировку</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    @foreach(\App\Models\Trainer\Exercise::AVAILABLE_FIELDS as $key => $label)
+                    <?php $__currentLoopData = \App\Models\Trainer\Exercise::AVAILABLE_FIELDS; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <label class="flex items-center space-x-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                            <input type="checkbox" name="fields_config[]" value="{{ $key }}" class="field-config-checkbox">
-                            <span class="text-sm">{{ $label }}</span>
+                            <input type="checkbox" name="fields_config[]" value="<?php echo e($key); ?>" class="field-config-checkbox">
+                            <span class="text-sm"><?php echo e($label); ?></span>
                         </label>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
@@ -507,7 +506,7 @@ function applyFilters() {
     const form = document.getElementById('filterForm');
     const formData = new FormData(form);
     const params = new URLSearchParams(formData);
-    const url = '{{ route('admin.exercises.index') }}?' + params.toString();
+    const url = '<?php echo e(route('admin.exercises.index')); ?>?' + params.toString();
     loadExercises(url);
 }
 
@@ -569,7 +568,7 @@ function openEditModal(id) {
     hideMediaPreview(document.getElementById('imagePreviewFemale'));
     hideMediaPreview(document.getElementById('imagePreviewFemale2'));
     
-    const editUrl = `{{ url('/exercises') }}/${id}/edit`;
+    const editUrl = `<?php echo e(url('/exercises')); ?>/${id}/edit`;
     
     fetch(editUrl, {
         headers: {
@@ -637,7 +636,7 @@ function openEditModal(id) {
             const imagePreviewFemale2 = document.getElementById('imagePreviewFemale2');
             
             if (data.image_url) {
-        setMediaPreview(imagePreview, '/storage/' + data.image_url, isVideoPath(data.image_url));
+                setMediaPreview(imagePreview, '/storage/' + data.image_url, isVideoPath(data.image_url));
             } else {
                 hideMediaPreview(imagePreview);
             }
@@ -678,7 +677,7 @@ document.getElementById('exerciseForm').addEventListener('submit', function(e) {
     const form = this;
     const formData = new FormData(form);
     const id = document.getElementById('exerciseId').value;
-    const baseUrl = '{{ url('/exercises') }}';
+    const baseUrl = '<?php echo e(url('/exercises')); ?>';
     const url = id ? `${baseUrl}/${id}` : baseUrl;
     
     // Собираем muscle_groups для RU и UK
@@ -711,7 +710,7 @@ document.getElementById('exerciseForm').addEventListener('submit', function(e) {
     fetch(url, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
             'Accept': 'application/json'
         },
         body: formData
@@ -782,11 +781,11 @@ setupMediaInput('image_female_2', 'imagePreviewFemale2');
 function deleteExercise(id) {
     if(!confirm('Удалить упражнение?')) return;
     
-    const deleteUrl = `{{ url('/exercises') }}/${id}`;
+    const deleteUrl = `<?php echo e(url('/exercises')); ?>/${id}`;
     
     fetch(deleteUrl, {
         method: 'DELETE',
-        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'}
+        headers: {'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json'}
     })
     .then(r => r.json())
     .then(data => {
@@ -800,4 +799,6 @@ function deleteExercise(id) {
     });
 }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/admin/exercises/index.blade.php ENDPATH**/ ?>

@@ -240,6 +240,20 @@ document.head.appendChild(style);
 function workoutApp() {
     return {
         currentView: 'list', // list, create, edit, view
+        touchStartX: null,
+        touchStartY: null,
+        touchHandlersSetup: false,
+        touchStartTime: null,
+        maxVerticalDeviation: 80,
+        edgeThreshold: 80,
+        swipeHandled: false,
+        swipeActivationThreshold: 120,
+        swipeVisualLimit: 140,
+        swipeTargetElement: null,
+        swipeAnimationTimeout: null,
+        boundTouchStart: null,
+        boundTouchMove: null,
+        boundTouchEnd: null,
         workouts: @json($workouts->items()),
         totalWorkouts: {{ $workouts->total() }},
         
@@ -260,6 +274,10 @@ function workoutApp() {
         formDescription: '',
         formStatus: 'planned',
         isProcessing: false,
+        
+        init() {
+            this.setupTouchHandlers();
+        },
         
         // Функциональность заполнения упражнений для тренера
         exerciseStatuses: {}, // Хранение статусов упражнений
@@ -285,12 +303,222 @@ function workoutApp() {
             exercise: null
         },
 
+        isVideoFile(path) {
+            if (!path || path === 'null' || path === null) {
+                return false;
+            }
+            return isVideoMedia(path);
+        },
+
+        setupTouchHandlers() {
+            if (this.touchHandlersSetup) return;
+            this.touchHandlersSetup = true;
+            this.boundTouchStart = this.handleTouchStart.bind(this);
+            this.boundTouchMove = this.handleTouchMove.bind(this);
+            this.boundTouchEnd = this.handleTouchEnd.bind(this);
+            const container = document.getElementById('workout-root');
+            if (!container) return;
+            container.addEventListener('touchstart', this.boundTouchStart, { passive: false });
+            container.addEventListener('touchmove', this.boundTouchMove, { passive: false });
+            container.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+        },
+
+        getSwipeTargetElement() {
+            if (this.currentView === 'view') {
+                return document.getElementById('trainer-workout-view-section');
+            }
+            if (this.currentView === 'create' || this.currentView === 'edit') {
+                return document.getElementById('trainer-workout-form-section');
+            }
+            return null;
+        },
+
+        applySwipeTransform(distance) {
+            const target = this.swipeTargetElement;
+            if (!target) return;
+            const clamped = Math.max(0, Math.min(distance, this.swipeVisualLimit));
+            target.style.transform = `translateX(${clamped}px)`;
+        },
+
+        resetSwipeTransform(immediate = false, targetElement = null) {
+            const target = targetElement || this.swipeTargetElement;
+            if (!target) return;
+            if (immediate) {
+                target.style.transition = '';
+                target.style.transform = '';
+                return;
+            }
+            target.style.transition = 'transform 0.2s ease';
+            requestAnimationFrame(() => {
+                target.style.transform = 'translateX(0px)';
+            });
+            setTimeout(() => {
+                target.style.transition = '';
+                target.style.transform = '';
+            }, 200);
+        },
+
+        clearSwipeAnimationTimeout() {
+            if (this.swipeAnimationTimeout) {
+                clearTimeout(this.swipeAnimationTimeout);
+                this.swipeAnimationTimeout = null;
+            }
+        },
+
+        handleTouchStart(event) {
+            if (event.touches.length !== 1) return;
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            this.closeGlobalMobileMenu();
+            this.clearSwipeAnimationTimeout();
+            this.swipeHandled = false;
+            this.touchStartX = event.touches[0].clientX;
+            this.touchStartY = event.touches[0].clientY;
+            this.touchStartTime = performance.now();
+            if (this.touchStartX <= this.edgeThreshold) {
+                this.swipeTargetElement = this.getSwipeTargetElement();
+                if (this.swipeTargetElement) {
+                    this.swipeTargetElement.style.transition = 'transform 0s';
+                }
+            } else {
+                this.swipeTargetElement = null;
+            }
+            if (this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchMove(event) {
+            if (this.touchStartX === null) return;
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            const touch = event.touches[0];
+            const deltaX = Math.max(0, touch.clientX - this.touchStartX);
+            const deltaY = touch.clientY - (this.touchStartY ?? 0);
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+            if (this.swipeTargetElement) {
+                this.applySwipeTransform(deltaX);
+            }
+            if (deltaX > this.swipeActivationThreshold && !this.swipeHandled) {
+                this.handleSwipeRight(event, this.swipeTargetElement);
+                return;
+            }
+            if (event && this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchEnd(event) {
+            if (this.touchStartX === null || event.changedTouches.length !== 1) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            const targetElement = this.swipeTargetElement;
+            if (this.swipeHandled) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeHandled = false;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const startX = this.touchStartX;
+            const startY = this.touchStartY ?? 0;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            const duration = performance.now() - (this.touchStartTime ?? performance.now());
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (startX > this.edgeThreshold) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (deltaX > this.swipeActivationThreshold && duration < 600) {
+                this.handleSwipeRight(event, targetElement);
+                return;
+            }
+            this.resetSwipeTransform(false, targetElement);
+            this.swipeTargetElement = null;
+        },
+
+        handleSwipeRight(event, targetElement = null) {
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            this.swipeHandled = true;
+            this.closeGlobalMobileMenu();
+            this.clearSwipeAnimationTimeout();
+            const target = targetElement || this.swipeTargetElement || this.getSwipeTargetElement();
+            if (target) {
+                this.swipeTargetElement = target;
+                target.style.transition = 'transform 0.18s ease';
+                requestAnimationFrame(() => {
+                    target.style.transform = 'translateX(100%)';
+                });
+                this.swipeAnimationTimeout = setTimeout(() => {
+                    this.showList();
+                    this.resetSwipeTransform(true, target);
+                    this.swipeTargetElement = null;
+                    this.swipeAnimationTimeout = null;
+                }, 180);
+            } else {
+                this.showList();
+            }
+        },
+
+        isAnyModalOpen() {
+            if (this.showExerciseModal) return true;
+            if (this.showTemplateModal) return true;
+            if (this.exerciseDetailModal?.isOpen) return true;
+            if (this.videoModal?.isOpen) return true;
+            if (this.domModalVisible('exerciseModal')) return true;
+            if (this.domModalVisible('templateModal')) return true;
+            if (this.domModalVisible('simple-exercise-modal')) return true;
+            if (document.getElementById('js-exercise-modal')) return true;
+            return false;
+        },
+
+        domModalVisible(id) {
+            const el = document.getElementById(id);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none';
+        },
+
+        closeGlobalMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            }
+        },
+
         // Навигация
         showList() {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
             // Обновляем данные в списке перед возвратом
             if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
                 this.updateWorkoutProgressInList();
             }
+            this.closeGlobalMobileMenu();
             
             this.currentView = 'list';
             this.currentWorkout = null;
@@ -302,9 +530,20 @@ function workoutApp() {
             }
             document.getElementById('selectedExercisesContainer').style.display = 'none';
             document.getElementById('emptyExercisesState').style.display = 'block';
+            this.$nextTick(() => {
+                const viewSection = document.getElementById('trainer-workout-view-section');
+                if (viewSection) viewSection.style.display = 'none';
+                const listSection = document.getElementById('trainer-workout-list-section');
+                if (listSection) listSection.style.display = '';
+                const listStats = document.getElementById('trainer-workout-list-stats');
+                if (listStats) listStats.style.display = '';
+                const formSection = document.getElementById('trainer-workout-form-section');
+                if (formSection) formSection.style.display = 'none';
+            });
         },
         
         showCreate() {
+            this.closeGlobalMobileMenu();
             this.currentView = 'create';
             this.currentWorkout = null;
             this.formTitle = '';
@@ -336,9 +575,20 @@ function workoutApp() {
                 };
                 this.displaySelectedExercises([warmupData], false);
             }
+            this.$nextTick(() => {
+                const listSection = document.getElementById('trainer-workout-list-section');
+                if (listSection) listSection.style.display = 'none';
+                const listStats = document.getElementById('trainer-workout-list-stats');
+                if (listStats) listStats.style.display = 'none';
+                const viewSection = document.getElementById('trainer-workout-view-section');
+                if (viewSection) viewSection.style.display = 'none';
+                const formSection = document.getElementById('trainer-workout-form-section');
+                if (formSection) formSection.style.display = '';
+            });
         },
         
         showEdit(workoutId) {
+            this.closeGlobalMobileMenu();
             this.currentView = 'edit';
             this.currentWorkout = this.workouts.find(w => w.id === workoutId);
             this.formTitle = this.currentWorkout.title;
@@ -415,6 +665,16 @@ function workoutApp() {
                 document.getElementById('selectedExercisesContainer').style.display = 'none';
                 document.getElementById('emptyExercisesState').style.display = 'block';
             }
+            this.$nextTick(() => {
+                const listSection = document.getElementById('trainer-workout-list-section');
+                if (listSection) listSection.style.display = 'none';
+                const listStats = document.getElementById('trainer-workout-list-stats');
+                if (listStats) listStats.style.display = 'none';
+                const viewSection = document.getElementById('trainer-workout-view-section');
+                if (viewSection) viewSection.style.display = 'none';
+                const formSection = document.getElementById('trainer-workout-form-section');
+                if (formSection) formSection.style.display = '';
+            });
         },
         
         showView(workoutId) {
@@ -424,6 +684,16 @@ function workoutApp() {
             this.loadExerciseProgress(workoutId);
             // Загружаем данные подходов из workoutProgress
             this.loadSetsDataFromProgress(workoutId);
+            this.$nextTick(() => {
+                const viewSection = document.getElementById('trainer-workout-view-section');
+                if (viewSection) viewSection.style.display = '';
+                const listSection = document.getElementById('trainer-workout-list-section');
+                if (listSection) listSection.style.display = 'none';
+                const listStats = document.getElementById('trainer-workout-list-stats');
+                if (listStats) listStats.style.display = 'none';
+                const formSection = document.getElementById('trainer-workout-form-section');
+                if (formSection) formSection.style.display = 'none';
+            });
         },
 
         // Обновление прогресса упражнений в списке тренировок
@@ -1861,10 +2131,13 @@ function workoutApp() {
             const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
             
             if (hasImage2) {
+                const mediaHtml = renderMediaElement(`/storage/${exercise.image_url_2}`, exercise.name || '', {
+                    style: 'width: 100%; height: 350px; object-fit: contain;'
+                });
                 bodyHTML += `<div style="margin-bottom: 24px;">`;
                 bodyHTML += `
                     <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                        ${mediaHtml}
                     </div>
                 `;
                 bodyHTML += '</div>';
@@ -2130,6 +2403,7 @@ function workoutApp() {
         
         // Инициализация
         init() {
+            this.setupTouchHandlers();
             // Загружаем прогресс для всех тренировок при загрузке страницы
             this.loadAllWorkoutProgress();
             
@@ -2267,11 +2541,11 @@ function workoutApp() {
 @endsection
 
 @section("content")
-<div x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
+<div id="workout-root" x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
     
 
     <!-- Фильтры и поиск -->
-    <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-workout-list-section" x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
                 .filters-row {
@@ -2618,7 +2892,7 @@ function workoutApp() {
     </div>
 
     <!-- СПИСОК ТРЕНИРОВОК -->
-    <div x-show="currentView === 'list'" class="space-y-4">
+    <div id="trainer-workout-list-stats" x-show="currentView === 'list'" class="space-y-4">
         <template x-for="workout in paginatedWorkouts" :key="workout.id">
             <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
                 <!-- Статус индикатор -->
@@ -2783,7 +3057,7 @@ function workoutApp() {
     </div>
 
     <!-- СОЗДАНИЕ/РЕДАКТИРОВАНИЕ ТРЕНИРОВКИ -->
-    <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-workout-form-section" x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">
                 <span x-text="currentWorkout?.id ? '{{ __('common.edit_workout') }}' : '{{ __('common.create_workout') }}'"></span>
@@ -2963,7 +3237,7 @@ function workoutApp() {
         </form>
     </div>
     <!-- ПРОСМОТР ТРЕНИРОВКИ -->
-    <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-workout-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">{{ __('common.view_workout') }}</h3>
             <button @click="showList()" 
@@ -3072,10 +3346,17 @@ function workoutApp() {
                                     <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null" 
                                          @click="openExerciseDetailModal(exercise)"
                                          class="cursor-pointer hover:opacity-80 transition-opacity">
-                                        <img :src="(exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null) ? '/storage/' + exercise.image_url : ''" 
-                                             :alt="exercise.name"
-                                             class="w-12 h-12 object-cover rounded-lg shadow-sm"
-                                             onerror="this.parentElement.style.display='none'">
+                                        <template x-if="!isVideoFile(exercise.image_url)">
+                                            <img :src="'/storage/' + exercise.image_url" 
+                                                 :alt="exercise.name"
+                                                 class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                 onerror="this.parentElement.style.display='none'">
+                                        </template>
+                                        <template x-if="isVideoFile(exercise.image_url)">
+                                            <video :src="'/storage/' + exercise.image_url"
+                                                   class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                   autoplay loop muted playsinline></video>
+                                        </template>
                                     </div>
                                     
                                     <!-- Название упражнения (кликабельно) -->
@@ -3652,6 +3933,28 @@ async function loadTemplates() {
 }
 
 // Отображение упражнений
+function isVideoMedia(path = '') {
+    return /\.(mp4|webm|mov|m4v)$/i.test((path || '').toLowerCase());
+}
+
+function renderMediaElement(path, altText = '', options = {}) {
+    if (!path) return '';
+    const { className = '', style = '', attributes = '' } = options;
+    const classAttr = className ? ` class="${className}"` : '';
+    const extraAttr = attributes ? ` ${attributes}` : '';
+    const baseStyle = style ? style.trim() : '';
+    const safeAlt = (altText || '').replace(/"/g, '&quot;');
+    
+    if (isVideoMedia(path)) {
+        const combinedStyle = [baseStyle, 'pointer-events: none;'].filter(Boolean).join(' ');
+        const styleAttr = combinedStyle ? ` style="${combinedStyle}"` : '';
+        return `<video src="${path}"${classAttr}${styleAttr}${extraAttr} autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>`;
+    }
+    
+    const styleAttr = baseStyle ? ` style="${baseStyle}"` : '';
+    return `<img src="${path}" alt="${safeAlt}"${classAttr}${styleAttr}${extraAttr}>`;
+}
+
 function renderExercises() {
     const container = document.getElementById('exercises-container');
     if (exercises.length === 0) {
@@ -3708,11 +4011,7 @@ function renderExercises() {
                  data-exercise-favorite="${isFavorite ? '1' : '0'}"
                  style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 180px;"
                  onclick="toggleExercise(this, ${exercise.id})">
-                ${imageUrl ? `
-                    <img src="${imageUrl}" 
-                         alt="${escapeName}" 
-                         style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
-                ` : ''}
+                ${imageUrl ? renderMediaElement(imageUrl, escapeName, { style: 'width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;' }) : ''}
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 600; color: #111827; margin-bottom: 6px; font-size: 16px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
@@ -4996,9 +5295,16 @@ function copyPlanToFields(exerciseId) {
             <!-- Изображения - показываем только вторую картинку -->
             <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
-                         :alt="exerciseDetailModal.exercise?.name"
-                         style="width: 100%; height: 280px; object-fit: cover;">
+                    <template x-if="!isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
+                        <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
+                             :alt="exerciseDetailModal.exercise?.name"
+                             style="width: 100%; height: 280px; object-fit: cover;">
+                    </template>
+                    <template x-if="isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
+                        <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"
+                               style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
+                               autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                    </template>
                 </div>
             </div>
             

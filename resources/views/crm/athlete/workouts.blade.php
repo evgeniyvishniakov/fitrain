@@ -4,15 +4,53 @@
 @section("page-title", __('common.workouts'))
 
 <script>
+const VIDEO_EXT_REGEXP = /\.(mp4|webm|mov|m4v)$/i;
+
+function isVideoMedia(path = '') {
+    return VIDEO_EXT_REGEXP.test((path || '').toString().toLowerCase());
+}
+
+function renderMediaElement(path, altText = '', options = {}) {
+    if (!path) return '';
+    const { className = '', style = '', attributes = '' } = options;
+    const classAttr = className ? ` class="${className}"` : '';
+    const extraAttr = attributes ? ` ${attributes}` : '';
+    const baseStyle = style ? style.trim() : '';
+    const safeAlt = (altText || '').replace(/"/g, '&quot;');
+    
+    if (isVideoMedia(path)) {
+        const combinedStyle = [baseStyle, 'pointer-events: none;'].filter(Boolean).join(' ');
+        const styleAttr = combinedStyle ? ` style="${combinedStyle}"` : '';
+        return `<video src="${path}"${classAttr}${styleAttr}${extraAttr} autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>`;
+    }
+    
+    const styleAttr = baseStyle ? ` style="${baseStyle}"` : '';
+    return `<img src="${path}" alt="${safeAlt}"${classAttr}${styleAttr}${extraAttr}>`;
+}
+
         // Workout viewing functionality
         function athleteWorkoutApp() {
             return {
-                currentView: 'list', // list, view
+        currentView: 'list', // list, view
+        touchStartX: null,
+        touchStartY: null,
+        touchHandlersSetup: false,
+        touchStartTime: null,
+        maxVerticalDeviation: 80,
+        edgeThreshold: 80,
+        swipeHandled: false,
+        swipeActivationThreshold: 120,
+        swipeVisualLimit: 140,
+        swipeTargetElement: null,
+        swipeAnimationTimeout: null,
+        boundTouchStart: null,
+        boundTouchMove: null,
+        boundTouchEnd: null,
                 workouts: @json($workouts->items()),
                 currentWorkout: null,
                 exerciseStatuses: {}, // Store exercise statuses
                 exerciseComments: {}, // Store exercise comments
-                exerciseSetsData: {}, // Store sets data
+        exerciseSetsData: {}, // Store sets data
         exerciseSetsExpanded: {}, // Store sets fields expansion state
         saveTimeout: null, // Auto-save timer
         lastSaved: null, // Last save time
@@ -30,25 +68,237 @@
             exercise: null
         },
         
+        setupTouchHandlers() {
+            if (this.touchHandlersSetup) return;
+            this.touchHandlersSetup = true;
+            this.boundTouchStart = this.handleTouchStart.bind(this);
+            this.boundTouchMove = this.handleTouchMove.bind(this);
+            this.boundTouchEnd = this.handleTouchEnd.bind(this);
+            const container = document.getElementById('workout-root');
+            if (!container) return;
+            container.addEventListener('touchstart', this.boundTouchStart, { passive: false });
+            container.addEventListener('touchmove', this.boundTouchMove, { passive: false });
+            container.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+        },
+
+        getSwipeTargetElement() {
+            if (this.currentView === 'view') {
+                return document.getElementById('athlete-workout-view-section');
+            }
+            return null;
+        },
+
+        applySwipeTransform(distance) {
+            const target = this.swipeTargetElement;
+            if (!target) return;
+            const clamped = Math.max(0, Math.min(distance, this.swipeVisualLimit));
+            target.style.transform = `translateX(${clamped}px)`;
+        },
+
+        resetSwipeTransform(immediate = false, targetElement = null) {
+            const target = targetElement || this.swipeTargetElement;
+            if (!target) return;
+            if (immediate) {
+                target.style.transition = '';
+                target.style.transform = '';
+                return;
+            }
+            target.style.transition = 'transform 0.2s ease';
+            requestAnimationFrame(() => {
+                target.style.transform = 'translateX(0px)';
+            });
+            setTimeout(() => {
+                target.style.transition = '';
+                target.style.transform = '';
+            }, 200);
+        },
+
+        clearSwipeAnimationTimeout() {
+            if (this.swipeAnimationTimeout) {
+                clearTimeout(this.swipeAnimationTimeout);
+                this.swipeAnimationTimeout = null;
+            }
+        },
+
+        handleTouchStart(event) {
+            if (event.touches.length !== 1) return;
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.swipeHandled = false;
+            this.touchStartX = event.touches[0].clientX;
+            this.touchStartY = event.touches[0].clientY;
+            this.touchStartTime = performance.now();
+            if (this.touchStartX <= this.edgeThreshold) {
+                this.swipeTargetElement = this.getSwipeTargetElement();
+                if (this.swipeTargetElement) {
+                    this.swipeTargetElement.style.transition = 'transform 0s';
+                }
+            } else {
+                this.swipeTargetElement = null;
+            }
+            if (this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchMove(event) {
+            if (this.touchStartX === null) return;
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            const touch = event.touches[0];
+            const deltaX = Math.max(0, touch.clientX - this.touchStartX);
+            const deltaY = touch.clientY - (this.touchStartY ?? 0);
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+            if (this.swipeTargetElement) {
+                this.applySwipeTransform(deltaX);
+            }
+            if (deltaX > this.swipeActivationThreshold && !this.swipeHandled) {
+                this.handleSwipeRight(event, this.swipeTargetElement);
+                return;
+            }
+            if (event && this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchEnd(event) {
+            if (this.touchStartX === null || event.changedTouches.length !== 1) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            const targetElement = this.swipeTargetElement;
+            if (this.swipeHandled) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeHandled = false;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const startX = this.touchStartX;
+            const startY = this.touchStartY ?? 0;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            const duration = performance.now() - (this.touchStartTime ?? performance.now());
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (startX > this.edgeThreshold) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (deltaX > this.swipeActivationThreshold && duration < 600) {
+                this.handleSwipeRight(event, targetElement);
+                return;
+            }
+            this.resetSwipeTransform(false, targetElement);
+            this.swipeTargetElement = null;
+        },
+
+        handleSwipeRight(event, targetElement = null) {
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            this.swipeHandled = true;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            const target = targetElement || this.swipeTargetElement || this.getSwipeTargetElement();
+            if (target) {
+                this.swipeTargetElement = target;
+                target.style.transition = 'transform 0.18s ease';
+                requestAnimationFrame(() => {
+                    target.style.transform = 'translateX(100%)';
+                });
+                this.swipeAnimationTimeout = setTimeout(() => {
+                    this.showList();
+                    this.resetSwipeTransform(true, target);
+                    this.swipeTargetElement = null;
+                    this.swipeAnimationTimeout = null;
+                }, 180);
+            } else {
+                this.showList();
+            }
+        },
+
+        closeMobileMenuIfOpen() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            }
+        },
+
+        isAnyModalOpen() {
+            if (this.exerciseDetailModal?.isOpen) return true;
+            if (this.videoModal?.isOpen) return true;
+            if (this.domModalVisible('exerciseModal')) return true;
+            if (this.domModalVisible('templateModal')) return true;
+            if (document.getElementById('js-exercise-modal')) return true;
+            return false;
+        },
+
+        domModalVisible(id) {
+            const el = document.getElementById(id);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none';
+        },
+
+        isVideoFile(path) {
+            if (!path || path === 'null' || path === null) {
+                return false;
+            }
+            return isVideoMedia(path);
+        },
+        
                 workoutProgress: {}, // Progress for each workout
                 isLoading: true, // Loading flag
                 lastChangedExercise: null, // Last changed exercise
-                exercisesExpanded: {}, // Store exercises expansion state in cards
-
+        exercisesExpanded: {}, // Store exercises expansion state in cards
                 // Инициализация
                 init() {
+                    this.setupTouchHandlers();
                     this.loadAllWorkoutProgress();
                 },
 
                 // Navigation
                 showList() {
+                    this.clearSwipeAnimationTimeout();
+                    this.resetSwipeTransform(true);
+                    this.swipeTargetElement = null;
                     // Update data in list before returning
                     if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
                         this.updateWorkoutProgressInList();
                     }
+                    this.closeMobileMenuIfOpen();
                     
                     this.currentView = 'list';
                     this.currentWorkout = null;
+                    this.$nextTick(() => {
+                        const viewSection = document.getElementById('athlete-workout-view-section');
+                        if (viewSection) viewSection.style.display = 'none';
+                        const listStats = document.getElementById('athlete-workout-list-stats');
+                        if (listStats) listStats.style.display = '';
+                        const listSection = document.getElementById('athlete-workout-list-section');
+                        if (listSection) listSection.style.display = '';
+                    });
                 },
 
                 showView(workoutId) {
@@ -57,6 +307,14 @@
                     
                 // Load saved progress when opening workout
                 this.loadExerciseProgress(workoutId);
+                this.$nextTick(() => {
+                    const viewSection = document.getElementById('athlete-workout-view-section');
+                    if (viewSection) viewSection.style.display = '';
+                    const listStats = document.getElementById('athlete-workout-list-stats');
+                    if (listStats) listStats.style.display = 'none';
+                    const listSection = document.getElementById('athlete-workout-list-section');
+                    if (listSection) listSection.style.display = 'none';
+                });
             },
 
             // Load progress for all workouts
@@ -509,10 +767,13 @@
                     const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
                     
                     if (hasImage2) {
+                        const mediaHtml = renderMediaElement(`/storage/${exercise.image_url_2}`, exercise.name || '', {
+                            style: 'width: 100%; height: 350px; object-fit: contain;'
+                        });
                         bodyHTML += `<div style="margin-bottom: 24px;">`;
                         bodyHTML += `
                             <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                                <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                                ${mediaHtml}
                             </div>
                         `;
                         bodyHTML += '</div>';
@@ -919,7 +1180,7 @@
 @endsection
 
 @section("content")
-<div x-data="athleteWorkoutApp()" x-init="init()" class="space-y-6 fade-in-up">
+<div id="workout-root" x-data="athleteWorkoutApp()" x-init="init()" class="space-y-6 fade-in-up">
 
     <!-- Индикатор загрузки -->
     <div x-show="isLoading" x-cloak class="flex justify-center items-center py-12">
@@ -930,7 +1191,7 @@
     </div>
 
     <!-- Статистика -->
-    <div x-show="currentView === 'list' && !isLoading" x-cloak class="stats-container">
+    <div id="athlete-workout-list-stats" x-show="currentView === 'list' && !isLoading" x-cloak class="stats-container">
         <div class="stat-card">
             <div class="stat-icon stat-icon-blue">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -981,7 +1242,7 @@
     </div>
 
     <!-- Список тренировок -->
-    <div x-show="currentView === 'list' && !isLoading" x-cloak class="space-y-4">
+    <div id="athlete-workout-list-section" x-show="currentView === 'list' && !isLoading" x-cloak class="space-y-4">
         @if($workouts->count() > 0)
             @foreach($workouts as $workout)
                 <div class="workout-card group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
@@ -1103,7 +1364,7 @@
     </div>
 
     <!-- Просмотр тренировки -->
-    <div x-show="currentView === 'view'" x-cloak x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="athlete-workout-view-section" x-show="currentView === 'view'" x-cloak x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6">
             <div x-show="lastSaved" class="text-sm text-green-600 mb-4">
                 💾 {{ __('common.last_saved') }}: <span x-text="lastSaved ? lastSaved.toLocaleTimeString('ru-RU') : ''"></span>
@@ -1211,10 +1472,17 @@
                                         <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null" 
                                              @click="openExerciseDetailModal(exercise)"
                                              class="cursor-pointer hover:opacity-80 transition-opacity">
-                                            <img :src="(exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null) ? '/storage/' + exercise.image_url : ''" 
-                                                 :alt="exercise.name"
-                                                 class="w-12 h-12 object-cover rounded-lg shadow-sm"
-                                                 onerror="this.parentElement.style.display='none'">
+                                            <template x-if="!isVideoFile(exercise.image_url)">
+                                                <img :src="'/storage/' + exercise.image_url" 
+                                                     :alt="exercise.name"
+                                                     class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                     onerror="this.parentElement.style.display='none'">
+                                            </template>
+                                            <template x-if="isVideoFile(exercise.image_url)">
+                                                <video :src="'/storage/' + exercise.image_url"
+                                                       class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                       autoplay loop muted playsinline></video>
+                                            </template>
                                         </div>
                                         
                                         <!-- Название упражнения (кликабельно) -->
@@ -1892,9 +2160,16 @@ input[type="number"].no-spinner:hover {
             <!-- Изображения - показываем только вторую картинку -->
             <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
-                         :alt="exerciseDetailModal.exercise?.name"
-                         style="width: 100%; height: 280px; object-fit: cover;">
+                    <template x-if="!isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
+                        <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''"
+                             :alt="exerciseDetailModal.exercise?.name"
+                             style="width: 100%; height: 280px; object-fit: cover;">
+                    </template>
+                    <template x-if="isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
+                        <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"
+                               style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
+                               autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                    </template>
                 </div>
             </div>
             

@@ -247,6 +247,21 @@ document.head.appendChild(style);
 function workoutApp() {
             return {
         currentView: 'list', // list, create, edit, view
+        touchStartX: null,
+        touchStartY: null,
+        touchHandlersSetup: false,
+        touchStartTime: null,
+        maxVerticalDeviation: 80,
+        edgeThreshold: 80,
+        swipeHandled: false,
+        swipeActivationThreshold: 120,
+        swipeVisualLimit: 140,
+        swipeTargetElement: null,
+        swipeAnimationTimeout: null,
+        boundTouchStart: null,
+        boundTouchMove: null,
+        boundTouchEnd: null,
+        activeDetailModalElement: null,
                 workouts: @json($workouts->items()),
         totalWorkouts: {{ $workouts->total() }},
         
@@ -266,6 +281,11 @@ function workoutApp() {
         formDescription: '',
         formStatus: 'planned',
         
+        init() {
+            this.setupTouchHandlers();
+            this.setupHistoryIntegration();
+        },
+        
         // Функциональность заполнения упражнений для тренера
         exerciseStatuses: {}, // Хранение статусов упражнений
         exerciseComments: {}, // Хранение комментариев к упражнениям
@@ -277,10 +297,258 @@ function workoutApp() {
         lastChangedExercise: null, // Последнее измененное упражнение
         exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
         
+        isVideoFile(path) {
+            if (!path || path === 'null' || path === null) {
+                return false;
+            }
+            return isVideoMedia(path);
+        },
+
+        setupTouchHandlers() {
+            if (this.touchHandlersSetup) return;
+            this.touchHandlersSetup = true;
+            this.boundTouchStart = this.handleTouchStart.bind(this);
+            this.boundTouchMove = this.handleTouchMove.bind(this);
+            this.boundTouchEnd = this.handleTouchEnd.bind(this);
+            const container = document.getElementById('workout-root');
+            if (!container) return;
+            container.addEventListener('touchstart', this.boundTouchStart, { passive: false });
+            container.addEventListener('touchmove', this.boundTouchMove, { passive: false });
+            container.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+        },
+
+        getSwipeTargetElement() {
+            if (this.currentView === 'view') {
+                return document.getElementById('self-workout-view-section');
+            }
+            if (this.currentView === 'create' || this.currentView === 'edit') {
+                return document.getElementById('self-workout-form-section');
+            }
+            return null;
+        },
+
+        applySwipeTransform(distance) {
+            const target = this.swipeTargetElement;
+            if (!target) return;
+            const clamped = Math.max(0, Math.min(distance, this.swipeVisualLimit));
+            target.style.transform = `translateX(${clamped}px)`;
+        },
+
+        resetSwipeTransform(immediate = false, targetElement = null) {
+            const target = targetElement || this.swipeTargetElement;
+            if (!target) return;
+            if (immediate) {
+                target.style.transition = '';
+                target.style.transform = '';
+                return;
+            }
+            target.style.transition = 'transform 0.2s ease';
+            requestAnimationFrame(() => {
+                target.style.transform = 'translateX(0px)';
+            });
+            setTimeout(() => {
+                target.style.transition = '';
+                target.style.transform = '';
+            }, 200);
+        },
+
+        clearSwipeAnimationTimeout() {
+            if (this.swipeAnimationTimeout) {
+                clearTimeout(this.swipeAnimationTimeout);
+                this.swipeAnimationTimeout = null;
+            }
+        },
+
+        handleTouchStart(event) {
+            if (event.touches.length !== 1) return;
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            this.swipeHandled = false;
+            this.touchStartX = event.touches[0].clientX;
+            this.touchStartY = event.touches[0].clientY;
+            this.touchStartTime = performance.now();
+            if (this.touchStartX <= this.edgeThreshold) {
+                this.swipeTargetElement = this.getSwipeTargetElement();
+                if (this.swipeTargetElement) {
+                    this.swipeTargetElement.style.transition = 'transform 0s';
+                }
+            } else {
+                this.swipeTargetElement = null;
+            }
+            if (this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchMove(event) {
+            if (this.touchStartX === null) return;
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            const touch = event.touches[0];
+            const deltaX = Math.max(0, touch.clientX - this.touchStartX);
+            const deltaY = touch.clientY - (this.touchStartY ?? 0);
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+            if (this.swipeTargetElement) {
+                this.applySwipeTransform(deltaX);
+            }
+            if (deltaX > this.swipeActivationThreshold && !this.swipeHandled) {
+                this.handleSwipeRight(event, this.swipeTargetElement);
+                return;
+            }
+            if (event && this.touchStartX <= this.edgeThreshold) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+
+        handleTouchEnd(event) {
+            if (this.touchStartX === null || event.changedTouches.length !== 1) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            const targetElement = this.swipeTargetElement;
+            if (this.swipeHandled) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeHandled = false;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const startX = this.touchStartX;
+            const startY = this.touchStartY ?? 0;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            const duration = performance.now() - (this.touchStartTime ?? performance.now());
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+
+            if (Math.abs(deltaY) > this.maxVerticalDeviation) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (startX > this.edgeThreshold) {
+                this.resetSwipeTransform(false, targetElement);
+                this.swipeTargetElement = null;
+                return;
+            }
+            if (deltaX > this.swipeActivationThreshold && duration < 600) {
+                this.handleSwipeRight(event, targetElement);
+                return;
+            }
+            this.resetSwipeTransform(false, targetElement);
+            this.swipeTargetElement = null;
+        },
+
+        handleSwipeRight(event, targetElement = null) {
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            this.swipeHandled = true;
+            this.closeMobileMenuIfOpen();
+            this.clearSwipeAnimationTimeout();
+            const target = targetElement || this.swipeTargetElement || this.getSwipeTargetElement();
+            if (target) {
+                this.swipeTargetElement = target;
+                target.style.transition = 'transform 0.18s ease';
+                requestAnimationFrame(() => {
+                    target.style.transform = 'translateX(100%)';
+                });
+                this.swipeAnimationTimeout = setTimeout(() => {
+                    this.showList();
+                    this.resetSwipeTransform(true, target);
+                    this.swipeTargetElement = null;
+                    this.swipeAnimationTimeout = null;
+                }, 180);
+            } else {
+                this.showList();
+            }
+        },
+
+        setupHistoryIntegration() {
+            if (!this.historyInitialized) {
+                this.historyInitialized = true;
+                const initialState = history.state && history.state.__selfWorkoutState
+                    ? history.state
+                    : { __selfWorkoutState: true, view: 'list' };
+                history.replaceState(initialState, document.title, window.location.href);
+                this.boundPopStateHandler = this.handlePopState.bind(this);
+                window.addEventListener('popstate', this.boundPopStateHandler);
+            }
+        },
+
+        handlePopState(event) {
+            const state = event.state;
+            if (!state || !state.__selfWorkoutState) {
+                if (this.currentView === 'view') {
+                    // Возвращаемся к списку и возвращаем состояние, чтобы избежать ухода со страницы
+                    this.showList();
+                    history.pushState({ __selfWorkoutState: true, view: 'list' }, document.title, window.location.href);
+                }
+                return;
+            }
+            if (state.view === 'list' && this.currentView !== 'list') {
+                this.showList();
+            }
+        },
+
+        pushWorkoutState(workoutId) {
+            const currentState = history.state || {};
+            if (currentState.view === 'workout' && currentState.workoutId === workoutId) {
+                return;
+            }
+            history.pushState({ __selfWorkoutState: true, view: 'workout', workoutId }, document.title, window.location.href);
+        },
+
+        pushListState() {
+            const currentState = history.state || {};
+            if (currentState.view !== 'list') {
+                history.replaceState({ __selfWorkoutState: true, view: 'list' }, document.title, window.location.href);
+            }
+        },
+
+        isAnyModalOpen() {
+            if (this.activeDetailModalElement) return true;
+            if (this.domModalVisible('exerciseModal')) return true;
+            if (this.domModalVisible('templateModal')) return true;
+            if (document.getElementById('js-exercise-modal')) return true;
+            if (document.getElementById('simple-exercise-modal')) return true;
+            return false;
+        },
+
+        domModalVisible(id) {
+            const el = document.getElementById(id);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none';
+        },
+        
+        closeMobileMenuIfOpen() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            }
+        },
+        
         // Модальное окно для видео
         
         // Навигация
                 showList() {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
             // Обновляем данные в списке перед возвратом
                     if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
                         this.updateWorkoutProgressInList();
@@ -296,6 +564,19 @@ function workoutApp() {
             }
             document.getElementById('selectedExercisesContainer').style.display = 'none';
             document.getElementById('emptyExercisesState').style.display = 'block';
+            this.pushListState();
+            this.closeMobileMenuIfOpen();
+            this.currentWorkout = null;
+            this.currentView = 'list';
+            this.$nextTick(() => {
+                history.replaceState({ __selfWorkoutState: true, view: 'list' }, document.title, window.location.href);
+                const viewSection = document.getElementById('self-workout-view-section');
+                if (viewSection) viewSection.style.display = 'none';
+                const listSection = document.getElementById('self-workout-list-section');
+                if (listSection) listSection.style.display = '';
+                const listStats = document.getElementById('self-workout-list-stats');
+                if (listStats) listStats.style.display = '';
+            });
         },
         
         showCreate() {
@@ -448,6 +729,15 @@ function workoutApp() {
                 });
                 this.displaySelectedExercises(formattedExercises, true); // true = режим просмотра, развернуто
             }
+            this.pushWorkoutState(workoutId);
+            this.$nextTick(() => {
+                const viewSection = document.getElementById('self-workout-view-section');
+                if (viewSection) viewSection.style.display = '';
+                const listSection = document.getElementById('self-workout-list-section');
+                if (listSection) listSection.style.display = 'none';
+                const listStats = document.getElementById('self-workout-list-stats');
+                if (listStats) listStats.style.display = 'none';
+            });
         },
 
         // Обновление прогресса упражнений в списке тренировок
@@ -1649,6 +1939,8 @@ function workoutApp() {
                         padding: 10px;
                     `;
                     
+                    this.activeDetailModalElement = modal;
+                    
                     // Создаем контент модального окна
                     const content = document.createElement('div');
                     content.style.cssText = `
@@ -1687,7 +1979,10 @@ function workoutApp() {
                     `;
                     
                     const closeButton = header.querySelector('button');
-                    closeButton.addEventListener('click', () => modal.remove());
+                    closeButton.addEventListener('click', () => {
+                        modal.remove();
+                        this.activeDetailModalElement = null;
+                    });
                     
                     // Контент с прокруткой
                     const body = document.createElement('div');
@@ -1699,10 +1994,13 @@ function workoutApp() {
                     const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
                     
                     if (hasImage2) {
+                        const mediaHtml = renderMediaElement(`/storage/${exercise.image_url_2}`, exercise.name || '', {
+                            style: 'width: 100%; height: 350px; object-fit: contain;'
+                        });
                         bodyHTML += `<div style="margin-bottom: 24px;">`;
                         bodyHTML += `
                             <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                                <img src="/storage/${exercise.image_url_2}" alt="${exercise.name}" style="width: 100%; height: 350px; object-fit: contain;">
+                                ${mediaHtml}
                             </div>
                         `;
                         bodyHTML += '</div>';
@@ -1783,6 +2081,7 @@ function workoutApp() {
                     modal.addEventListener('click', (e) => {
                         if (e.target === modal) {
                             modal.remove();
+                            this.activeDetailModalElement = null;
                         }
                     });
                 },
@@ -1969,6 +2268,7 @@ function workoutApp() {
         
         // Инициализация
         init() {
+            this.setupTouchHandlers();
             // Загружаем прогресс для всех тренировок при загрузке страницы
             this.loadAllWorkoutProgress();
             
@@ -2092,11 +2392,11 @@ function workoutApp() {
 @endsection
 
 @section("content")
-<div x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
+<div id="workout-root" x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
     
 
     <!-- Фильтры и поиск -->
-    <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="self-workout-list-section" x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
                 .filters-row {
@@ -2452,7 +2752,7 @@ function workoutApp() {
     </div>
 
     <!-- СПИСОК ТРЕНИРОВОК -->
-    <div x-show="currentView === 'list'" class="space-y-4">
+    <div id="self-workout-list-stats" x-show="currentView === 'list'" class="space-y-4">
         <template x-for="workout in paginatedWorkouts" :key="workout.id">
             <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-indigo-200 overflow-hidden">
                     <!-- Статус индикатор -->
@@ -2626,7 +2926,7 @@ function workoutApp() {
     </div>
 
     <!-- СОЗДАНИЕ/РЕДАКТИРОВАНИЕ ТРЕНИРОВКИ -->
-    <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="self-workout-form-section" x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">
                 <span x-text="currentWorkout?.id ? '{{ __('common.edit_workout') }}' : '{{ __('common.create_workout') }}'"></span>
@@ -2799,7 +3099,7 @@ function workoutApp() {
     </div>
 
     <!-- ПРОСМОТР ТРЕНИРОВКИ -->
-    <div x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="self-workout-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">{{ __('common.view_workout') }}</h3>
             <button @click="showList()" 
@@ -2912,10 +3212,17 @@ function workoutApp() {
                                         <div x-show="exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null" 
                                              @click="openExerciseDetailModal(exercise)"
                                              class="cursor-pointer hover:opacity-80 transition-opacity">
-                                            <img :src="(exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null) ? '/storage/' + exercise.image_url : ''" 
-                                                 :alt="exercise.name"
-                                                 class="w-12 h-12 object-cover rounded-lg shadow-sm"
-                                                 onerror="this.parentElement.style.display='none'">
+                                            <template x-if="!isVideoFile(exercise.image_url)">
+                                                <img :src="'/storage/' + exercise.image_url" 
+                                                     :alt="exercise.name"
+                                                     class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                     onerror="this.parentElement.style.display='none'">
+                                            </template>
+                                            <template x-if="isVideoFile(exercise.image_url)">
+                                                <video :src="'/storage/' + exercise.image_url"
+                                                       class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                       autoplay loop muted playsinline></video>
+                                            </template>
                                         </div>
                                         
                                         <!-- Название упражнения (кликабельно) -->
@@ -3496,6 +3803,30 @@ document.addEventListener('DOMContentLoaded', function() {
     loadExercises();
 });
 
+const VIDEO_EXT_REGEXP = /\.(mp4|webm|mov|m4v)$/i;
+
+function isVideoMedia(path = '') {
+    return VIDEO_EXT_REGEXP.test((path || '').toString().toLowerCase());
+}
+
+function renderMediaElement(path, altText = '', options = {}) {
+    if (!path) return '';
+    const { className = '', style = '', attributes = '' } = options;
+    const classAttr = className ? ` class="${className}"` : '';
+    const extraAttr = attributes ? ` ${attributes}` : '';
+    const baseStyle = style ? style.trim() : '';
+    const safeAlt = (altText || '').replace(/"/g, '&quot;');
+    
+    if (isVideoMedia(path)) {
+        const combinedStyle = [baseStyle, 'pointer-events: none;'].filter(Boolean).join(' ');
+        const styleAttr = combinedStyle ? ` style="${combinedStyle}"` : '';
+        return `<video src="${path}"${classAttr}${styleAttr}${extraAttr} autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>`;
+    }
+    
+    const styleAttr = baseStyle ? ` style="${baseStyle}"` : '';
+    return `<img src="${path}" alt="${safeAlt}"${classAttr}${styleAttr}${extraAttr}>`;
+}
+
 // Загрузка шаблонов
 async function loadTemplates() {
     try {
@@ -3552,6 +3883,8 @@ function renderExercises() {
         const exerciseType = exercise.exercise_type || (exercise.is_system ? 'system' : 'custom');
         const isFavorite = !!exercise.is_favorite;
         
+        const mediaHtml = imageUrl ? renderMediaElement(imageUrl, escapeName, { style: 'width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;' }) : '';
+        
         return `
             <div data-exercise-id="${exercise.id}" 
                  data-exercise-name="${escapeName}" 
@@ -3561,11 +3894,7 @@ function renderExercises() {
                  data-exercise-favorite="${isFavorite ? '1' : '0'}"
                  style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; cursor: pointer; background: white; display: flex; flex-direction: row; align-items: flex-start; gap: 14px; max-width: 100%; box-sizing: border-box; min-height: 180px;"
                  onclick="toggleExercise(this, ${exercise.id})">
-                ${imageUrl ? `
-                    <img src="${imageUrl}" 
-                         alt="${escapeName}" 
-                         style="width: 100px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
-                ` : ''}
+                ${mediaHtml}
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 600; color: #111827; margin-bottom: 6px; font-size: 16px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
