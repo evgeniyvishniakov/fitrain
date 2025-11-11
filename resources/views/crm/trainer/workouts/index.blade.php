@@ -3348,9 +3348,9 @@ function workoutApp() {
                                          class="cursor-pointer hover:opacity-80 transition-opacity">
                                         <template x-if="!isVideoFile(exercise.image_url)">
                                             <img :src="'/storage/' + exercise.image_url" 
-                                                 :alt="exercise.name"
-                                                 class="w-12 h-12 object-cover rounded-lg shadow-sm"
-                                                 onerror="this.parentElement.style.display='none'">
+                                             :alt="exercise.name"
+                                             class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                             onerror="this.parentElement.style.display='none'">
                                         </template>
                                         <template x-if="isVideoFile(exercise.image_url)">
                                             <video :src="'/storage/' + exercise.image_url"
@@ -5296,9 +5296,9 @@ function copyPlanToFields(exerciseId) {
             <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <template x-if="!isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
-                        <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
-                             :alt="exerciseDetailModal.exercise?.name"
-                             style="width: 100%; height: 280px; object-fit: cover;">
+                    <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
+                         :alt="exerciseDetailModal.exercise?.name"
+                         style="width: 100%; height: 280px; object-fit: cover;">
                     </template>
                     <template x-if="isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
                         <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"

@@ -878,38 +878,38 @@ function toggleExercise(element, id, name, category, equipment) {
 
             if (equipmentSelect) {
                 const prevEquipment = equipment;
-                const equipmentSet = new Set();
+            const equipmentSet = new Set();
                 exercises.forEach(ex => {
                     const exType = ex.exercise_type || (ex.is_system ? 'system' : 'custom');
                     const matchesType = !typeFilter || (typeFilter === 'favorite' ? !!ex.is_favorite : exType === typeFilter);
                     if ((!category || ex.category === category) && matchesType) {
-                        if (ex.equipment && ex.equipment !== 'null' && ex.equipment !== null) {
-                            equipmentSet.add(ex.equipment);
-                        }
+                    if (ex.equipment && ex.equipment !== 'null' && ex.equipment !== null) {
+                        equipmentSet.add(ex.equipment);
                     }
-                });
+                }
+            });
 
                 const desiredOptions = [''].concat(Array.from(equipmentSet).sort((a, b) => a.localeCompare(b, 'ru')));
                 const currentOptions = Array.from(equipmentSelect.options || []).map(option => option.value);
 
                 if (JSON.stringify(currentOptions) !== JSON.stringify(desiredOptions)) {
-                    equipmentSelect.innerHTML = '';
-                    const emptyOpt = document.createElement('option');
-                    emptyOpt.value = '';
-                    emptyOpt.textContent = '{{ __('common.all_equipment') }}';
-                    equipmentSelect.appendChild(emptyOpt);
+            equipmentSelect.innerHTML = '';
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = '';
+            emptyOpt.textContent = '{{ __('common.all_equipment') }}';
+            equipmentSelect.appendChild(emptyOpt);
                     desiredOptions.slice(1).forEach(eq => {
-                        const opt = document.createElement('option');
-                        opt.value = eq;
-                        opt.textContent = eq;
-                        equipmentSelect.appendChild(opt);
-                    });
+                const opt = document.createElement('option');
+                opt.value = eq;
+                opt.textContent = eq;
+                equipmentSelect.appendChild(opt);
+            });
                 }
 
                 if (desiredOptions.includes(prevEquipment)) {
                     equipmentSelect.value = prevEquipment;
-                } else {
-                    equipmentSelect.value = '';
+            } else {
+                equipmentSelect.value = '';
                 }
             }
 
@@ -934,7 +934,7 @@ function toggleExercise(element, id, name, category, equipment) {
                 if (matchesSearch && matchesCategory && matchesEquipment && matchesType) {
                     card.style.display = 'flex';
                     visibleCount++;
-                } else {
+            } else {
                     card.style.display = 'none';
                 }
             });

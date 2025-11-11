@@ -336,7 +336,7 @@ function exerciseApp() {
                 menu.classList.remove('open');
             }
         },
-
+        
         // Перевод оборудования на текущий язык
         getEquipmentTranslation(equipment) {
             if (!equipment) return '';

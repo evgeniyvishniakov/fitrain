@@ -31,7 +31,7 @@ function renderMediaElement(path, altText = '', options = {}) {
         // Workout viewing functionality
         function athleteWorkoutApp() {
             return {
-        currentView: 'list', // list, view
+                currentView: 'list', // list, view
         touchStartX: null,
         touchStartY: null,
         touchHandlersSetup: false,
@@ -50,7 +50,7 @@ function renderMediaElement(path, altText = '', options = {}) {
                 currentWorkout: null,
                 exerciseStatuses: {}, // Store exercise statuses
                 exerciseComments: {}, // Store exercise comments
-        exerciseSetsData: {}, // Store sets data
+                exerciseSetsData: {}, // Store sets data
         exerciseSetsExpanded: {}, // Store sets fields expansion state
         saveTimeout: null, // Auto-save timer
         lastSaved: null, // Last save time
@@ -271,7 +271,7 @@ function renderMediaElement(path, altText = '', options = {}) {
                 workoutProgress: {}, // Progress for each workout
                 isLoading: true, // Loading flag
                 lastChangedExercise: null, // Last changed exercise
-        exercisesExpanded: {}, // Store exercises expansion state in cards
+                exercisesExpanded: {}, // Store exercises expansion state in cards
                 // Инициализация
                 init() {
                     this.setupTouchHandlers();
@@ -1474,9 +1474,9 @@ function renderMediaElement(path, altText = '', options = {}) {
                                              class="cursor-pointer hover:opacity-80 transition-opacity">
                                             <template x-if="!isVideoFile(exercise.image_url)">
                                                 <img :src="'/storage/' + exercise.image_url" 
-                                                     :alt="exercise.name"
-                                                     class="w-12 h-12 object-cover rounded-lg shadow-sm"
-                                                     onerror="this.parentElement.style.display='none'">
+                                                 :alt="exercise.name"
+                                                 class="w-12 h-12 object-cover rounded-lg shadow-sm"
+                                                 onerror="this.parentElement.style.display='none'">
                                             </template>
                                             <template x-if="isVideoFile(exercise.image_url)">
                                                 <video :src="'/storage/' + exercise.image_url"
@@ -2161,9 +2161,9 @@ input[type="number"].no-spinner:hover {
             <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <template x-if="!isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
-                        <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''"
-                             :alt="exerciseDetailModal.exercise?.name"
-                             style="width: 100%; height: 280px; object-fit: cover;">
+                    <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
+                         :alt="exerciseDetailModal.exercise?.name"
+                         style="width: 100%; height: 280px; object-fit: cover;">
                     </template>
                     <template x-if="isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
                         <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"

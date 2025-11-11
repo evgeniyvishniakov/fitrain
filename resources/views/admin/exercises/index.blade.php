@@ -84,10 +84,10 @@
                                            class="w-16 h-16 object-cover rounded-lg border border-gray-200"
                                            autoplay muted loop playsinline></video>
                                 @else
-                                    <img src="{{ asset('storage/' . $displayImage) }}" 
-                                         alt="{{ $exercise->getTranslated('name', 'ru') }}" 
-                                         class="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs\'>Нет фото</div>'">
+                                <img src="{{ asset('storage/' . $displayImage) }}" 
+                                     alt="{{ $exercise->getTranslated('name', 'ru') }}" 
+                                     class="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs\'>Нет фото</div>'">
                                 @endif
                             @else
                                 <div class="w-16 h-16 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs">

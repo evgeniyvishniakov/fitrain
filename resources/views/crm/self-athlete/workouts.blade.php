@@ -261,6 +261,15 @@ function workoutApp() {
         boundTouchStart: null,
         boundTouchMove: null,
         boundTouchEnd: null,
+        menuGesture: null, // 'open' | 'close' | null
+        menuGestureHandled: false,
+        menuSwipeThreshold: 60,
+        menuIsOpen: false,
+        menuObserver: null,
+        menuCloseEdgeGuard: 60,
+        historyInitialized: false,
+        popStateLocked: false,
+        boundPopStateHandler: null,
         activeDetailModalElement: null,
                 workouts: @json($workouts->items()),
         totalWorkouts: {{ $workouts->total() }},
@@ -284,6 +293,8 @@ function workoutApp() {
         init() {
             this.setupTouchHandlers();
             this.setupHistoryIntegration();
+            this.syncMenuState();
+            this.setupMenuObserver();
         },
         
         // Функциональность заполнения упражнений для тренера
@@ -311,10 +322,12 @@ function workoutApp() {
             this.boundTouchMove = this.handleTouchMove.bind(this);
             this.boundTouchEnd = this.handleTouchEnd.bind(this);
             const container = document.getElementById('workout-root');
-            if (!container) return;
-            container.addEventListener('touchstart', this.boundTouchStart, { passive: false });
-            container.addEventListener('touchmove', this.boundTouchMove, { passive: false });
-            container.addEventListener('touchend', this.boundTouchEnd, { passive: false });
+            if (container && window.CSS && CSS.supports('touch-action', 'pan-y')) {
+                container.style.touchAction = 'pan-y';
+            }
+            document.addEventListener('touchstart', this.boundTouchStart, { passive: false, capture: true });
+            document.addEventListener('touchmove', this.boundTouchMove, { passive: false, capture: true });
+            document.addEventListener('touchend', this.boundTouchEnd, { passive: false, capture: true });
         },
 
         getSwipeTargetElement() {
@@ -361,30 +374,113 @@ function workoutApp() {
 
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
-            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
             if (this.isAnyModalOpen()) return;
+            if (this.popStateLocked) return;
+
+            const touch = event.touches[0];
+            const startX = touch.clientX;
+            const startY = touch.clientY;
+            const nearEdge = startX <= this.edgeThreshold;
+            const menu = document.getElementById('mobile-menu');
+            const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
+            const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
+            const isMenuToggle = event.target.closest('.mobile-menu-btn');
+            const isMenuClose = event.target.closest('.mobile-menu-close');
+            const menuOpen = !!(menu && menu.classList.contains('open'));
+            this.menuIsOpen = menuOpen;
+
+            this.menuGesture = null;
+            this.menuGestureHandled = false;
+
+            if (isMenuToggle || isMenuClose) {
+                // Оставляем стандартное поведение кнопок меню
+                return;
+            }
+
+            if (this.currentView === 'list') {
+                if (menuOpen) {
+                    const guard = this.menuCloseEdgeGuard;
+                    const menuWidth = this.getMobileMenuWidth();
+                    if (startX <= guard) {
+                        // Блокируем системный жест "назад", но меню не трогаем
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        this.menuGesture = null;
+                        this.menuGestureHandled = false;
+                        return;
+                    }
+                    if (startX <= menuWidth + guard) {
+                        // Любое касание в пределах панели игнорируем
+                        this.menuGesture = null;
+                        this.menuGestureHandled = false;
+                        return;
+                    }
+                    // свайп из остальной части экрана – закрываем
+                    this.menuGesture = 'close';
+                } else {
+                    if (!nearEdge) {
+                        return;
+                    }
+                    this.menuGesture = 'open';
+                }
+
+                this.clearSwipeAnimationTimeout();
+                this.swipeHandled = false;
+                this.touchStartX = startX;
+                this.touchStartY = startY;
+                this.touchStartTime = performance.now();
+                this.swipeTargetElement = null;
+
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+                return;
+            }
+
+            if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (!nearEdge) return;
+
             this.closeMobileMenuIfOpen();
             this.clearSwipeAnimationTimeout();
             this.swipeHandled = false;
-            this.touchStartX = event.touches[0].clientX;
-            this.touchStartY = event.touches[0].clientY;
+            this.touchStartX = startX;
+            this.touchStartY = startY;
             this.touchStartTime = performance.now();
-            if (this.touchStartX <= this.edgeThreshold) {
-                this.swipeTargetElement = this.getSwipeTargetElement();
-                if (this.swipeTargetElement) {
-                    this.swipeTargetElement.style.transition = 'transform 0s';
-                }
-            } else {
-                this.swipeTargetElement = null;
+            this.swipeTargetElement = this.getSwipeTargetElement();
+            if (this.swipeTargetElement) {
+                this.swipeTargetElement.style.transition = 'transform 0s';
             }
-            if (this.touchStartX <= this.edgeThreshold) {
-                event.preventDefault();
-                event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.stopImmediatePropagation) {
+                event.stopImmediatePropagation();
             }
         },
 
         handleTouchMove(event) {
             if (this.touchStartX === null) return;
+            if (this.popStateLocked) return;
+            if (this.currentView === 'list') {
+                if (!this.menuGesture) return;
+                if (this.menuGestureHandled) return;
+                const touch = event.touches[0];
+                const deltaX = touch.clientX - this.touchStartX;
+                const deltaY = touch.clientY - (this.touchStartY ?? 0);
+                if (Math.abs(deltaY) > this.maxVerticalDeviation) return;
+                if (this.menuGesture === 'open' && deltaX > this.menuSwipeThreshold) {
+                    this.openMobileMenu();
+                    this.menuGestureHandled = true;
+                } else if (this.menuGesture === 'close' && (this.touchStartX - touch.clientX) > this.menuSwipeThreshold) {
+                    this.closeMobileMenuIfOpen();
+                    this.menuGestureHandled = true;
+                }
+                return;
+            }
             if (!['view', 'create', 'edit'].includes(this.currentView)) return;
             if (this.isAnyModalOpen()) return;
             const touch = event.touches[0];
@@ -401,10 +497,43 @@ function workoutApp() {
             if (event && this.touchStartX <= this.edgeThreshold) {
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
         },
 
         handleTouchEnd(event) {
+            if (this.popStateLocked) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeTargetElement = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+            if (this.currentView === 'list') {
+                if (this.menuGesture && !this.menuGestureHandled && event.changedTouches.length === 1) {
+                    const touch = event.changedTouches[0];
+                    const deltaX = touch.clientX - this.touchStartX;
+                    const deltaY = touch.clientY - (this.touchStartY ?? 0);
+                    if (Math.abs(deltaY) <= this.maxVerticalDeviation) {
+                        if (this.menuGesture === 'open' && deltaX > this.menuSwipeThreshold) {
+                            this.openMobileMenu();
+                        } else if (this.menuGesture === 'close' && (this.touchStartX - touch.clientX) > this.menuSwipeThreshold) {
+                            this.closeMobileMenuIfOpen();
+                        }
+                    }
+                }
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
             if (this.touchStartX === null || event.changedTouches.length !== 1) {
                 this.resetSwipeTransform(true);
                 this.swipeTargetElement = null;
@@ -452,9 +581,13 @@ function workoutApp() {
         handleSwipeRight(event, targetElement = null) {
             if (!['view', 'create', 'edit'].includes(this.currentView)) return;
             if (this.isAnyModalOpen()) return;
+            if (this.popStateLocked) return;
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
             this.swipeHandled = true;
             this.closeMobileMenuIfOpen();
@@ -535,10 +668,44 @@ function workoutApp() {
             return style.display !== 'none';
         },
         
+        isMobileMenuOpen() {
+            return this.menuIsOpen;
+        },
+
+        syncMenuState() {
+            const menu = document.getElementById('mobile-menu');
+            this.menuIsOpen = !!(menu && menu.classList.contains('open'));
+        },
+
+        setupMenuObserver() {
+            const menu = document.getElementById('mobile-menu');
+            if (!menu || this.menuObserver) return;
+            this.menuObserver = new MutationObserver(() => {
+                this.syncMenuState();
+            });
+            this.menuObserver.observe(menu, { attributes: true, attributeFilter: ['class'] });
+        },
+
+        getMobileMenuWidth() {
+            const menu = document.getElementById('mobile-menu');
+            if (!menu) return 0;
+            const content = menu.querySelector('.mobile-menu-content');
+            return content ? content.offsetWidth || 0 : menu.offsetWidth || 0;
+        },
+
+        openMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu && !menu.classList.contains('open')) {
+                menu.classList.add('open');
+                this.menuIsOpen = true;
+            }
+        },
+        
         closeMobileMenuIfOpen() {
             const menu = document.getElementById('mobile-menu');
             if (menu && menu.classList.contains('open')) {
                 menu.classList.remove('open');
+                this.menuIsOpen = false;
             }
         },
         
@@ -2392,11 +2559,19 @@ function workoutApp() {
 @endsection
 
 @section("content")
-<div id="workout-root" x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6">
+<div id="workout-root" x-data="workoutApp()" x-init="init()" x-cloak class="space-y-6 overflow-hidden relative">
     
 
     <!-- Фильтры и поиск -->
-    <div id="self-workout-list-section" x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="self-workout-list-section"
+         x-show="currentView === 'list'"
+         x-transition:enter="transition transform duration-300 ease-out"
+         x-transition:enter-start="-translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition transform duration-300 ease-in"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="-translate-x-full"
+         class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 will-change-transform">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
             <style>
                 .filters-row {
@@ -2926,7 +3101,15 @@ function workoutApp() {
     </div>
 
     <!-- СОЗДАНИЕ/РЕДАКТИРОВАНИЕ ТРЕНИРОВКИ -->
-    <div id="self-workout-form-section" x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="self-workout-form-section"
+         x-show="currentView === 'create' || currentView === 'edit'"
+         x-transition:enter="transition transform duration-300 ease-out"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition transform duration-300 ease-in"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full"
+         class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 will-change-transform">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">
                 <span x-text="currentWorkout?.id ? '{{ __('common.edit_workout') }}' : '{{ __('common.create_workout') }}'"></span>
@@ -3099,7 +3282,15 @@ function workoutApp() {
     </div>
 
     <!-- ПРОСМОТР ТРЕНИРОВКИ -->
-    <div id="self-workout-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="self-workout-view-section"
+         x-show="currentView === 'view'"
+         x-transition:enter="transition transform duration-300 ease-out"
+         x-transition:enter-start="translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition transform duration-300 ease-in"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="translate-x-full"
+         class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 will-change-transform">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">{{ __('common.view_workout') }}</h3>
             <button @click="showList()" 
