@@ -894,7 +894,7 @@ function exerciseApp() {
                                 <img :src="`/storage/${exercise.image_url}`" 
                                      :alt="exercise.name"
                                      class="w-full h-full object-cover rounded-lg"
-                                     style="max-height: 200px;">
+                                     style="max-height: 250px;">
                             </div>
                             
                             <!-- Информация справа -->

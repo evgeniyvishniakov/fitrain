@@ -1804,12 +1804,12 @@ function exerciseApp() {
                                     <img :src="`/storage/${getPrimaryMedia(exercise)}`" 
                                          :alt="exercise.name"
                                          class="w-full h-full object-cover rounded-lg"
-                                         style="max-height: 200px;">
+                                         style="max-height: 250px;">
                                 </template>
                                 <template x-if="getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise))">
                                     <video :src="`/storage/${getPrimaryMedia(exercise)}`" 
                                            class="w-full h-full object-cover rounded-lg"
-                                           style="max-height: 200px; pointer-events: none;"
+                                           style="max-height: 250px; pointer-events: none;"
                                            autoplay loop muted playsinline></video>
                                 </template>
                             </div>

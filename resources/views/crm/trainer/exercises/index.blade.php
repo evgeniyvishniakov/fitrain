@@ -2865,7 +2865,7 @@ function exerciseApp() {
     }
 
     .exercise-card-thumbnail__image {
-        max-height: 180px;
+        max-height: 250px;
     }
 
     .exercise-card-thumbnail--desktop {

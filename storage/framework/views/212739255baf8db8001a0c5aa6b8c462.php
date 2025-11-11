@@ -256,6 +256,7 @@ document.head.appendChild(style);
 function workoutApp() {
             return {
         currentView: 'list', // list, create, edit, view
+        formMode: 'create', // create, edit
         touchStartX: null,
         touchStartY: null,
         touchHandlersSetup: false,
@@ -725,41 +726,23 @@ function workoutApp() {
         // Модальное окно для видео
         
         // Навигация
-                showList() {
+        showList() {
             this.clearSwipeAnimationTimeout();
             this.resetSwipeTransform(true);
             this.swipeTargetElement = null;
-            // Обновляем данные в списке перед возвратом
-                    if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
-                        this.updateWorkoutProgressInList();
-                    }
-                    
-                    this.currentView = 'list';
-                    this.currentWorkout = null;
-            
-            // Очищаем форму упражнений при возврате к списку
-            const exercisesList = document.getElementById('selectedExercisesList');
-            if (exercisesList) {
-                exercisesList.innerHTML = '';
+            if (this.currentWorkout && Object.keys(this.exerciseStatuses).length > 0) {
+                this.updateWorkoutProgressInList();
             }
-            document.getElementById('selectedExercisesContainer').style.display = 'none';
-            document.getElementById('emptyExercisesState').style.display = 'block';
             this.pushListState();
             this.closeMobileMenuIfOpen();
-            this.currentWorkout = null;
             this.currentView = 'list';
             this.$nextTick(() => {
-                history.replaceState({ __selfWorkoutState: true, view: 'list' }, document.title, window.location.href);
-                const viewSection = document.getElementById('self-workout-view-section');
-                if (viewSection) viewSection.style.display = 'none';
-                const listSection = document.getElementById('self-workout-list-section');
-                if (listSection) listSection.style.display = '';
-                const listStats = document.getElementById('self-workout-list-stats');
-                if (listStats) listStats.style.display = '';
+                this.currentWorkout = null;
             });
         },
         
         showCreate() {
+            this.formMode = 'create';
             this.currentView = 'create';
             this.currentWorkout = null;
             this.formTitle = '';
@@ -794,6 +777,7 @@ function workoutApp() {
         },
         
         showEdit(workoutId) {
+            this.formMode = 'edit';
             this.currentView = 'edit';
             this.currentWorkout = this.workouts.find(w => w.id === workoutId);
             this.formTitle = this.currentWorkout.title;
@@ -3137,7 +3121,8 @@ function workoutApp() {
          class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 will-change-transform">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">
-                <span x-text="currentWorkout?.id ? '<?php echo e(__('common.edit_workout')); ?>' : '<?php echo e(__('common.create_workout')); ?>'"></span>
+                    <span x-show="formMode === 'edit'" x-cloak><?php echo e(__('common.edit_workout')); ?></span>
+                    <span x-show="formMode !== 'edit'" x-cloak><?php echo e(__('common.create_workout')); ?></span>
             </h3>
         </div>
         
@@ -3293,7 +3278,7 @@ function workoutApp() {
             </div>
 
             <!-- Кнопки -->
-            <div class="flex items-center justify-between gap-4 pt-6 border-t border-gray-200 flex-wrap">
+            <div class="flex items-center justify-between gap-4 pt-6 border-т border-gray-200 flex-wrap">
                 <button type="button" 
                         @click="showList()" 
                         data-swipe-ignore="true"
@@ -3305,7 +3290,8 @@ function workoutApp() {
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    <span x-text="currentWorkout?.id ? '<?php echo e(__('common.update')); ?>' : '<?php echo e(__('common.create')); ?>'"></span>
+                    <span x-show="formMode === 'edit'" x-cloak><?php echo e(__('common.update')); ?></span>
+                    <span x-show="formMode !== 'edit'" x-cloak><?php echo e(__('common.create')); ?></span>
                 </button>
             </div>
         </form>

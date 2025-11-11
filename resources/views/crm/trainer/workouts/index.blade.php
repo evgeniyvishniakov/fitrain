@@ -251,6 +251,7 @@ document.head.appendChild(style);
 function workoutApp() {
     return {
         currentView: 'list', // list, create, edit, view
+        formMode: 'create', // create, edit
         touchStartX: null,
         touchStartY: null,
         touchHandlersSetup: false,
@@ -691,30 +692,15 @@ function workoutApp() {
                 this.updateWorkoutProgressInList();
             }
             this.closeGlobalMobileMenu();
-            
+
             this.currentView = 'list';
-            this.currentWorkout = null;
-            
-            // Очищаем форму упражнений при возврате к списку
-            const exercisesList = document.getElementById('selectedExercisesList');
-            if (exercisesList) {
-                exercisesList.innerHTML = '';
-            }
-            document.getElementById('selectedExercisesContainer').style.display = 'none';
-            document.getElementById('emptyExercisesState').style.display = 'block';
             this.$nextTick(() => {
-                const viewSection = document.getElementById('trainer-workout-view-section');
-                if (viewSection) viewSection.style.display = 'none';
-                const listSection = document.getElementById('trainer-workout-list-section');
-                if (listSection) listSection.style.display = '';
-                const listStats = document.getElementById('trainer-workout-list-stats');
-                if (listStats) listStats.style.display = '';
-                const formSection = document.getElementById('trainer-workout-form-section');
-                if (formSection) formSection.style.display = 'none';
+                this.currentWorkout = null;
             });
         },
         
         showCreate() {
+            this.formMode = 'create';
             this.closeGlobalMobileMenu();
             this.currentView = 'create';
             this.currentWorkout = null;
@@ -760,6 +746,7 @@ function workoutApp() {
         },
         
         showEdit(workoutId) {
+            this.formMode = 'edit';
             this.closeGlobalMobileMenu();
             this.currentView = 'edit';
             this.currentWorkout = this.workouts.find(w => w.id === workoutId);
@@ -3232,7 +3219,8 @@ function workoutApp() {
     <div id="trainer-workout-form-section" x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">
-                <span x-text="currentWorkout?.id ? '{{ __('common.edit_workout') }}' : '{{ __('common.create_workout') }}'"></span>
+                    <span x-show="formMode === 'edit'" x-cloak>{{ __('common.edit_workout') }}</span>
+                    <span x-show="formMode !== 'edit'" x-cloak>{{ __('common.create_workout') }}</span>
             </h3>
             <div class="flex items-center gap-2">
                 @if(auth()->user()->hasRole('trainer'))
@@ -3403,7 +3391,8 @@ function workoutApp() {
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    <span x-text="currentWorkout?.id ? '{{ __('common.update') }}' : '{{ __('common.create') }}'"></span>
+                    <span x-show="formMode === 'edit'" x-cloak>{{ __('common.update') }}</span>
+                    <span x-show="formMode !== 'edit'" x-cloak>{{ __('common.create') }}</span>
                 </button>
             </div>
         </form>
