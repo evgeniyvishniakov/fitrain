@@ -200,6 +200,8 @@ function athletesApp() {
         lastScrollPositions: {
             list: 0,
             view: 0,
+            create: 0,
+            edit: 0,
         },
         lastView: 'list',
         menuGesture: null,
@@ -674,7 +676,7 @@ function athletesApp() {
             this.currentView = 'list';
             this.currentAthlete = null;
             this.$nextTick(() => {
-                if (previousView === 'view' && this.lastScrollPositions && this.lastScrollPositions.list !== null) {
+                if ((previousView === 'view' || previousView === 'create' || previousView === 'edit') && this.lastScrollPositions && this.lastScrollPositions.list !== null) {
                     window.scrollTo({
                         top: this.lastScrollPositions.list,
                         behavior: 'auto'
@@ -685,7 +687,15 @@ function athletesApp() {
         },
         
         showCreate() {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'edit') {
+                this.lastScrollPositions.edit = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'create';
+            this.lastView = 'create';
             this.currentAthlete = null;
             this.formName = '';
             this.formEmail = '';
@@ -698,6 +708,13 @@ function athletesApp() {
             this.formGoals = [];
             this.formHealthRestrictions = '';
             this.formIsActive = '1';
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         // Генерация пароля
@@ -725,7 +742,15 @@ function athletesApp() {
         },
         
         showEdit(athleteId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'create') {
+                this.lastScrollPositions.create = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'edit';
+            this.lastView = 'edit';
             this.currentAthlete = this.athletes.find(a => a.id === athleteId);
             this.formName = this.currentAthlete.name;
             this.formEmail = this.currentAthlete.email;
@@ -740,6 +765,13 @@ function athletesApp() {
             this.formGoals = this.currentAthlete.goals || [];
             this.formHealthRestrictions = this.currentAthlete.health_restrictions ? JSON.stringify(this.currentAthlete.health_restrictions) : '';
             this.formIsActive = this.currentAthlete.is_active ? '1' : '0';
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         async showView(athleteId) {

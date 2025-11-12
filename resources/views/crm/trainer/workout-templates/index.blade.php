@@ -56,6 +56,8 @@ function templatesApp() {
         lastScrollPositions: {
             list: 0,
             view: 0,
+            create: 0,
+            edit: 0,
         },
         lastView: 'list',
         
@@ -437,7 +439,7 @@ function templatesApp() {
             this.touchStartTime = null;
             this.swipeHandled = false;
             this.$nextTick(() => {
-                if (previousView === 'view' && this.lastScrollPositions.list !== null) {
+                if ((previousView === 'view' || previousView === 'create' || previousView === 'edit') && this.lastScrollPositions.list !== null) {
                     window.scrollTo({
                         top: this.lastScrollPositions.list,
                         behavior: 'auto'
@@ -448,7 +450,15 @@ function templatesApp() {
         },
         
         showCreate() {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'edit') {
+                this.lastScrollPositions.edit = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'create';
+            this.lastView = 'create';
             this.currentTemplate = null;
             this.formName = '';
             this.formExercises = [];
@@ -467,10 +477,25 @@ function templatesApp() {
             this.touchStartY = null;
             this.touchStartTime = null;
             this.swipeHandled = false;
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         showEdit(templateId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'create') {
+                this.lastScrollPositions.create = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'edit';
+            this.lastView = 'edit';
             this.currentTemplate = this.templates.find(t => t.id === templateId);
             this.formName = this.currentTemplate.name;
             this.formExercises = this.currentTemplate ? (this.currentTemplate.valid_exercises || this.currentTemplate.exercises || []) : [];
@@ -492,6 +517,13 @@ function templatesApp() {
             this.touchStartY = null;
             this.touchStartTime = null;
             this.swipeHandled = false;
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         showView(templateId) {

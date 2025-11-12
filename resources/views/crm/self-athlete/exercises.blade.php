@@ -131,6 +131,8 @@ function exerciseApp() {
             list: 0,
             view: 0,
             addVideo: 0,
+            create: 0,
+            edit: 0,
         },
         lastView: 'list',
         
@@ -502,7 +504,7 @@ function exerciseApp() {
             this.currentView = 'list';
             this.currentExercise = null;
             this.$nextTick(() => {
-                if ((previousView === 'view' || previousView === 'add-video') && this.lastScrollPositions.list !== null) {
+                if ((previousView === 'view' || previousView === 'add-video' || previousView === 'create' || previousView === 'edit') && this.lastScrollPositions.list !== null) {
                     window.scrollTo({
                         top: this.lastScrollPositions.list,
                         behavior: 'auto'
@@ -513,7 +515,17 @@ function exerciseApp() {
         },
         
         showCreate() {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'add-video') {
+                this.lastScrollPositions.addVideo = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'edit') {
+                this.lastScrollPositions.edit = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'create';
+            this.lastView = 'create';
             this.currentExercise = null;
             this.formName = '';
             this.formDescription = '';
@@ -537,10 +549,27 @@ function exerciseApp() {
                 if (imageInput) imageInput.value = '';
                 if (imageInput2) imageInput2.value = '';
             }, 0);
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         showEdit(exerciseId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'add-video') {
+                this.lastScrollPositions.addVideo = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'create') {
+                this.lastScrollPositions.create = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'edit';
+            this.lastView = 'edit';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
             this.formName = this.currentExercise.name;
             this.formDescription = this.currentExercise.description || '';
@@ -564,6 +593,13 @@ function exerciseApp() {
                 if (imageInput) imageInput.value = '';
                 if (imageInput2) imageInput2.value = '';
             }, 0);
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         showView(exerciseId) {

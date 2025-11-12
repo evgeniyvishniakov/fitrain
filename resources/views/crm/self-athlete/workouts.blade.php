@@ -322,7 +322,8 @@ function workoutApp() {
         lastScrollPositions: {
             list: 0,
             view: 0,
-            form: 0,
+            create: 0,
+            edit: 0,
         },
         lastView: 'list',
         
@@ -747,7 +748,7 @@ function workoutApp() {
             this.currentView = 'list';
             this.$nextTick(() => {
                 this.currentWorkout = null;
-                if (previousView === 'view' && this.lastScrollPositions.list !== null) {
+                if ((previousView === 'view' || previousView === 'create' || previousView === 'edit') && this.lastScrollPositions.list !== null) {
                     window.scrollTo({
                         top: this.lastScrollPositions.list,
                         behavior: 'auto'
@@ -758,8 +759,16 @@ function workoutApp() {
         },
         
         showCreate() {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'edit') {
+                this.lastScrollPositions.edit = window.scrollY || window.pageYOffset || 0;
+            }
             this.formMode = 'create';
             this.currentView = 'create';
+            this.lastView = 'create';
             this.currentWorkout = null;
             this.formTitle = '';
             this.formDescription = '';
@@ -790,11 +799,26 @@ function workoutApp() {
                 };
                 this.displaySelectedExercises([warmupData], false);
             }
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         showEdit(workoutId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            } else if (this.currentView === 'create') {
+                this.lastScrollPositions.create = window.scrollY || window.pageYOffset || 0;
+            }
             this.formMode = 'edit';
             this.currentView = 'edit';
+            this.lastView = 'edit';
             this.currentWorkout = this.workouts.find(w => w.id === workoutId);
             this.formTitle = this.currentWorkout.title;
             this.formDescription = this.currentWorkout.description || '';
@@ -879,6 +903,13 @@ function workoutApp() {
                 document.getElementById('selectedExercisesContainer').style.display = 'none';
                 document.getElementById('emptyExercisesState').style.display = 'block';
             }
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         showView(workoutId) {
