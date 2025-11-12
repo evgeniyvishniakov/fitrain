@@ -19,10 +19,11 @@ return [
     'exists' => 'Выбранное значение для :attribute не существует.',
     'image' => 'Поле :attribute должно быть изображением.',
     'mimes' => 'Поле :attribute должно быть файлом одного из типов: :values.',
+    'mimetypes' => 'Поле :attribute должно быть файлом одного из допустимых типов: :values.',
     'size' => [
         'file' => 'Размер файла :attribute должен быть :size килобайт.',
     ],
-    
+
     'attributes' => [
         'name' => 'имя',
         'email' => 'email',

@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", "Fitrain CRM")</title>
+    @php($siteFavicon = \App\Models\SystemSetting::get('site.favicon'))
+    @php($siteName = \App\Models\SystemSetting::get('site.name', 'Fitrain'))
+    @php($siteLogoDefault = \App\Models\SystemSetting::get('site.logo', ''))
+    @php($siteLogoLight = \App\Models\SystemSetting::get('site.logo_light'))
+    @php($siteLogoDark = \App\Models\SystemSetting::get('site.logo_dark'))
+    @php($crmLogoLight = $siteLogoLight ?: $siteLogoDefault)
+    @php($crmLogoDark = $siteLogoDark ?: ($siteLogoLight ?: $siteLogoDefault))
+    @if($siteFavicon)
+        <link rel="icon" type="image/png" href="{{ asset('storage/' . $siteFavicon) }}">
+    @endif
     
     @vite(['resources/css/app.css'])
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,6 +23,23 @@
     <script src="{{ asset('js/notifications.js') }}"></script>
     <style>
         [x-cloak] { display: none !important; }
+        
+        .crm-logo {
+            height: 72px;
+            max-width: 260px;
+            width: auto;
+            display: block;
+            object-fit: contain;
+        }
+        .theme-dark .crm-logo {
+            height: 60px;
+            max-width: 220px;
+        }
+        .crm-logo-light { display: block; }
+        .crm-logo-dark { display: none; }
+        .theme-dark .crm-logo-light { display: none; }
+        .theme-dark .crm-logo-dark { display: block; }
+        .theme-light .crm-logo-dark { display: none; }
         
         /* Индикатор загрузки */
         .loading-spinner {
@@ -617,19 +644,36 @@
     <div id="mobile-menu" class="mobile-menu">
         <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
         <div class="mobile-menu-content">
-            <!-- Заголовок меню -->
+            <!-- Шапка мобильного меню -->
             <div class="mobile-menu-header">
-                <h2 class="mobile-menu-title">Меню</h2>
+                <div class="flex items-center gap-3">
+                    @if($crmLogoLight || $crmLogoDark)
+                        <div class="flex items-center">
+                            @if($crmLogoLight)
+                                <img src="{{ asset('storage/' . $crmLogoLight) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-light h-10">
+                            @endif
+                            @if($crmLogoDark)
+                                <img src="{{ asset('storage/' . $crmLogoDark) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-dark h-10">
+                            @endif
+                        </div>
+                    @else
+                        <div class="w-10 h-10 bg-indigo-600/10 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    @endif
+                    <h2 class="mobile-menu-title">Меню</h2>
+                </div>
                 <button onclick="toggleMobileMenu()" class="mobile-menu-close">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
             
-            <!-- Навигация -->
             <nav class="mobile-menu-nav">
-                <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link {{ request()->routeIs('crm.dashboard.*') ? 'active' : '' }}">
+                <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link {{ request()->routeIs('crm.dashboard*') ? 'active' : '' }}">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
@@ -728,18 +772,29 @@
         <div style="display: none;" class="desktop-sidebar">
             <div class="sidebar flex flex-col flex-grow backdrop-blur-md">
                 <!-- Логотип -->
-                <div class="flex items-center px-6 py-6">
-                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mr-3">
-                        <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <h1 class="text-xl font-bold text-white">Fitrain CRM</h1>
+                <div class="flex items-center px-6 py-6 gap-3">
+                    @if($crmLogoLight || $crmLogoDark)
+                        <div class="flex items-center">
+                            @if($crmLogoLight)
+                                <img src="{{ asset('storage/' . $crmLogoLight) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-light">
+                            @endif
+                            @if($crmLogoDark)
+                                <img src="{{ asset('storage/' . $crmLogoDark) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-dark {{ $crmLogoLight ? '' : 'block' }}">
+                            @endif
+                        </div>
+                    @else
+                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mr-3">
+                            <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span class="text-xl font-bold text-white">{{ $siteName }} CRM</span>
+                    @endif
                 </div>
                 
                 <!-- Навигация -->
-                <nav class="flex-1 px-4 py-6 space-y-2">
-                    <a href="{{ route("crm.dashboard.main") }}" class="nav-link {{ request()->routeIs('crm.dashboard.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                <nav class="flex-1 px-4 space-y-2">
+                    <a href="{{ route("crm.dashboard.main") }}" class="nav-link {{ request()->routeIs('crm.dashboard*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                         </svg>

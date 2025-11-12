@@ -752,7 +752,7 @@ function workoutApp() {
                     window.scrollTo({
                         top: this.lastScrollPositions.list,
                         behavior: 'auto'
-                    });
+            });
                 }
             });
             this.lastView = 'list';
@@ -4392,7 +4392,7 @@ function filterTemplates() {
 // Добавление выбранных упражнений
 function addSelectedExercises() {
     const selectedElements = document.querySelectorAll('#exerciseModal [data-selected="true"]');
-
+    
     const orderedSelectedElements = Array.from(selectedElements).sort((a, b) => {
         const orderA = parseInt(a.dataset.selectionOrder || '', 10);
         const orderB = parseInt(b.dataset.selectionOrder || '', 10);

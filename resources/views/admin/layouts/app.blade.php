@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Админ панель') - FitTrain</title>
+    @php($siteFavicon = \App\Models\SystemSetting::get('site.favicon'))
+    @if($siteFavicon)
+        <link rel="icon" type="image/png" href="{{ asset('storage/' . $siteFavicon) }}">
+    @endif
     
     <style>
         .status-active {
@@ -56,10 +60,16 @@
     <div class="flex h-screen">
         <!-- Sidebar -->
         <div id="sidebar" class="bg-gray-800 text-white w-64 sidebar-transition">
+            @php($siteLogo = \App\Models\SystemSetting::get('site.logo'))
+            @php($siteName = \App\Models\SystemSetting::get('site.name', 'FitTrain Admin'))
             <div class="p-6">
-                <div class="flex items-center">
-                    <i class="fas fa-dumbbell text-2xl text-blue-400 mr-3"></i>
-                    <h1 class="text-xl font-bold">FitTrain Admin</h1>
+                <div class="flex items-center gap-3">
+                    @if($siteLogo)
+                        <img src="{{ asset('storage/' . $siteLogo) }}" alt="Логотип" class="h-10 w-auto object-contain">
+                    @else
+                        <i class="fas fa-dumbbell text-2xl text-blue-400"></i>
+                    @endif
+                    <h1 class="text-xl font-bold">{{ $siteName }}</h1>
                 </div>
             </div>
             
@@ -116,6 +126,11 @@
                     <p class="text-gray-400 text-xs uppercase tracking-wider">Система</p>
                 </div>
                 
+                <a href="{{ route('admin.site.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.site*') ? 'bg-gray-700 text-white' : '' }}">
+                    <i class="fas fa-globe mr-3"></i>
+                    Сайт
+                </a>
+
                 <a href="{{ route('admin.system.index') }}" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.system*') ? 'bg-gray-700 text-white' : '' }}">
                     <i class="fas fa-cogs mr-3"></i>
                     Система

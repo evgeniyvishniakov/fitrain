@@ -437,7 +437,7 @@ function renderMediaElement(path, altText = '', options = {}) {
                 },
 
                 // Navigation
-        showList() {
+                showList() {
             const previousView = this.currentView;
                     this.clearSwipeAnimationTimeout();
                     this.resetSwipeTransform(true);

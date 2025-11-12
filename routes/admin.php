@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CurrencyController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\TrainerSubscriptionController;
 use App\Http\Controllers\Admin\ExerciseController;
+use App\Http\Controllers\Admin\SiteSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,6 +112,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/{exercise}/edit', [ExerciseController::class, 'edit'])->name('edit');
         Route::put('/{exercise}', [ExerciseController::class, 'update'])->name('update');
         Route::delete('/{exercise}', [ExerciseController::class, 'destroy'])->name('destroy');
+    });
+
+    // Настройки сайта
+    Route::prefix('site')->name('admin.site.')->group(function () {
+        Route::get('/', [SiteSettingsController::class, 'index'])->name('index');
+        Route::post('/', [SiteSettingsController::class, 'update'])->name('update');
     });
 
     // Системные функции
