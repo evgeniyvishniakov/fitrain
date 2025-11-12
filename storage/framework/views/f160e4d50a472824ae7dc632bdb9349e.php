@@ -1,28 +1,16 @@
 <?php $__env->startSection("title", __('common.exercises')); ?>
 <?php $__env->startSection("page-title", __('common.exercises')); ?>
 
+<?php $__env->startSection("header-actions"); ?>
+    <!-- Кнопка добавления перенесена в строку с фильтрами -->
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection("content"); ?>
 <script>
-// SPA функциональность для упражнений
 const VIDEO_EXT_REGEXP = /\.(mp4|webm|mov|m4v)$/i;
 
 function isVideoMedia(path = '') {
     return VIDEO_EXT_REGEXP.test((path || '').toString().toLowerCase());
-}
-
-function renderMediaElement(path, altText = '', options = {}) {
-    if (!path) return '';
-    const { className = '', style = '', attributes = '' } = options;
-    const classAttr = className ? ` class="${className}"` : '';
-    const extraAttr = attributes ? ` ${attributes}` : '';
-    const safeAlt = (altText || '').replace(/"/g, '&quot;');
-    const baseStyle = style ? style.trim() : '';
-    if (isVideoMedia(path)) {
-        const combinedStyle = [baseStyle, 'pointer-events: none;'].filter(Boolean).join(' ');
-        const styleAttr = combinedStyle ? ` style="${combinedStyle}"` : '';
-        return `<video src="${path}"${classAttr}${styleAttr}${extraAttr} autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>`;
-    }
-    const styleAttr = baseStyle ? ` style="${baseStyle}"` : '';
-    return `<img src="${path}" alt="${safeAlt}"${classAttr}${styleAttr}${extraAttr}>`;
 }
 
 // SPA функциональность для упражнений
@@ -59,11 +47,43 @@ function exerciseApp() {
         favoriteIds: <?php echo json_encode($favoriteIds ?? [], 15, 512) ?>,
         currentPage: 1,
         itemsPerPage: 10,
-        
-        isVideoFile(path) {
-            if (!path || path === 'null' || path === null) {
-                return false;
+
+        cleanMediaPath(path) {
+            if (path === null || path === undefined) return null;
+            if (typeof path !== 'string') {
+                path = path?.toString?.() ?? '';
             }
+            const trimmed = path.trim();
+            if (!trimmed || trimmed === 'null' || trimmed === 'undefined') {
+                return null;
+            }
+            return trimmed;
+        },
+
+        getPrimaryMedia(exercise) {
+            if (!exercise) return null;
+            const male = this.cleanMediaPath(exercise.image_url);
+            const female = this.cleanMediaPath(exercise.image_url_female);
+            const isGlutes = exercise.category === 'Ягодицы';
+            if (isGlutes) {
+                return female || male;
+            }
+            return male || female;
+        },
+
+        getSecondaryMedia(exercise) {
+            if (!exercise) return null;
+            const male2 = this.cleanMediaPath(exercise.image_url_2);
+            const female2 = this.cleanMediaPath(exercise.image_url_female_2);
+            const isGlutes = exercise.category === 'Ягодицы';
+            if (isGlutes) {
+                return female2 || male2;
+            }
+            return male2 || female2;
+        },
+
+        isVideoFile(path) {
+            if (!path) return false;
             return isVideoMedia(path);
         },
 
@@ -72,36 +92,30 @@ function exerciseApp() {
             return !!(this.userVideos && this.userVideos[exercise.id] && this.userVideos[exercise.id].video_url);
         },
 
-        hasExerciseVideo(exercise) {
-            if (!exercise) return false;
-            const primary = this.getDisplayImage(exercise);
-            const secondary = this.getDisplayImage2(exercise);
-            if (this.isVideoFile(primary)) return true;
-            if (this.isVideoFile(secondary)) return true;
-            if (exercise.video_url) return true;
-            return false;
-        },
-
-        shouldShowPrimaryImage(exercise) {
-            if (!exercise) return false;
-            const primary = this.getDisplayImage(exercise);
+        shouldShowPrimaryImage(exercise, options = {}) {
+            const { suppressWhenHasVideo = true } = options;
+            const primary = this.getPrimaryMedia(exercise);
             if (!primary) return false;
             if (this.isVideoFile(primary)) return false;
-            const secondary = this.getDisplayImage2(exercise);
-            if (secondary && this.isVideoFile(secondary)) return false;
-            if (secondary && typeof secondary === 'string' && secondary.toLowerCase().endsWith('.gif')) return false;
-            if (exercise.video_url) return false;
-            if (this.hasUserVideo(exercise)) return false;
+            const secondary = this.getSecondaryMedia(exercise);
+            if (secondary && this.isVideoFile(secondary) && suppressWhenHasVideo) return false;
+            if (secondary && secondary.toLowerCase().endsWith('.gif') && suppressWhenHasVideo) return false;
+            if (suppressWhenHasVideo) {
+                if (exercise && exercise.video_url) return false;
+                if (this.hasUserVideo(exercise)) return false;
+            }
             return true;
         },
 
-        shouldShowSecondaryImage(exercise) {
-            if (!exercise) return false;
-            const secondary = this.getDisplayImage2(exercise);
+        shouldShowSecondaryImage(exercise, options = {}) {
+            const { suppressWhenHasVideo = true } = options;
+            const secondary = this.getSecondaryMedia(exercise);
             if (!secondary) return false;
             if (this.isVideoFile(secondary)) return false;
-            if (exercise.video_url) return false;
-            if (this.hasUserVideo(exercise)) return false;
+            if (suppressWhenHasVideo) {
+                if (exercise && exercise.video_url) return false;
+                if (this.hasUserVideo(exercise)) return false;
+            }
             return true;
         },
         
@@ -127,204 +141,6 @@ function exerciseApp() {
         formImagePreview2: '',
         formImageUrl2: '',
         formFieldsConfig: ['weight', 'reps', 'sets', 'rest'], // По умолчанию
-        
-        // Получить изображение для отображения в списке
-        // Для категории "Ягодицы" - приоритет женские, для остальных - мужские
-        getDisplayImage(exercise) {
-            if (!exercise) return null;
-            const isGlutes = exercise.category === 'Ягодицы';
-            
-            if (isGlutes) {
-                // Для категории "Ягодицы" - сначала женское
-                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
-                    return exercise.image_url_female;
-                }
-                // Если женского нет, проверяем мужское
-                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
-                    return exercise.image_url;
-                }
-            } else {
-                // Для остальных категорий - сначала мужское
-                if (exercise.image_url && typeof exercise.image_url === 'string' && exercise.image_url.trim() !== '' && exercise.image_url !== 'null') {
-                    return exercise.image_url;
-                }
-                // Если мужского нет, проверяем женское
-                if (exercise.image_url_female && typeof exercise.image_url_female === 'string' && exercise.image_url_female.trim() !== '' && exercise.image_url_female !== 'null') {
-                    return exercise.image_url_female;
-                }
-            }
-            return null;
-        },
-        
-        // Получить второе изображение для отображения в просмотре
-        // Для категории "Ягодицы" - приоритет женские, для остальных - мужские
-        getDisplayImage2(exercise) {
-            if (!exercise) return null;
-            const isGlutes = exercise.category === 'Ягодицы';
-            
-            if (isGlutes) {
-                // Для категории "Ягодицы" - сначала второе женское
-                if (exercise.image_url_female_2 && typeof exercise.image_url_female_2 === 'string' && exercise.image_url_female_2.trim() !== '' && exercise.image_url_female_2 !== 'null') {
-                    return exercise.image_url_female_2;
-                }
-                // Если женского нет, проверяем мужское
-                if (exercise.image_url_2 && typeof exercise.image_url_2 === 'string' && exercise.image_url_2.trim() !== '' && exercise.image_url_2 !== 'null') {
-                    return exercise.image_url_2;
-                }
-            } else {
-                // Для остальных категорий - сначала второе мужское
-                if (exercise.image_url_2 && typeof exercise.image_url_2 === 'string' && exercise.image_url_2.trim() !== '' && exercise.image_url_2 !== 'null') {
-                    return exercise.image_url_2;
-                }
-                // Если мужского нет, проверяем женское
-                if (exercise.image_url_female_2 && typeof exercise.image_url_female_2 === 'string' && exercise.image_url_female_2.trim() !== '' && exercise.image_url_female_2 !== 'null') {
-                    return exercise.image_url_female_2;
-                }
-            }
-            return null;
-        },
-        
-        // Навигация
-        showList() {
-            this.clearSwipeAnimationTimeout();
-            this.resetSwipeTransform(true);
-            this.swipeTargetElement = null;
-            this.closeMobileMenuIfOpen();
-            this.currentView = 'list';
-            this.currentExercise = null;
-        },
-        
-        showCreate() {
-            this.currentView = 'create';
-            this.currentExercise = null;
-            this.formName = '';
-            this.formDescription = '';
-            this.formCategory = '';
-            this.formEquipment = '';
-            this.formMuscleGroupsText = '';
-            this.formInstructions = '';
-            this.formVideoUrl = '';
-            this.formImage = null;
-            this.formImagePreview = '';
-            this.formImageUrl = '';
-            this.formImage2 = null;
-            this.formImagePreview2 = '';
-            this.formImageUrl2 = '';
-            this.formFieldsConfig = ['weight', 'reps', 'sets', 'rest'];
-            
-            // Очищаем input файлов при открытии формы создания
-            setTimeout(() => {
-                const imageInput = document.querySelector('input[name="image"]');
-                const imageInput2 = document.querySelector('input[name="image_2"]');
-                if (imageInput) imageInput.value = '';
-                if (imageInput2) imageInput2.value = '';
-            }, 0);
-        },
-        
-        showEdit(exerciseId) {
-            this.currentView = 'edit';
-            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
-            this.formName = this.currentExercise.name;
-            this.formDescription = this.currentExercise.description || '';
-            this.formCategory = this.currentExercise.category;
-            this.formEquipment = this.currentExercise.equipment;
-            this.formMuscleGroupsText = Array.isArray(this.currentExercise.muscle_groups) ? this.currentExercise.muscle_groups.join(', ') : '';
-            this.formInstructions = this.currentExercise.instructions || '';
-            this.formVideoUrl = this.currentExercise.video_url || '';
-            this.formImage = null;
-            // Используем приоритет: женское изображение, если есть, иначе мужское
-            const displayImage = this.getDisplayImage(this.currentExercise);
-            const displayImage2 = this.getDisplayImage2(this.currentExercise);
-            this.formImagePreview = displayImage ? `/storage/${displayImage}` : '';
-            this.formImageUrl = displayImage || '';
-            this.formImage2 = null;
-            this.formImagePreview2 = displayImage2 ? `/storage/${displayImage2}` : '';
-            this.formImageUrl2 = displayImage2 || '';
-            this.formFieldsConfig = this.currentExercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
-            
-            // Очищаем input файлов при открытии формы редактирования
-            setTimeout(() => {
-                const imageInput = document.querySelector('input[name="image"]');
-                const imageInput2 = document.querySelector('input[name="image_2"]');
-                if (imageInput) imageInput.value = '';
-                if (imageInput2) imageInput2.value = '';
-            }, 0);
-        },
-        
-        showView(exerciseId) {
-            this.clearSwipeAnimationTimeout();
-            this.resetSwipeTransform(true);
-            this.swipeTargetElement = null;
-            this.currentView = 'view';
-            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
-            
-            // Загружаем пользовательское видео, если упражнение системное
-            if (this.currentExercise && this.currentExercise.is_system) {
-                this.loadUserVideo(exerciseId);
-            } else {
-                this.currentUserVideo = null;
-            }
-        },
-        
-        showAddVideo(exerciseId) {
-            this.currentView = 'add-video';
-            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
-            this.userVideoUrl = '';
-            this.userVideoTitle = '';
-            this.userVideoDescription = '';
-            this.currentUserVideo = null;
-            
-            // Загружаем существующее видео, если есть
-            this.loadUserVideo(exerciseId);
-        },
-        
-        // Фильтрация
-        get filteredExercises() {
-            let filtered = this.exercises;
-            
-            if (this.search) {
-                const normalizedSearch = this.search.toLowerCase();
-                filtered = filtered.filter(e => 
-                    (e.name || '').toLowerCase().includes(normalizedSearch) ||
-                    (e.description || '').toLowerCase().includes(normalizedSearch) ||
-                    (e.category || '').toLowerCase().includes(normalizedSearch) ||
-                    (e.equipment || '').toLowerCase().includes(normalizedSearch)
-                );
-            }
-            
-            if (this.category) {
-                filtered = filtered.filter(e => (e.category || '') === this.category);
-            }
-            
-            if (this.equipment) {
-                filtered = filtered.filter(e => (e.equipment || '') === this.equipment);
-            }
-            
-            if (this.exerciseType) {
-                if (this.exerciseType === 'system') {
-                    filtered = filtered.filter(e => e.is_system === true);
-                } else if (this.exerciseType === 'user') {
-                    filtered = filtered.filter(e => e.is_system === false);
-                } else if (this.exerciseType === 'favorite') {
-                    filtered = filtered.filter(e => this.favoriteIds.includes(e.id));
-                }
-            }
-            
-            return filtered;
-        },
-        
-        // Доступные варианты оборудования по выбранной категории
-        availableEquipments() {
-            const equipmentsSet = new Set();
-            (this.exercises || []).forEach(exercise => {
-                if (!this.category || exercise.category === this.category) {
-                    if (exercise.equipment) {
-                        equipmentsSet.add(exercise.equipment);
-                    }
-                }
-            });
-            return Array.from(equipmentsSet).sort();
-        },
         
         // Перевод оборудования на текущий язык
         getEquipmentTranslation(equipment) {
@@ -356,7 +172,7 @@ function exerciseApp() {
             this.boundTouchStart = this.handleTouchStart.bind(this);
             this.boundTouchMove = this.handleTouchMove.bind(this);
             this.boundTouchEnd = this.handleTouchEnd.bind(this);
-            const container = document.getElementById('trainer-exercises-root');
+            const container = document.getElementById('self-exercises-root');
             if (container && window.CSS && CSS.supports('touch-action', 'pan-y')) {
                 container.style.touchAction = 'pan-y';
             }
@@ -367,7 +183,7 @@ function exerciseApp() {
 
         getSwipeTargetElement() {
             if (this.currentView === 'view') {
-                return document.getElementById('trainer-exercise-view-section');
+                return document.getElementById('self-exercise-view-section');
             }
             return null;
         },
@@ -511,7 +327,7 @@ function exerciseApp() {
             if (this.currentView !== 'view') return;
             if (!nearEdge) return;
 
-            this.closeGlobalMobileMenu();
+            this.closeMobileMenuIfOpen();
             this.clearSwipeAnimationTimeout();
             this.swipeHandled = false;
             this.touchStartX = startX;
@@ -648,7 +464,7 @@ function exerciseApp() {
                 event.stopPropagation();
             }
             this.swipeHandled = true;
-            this.closeGlobalMobileMenu();
+            this.closeMobileMenuIfOpen();
             this.clearSwipeAnimationTimeout();
             const target = targetElement || this.swipeTargetElement || this.getSwipeTargetElement();
             if (target) {
@@ -668,8 +484,130 @@ function exerciseApp() {
             }
         },
 
-        closeGlobalMobileMenu() {
+        // Навигация
+        showList() {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
             this.closeMobileMenuIfOpen();
+            this.currentView = 'list';
+            this.currentExercise = null;
+        },
+        
+        showCreate() {
+            this.currentView = 'create';
+            this.currentExercise = null;
+            this.formName = '';
+            this.formDescription = '';
+            this.formCategory = '';
+            this.formEquipment = '';
+            this.formMuscleGroupsText = '';
+            this.formInstructions = '';
+            this.formVideoUrl = '';
+            this.formImage = null;
+            this.formImagePreview = '';
+            this.formImageUrl = '';
+            this.formImage2 = null;
+            this.formImagePreview2 = '';
+            this.formImageUrl2 = '';
+            this.formFieldsConfig = ['weight', 'reps', 'sets', 'rest'];
+            
+            // Очищаем input файлов при открытии формы создания
+            setTimeout(() => {
+                const imageInput = document.querySelector('input[name="image"]');
+                const imageInput2 = document.querySelector('input[name="image_2"]');
+                if (imageInput) imageInput.value = '';
+                if (imageInput2) imageInput2.value = '';
+            }, 0);
+        },
+        
+        showEdit(exerciseId) {
+            this.currentView = 'edit';
+            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            this.formName = this.currentExercise.name;
+            this.formDescription = this.currentExercise.description || '';
+            this.formCategory = this.currentExercise.category;
+            this.formEquipment = this.currentExercise.equipment;
+            this.formMuscleGroupsText = Array.isArray(this.currentExercise.muscle_groups) ? this.currentExercise.muscle_groups.join(', ') : '';
+            this.formInstructions = this.currentExercise.instructions || '';
+            this.formVideoUrl = this.currentExercise.video_url || '';
+            this.formImage = null;
+            this.formImagePreview = this.currentExercise.image_url ? `/storage/${this.currentExercise.image_url}` : '';
+            this.formImageUrl = this.currentExercise.image_url || '';
+            this.formImage2 = null;
+            this.formImagePreview2 = this.currentExercise.image_url_2 ? `/storage/${this.currentExercise.image_url_2}` : '';
+            this.formImageUrl2 = this.currentExercise.image_url_2 || '';
+            this.formFieldsConfig = this.currentExercise.fields_config || ['weight', 'reps', 'sets', 'rest'];
+            
+            // Очищаем input файлов при открытии формы редактирования
+            setTimeout(() => {
+                const imageInput = document.querySelector('input[name="image"]');
+                const imageInput2 = document.querySelector('input[name="image_2"]');
+                if (imageInput) imageInput.value = '';
+                if (imageInput2) imageInput2.value = '';
+            }, 0);
+        },
+        
+        showView(exerciseId) {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
+            this.currentView = 'view';
+            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            
+            // Загружаем пользовательское видео, если упражнение системное
+            if (this.currentExercise && this.currentExercise.is_system) {
+                this.loadUserVideo(exerciseId);
+            } else {
+                this.currentUserVideo = null;
+            }
+        },
+        
+        showAddVideo(exerciseId) {
+            this.currentView = 'add-video';
+            this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            this.userVideoUrl = '';
+            this.userVideoTitle = '';
+            this.userVideoDescription = '';
+            this.currentUserVideo = null;
+            
+            // Загружаем существующее видео, если есть
+            this.loadUserVideo(exerciseId);
+        },
+        
+        // Фильтрация
+        get filteredExercises() {
+            let filtered = this.exercises;
+            
+            if (this.search) {
+                const normalizedSearch = this.search.toLowerCase();
+                filtered = filtered.filter(e => 
+                    (e.name || '').toLowerCase().includes(normalizedSearch) ||
+                    (e.description || '').toLowerCase().includes(normalizedSearch) ||
+                    (e.category || '').toLowerCase().includes(normalizedSearch) ||
+                    (e.equipment || '').toLowerCase().includes(normalizedSearch)
+                );
+            }
+            
+            if (this.category) {
+                filtered = filtered.filter(e => (e.category || '') === this.category);
+            }
+            
+            if (this.equipment) {
+                filtered = filtered.filter(e => (e.equipment || '') === this.equipment);
+            }
+            
+            if (this.exerciseType) {
+                if (this.exerciseType === 'system') {
+                    filtered = filtered.filter(e => e.is_system === true);
+                } else if (this.exerciseType === 'user') {
+                    filtered = filtered.filter(e => e.is_system === false);
+                } else if (this.exerciseType === 'favorite') {
+                    filtered = filtered.filter(e => this.favoriteIds.includes(e.id));
+                }
+            }
+            
+            return filtered;
         },
         
         // Пагинация
@@ -710,7 +648,7 @@ function exerciseApp() {
         },
         
         goToPage(page) {
-            this.currentPage = page;
+                this.currentPage = page;
         },
         
         previousPage() {
@@ -728,21 +666,55 @@ function exerciseApp() {
         // Сохранение
         async saveExercise() {
             try {
+                // Валидация на фронтенде
+                if (!this.formName.trim()) {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка валидации',
+                            message: 'Название упражнения обязательно для заполнения'
+                        }
+                    }));
+                    return;
+                }
+                
+                if (!this.formCategory) {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка валидации',
+                            message: 'Категория упражнения обязательна для заполнения'
+                        }
+                    }));
+                    return;
+                }
+                
+                if (!this.formEquipment) {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка валидации',
+                            message: 'Оборудование обязательно для заполнения'
+                        }
+                    }));
+                    return;
+                }
+                
                 const muscleGroups = this.formMuscleGroupsText
                     .split(',')
                     .map(g => g.trim())
                     .filter(g => g.length > 0);
                 
                 const formData = new FormData();
-                formData.append('name', this.formName);
-                formData.append('description', this.formDescription);
+                formData.append('name', this.formName.trim());
+                formData.append('description', this.formDescription || '');
                 formData.append('category', this.formCategory);
                 formData.append('equipment', this.formEquipment);
-                formData.append('instructions', this.formInstructions);
-                formData.append('video_url', this.formVideoUrl);
+                formData.append('instructions', this.formInstructions || '');
+                formData.append('video_url', this.formVideoUrl || '');
                 
                 muscleGroups.forEach((group, index) => {
-                    formData.append(`muscle_groups[${index}]`, group);
+                    formData.append('muscle_groups[' + index + ']', group);
                 });
                 
                 this.formFieldsConfig.forEach((field, index) => {
@@ -778,7 +750,7 @@ function exerciseApp() {
                 }
                 
                 const url = this.currentExercise && this.currentExercise.id ? 
-                    `/exercises/${this.currentExercise.id}` : '/exercises';
+                    '/self-athlete/exercises/' + this.currentExercise.id : '/self-athlete/exercises';
                 const method = 'POST';
                 
                 if (this.currentExercise && this.currentExercise.id) {
@@ -795,13 +767,36 @@ function exerciseApp() {
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    // Получаем текст ответа для ошибок валидации
+                    const errorText = await response.text();
+                    let errorMessage = `HTTP error! status: ${response.status}`;
+                    
+                    // Если это ошибка валидации (422), пытаемся извлечь детали
+                    if (response.status === 422) {
+                        try {
+                            const errorData = JSON.parse(errorText);
+                            if (errorData.errors) {
+                                const validationErrors = Object.values(errorData.errors).flat();
+                                errorMessage = `Ошибка валидации: ${validationErrors.join(', ')}`;
+                            } else if (errorData.message) {
+                                errorMessage = errorData.message;
+                            }
+                        } catch (e) {
+                            // Если не удалось распарсить JSON, используем текст как есть
+                            if (errorText && !errorText.includes('<!DOCTYPE')) {
+                                errorMessage = errorText;
+                            }
+                        }
+                    }
+                    
+                    throw new Error(errorMessage);
                 }
                 
                 const text = await response.text();
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -816,6 +811,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -864,12 +860,12 @@ function exerciseApp() {
                     }));
                 }
             } catch (error) {
-                // Показываем уведомление об ошибке
+                // Показываем уведомление об ошибке с деталями
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
                         title: '<?php echo e(__('common.error')); ?>',
-                        message: '<?php echo e(__('common.exercise_saving_error')); ?>'
+                        message: error.message || '<?php echo e(__('common.exercise_saving_error')); ?>'
                     }
                 }));
             }
@@ -894,7 +890,7 @@ function exerciseApp() {
         
         async performDelete(id) {
             try {
-                const response = await fetch(`/exercises/${id}`, {
+                const response = await fetch(`/self-athlete/exercises/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -907,6 +903,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -921,6 +918,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -978,8 +976,8 @@ function exerciseApp() {
         async toggleFavorite(exerciseId) {
             const isFav = this.isFavorite(exerciseId);
             const url = isFav 
-                ? `/exercises/${exerciseId}/favorite`
-                : `/exercises/${exerciseId}/favorite`;
+                ? `/self-athlete/exercises/${exerciseId}/favorite`
+                : `/self-athlete/exercises/${exerciseId}/favorite`;
             const method = isFav ? 'DELETE' : 'POST';
             
             try {
@@ -1154,6 +1152,87 @@ function exerciseApp() {
             return this.userVideos[exercise.id]?.title || exercise.name;
         },
         
+        // Загрузка упражнений из тренировок
+        async loadExercisesFromWorkouts() {
+            try {
+                const response = await fetch('/self-athlete/exercises/from-workouts', {
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                
+                // Проверяем, не HTML ли это (например, страница входа)
+                if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: '<?php echo e(__('common.authorization_error')); ?>',
+                            message: '<?php echo e(__('common.reauthorization_required')); ?>'
+                        }
+                    }));
+                    return;
+                }
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: '<?php echo e(__('common.server_response_error')); ?>',
+                            message: '<?php echo e(__('common.invalid_server_response')); ?>'
+                        }
+                    }));
+                    return;
+                }
+                
+                if (result.success && result.exercises) {
+                    // Добавляем загруженные упражнения к существующим
+                    const newExercises = result.exercises.filter(newEx => 
+                        !this.exercises.some(existingEx => existingEx.id === newEx.id)
+                    );
+                    
+                    this.exercises = [...this.exercises, ...newExercises];
+                    
+                    // Показываем уведомление об успехе
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'success',
+                            title: 'Упражнения загружены',
+                            message: `Добавлено ${newExercises.length} новых упражнений из тренировок`
+                        }
+                    }));
+                } else {
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            type: 'error',
+                            title: 'Ошибка загрузки',
+                            message: result.message || 'Не удалось загрузить упражнения из тренировок'
+                        }
+                    }));
+                }
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-notification', {
+                    detail: {
+                        type: 'error',
+                        title: 'Ошибка',
+                        message: 'Не удалось загрузить упражнения из тренировок'
+                    }
+                }));
+            }
+        },
+        
         // Инициализация
         init() {
             this.setupTouchHandlers();
@@ -1169,10 +1248,6 @@ function exerciseApp() {
             
             this.$watch('category', () => {
                 this.currentPage = 1;
-                const available = this.availableEquipments();
-                if (this.equipment && !available.includes(this.equipment)) {
-                    this.equipment = '';
-                }
             });
             
             this.$watch('equipment', () => {
@@ -1214,7 +1289,7 @@ function exerciseApp() {
         // Методы для работы с пользовательскими видео
         async loadAllUserVideos() {
             try {
-                const response = await fetch('/exercises/user-videos', {
+                const response = await fetch('/self-athlete/exercises/user-videos', {
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json',
@@ -1230,6 +1305,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    
                     return;
                 }
                 
@@ -1237,6 +1313,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
+                    
                     return;
                 }
                 
@@ -1252,7 +1329,7 @@ function exerciseApp() {
         
         async loadUserVideo(exerciseId) {
             try {
-                const response = await fetch(`/exercises/${exerciseId}/user-video`, {
+                const response = await fetch(`/self-athlete/exercises/${exerciseId}/user-video`, {
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json'
@@ -1267,6 +1344,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    
                     return;
                 }
                 
@@ -1274,6 +1352,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
+                    
                     return;
                 }
                 
@@ -1295,7 +1374,7 @@ function exerciseApp() {
                     description: this.userVideoDescription
                 };
                 
-                const response = await fetch(`/exercises/${this.currentExercise.id}/user-video`, {
+                const response = await fetch(`/self-athlete/exercises/${this.currentExercise.id}/user-video`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1313,6 +1392,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -1327,6 +1407,7 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
+                    
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
@@ -1338,18 +1419,6 @@ function exerciseApp() {
                 }
                 
                 if (result.success) {
-                    // Обновляем текущее видео
-                    this.currentUserVideo = result.video;
-                    
-                    // Обновляем кэш пользовательских видео для этого упражнения
-                    this.userVideos[this.currentExercise.id] = result.video;
-                    
-                    // Обновляем текущее упражнение, чтобы видео сразу отображалось
-                    if (this.currentExercise) {
-                        // Обновляем объект упражнения, чтобы видео отображалось
-                        this.currentExercise = { ...this.currentExercise };
-                    }
-                    
                     // Показываем уведомление об успехе
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
@@ -1358,6 +1427,9 @@ function exerciseApp() {
                             message: result.message
                         }
                     }));
+                    
+                    // Обновляем текущее видео
+                    this.currentUserVideo = result.video;
                     
                     // Переключаемся на просмотр
                     this.showView(this.currentExercise.id);
@@ -1385,7 +1457,7 @@ function exerciseApp() {
         
         async deleteUserVideo() {
             try {
-                const response = await fetch(`/exercises/${this.currentExercise.id}/user-video`, {
+                const response = await fetch(`/self-athlete/exercises/${this.currentExercise.id}/user-video`, {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json',
@@ -1401,6 +1473,7 @@ function exerciseApp() {
                 
                 // Проверяем, не HTML ли это (например, страница входа)
                 if (text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html')) {
+                    
                     return;
                 }
                 
@@ -1408,24 +1481,11 @@ function exerciseApp() {
                 try {
                     result = JSON.parse(text);
                 } catch (parseError) {
+                    
                     return;
                 }
                 
                 if (result.success) {
-                    // Удаляем из кэша пользовательских видео
-                    delete this.userVideos[this.currentExercise.id];
-                    
-                    // Очищаем поля
-                    this.currentUserVideo = null;
-                    this.userVideoUrl = '';
-                    this.userVideoTitle = '';
-                    this.userVideoDescription = '';
-                    
-                    // Обновляем текущее упражнение, чтобы видео исчезло из просмотра
-                    if (this.currentExercise) {
-                        this.currentExercise = { ...this.currentExercise };
-                    }
-                    
                     // Показываем уведомление об успехе
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
@@ -1434,6 +1494,12 @@ function exerciseApp() {
                             message: result.message
                         }
                     }));
+                    
+                    // Очищаем поля
+                    this.currentUserVideo = null;
+                    this.userVideoUrl = '';
+                    this.userVideoTitle = '';
+                    this.userVideoDescription = '';
                     
                     // Переключаемся на просмотр
                     this.showView(this.currentExercise.id);
@@ -1459,7 +1525,7 @@ function exerciseApp() {
             }
         },
         
-        // Обработка выбора изображения
+        // Обработка выбора первого изображения
         handleImageSelect(event) {
             const file = event.target.files[0];
             if (file) {
@@ -1476,13 +1542,13 @@ function exerciseApp() {
                     return;
                 }
                 
-                // Валидация размера файла (макс 5MB)
-                if (file.size > 5 * 1024 * 1024) {
+                // Валидация размера файла (макс 10MB)
+                if (file.size > 10 * 1024 * 1024) {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
                             title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 5MB'
+                            message: 'Размер файла не должен превышать 10MB'
                         }
                     }));
                     event.target.value = '';
@@ -1500,7 +1566,7 @@ function exerciseApp() {
             }
         },
         
-        // Удаление изображения
+        // Удаление первого изображения
         removeImage() {
             this.formImage = null;
             this.formImagePreview = '';
@@ -1527,13 +1593,13 @@ function exerciseApp() {
                     return;
                 }
                 
-                // Валидация размера файла (макс 5MB)
-                if (file.size > 5 * 1024 * 1024) {
+                // Валидация размера файла (макс 10MB)
+                if (file.size > 10 * 1024 * 1024) {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
                             title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 5MB'
+                            message: 'Размер файла не должен превышать 10MB'
                         }
                     }));
                     event.target.value = '';
@@ -1580,12 +1646,7 @@ function exerciseApp() {
 }
 </script>
 
-<?php $__env->startSection("header-actions"); ?>
-    <!-- Кнопка добавления перенесена в строку с фильтрами -->
-<?php $__env->stopSection(); ?>
-
-<?php $__env->startSection("content"); ?>
-<div id="trainer-exercises-root" x-data="exerciseApp()" x-init="init()" x-cloak class="space-y-6">
+<div id="self-exercises-root" x-data="exerciseApp()" x-init="init()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
     <div x-show="currentView === 'list'" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -1637,15 +1698,15 @@ function exerciseApp() {
             <div class="filters-row">
                 <!-- Поиск -->
                 <div class="search-container">
-                    <input type="text" 
-                           x-model="search" 
+                    <input type="text"
+                           x-model="search"
                            placeholder="<?php echo e(__('common.search_exercises')); ?>" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
                 <!-- Фильтр категории -->
                 <div class="filter-container">
-                    <select x-model="category" 
+                    <select x-model="category"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value=""><?php echo e(__('common.all_categories')); ?></option>
                         <option value="Грудь"><?php echo e(__('common.chest')); ?></option>
@@ -1666,10 +1727,10 @@ function exerciseApp() {
                 
                 <!-- Фильтр оборудования -->
                 <div class="filter-container">
-                    <select x-model="equipment" 
+                    <select x-model="equipment"
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
                         <option value=""><?php echo e(__('common.all_equipment')); ?></option>
-                        <template x-for="eq in availableEquipments().filter(e => e && e !== 'null')" :key="eq">
+                        <template x-for="eq in Array.from(new Set(exercises.filter(e => !category || e.category === category).map(e => e.equipment).filter(eq => eq && eq !== 'null'))).sort()" :key="eq">
                             <option :value="eq" x-text="getEquipmentTranslation(eq)"></option>
                         </template>
                     </select>
@@ -1688,7 +1749,7 @@ function exerciseApp() {
                 
                 <!-- Кнопки -->
                 <div class="buttons-container">
-                    <?php if(auth()->user()->hasRole('trainer')): ?>
+                    <?php if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete')): ?>
                         <button @click="showCreate()" 
                                 class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
                             <?php echo e(__('common.create_exercise')); ?>
@@ -1725,17 +1786,17 @@ function exerciseApp() {
             <template x-for="exercise in paginatedExercises" :key="exercise.id">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 p-4 md:p-6" @click="showView(exercise.id)">
                     <!-- Мобильная версия -->
-                    <div class="mobile-only" style="gap: 1rem;">
-                        <div x-show="getDisplayImage(exercise)" class="exercise-card-thumbnail">
-                            <template x-if="!isVideoFile(getDisplayImage(exercise))">
-                                <img :src="`/storage/${getDisplayImage(exercise)}`" 
+                    <div class="flex md:hidden gap-4">
+                        <div x-show="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false }) || (getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise)))" class="flex-shrink-0 w-24">
+                            <template x-if="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false })">
+                                <img :src="`/storage/${getPrimaryMedia(exercise)}`" 
                                      :alt="exercise.name"
-                                     class="exercise-card-thumbnail__image">
+                                     class="w-full h-32 object-contain rounded-lg">
                             </template>
-                            <template x-if="isVideoFile(getDisplayImage(exercise))">
-                                <video :src="`/storage/${getDisplayImage(exercise)}`" 
-                                       class="exercise-card-thumbnail__image"
-                                       autoplay loop muted playsinline></video>
+                            <template x-if="getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise))">
+                                <video :src="`/storage/${getPrimaryMedia(exercise)}`" 
+                                       class="w-full h-32 object-contain rounded-lg"
+                                       autoplay loop muted playsinline style="pointer-events: none;"></video>
                             </template>
                         </div>
                         <div class="flex items-center flex-1">
@@ -1746,105 +1807,111 @@ function exerciseApp() {
                     </div>
                     
                     <!-- Десктопная версия -->
-                    <div class="desktop-only">
-                        <div class="exercise-card-desktop">
-                            <!-- Картинка -->
-                            <div x-show="getDisplayImage(exercise)" class="exercise-card-thumbnail exercise-card-thumbnail--desktop">
-                                <template x-if="!isVideoFile(getDisplayImage(exercise))">
-                                    <img :src="`/storage/${getDisplayImage(exercise)}`" 
+                    <div class="hidden md:block">
+                        <div style="display: flex; gap: 1rem;">
+                            <!-- Картинка слева -->
+                            <div x-show="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false }) || (getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise)))" style="flex: 0 0 25%; max-width: 25%;">
+                                <template x-if="shouldShowPrimaryImage(exercise, { suppressWhenHasVideo: false })">
+                                    <img :src="`/storage/${getPrimaryMedia(exercise)}`" 
                                          :alt="exercise.name"
-                                         class="exercise-card-thumbnail__image">
+                                         class="w-full h-full object-cover rounded-lg"
+                                         style="max-height: 250px;">
                                 </template>
-                                <template x-if="isVideoFile(getDisplayImage(exercise))">
-                                    <video :src="`/storage/${getDisplayImage(exercise)}`" 
-                                           class="exercise-card-thumbnail__image"
+                                <template x-if="getPrimaryMedia(exercise) && isVideoFile(getPrimaryMedia(exercise))">
+                                    <video :src="`/storage/${getPrimaryMedia(exercise)}`" 
+                                           class="w-full h-full object-cover rounded-lg"
+                                           style="max-height: 250px; pointer-events: none;"
                                            autoplay loop muted playsinline></video>
                                 </template>
                             </div>
                             
-                            <!-- Информация -->
-                            <div class="exercise-card-content">
-                                <!-- Заголовок -->
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex-1">
-                                        <div class="flex items-center justify-between mb-4">
+                            <!-- Информация справа -->
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
                                         @click.stop="showView(exercise.id)"
                                         :title="'Нажмите чтобы открыть: ' + exercise.name">
                                         <span x-text="exercise.name"></span>
                                     </h3>
-                                    <button x-show="hasVideo(exercise)" 
-                                            @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
-                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                        </svg>
-                                        <?php echo e(__('common.video')); ?>
+                                <button x-show="hasVideo(exercise)" 
+                                        @click="openSimpleModal(getVideoUrl(exercise), getVideoTitle(exercise))"
+                                        class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer ml-4">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
+                                    <?php echo e(__('common.video')); ?>
 
-                                    </button>
-                                </div>
+                                </button>
+                            </div>
                             
-                                        <!-- Теги -->
-                                        <div class="flex flex-wrap gap-2 mb-4 justify-between exercise-badge-row">
-                                            <div class="flex flex-wrap gap-2 exercise-tag-group">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
-                                            </div>
-                                            <span x-show="exercise.is_system" 
-                                                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help exercise-system-tag"
-                                                  title="Системное упражнение нельзя редактировать или удалять">
-                                                Системное
-                                            </span>
-                                            <span x-show="!exercise.is_system" 
-                                                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 exercise-user-tag"
-                                                  title="Пользовательское упражнение можно редактировать и удалять">
-                                                Пользовательское
-                                            </span>
-                                        </div>
-                                        
-                                        <!-- Группы мышц -->
-                                        <div class="text-sm text-gray-500 exercise-muscle-groups" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
-                                            <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
-                                        </div>
-                                    </div>
+                            <!-- Теги -->
+                            <div class="flex flex-wrap gap-2 mb-4 justify-between">
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
                                 </div>
+                                <div class="flex gap-2">
+                                    <span x-show="exercise.is_system" 
+                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help"
+                                          title="Системное упражнение нельзя редактировать или удалять">
+                                        Системное
+                                    </span>
+                                    <span x-show="!exercise.is_system" 
+                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                          title="Пользовательское упражнение можно редактировать и удалять">
+                                        Пользовательское
+                                    </span>
+                                </div>
+                            </div>
                                 
-                                <!-- Кнопки -->
-                                <div class="flex space-x-2 exercise-actions" @click.stop="">
-                                    <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                                        <?php echo e(__('common.view')); ?>
+                            <!-- Группы мышц -->
+                            <div class="text-sm text-gray-500" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
+                                <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
+                    </div>
+                            
+                            <!-- Кнопки внизу справа -->
+                            <div class="flex space-x-2 mt-4" style="margin-top: auto; padding-top: 1rem;" @click.stop="">
+                        <button @click="showView(exercise.id)" class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                            <?php echo e(__('common.view')); ?>
 
-                                    </button>
-                                    <?php if(auth()->user()->hasRole('trainer')): ?>
-                                        <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>"
-                                                @click="showEdit(currentExercise.id)"
-                                                class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                            <?php echo e(__('common.edit')); ?>
+                        </button>
+                        <?php if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete')): ?>
+                            <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>" 
+                                    @click="showEdit(currentExercise.id)" 
+                                    class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                <?php echo e(__('common.edit')); ?>
 
-                                        </button>
-                                        <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>"
-                                                @click="deleteExercise(currentExercise.id)"
-                                                class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
-                                            <?php echo e(__('common.delete')); ?>
+                            </button>
+                            <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>" 
+                                    @click="deleteExercise(currentExercise.id)" 
+                                    class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                <?php echo e(__('common.delete')); ?>
 
-                                        </button>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Кнопка избранного -->
-                                    <button @click.stop="toggleFavorite(exercise.id)" 
-                                            class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
-                                            :class="isFavorite(exercise.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                                            :title="isFavorite(exercise.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
-                                        <!-- Заполненная звезда (в избранном) -->
-                                        <svg x-show="isFavorite(exercise.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                        <!-- Пустая звезда (не в избранном) -->
-                                        <svg x-show="!isFavorite(exercise.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                                        </svg>
-                                    </button>
-                                </div>
+                            </button>
+                            <button x-show="currentExercise && currentExercise.is_system" 
+                                    @click="showAddVideo(currentExercise.id)"
+                                    class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                                <?php echo e(__('common.add_video')); ?>
+
+                            </button>
+                        <?php endif; ?>
+                        
+                        
+                        <!-- Кнопка избранного -->
+                        <button @click.stop="toggleFavorite(exercise.id)" 
+                                class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                                :class="isFavorite(exercise.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                                :title="isFavorite(exercise.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                            <!-- Заполненная звезда (в избранном) -->
+                            <svg x-show="isFavorite(exercise.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            <!-- Пустая звезда (не в избранном) -->
+                            <svg x-show="!isFavorite(exercise.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </button>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -1859,7 +1926,7 @@ function exerciseApp() {
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет упражнений</h3>
             <p class="text-gray-600 mb-8 max-w-md mx-auto">Добавьте упражнения в базу для создания тренировок.</p>
-            <?php if(auth()->user()->hasRole('trainer')): ?>
+            <?php if(auth()->user()->hasRole('trainer') || auth()->user()->hasRole('self-athlete')): ?>
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     <?php echo e(__('common.create')); ?> <?php echo e(__('common.first_exercise')); ?>
@@ -1873,31 +1940,31 @@ function exerciseApp() {
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                 <div class="flex items-center justify-center">
                     <div class="flex items-center space-x-2">
-                        <button @click="previousPage()" 
-                                :disabled="currentPage === 1"
+            <button @click="previousPage()" 
+                    :disabled="currentPage === 1"
                                 :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
                                 class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
-                        </button>
-                        
-                        <template x-for="page in visiblePages" :key="page">
-                            <button @click="goToPage(page)" 
+            </button>
+            
+            <template x-for="page in visiblePages" :key="page">
+                <button @click="goToPage(page)" 
                                     :class="page === currentPage ? 'bg-indigo-600 text-white border-indigo-600' : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'"
                                     class="px-3 py-2 text-sm font-medium border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                                 <span x-text="page"></span>
                             </button>
-                        </template>
-                        
-                        <button @click="nextPage()" 
-                                :disabled="currentPage === totalPages"
+            </template>
+            
+            <button @click="nextPage()" 
+                    :disabled="currentPage === totalPages"
                                 :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'"
                                 class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
-                        </button>
+            </button>
                     </div>
                 </div>
             </div>
@@ -1906,16 +1973,16 @@ function exerciseApp() {
 
     <!-- Форма создания/редактирования -->
     <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="mb-6 flex justify-between items-start">
-            <div>
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '<?php echo e(__('common.create_exercise')); ?>' : '<?php echo e(__('common.edit_exercise')); ?>'"></h2>
-                <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
-            </div>
-            <button @click="showList()" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                <?php echo e(__('common.back_to_list')); ?>
+                <button @click="showList()" 
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                    <?php echo e(__('common.back_to_list')); ?>
 
-            </button>
+                </button>
+            </div>
+            <p class="text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
         </div>
         
         <form @submit.prevent="saveExercise()" class="space-y-6">
@@ -1939,7 +2006,6 @@ function exerciseApp() {
                     </div>
                 </div>
                 
-                <!-- Загрузка главного изображения -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Главное изображение упражнения</label>
                     
@@ -1966,16 +2032,15 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-sm text-gray-500">Максимальный размер: 5MB. Форматы: JPG, PNG, GIF</p>
+                    <p class="mt-1 text-xs text-gray-500">Выберите главное изображение (JPG, PNG, GIF, WEBP, макс 10MB)</p>
                     
                     <!-- Превью нового изображения при создании -->
-                    <div x-show="currentView === 'create' && formImagePreview" class="mt-4">
+                    <div x-show="currentView === 'create' && formImagePreview" class="mt-3">
                         <p class="text-xs text-gray-500 mb-1">Превью:</p>
                         <img :src="formImagePreview" alt="Превью" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                     </div>
                 </div>
                 
-                <!-- Загрузка второго изображения -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Второе изображение (необязательно)</label>
                     
@@ -2002,41 +2067,19 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect2($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-sm text-gray-500">Дополнительное изображение. Макс 5MB. Форматы: JPG, PNG, GIF</p>
+                    <p class="mt-1 text-xs text-gray-500">Доп. изображение упражнения (JPG, PNG, GIF, WEBP, макс 10MB)</p>
                     
                     <!-- Превью второго изображения при создании -->
-                    <div x-show="currentView === 'create' && formImagePreview2" class="mt-4">
+                    <div x-show="currentView === 'create' && formImagePreview2" class="mt-3">
                         <p class="text-xs text-gray-500 mb-1">Превью:</p>
                         <img :src="formImagePreview2" alt="Превью 2" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                     </div>
                 </div>
                 
-                <!-- Три поля в одну строку -->
-                <div class="flex flex-col md:flex-row gap-6 flex-form-row" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <style>
-                        /* Мобильные (< 640px) - в колонку */
-                        @media (max-width: 639px) {
-                            .flex-form-row { flex-direction: column !important; }
-                        }
-                        /* Планшеты (640px - 767px) - в колонку */
-                        @media (min-width: 640px) and (max-width: 767px) {
-                            .flex-form-row { flex-direction: column !important; }
-                        }
-                        /* Планшеты (768px - 1023px) - в линию */
-                        @media (min-width: 768px) and (max-width: 1023px) {
-                            .flex-form-row { flex-direction: row !important; }
-                        }
-                        /* Ноутбуки (1024px - 1279px) - в линию */
-                        @media (min-width: 1024px) and (max-width: 1279px) {
-                            .flex-form-row { flex-direction: row !important; }
-                        }
-                        /* Десктопы (1280px+) - в линию */
-                        @media (min-width: 1280px) {
-                            .flex-form-row { flex-direction: row !important; }
-                        }
-                    </style>
+                <!-- Категория и Оборудование в одну строку -->
+                <div style="display: flex !important; gap: 1.5rem !important; flex-wrap: wrap !important; width: 100% !important;">
                     <!-- Категория -->
-                    <div class="flex-1">
+                    <div style="flex: 1 !important; min-width: 200px !important; width: 50% !important;">
                         <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.category')); ?> *</label>
                         <select x-model="formCategory" 
                                 required
@@ -2059,7 +2102,7 @@ function exerciseApp() {
                     </div>
                     
                     <!-- Оборудование -->
-                    <div class="flex-1">
+                    <div style="flex: 1 !important; min-width: 200px !important; width: 50% !important;">
                         <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.equipment')); ?></label>
                         <select x-model="formEquipment" 
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
@@ -2082,18 +2125,18 @@ function exerciseApp() {
                             <option value="Резина / Экспандер"><?php echo e(__('common.resistance_band')); ?></option>
                         </select>
                     </div>
-                    
-                    <!-- Группы мышц -->
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Группы мышц (через запятую)</label>
-                        <input type="text" 
-                               x-model="formMuscleGroupsText" 
-                               placeholder="например: грудь, плечи, трицепс"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    </div>
                 </div>
                 
-                <!-- Описание -->
+                <!-- Группы мышц отдельно -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Группы мышц (через запятую)</label>
+                    <input type="text" 
+                           x-model="formMuscleGroupsText" 
+                           placeholder="например: грудь, плечи, трицепс"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                </div>
+            
+            <!-- Описание -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.description')); ?></label>
                     <textarea x-model="formDescription" 
@@ -2326,16 +2369,11 @@ function exerciseApp() {
 
     <!-- Форма добавления пользовательского видео -->
     <div x-show="currentView === 'add-video'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="mb-6 flex justify-between items-start">
-            <div>
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
                 <h2 class="text-2xl font-bold text-gray-900"><?php echo e(__('common.add_video_to_exercise')); ?></h2>
-                <p class="mt-2 text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
             </div>
-            <button @click="showList()" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                <?php echo e(__('common.back_to_list')); ?>
-
-            </button>
+            <p class="text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
         </div>
         
         <form @submit.prevent="saveUserVideo()" class="space-y-6">
@@ -2403,35 +2441,38 @@ function exerciseApp() {
     </div>
 
     <!-- Просмотр упражнения -->
-    <div id="trainer-exercise-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="self-exercise-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <!-- Кнопки сверху -->
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-2">
                 <button x-show="currentExercise && currentExercise.is_system"
                         @click="showAddVideo(currentExercise.id)" 
-                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors md:hidden">
                     <?php echo e(__('common.add_video')); ?>
 
                 </button>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button @click.stop="toggleFavorite(currentExercise?.id)" 
-                        class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
-                        :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                        :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
-                    <!-- Заполненная звезда (в избранном) -->
-                    <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                    <!-- Пустая звезда (не в избранном) -->
-                    <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                    </svg>
-                </button>
-                
-            </div>
-        </div>
+                <button @click="showList()" 
+                        class="hidden md:inline-flex px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                    <?php echo e(__('common.back_to_list')); ?>
 
+                </button>
+            </div>
+             <!-- Кнопка избранного -->
+            <button @click.stop="toggleFavorite(currentExercise?.id)" 
+                    class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
+                    :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
+                    :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                <!-- Заполненная звезда (в избранном) -->
+                <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <!-- Пустая звезда (не в избранном) -->
+                <svg x-show="!isFavorite(currentExercise?.id)" class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                </svg>
+            </button>
+        </div>
+        
         <div x-show="currentExercise" class="space-y-6">
             <!-- Название (только на мобилке) -->
             <h2 class="exercise-view-mobile text-3xl font-bold text-gray-900 text-center" x-text="currentExercise?.name || 'Упражнение'"></h2>
@@ -2441,18 +2482,18 @@ function exerciseApp() {
                 <!-- Левая колонка: картинки и видео -->
                 <div class="flex-shrink-0" style="width: 35%; max-width: 500px;">
                     <div class="space-y-4">
-                        <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                        <!-- Главное изображение (скрывается если есть видео) -->
                         <template x-if="shouldShowPrimaryImage(currentExercise)">
                             <div>
-                                <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
+                                <img :src="`/storage/${getPrimaryMedia(currentExercise)}`" 
                                      :alt="currentExercise.name"
                                      class="w-full rounded-lg shadow-md"
                                      style="object-fit: contain;">
                             </div>
                         </template>
-                        <template x-if="getDisplayImage(currentExercise) && isVideoFile(getDisplayImage(currentExercise))">
+                        <template x-if="getPrimaryMedia(currentExercise) && isVideoFile(getPrimaryMedia(currentExercise))">
                             <div>
-                                <video :src="`/storage/${getDisplayImage(currentExercise)}`"
+                                <video :src="`/storage/${getPrimaryMedia(currentExercise)}`"
                                        class="w-full rounded-lg shadow-md"
                                        style="object-fit: contain; pointer-events: none;"
                                        autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
@@ -2462,47 +2503,23 @@ function exerciseApp() {
                         <!-- Второе изображение -->
                         <template x-if="shouldShowSecondaryImage(currentExercise)">
                             <div>
-                                <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
+                                <img :src="`/storage/${getSecondaryMedia(currentExercise)}`" 
                                      :alt="currentExercise.name"
                                      class="w-full rounded-lg shadow-md"
                                      style="object-fit: contain;">
                             </div>
                         </template>
-                        <template x-if="getDisplayImage2(currentExercise) && isVideoFile(getDisplayImage2(currentExercise))">
+                        <template x-if="getSecondaryMedia(currentExercise) && isVideoFile(getSecondaryMedia(currentExercise))">
                             <div>
-                                <video :src="`/storage/${getDisplayImage2(currentExercise)}`" 
+                                <video :src="`/storage/${getSecondaryMedia(currentExercise)}`"
                                        class="w-full rounded-lg shadow-md"
                                        style="object-fit: contain; pointer-events: none;"
                                        autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
                             </div>
                         </template>
                         
-                        <!-- Пользовательское видео (приоритет) -->
-                        <div x-show="userVideos[currentExercise?.id]?.video_url">
-                            <p class="text-xs text-gray-500 mb-1 font-medium">Ваше видео</p>
-                            <div class="bg-gray-50 rounded-lg p-2">
-                                <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                                    <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
-                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                            allowfullscreen>
-                                    </iframe>
-                                </div>
-                                <div x-show="!isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="text-center py-4">
-                                    <a :href="userVideos[currentExercise?.id]?.video_url" 
-                                       target="_blank" 
-                                       rel="noopener noreferrer"
-                                       class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                        </svg>
-                                        Видео
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Системное видео (если нет пользовательского) -->
-                        <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url">
+                        <!-- Системное видео -->
+                        <div x-show="currentExercise?.video_url">
                             <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
                             <div class="bg-gray-50 rounded-lg p-2">
                                 <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
@@ -2570,18 +2587,18 @@ function exerciseApp() {
             <div class="exercise-view-mobile space-y-6">
                 <!-- Картинки по центру -->
                 <div class="flex flex-col items-center gap-4">
-                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
+                    <!-- Главное изображение (скрывается если есть видео) -->
                     <template x-if="shouldShowPrimaryImage(currentExercise)">
                         <div class="w-full">
-                            <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
+                            <img :src="`/storage/${getPrimaryMedia(currentExercise)}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md mx-auto"
                                  style="object-fit: contain; max-height: 400px;">
                         </div>
                     </template>
-                    <template x-if="getDisplayImage(currentExercise) && isVideoFile(getDisplayImage(currentExercise))">
+                    <template x-if="getPrimaryMedia(currentExercise) && isVideoFile(getPrimaryMedia(currentExercise))">
                         <div class="w-full">
-                            <video :src="`/storage/${getDisplayImage(currentExercise)}`" 
+                            <video :src="`/storage/${getPrimaryMedia(currentExercise)}`" 
                                    class="w-full rounded-lg shadow-md mx-auto"
                                    style="object-fit: contain; max-height: 400px; pointer-events: none;"
                                    autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
@@ -2591,15 +2608,15 @@ function exerciseApp() {
                     <!-- Второе изображение -->
                     <template x-if="shouldShowSecondaryImage(currentExercise)">
                         <div class="w-full">
-                            <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
+                            <img :src="`/storage/${getSecondaryMedia(currentExercise)}`" 
                                  :alt="currentExercise.name"
                                  class="w-full rounded-lg shadow-md mx-auto"
                                  style="object-fit: contain; max-height: 400px;">
                         </div>
                     </template>
-                    <template x-if="getDisplayImage2(currentExercise) && isVideoFile(getDisplayImage2(currentExercise))">
+                    <template x-if="getSecondaryMedia(currentExercise) && isVideoFile(getSecondaryMedia(currentExercise))">
                         <div class="w-full">
-                            <video :src="`/storage/${getDisplayImage2(currentExercise)}`" 
+                            <video :src="`/storage/${getSecondaryMedia(currentExercise)}`" 
                                    class="w-full rounded-lg shadow-md mx-auto"
                                    style="object-fit: contain; max-height: 400px; pointer-events: none;"
                                    autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
@@ -2642,35 +2659,9 @@ function exerciseApp() {
                     </div>
                 </div>
                 
-                <!-- Пользовательское видео (приоритет) -->
-                <div x-show="userVideos[currentExercise?.id]?.video_url">
+                <!-- Системное видео -->
+                <div x-show="currentExercise?.video_url">
                     <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
-                    <p class="text-xs text-gray-500 mb-1 text-center">Ваше видео</p>
-                    <div class="bg-gray-50 rounded-lg p-2">
-                        <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                            <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                    allowfullscreen>
-                            </iframe>
-                        </div>
-                        <div x-show="!isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="text-center py-4">
-                            <a :href="userVideos[currentExercise?.id]?.video_url" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                </svg>
-                                Видео
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Системное видео (если нет пользовательского) -->
-                <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
-                    <p class="text-xs text-gray-500 mb-1 text-center">Системное видео</p>
                     <div class="bg-gray-50 rounded-lg p-2">
                         <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
@@ -2697,7 +2688,7 @@ function exerciseApp() {
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-6 border-t border-gray-200">
                 <button @click="showList()" 
                         data-swipe-ignore="true"
-                        class="self-start inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                        class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
@@ -2711,8 +2702,14 @@ function exerciseApp() {
                     </button>
                     <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === <?php echo e(auth()->id()); ?>" 
                             @click="deleteExercise(currentExercise.id)" 
-                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
+                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
                         Удалить
+                    </button>
+                    <button x-show="currentExercise && currentExercise.is_system" 
+                            @click="showAddVideo(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                        <?php echo e(__('common.add_video')); ?>
+
                     </button>
                 </div>
             </div>
@@ -2740,25 +2737,6 @@ function exerciseApp() {
     }
 }
 
-/* Медиа-запросы для мобильной и десктопной версии */
-.mobile-only {
-    display: flex !important;
-}
-
-.desktop-only {
-    display: none !important;
-}
-
-@media (min-width: 768px) {
-    .mobile-only {
-        display: none !important;
-    }
-    
-    .desktop-only {
-        display: block !important;
-    }
-}
-
 .exercise-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -2768,141 +2746,6 @@ function exerciseApp() {
 @media (min-width: 1024px) {
     .exercise-grid {
         grid-template-columns: 1fr 1fr;
-    }
-}
-
-/* Превью изображений в карточках упражнений */
-.exercise-card-desktop {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 1.5rem;
-    width: 100%;
-}
-
-@media (orientation: landscape) and (max-width: 1180px) {
-    .exercise-card-desktop {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .exercise-card-thumbnail {
-        width: 100%;
-        max-width: 100%;
-        padding: 1.25rem 1rem;
-    }
-
-    .exercise-card-thumbnail__image {
-        max-width: min(520px, 90%);
-        max-height: 240px;
-    }
-
-    .exercise-card-content .exercise-actions {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .exercise-card-content .exercise-actions button {
-        margin-left: 0;
-    }
-
-}
-
-@media (orientation: portrait) and (min-width: 768px) and (max-width: 1024px) {
-    .exercise-card-content {
-        width: 100%;
-    }
-
-    .exercise-card-content > .exercise-actions {
-        margin-top: 1rem;
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .exercise-card-content > .exercise-actions button {
-        margin-left: 0;
-    }
-}
-
-.exercise-card-content {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    align-items: flex-start;
-    text-align: left;
-}
-
-.exercise-card-content .exercise-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.exercise-card-thumbnail {
-    flex: 0 0 auto;
-    width: min(30vw, 200px);
-    max-width: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.75rem;
-    border-radius: 18px;
-    background: #ffffff;
-    box-shadow: 0 12px 24px -12px rgba(15, 23, 42, 0.45);
-}
-
-.exercise-card-thumbnail__image {
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 150px;
-    object-fit: contain;
-}
-
-.exercise-card-thumbnail--desktop {
-    width: min(26vw, 220px);
-    max-width: 220px;
-}
-
-@media (min-width: 1024px) {
-    .exercise-card-thumbnail {
-        width: min(22vw, 220px);
-        max-width: 220px;
-    }
-
-    .exercise-card-thumbnail__image {
-        max-height: 250px;
-    }
-
-    .exercise-card-thumbnail--desktop {
-        width: min(20vw, 240px);
-        max-width: 240px;
-    }
-}
-
-.exercise-badge-row {
-    width: 100%;
-}
-
-.exercise-tag-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.exercise-system-tag,
-.exercise-user-tag {
-    display: inline-flex;
-}
-
-.exercise-muscle-groups {
-    display: none !important;
-}
-
-@media (min-width: 1366px) and (hover: hover) and (pointer: fine) {
-    .exercise-muscle-groups {
-        display: block !important;
     }
 }
 
@@ -2959,4 +2802,4 @@ function exerciseApp() {
 </style>
 
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/trainer/exercises/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/self-athlete/exercises.blade.php ENDPATH**/ ?>

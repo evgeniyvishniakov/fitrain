@@ -1825,11 +1825,6 @@ function exerciseApp() {
                                                 class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
                                             {{ __('common.delete') }}
                                         </button>
-                                        <button x-show="currentExercise && currentExercise.is_system"
-                                                @click="showAddVideo(currentExercise.id)"
-                                                class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                                            {{ __('common.add_video') }}
-                                        </button>
                                     @endif
                                     
                                     <!-- Кнопка избранного -->
@@ -2407,15 +2402,10 @@ function exerciseApp() {
             <div class="flex items-center gap-2">
                 <button x-show="currentExercise && currentExercise.is_system"
                         @click="showAddVideo(currentExercise.id)" 
-                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors md:hidden">
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
                     {{ __('common.add_video') }}
                 </button>
-                <button @click="showList()" 
-                        class="hidden md:inline-flex px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    {{ __('common.back_to_list') }}
-                </button>
             </div>
-            
             <div class="flex items-center space-x-2">
                 <button @click.stop="toggleFavorite(currentExercise?.id)" 
                         class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
@@ -2431,11 +2421,6 @@ function exerciseApp() {
                     </svg>
                 </button>
                 
-                <button x-show="currentExercise && currentExercise.is_system"
-                        @click="showAddVideo(currentExercise.id)" 
-                        class="hidden md:inline-flex px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                    {{ __('common.add_video') }}
-                </button>
             </div>
         </div>
 
@@ -2704,7 +2689,7 @@ function exerciseApp() {
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-6 border-t border-gray-200">
                 <button @click="showList()" 
                         data-swipe-ignore="true"
-                        class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                        class="self-start inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
@@ -2720,11 +2705,6 @@ function exerciseApp() {
                             @click="deleteExercise(currentExercise.id)" 
                             class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
                         Удалить
-                    </button>
-                    <button x-show="currentExercise && currentExercise.is_system" 
-                            @click="showAddVideo(currentExercise.id)" 
-                            class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                        {{ __('common.add_video') }}
                     </button>
                 </div>
             </div>

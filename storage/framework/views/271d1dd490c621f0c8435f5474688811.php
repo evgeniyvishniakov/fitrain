@@ -1923,9 +1923,10 @@ function workoutApp() {
                                     </div>
                                     <button onclick="removeExercise(${exercise.id})" 
                                             onmousedown="event.stopPropagation()" 
-                                            class="text-red-500 hover:text-red-700 text-sm">
-                                        <?php echo e(__('common.delete')); ?>
-
+                                            class="text-red-500 hover:text-red-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -4030,6 +4031,7 @@ let exerciseCategories = [];
 let exerciseEquipments = [];
 let templates = [];
 let selectedTemplate = null;
+let exerciseSelectionOrder = 0;
 
 // Функции для работы с модальными окнами
 function openExerciseModal() {
@@ -4043,6 +4045,8 @@ function openExerciseModal() {
     if (categorySelect) categorySelect.value = '';
     if (equipmentSelect) equipmentSelect.value = '';
     if (typeSelect) typeSelect.value = '';
+
+    exerciseSelectionOrder = 0;
 
     loadExercises();
     // Применяем фильтрацию после загрузки упражнений
@@ -4307,6 +4311,12 @@ function toggleExercise(element, id) {
     
     // Сохраняем состояние выделения
     element.dataset.selected = !isSelected;
+    if (element.dataset.selected === 'true') {
+        exerciseSelectionOrder += 1;
+        element.dataset.selectionOrder = exerciseSelectionOrder;
+    } else {
+        element.dataset.selectionOrder = '';
+    }
 }
 
 // Переключение шаблона
@@ -4443,8 +4453,24 @@ function filterTemplates() {
 // Добавление выбранных упражнений
 function addSelectedExercises() {
     const selectedElements = document.querySelectorAll('#exerciseModal [data-selected="true"]');
+
+    const orderedSelectedElements = Array.from(selectedElements).sort((a, b) => {
+        const orderA = parseInt(a.dataset.selectionOrder || '', 10);
+        const orderB = parseInt(b.dataset.selectionOrder || '', 10);
+
+        const aHasOrder = !Number.isNaN(orderA);
+        const bHasOrder = !Number.isNaN(orderB);
+
+        if (aHasOrder && bHasOrder && orderA !== orderB) {
+            return orderA - orderB;
+        }
+
+        if (aHasOrder && !bHasOrder) return -1;
+        if (!aHasOrder && bHasOrder) return 1;
+        return 0;
+    });
     
-    const newExercises = Array.from(selectedElements).map(el => {
+    const newExercises = orderedSelectedElements.map(el => {
         // Находим полные данные упражнения из загруженного массива
         const exerciseId = parseInt(el.dataset.exerciseId);
         const fullExercise = exercises.find(ex => ex.id === exerciseId);

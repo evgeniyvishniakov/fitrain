@@ -3401,12 +3401,12 @@ function workoutApp() {
     </div>
     <!-- ПРОСМОТР ТРЕНИРОВКИ -->
     <div id="trainer-workout-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div class="hidden md:flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.view_workout') }}</h3>
+        <div class="hidden md:flex items-center gap-4 mb-6">
             <button @click="showList()" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 {{ __('common.back_to_list') }}
             </button>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.view_workout') }}</h3>
         </div>
         
         <div x-show="currentWorkout" class="space-y-6">
@@ -3528,17 +3528,15 @@ function workoutApp() {
                                           x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
                                     <span class="text-xs text-gray-500" x-text="(exercise.category || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (exercise.equipment || '')"></span>
                                 </div>
-                                <!-- Ссылка на видео упражнения -->
-                                <div x-show="exercise.video_url" class="exercise-video-link">
-                                    <!-- Кнопка для модального окна -->
-                                    <button @click="openSimpleModal(exercise.video_url, exercise.name)"
-                                            class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                        </svg>
-                                        Видео
-                                    </button>
-                                </div>
+                        <div x-show="exercise.video_url" class="exercise-video-link">
+                            <button @click="openSimpleModal(exercise.video_url, exercise.name)"
+                                    class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                Видео
+                            </button>
+                        </div>
                             </div>
                             
                             <!-- Параметры упражнения -->
