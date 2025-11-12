@@ -925,9 +925,31 @@ class AthleteController extends BaseController
                 ]);
             }
             
-            // Берем последнюю тренировку для автозаполнения
-            $lastWorkoutId = $allWorkouts->first()->id;
-            $lastWorkout = \App\Models\Trainer\Workout::find($lastWorkoutId);
+            $selectedWorkoutRow = null;
+            $selectedProgress = null;
+
+            foreach ($allWorkouts as $workoutRow) {
+                $progressCandidate = ExerciseProgress::where('workout_id', $workoutRow->id)
+                    ->where('exercise_id', $exerciseId)
+                    ->where('athlete_id', $athleteId)
+                    ->first();
+
+                if ($progressCandidate && !empty($progressCandidate->status)) {
+                    $selectedWorkoutRow = $workoutRow;
+                    $selectedProgress = $progressCandidate;
+                    break;
+                }
+            }
+
+            if (!$selectedWorkoutRow) {
+                return response()->json([
+                    'success' => true,
+                    'has_history' => false
+                ]);
+            }
+
+            // Берем последнюю тренировку с фактическим статусом для автозаполнения
+            $lastWorkout = \App\Models\Trainer\Workout::find($selectedWorkoutRow->id);
             
             // Загружаем данные упражнения из промежуточной таблицы
             $exerciseData = \DB::table('workout_exercise')
@@ -960,10 +982,7 @@ class AthleteController extends BaseController
             ];
             
             // Получаем фактические данные (из progress если есть)
-            $progress = \App\Models\Athlete\ExerciseProgress::where('workout_id', $lastWorkout->id)
-                ->where('exercise_id', $exerciseId)
-                ->where('athlete_id', $athleteId)
-                ->first();
+            $progress = $selectedProgress;
             
             $fact = null;
             $setsDetails = null;

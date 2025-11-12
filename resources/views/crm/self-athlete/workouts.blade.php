@@ -1846,8 +1846,10 @@ function workoutApp() {
                                     </div>
                                     <button onclick="removeExercise(${exercise.id})" 
                                             onmousedown="event.stopPropagation()" 
-                                            class="text-red-500 hover:text-red-700 text-sm">
-                                        {{ __('common.delete') }}
+                                            class="text-red-500 hover:text-red-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -1891,6 +1893,20 @@ function workoutApp() {
         
         // Генерация HTML для полей упражнения (точная копия оригинальной функции)
         generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
+            let normalizedFields = [];
+            if (Array.isArray(fieldsConfig) && fieldsConfig.length > 0) {
+                fieldsConfig.forEach(field => {
+                    if (typeof field === 'string') {
+                        const trimmed = field.trim();
+                        if (trimmed !== '' && !normalizedFields.includes(trimmed)) {
+                            normalizedFields.push(trimmed);
+                        }
+                    }
+                });
+            }
+            if (normalizedFields.length === 0) {
+                normalizedFields = ['sets', 'reps', 'weight', 'rest'];
+            }
             const fieldConfigs = {
                 'sets': {
                     label: '{{ __('common.sets') }}',
@@ -1989,7 +2005,7 @@ function workoutApp() {
             let html = '';
             
             // Генерируем поля из конфигурации
-            fieldsConfig.forEach(field => {
+            normalizedFields.forEach(field => {
                 if (fieldConfigs[field]) {
                     const config = fieldConfigs[field];
                     const colorClasses = getColorClasses(config.color);
@@ -3784,6 +3800,20 @@ function workoutApp() {
                         cursor: pointer !important;
                     }
                 }
+                
+                @media (min-width: 1024px) {
+                    #exerciseModal .exercise-filters-row {
+                        flex-wrap: nowrap !important;
+                    }
+                    #exerciseModal .exercise-filters-row input[type="text"] {
+                        flex: 1 1 280px !important;
+                    }
+                    #exerciseModal .exercise-filters-row select {
+                        flex: 0 0 auto !important;
+                        min-width: 160px !important;
+                        width: auto !important;
+                    }
+                }
             </style>
             <div class="exercise-filters-row" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
                 <!-- Поиск -->
@@ -4524,6 +4554,20 @@ function collectExerciseDataFromDOM() {
 
 // Генерация HTML для полей на основе конфигурации
 function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
+    let normalizedFields = [];
+    if (Array.isArray(fieldsConfig) && fieldsConfig.length > 0) {
+        fieldsConfig.forEach(field => {
+            if (typeof field === 'string') {
+                const trimmed = field.trim();
+                if (trimmed !== '' && !normalizedFields.includes(trimmed)) {
+                    normalizedFields.push(trimmed);
+                }
+            }
+        });
+    }
+    if (normalizedFields.length === 0) {
+        normalizedFields = ['sets', 'reps', 'weight', 'rest'];
+    }
     // Функция для безопасного получения значения поля
     function getFieldValue(fieldName, defaultValue = '') {
         if (!exerciseData || exerciseData[fieldName] === undefined || exerciseData[fieldName] === null || exerciseData[fieldName] === 'null' || exerciseData[fieldName] === '') {
@@ -4607,7 +4651,7 @@ function generateFieldsHtml(exerciseId, fieldsConfig, exerciseData = null) {
     let html = '';
     
     // Генерируем поля из конфигурации
-    fieldsConfig.forEach(field => {
+    normalizedFields.forEach(field => {
         if (fieldConfigs[field]) {
             const config = fieldConfigs[field];
             const colorClasses = getColorClasses(config.color);
