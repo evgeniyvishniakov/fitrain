@@ -423,6 +423,11 @@ function renderMediaElement(path, altText = '', options = {}) {
                 isLoading: true, // Loading flag
                 lastChangedExercise: null, // Last changed exercise
                 exercisesExpanded: {}, // Store exercises expansion state in cards
+        lastScrollPositions: {
+            list: 0,
+            view: 0,
+        },
+        lastView: 'list',
                 // Инициализация
                 init() {
                     this.setupTouchHandlers();
@@ -432,7 +437,8 @@ function renderMediaElement(path, altText = '', options = {}) {
                 },
 
                 // Navigation
-                showList() {
+        showList() {
+            const previousView = this.currentView;
                     this.clearSwipeAnimationTimeout();
                     this.resetSwipeTransform(true);
                     this.swipeTargetElement = null;
@@ -451,11 +457,22 @@ function renderMediaElement(path, altText = '', options = {}) {
                         if (listStats) listStats.style.display = '';
                         const listSection = document.getElementById('athlete-workout-list-section');
                         if (listSection) listSection.style.display = '';
+                if (previousView === 'view' && this.lastScrollPositions.list !== null) {
+                    window.scrollTo({
+                        top: this.lastScrollPositions.list,
+                        behavior: 'auto'
                     });
+                }
+                    });
+            this.lastView = 'list';
                 },
 
                 showView(workoutId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            }
                     this.currentView = 'view';
+            this.lastView = 'view';
                     this.currentWorkout = this.workouts.find(w => w.id === workoutId);
                     
                 // Load saved progress when opening workout
@@ -467,6 +484,10 @@ function renderMediaElement(path, altText = '', options = {}) {
                     if (listStats) listStats.style.display = 'none';
                     const listSection = document.getElementById('athlete-workout-list-section');
                     if (listSection) listSection.style.display = 'none';
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
                 });
             },
 

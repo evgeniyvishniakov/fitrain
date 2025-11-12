@@ -319,6 +319,12 @@ function workoutApp() {
         workoutProgress: {}, // Прогресс для каждой тренировки (как у спортсмена)
         lastChangedExercise: null, // Последнее измененное упражнение
         exercisesExpanded: {}, // Хранение состояния развернутости упражнений в карточках
+        lastScrollPositions: {
+            list: 0,
+            view: 0,
+            form: 0,
+        },
+        lastView: 'list',
         
         isVideoFile(path) {
             if (!path || path === 'null' || path === null) {
@@ -729,6 +735,7 @@ function workoutApp() {
         
         // Навигация
         showList() {
+            const previousView = this.currentView;
             this.clearSwipeAnimationTimeout();
             this.resetSwipeTransform(true);
             this.swipeTargetElement = null;
@@ -740,7 +747,14 @@ function workoutApp() {
             this.currentView = 'list';
             this.$nextTick(() => {
                 this.currentWorkout = null;
+                if (previousView === 'view' && this.lastScrollPositions.list !== null) {
+                    window.scrollTo({
+                        top: this.lastScrollPositions.list,
+                        behavior: 'auto'
+                    });
+                }
             });
+            this.lastView = 'list';
         },
         
         showCreate() {
@@ -868,7 +882,11 @@ function workoutApp() {
         },
         
         showView(workoutId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'view';
+            this.lastView = 'view';
             this.currentWorkout = this.workouts.find(w => w.id === workoutId);
             // Загружаем сохраненный прогресс при открытии тренировки
             this.loadExerciseProgress(workoutId);
@@ -903,6 +921,10 @@ function workoutApp() {
                 if (listSection) listSection.style.display = 'none';
                 const listStats = document.getElementById('self-workout-list-stats');
                 if (listStats) listStats.style.display = 'none';
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
             });
         },
 

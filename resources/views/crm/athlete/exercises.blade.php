@@ -129,6 +129,11 @@ function exerciseApp() {
         menuObserver: null,
         menuCloseEdgeGuard: 60,
         popStateLocked: false,
+        lastScrollPositions: {
+            list: 0,
+            view: 0,
+        },
+        lastView: 'list',
         
         // Инициализация
         async init() {
@@ -550,20 +555,40 @@ function exerciseApp() {
         
         // Навигация
         showList() {
+            const previousView = this.currentView;
             this.clearSwipeAnimationTimeout();
             this.resetSwipeTransform(true);
             this.swipeTargetElement = null;
             this.closeMobileMenuIfOpen();
             this.currentView = 'list';
             this.currentExercise = null;
+            this.$nextTick(() => {
+                if (previousView === 'view' && this.lastScrollPositions.list !== null) {
+                    window.scrollTo({
+                        top: this.lastScrollPositions.list,
+                        behavior: 'auto'
+                    });
+                }
+            });
+            this.lastView = 'list';
         },
         
         showView(exerciseId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            }
             this.clearSwipeAnimationTimeout();
             this.resetSwipeTransform(true);
             this.swipeTargetElement = null;
             this.currentView = 'view';
+            this.lastView = 'view';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         // Фильтрация

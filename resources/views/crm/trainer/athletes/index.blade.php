@@ -197,6 +197,11 @@ function athletesApp() {
         boundTouchStart: null,
         boundTouchMove: null,
         boundTouchEnd: null,
+        lastScrollPositions: {
+            list: 0,
+            view: 0,
+        },
+        lastView: 'list',
         menuGesture: null,
         menuGestureHandled: false,
         menuSwipeThreshold: 60,
@@ -665,8 +670,18 @@ function athletesApp() {
         
         // Навигация
         showList() {
+            const previousView = this.currentView;
             this.currentView = 'list';
             this.currentAthlete = null;
+            this.$nextTick(() => {
+                if (previousView === 'view' && this.lastScrollPositions && this.lastScrollPositions.list !== null) {
+                    window.scrollTo({
+                        top: this.lastScrollPositions.list,
+                        behavior: 'auto'
+                    });
+                }
+            });
+            this.lastView = 'list';
         },
         
         showCreate() {
@@ -728,7 +743,11 @@ function athletesApp() {
         },
         
         async showView(athleteId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'view';
+            this.lastView = 'view';
             this.currentAthlete = this.athletes.find(a => a.id === athleteId);
             this.activeTab = 'overview'; // сбрасываем на первую вкладку
             
@@ -747,6 +766,13 @@ function athletesApp() {
             } finally {
                 this.loadingAthleteData = false;
             }
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         // Обновление финансовых данных из истории платежей

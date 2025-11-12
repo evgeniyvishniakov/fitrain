@@ -127,6 +127,12 @@ function exerciseApp() {
         userVideoDescription: '',
         currentUserVideo: null,
         userVideos: {}, // Кэш пользовательских видео для всех упражнений
+        lastScrollPositions: {
+            list: 0,
+            view: 0,
+            addVideo: 0,
+        },
+        lastView: 'list',
         
         // Поля формы
         formName: '',
@@ -488,12 +494,22 @@ function exerciseApp() {
 
         // Навигация
         showList() {
+            const previousView = this.currentView;
             this.clearSwipeAnimationTimeout();
             this.resetSwipeTransform(true);
             this.swipeTargetElement = null;
             this.closeMobileMenuIfOpen();
             this.currentView = 'list';
             this.currentExercise = null;
+            this.$nextTick(() => {
+                if ((previousView === 'view' || previousView === 'add-video') && this.lastScrollPositions.list !== null) {
+                    window.scrollTo({
+                        top: this.lastScrollPositions.list,
+                        behavior: 'auto'
+                    });
+                }
+            });
+            this.lastView = 'list';
         },
         
         showCreate() {
@@ -551,10 +567,14 @@ function exerciseApp() {
         },
         
         showView(exerciseId) {
+            if (this.currentView === 'list') {
+                this.lastScrollPositions.list = window.scrollY || window.pageYOffset || 0;
+            }
             this.clearSwipeAnimationTimeout();
             this.resetSwipeTransform(true);
             this.swipeTargetElement = null;
             this.currentView = 'view';
+            this.lastView = 'view';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
             
             // Загружаем пользовательское видео, если упражнение системное
@@ -563,10 +583,21 @@ function exerciseApp() {
             } else {
                 this.currentUserVideo = null;
             }
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         showAddVideo(exerciseId) {
+            if (this.currentView === 'view') {
+                this.lastScrollPositions.view = window.scrollY || window.pageYOffset || 0;
+            }
             this.currentView = 'add-video';
+            this.lastView = 'add-video';
             this.currentExercise = this.exercises.find(e => e.id === exerciseId);
             this.userVideoUrl = '';
             this.userVideoTitle = '';
@@ -575,6 +606,13 @@ function exerciseApp() {
             
             // Загружаем существующее видео, если есть
             this.loadUserVideo(exerciseId);
+            
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         },
         
         // Фильтрация
