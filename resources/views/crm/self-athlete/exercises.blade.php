@@ -64,12 +64,24 @@ function exerciseApp() {
 
         getPrimaryMedia(exercise) {
             if (!exercise) return null;
-            return this.cleanMediaPath(exercise.image_url);
+            const male = this.cleanMediaPath(exercise.image_url);
+            const female = this.cleanMediaPath(exercise.image_url_female);
+            const isGlutes = exercise.category === 'Ягодицы';
+            if (isGlutes) {
+                return female || male;
+            }
+            return male || female;
         },
 
         getSecondaryMedia(exercise) {
             if (!exercise) return null;
-            return this.cleanMediaPath(exercise.image_url_2);
+            const male2 = this.cleanMediaPath(exercise.image_url_2);
+            const female2 = this.cleanMediaPath(exercise.image_url_female_2);
+            const isGlutes = exercise.category === 'Ягодицы';
+            if (isGlutes) {
+                return female2 || male2;
+            }
+            return male2 || female2;
         },
 
         isVideoFile(path) {
@@ -1880,6 +1892,7 @@ function exerciseApp() {
                             </button>
                         @endif
                         
+                        
                         <!-- Кнопка избранного -->
                         <button @click.stop="toggleFavorite(exercise.id)" 
                                 class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
@@ -2353,10 +2366,6 @@ function exerciseApp() {
         <div class="mb-6">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-2xl font-bold text-gray-900">{{ __('common.add_video_to_exercise') }}</h2>
-                <button @click="showList()" 
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    {{ __('common.back_to_list') }}
-                </button>
             </div>
             <p class="text-gray-600" x-text="'Добавьте своё видео для упражнения: ' + (currentExercise?.name || '')"></p>
         </div>
@@ -2428,12 +2437,18 @@ function exerciseApp() {
     <div id="self-exercise-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <!-- Кнопки сверху -->
         <div class="flex items-center justify-between mb-6">
-            <button @click="showList()" 
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                {{ __('common.back_to_list') }}
-            </button>
-            
-            <!-- Кнопка избранного -->
+            <div class="flex items-center gap-2">
+                <button x-show="currentExercise && currentExercise.is_system"
+                        @click="showAddVideo(currentExercise.id)" 
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors md:hidden">
+                    {{ __('common.add_video') }}
+                </button>
+                <button @click="showList()" 
+                        class="hidden md:inline-flex px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                    {{ __('common.back_to_list') }}
+                </button>
+            </div>
+             <!-- Кнопка избранного -->
             <button @click.stop="toggleFavorite(currentExercise?.id)" 
                     class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
                     :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
@@ -2661,22 +2676,32 @@ function exerciseApp() {
             </div>
             
             <!-- Кнопки действий внизу -->
-            <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
-                <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === {{ auth()->id() }}" 
-                        @click="showEdit(currentExercise.id)" 
-                        class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                    Редактировать
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-6 border-t border-gray-200">
+                <button @click="showList()" 
+                        data-swipe-ignore="true"
+                        class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    <span class="back-button-label">{{ __('common.back_to_list') }}</span>
                 </button>
-                <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === {{ auth()->id() }}" 
-                        @click="deleteExercise(currentExercise.id)" 
-                        class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                    Удалить
-                </button>
-                <button x-show="currentExercise && currentExercise.is_system" 
-                        @click="showAddVideo(currentExercise.id)" 
-                        class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
-                    {{ __('common.add_video') }}
-                </button>
+                <div class="flex items-center justify-end gap-3 flex-wrap">
+                    <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === {{ auth()->id() }}" 
+                            @click="showEdit(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                        Редактировать
+                    </button>
+                    <button x-show="currentExercise && !currentExercise.is_system && currentExercise.trainer_id === {{ auth()->id() }}" 
+                            @click="deleteExercise(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                        Удалить
+                    </button>
+                    <button x-show="currentExercise && currentExercise.is_system" 
+                            @click="showAddVideo(currentExercise.id)" 
+                            class="px-4 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                        {{ __('common.add_video') }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
