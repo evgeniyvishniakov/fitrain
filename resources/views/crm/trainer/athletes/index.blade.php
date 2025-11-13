@@ -2388,9 +2388,9 @@ function athletesApp() {
                         this.currentView = 'list';
                         this.currentPage = 1; // Сбрасываем на первую страницу
                     } else {
-                        // Возвращаемся к карточке спортсмена
-                        this.currentView = 'view';
-                        this.activeTab = 'overview';
+                    // Возвращаемся к карточке спортсмена
+                    this.currentView = 'view';
+                    this.activeTab = 'overview';
                     }
                 } else {
                     // Обработка ошибки CSRF token mismatch (419)

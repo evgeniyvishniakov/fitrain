@@ -2966,20 +2966,21 @@ function workoutApp() {
                     }
                 }
                 
-                /* Стили для названия и спортсмена в одном ряду */
-                .workout-title-athlete-row {
+                /* Стили для названия, спортсмена и статуса в одном ряду */
+                .workout-title-athlete-status-row {
                     display: flex !important;
                     flex-direction: column !important;
                     gap: 1.5rem !important;
                 }
                 
                 .workout-title-field,
-                .workout-athlete-field {
+                .workout-athlete-field,
+                .workout-status-field {
                     flex: 1 !important;
                 }
                 
                 @media (min-width: 1024px) {
-                    .workout-title-athlete-row {
+                    .workout-title-athlete-status-row {
                         flex-direction: row !important;
                         gap: 1rem !important;
                     }
@@ -3298,8 +3299,8 @@ function workoutApp() {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Основная информация -->
                 <div class="space-y-6">
-                    <!-- Название и спортсмен в одном ряду на десктопе -->
-                    <div class="workout-title-athlete-row">
+                    <!-- Название, спортсмен и статус в одном ряду на десктопе -->
+                    <div class="workout-title-athlete-status-row">
                         <div class="workout-title-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 <?php echo e(__('common.workout_title')); ?> *
@@ -3322,6 +3323,19 @@ function workoutApp() {
                                 <?php $__currentLoopData = $athletes ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $athlete): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <option value="<?php echo e($athlete->id); ?>"><?php echo e($athlete->name); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
+
+                        <div class="workout-status-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <?php echo e(__('common.status')); ?>
+
+                            </label>
+                            <select x-model="formStatus" 
+                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                                <option value="planned"><?php echo e(__('common.planned')); ?></option>
+                                <option value="completed"><?php echo e(__('common.completed')); ?></option>
+                                <option value="cancelled"><?php echo e(__('common.cancelled')); ?></option>
                             </select>
                         </div>
                     </div>
@@ -3381,19 +3395,6 @@ function workoutApp() {
                                   rows="6"
                                   class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                                   placeholder="<?php echo e(__('common.workout_description_placeholder')); ?>"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <?php echo e(__('common.status')); ?>
-
-                        </label>
-                        <select x-model="formStatus" 
-                                class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="planned"><?php echo e(__('common.planned')); ?></option>
-                            <option value="completed"><?php echo e(__('common.completed')); ?></option>
-                            <option value="cancelled"><?php echo e(__('common.cancelled')); ?></option>
-                        </select>
                     </div>
                 </div>
             </div>

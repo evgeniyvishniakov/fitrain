@@ -2965,20 +2965,21 @@ function workoutApp() {
                     }
                 }
                 
-                /* Стили для названия и спортсмена в одном ряду */
-                .workout-title-athlete-row {
+                /* Стили для названия, спортсмена и статуса в одном ряду */
+                .workout-title-athlete-status-row {
                     display: flex !important;
                     flex-direction: column !important;
                     gap: 1.5rem !important;
                 }
                 
                 .workout-title-field,
-                .workout-athlete-field {
+                .workout-athlete-field,
+                .workout-status-field {
                     flex: 1 !important;
                 }
                 
                 @media (min-width: 1024px) {
-                    .workout-title-athlete-row {
+                    .workout-title-athlete-status-row {
                         flex-direction: row !important;
                         gap: 1rem !important;
                     }
@@ -3291,8 +3292,8 @@ function workoutApp() {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Основная информация -->
                 <div class="space-y-6">
-                    <!-- Название и спортсмен в одном ряду на десктопе -->
-                    <div class="workout-title-athlete-row">
+                    <!-- Название, спортсмен и статус в одном ряду на десктопе -->
+                    <div class="workout-title-athlete-status-row">
                         <div class="workout-title-field">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 {{ __('common.workout_title') }} *
@@ -3315,6 +3316,18 @@ function workoutApp() {
                                 @foreach($athletes ?? [] as $athlete)
                                     <option value="{{ $athlete->id }}">{{ $athlete->name }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+
+                        <div class="workout-status-field">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                {{ __('common.status') }}
+                            </label>
+                            <select x-model="formStatus" 
+                                    class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                                <option value="planned">{{ __('common.planned') }}</option>
+                                <option value="completed">{{ __('common.completed') }}</option>
+                                <option value="cancelled">{{ __('common.cancelled') }}</option>
                             </select>
                         </div>
                     </div>
@@ -3372,18 +3385,6 @@ function workoutApp() {
                                   rows="6"
                                   class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
                                   placeholder="{{ __('common.workout_description_placeholder') }}"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            {{ __('common.status') }}
-                        </label>
-                        <select x-model="formStatus" 
-                                class="block w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                            <option value="planned">{{ __('common.planned') }}</option>
-                            <option value="completed">{{ __('common.completed') }}</option>
-                            <option value="cancelled">{{ __('common.cancelled') }}</option>
-                        </select>
                     </div>
                 </div>
             </div>
