@@ -65,7 +65,7 @@ class SiteSettingsController extends BaseController
         }
 
         if ($request->hasFile('favicon')) {
-            $this->storeImageSetting($request->file('favicon'), 'site.favicon', 'Favicon сайта');
+            $this->storeFaviconSetting($request->file('favicon'), 'site.favicon', 'Favicon сайта');
         }
 
         return redirect()
@@ -81,6 +81,23 @@ class SiteSettingsController extends BaseController
         }
 
         $path = $file->store('site', 'public');
+        SystemSetting::set($key, $path, 'string', $description, true);
+    }
+
+    private function storeFaviconSetting($file, string $key, string $description): void
+    {
+        $previous = SystemSetting::get($key);
+        if ($previous && Storage::disk('public')->exists($previous)) {
+            Storage::disk('public')->delete($previous);
+        }
+
+        // Всегда сохраняем фавикон как favicon.ico
+        $path = 'site/favicon.ico';
+        
+        // Если загружен не .ico файл, копируем содержимое
+        $contents = file_get_contents($file->getRealPath());
+        Storage::disk('public')->put($path, $contents);
+        
         SystemSetting::set($key, $path, 'string', $description, true);
     }
 }

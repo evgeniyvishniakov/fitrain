@@ -29,24 +29,29 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $this->routes(function () {
+            // Получаем значения доменов из конфига
+            $mainDomain = config('app.main_domain', 'fitrain.local');
+            $crmDomain = config('app.crm_domain', 'crm.fitrain.local');
+            $panelDomain = config('app.panel_domain', 'panel.fitrain.local');
+
             // API маршруты
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-            // Маршруты для основного домена (fitrain.local) - лендинг
+            // Маршруты для основного домена - лендинг
             Route::middleware('web')
-                ->domain('fitrain.local')
+                ->domain($mainDomain)
                 ->group(base_path('routes/landing.php'));
 
-            // Маршруты для CRM поддомена (crm.fitrain.local)
+            // Маршруты для CRM поддомена
             Route::middleware('web')
-                ->domain('crm.fitrain.local')
+                ->domain($crmDomain)
                 ->group(base_path('routes/crm.php'));
 
-            // Маршруты для админ панели (panel.fitrain.local)
+            // Маршруты для админ панели
             Route::middleware('web')
-                ->domain('panel.fitrain.local')
+                ->domain($panelDomain)
                 ->group(base_path('routes/admin.php'));
 
             // Fallback маршруты для localhost (локальная разработка)

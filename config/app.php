@@ -61,6 +61,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Domains
+    |--------------------------------------------------------------------------
+    |
+    | These values define the domains for different parts of the application.
+    | Main domain for landing page, CRM subdomain, and Admin panel subdomain.
+    |
+    */
+
+    'main_domain' => env('APP_MAIN_DOMAIN', 'fitrain.local'),
+    'crm_domain' => env('APP_CRM_DOMAIN', 'crm.fitrain.local'),
+    'panel_domain' => env('APP_PANEL_DOMAIN', 'panel.fitrain.local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
