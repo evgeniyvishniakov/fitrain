@@ -62,12 +62,15 @@ function dashboardCalendar() {
                 const dayString = `${year}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                 
                 const dayWorkouts = (this.monthWorkouts || []).filter(workout => {
-                    const workoutDate = new Date(workout.date);
-                    const workoutYear = workoutDate.getFullYear();
-                    const workoutMonth = workoutDate.getMonth() + 1;
-                    const workoutDay = workoutDate.getDate();
-                    const workoutDateString = `${workoutYear}-${String(workoutMonth).padStart(2, '0')}-${String(workoutDay).padStart(2, '0')}`;
-                    return workoutDateString === dayString;
+                    // Извлекаем только дату (YYYY-MM-DD) из строки, игнорируя время и часовой пояс
+                    let workoutDateStr = workout.date;
+                    if (typeof workoutDateStr === 'string') {
+                        const match = workoutDateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                        if (match) {
+                            workoutDateStr = `${match[1]}-${match[2]}-${match[3]}`;
+                        }
+                    }
+                    return workoutDateStr === dayString;
                 });
                 
                 // Динамическое определение "сегодня"

@@ -45,7 +45,16 @@ class SelfAthleteController extends BaseController
             ->where('date', '<=', now()->endOfMonth()->addMonth()->toDateString())
             ->orderBy('date', 'asc')
             ->orderBy('time', 'asc')
-            ->get() ?? collect();
+            ->get()
+            ->map(function($workout) {
+                return [
+                    'id' => $workout->id,
+                    'title' => $workout->title,
+                    'date' => $workout->date ? $workout->date->format('Y-m-d') : null,
+                    'time' => $workout->time,
+                    'status' => $workout->status,
+                ];
+            }) ?? collect();
         
         $recentWorkouts = $athlete->workouts()->latest()->take(5)->get();
         
