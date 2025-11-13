@@ -2383,9 +2383,15 @@ function athletesApp() {
                         }
                     }));
                     
-                    // Возвращаемся к карточке спортсмена
-                    this.currentView = 'view';
-                    this.activeTab = 'overview';
+                    // Если спортсмен стал неактивным, переходим в список, иначе в профиль
+                    if (!this.currentAthlete.is_active) {
+                        this.currentView = 'list';
+                        this.currentPage = 1; // Сбрасываем на первую страницу
+                    } else {
+                        // Возвращаемся к карточке спортсмена
+                        this.currentView = 'view';
+                        this.activeTab = 'overview';
+                    }
                 } else {
                     // Обработка ошибки CSRF token mismatch (419)
                     if (response.status === 419) {
