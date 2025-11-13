@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    @php
+        $siteFavicon = \App\Models\SystemSetting::get('site.favicon');
+    @endphp
+    @if(!empty($siteFavicon))
+        @php
+            $faviconExtension = strtolower(pathinfo($siteFavicon, PATHINFO_EXTENSION));
+            $faviconMime = in_array($faviconExtension, ['ico', 'x-icon']) ? 'image/x-icon' : 'image/png';
+            $faviconExists = false;
+            $faviconVersion = time();
+            
+            try {
+                $faviconExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon);
+                if ($faviconExists) {
+                    $faviconVersion = \Illuminate\Support\Facades\Storage::disk('public')->lastModified($siteFavicon);
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+            $faviconFullUrl = url('storage/' . $siteFavicon) . '?v=' . $faviconVersion . '&nocache=' . time();
+        @endphp
+        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="32x32">
+        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="16x16">
+        <link rel="shortcut icon" href="{{ $faviconFullUrl }}">
+        <link rel="apple-touch-icon" href="{{ $faviconFullUrl }}">
+    @endif
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Админ панель') - FitTrain</title>
-    @php($siteFavicon = \App\Models\SystemSetting::get('site.favicon'))
-    @if($siteFavicon)
-        <link rel="icon" type="image/png" href="{{ asset('storage/' . $siteFavicon) }}">
-    @endif
     
     <style>
         .status-active {

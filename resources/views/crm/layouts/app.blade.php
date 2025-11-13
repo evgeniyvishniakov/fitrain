@@ -1,20 +1,41 @@
 ﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
+    @php
+        $siteFavicon = \App\Models\SystemSetting::get('site.favicon');
+        $siteName = \App\Models\SystemSetting::get('site.name', 'Fitrain');
+        $siteLogoDefault = \App\Models\SystemSetting::get('site.logo', '');
+        $siteLogoLight = \App\Models\SystemSetting::get('site.logo_light');
+        $siteLogoDark = \App\Models\SystemSetting::get('site.logo_dark');
+        $crmLogoLight = $siteLogoLight ?: $siteLogoDefault;
+        $crmLogoDark = $siteLogoDark ?: ($siteLogoLight ?: $siteLogoDefault);
+    @endphp
+    @if(!empty($siteFavicon))
+        @php
+            $faviconExtension = strtolower(pathinfo($siteFavicon, PATHINFO_EXTENSION));
+            $faviconMime = in_array($faviconExtension, ['ico', 'x-icon']) ? 'image/x-icon' : 'image/png';
+            $faviconExists = false;
+            $faviconVersion = time();
+            
+            try {
+                $faviconExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon);
+                if ($faviconExists) {
+                    $faviconVersion = \Illuminate\Support\Facades\Storage::disk('public')->lastModified($siteFavicon);
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+            $faviconFullUrl = url('storage/' . $siteFavicon) . '?v=' . $faviconVersion . '&nocache=' . time();
+        @endphp
+        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="32x32">
+        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="16x16">
+        <link rel="shortcut icon" href="{{ $faviconFullUrl }}">
+        <link rel="apple-touch-icon" href="{{ $faviconFullUrl }}">
+    @endif
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", "Fitrain CRM")</title>
-    @php($siteFavicon = \App\Models\SystemSetting::get('site.favicon'))
-    @php($siteName = \App\Models\SystemSetting::get('site.name', 'Fitrain'))
-    @php($siteLogoDefault = \App\Models\SystemSetting::get('site.logo', ''))
-    @php($siteLogoLight = \App\Models\SystemSetting::get('site.logo_light'))
-    @php($siteLogoDark = \App\Models\SystemSetting::get('site.logo_dark'))
-    @php($crmLogoLight = $siteLogoLight ?: $siteLogoDefault)
-    @php($crmLogoDark = $siteLogoDark ?: ($siteLogoLight ?: $siteLogoDefault))
-    @if($siteFavicon)
-        <link rel="icon" type="image/png" href="{{ asset('storage/' . $siteFavicon) }}">
-    @endif
     
     @vite(['resources/css/app.css'])
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,6 +61,13 @@
         .theme-dark .crm-logo-light { display: none; }
         .theme-dark .crm-logo-dark { display: block; }
         .theme-light .crm-logo-dark { display: none; }
+        
+        /* Логотипы в мобильном меню */
+        .crm-logo-mobile-light { display: block; }
+        .crm-logo-mobile-dark { display: none; }
+        .theme-dark .crm-logo-mobile-light { display: none; }
+        .theme-dark .crm-logo-mobile-dark { display: block; }
+        .theme-light .crm-logo-mobile-dark { display: none; }
         
         /* Индикатор загрузки */
         .loading-spinner {
@@ -650,20 +678,19 @@
                     @if($crmLogoLight || $crmLogoDark)
                         <div class="flex items-center">
                             @if($crmLogoLight)
-                                <img src="{{ asset('storage/' . $crmLogoLight) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-light h-10">
+                                <img src="{{ asset('storage/' . $crmLogoLight) }}" alt="{{ $siteName }} logo" class="crm-logo-mobile crm-logo-mobile-light h-8 block">
                             @endif
                             @if($crmLogoDark)
-                                <img src="{{ asset('storage/' . $crmLogoDark) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-dark h-10">
+                                <img src="{{ asset('storage/' . $crmLogoDark) }}" alt="{{ $siteName }} logo" class="crm-logo-mobile crm-logo-mobile-dark h-8 hidden">
                             @endif
                         </div>
                     @else
-                        <div class="w-10 h-10 bg-indigo-600/10 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="w-8 h-8 bg-indigo-600/10 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
                     @endif
-                    <h2 class="mobile-menu-title">Меню</h2>
                 </div>
                 <button onclick="toggleMobileMenu()" class="mobile-menu-close">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
