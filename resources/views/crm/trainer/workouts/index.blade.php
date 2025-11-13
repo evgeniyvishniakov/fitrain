@@ -4950,9 +4950,7 @@ async function loadExerciseHistory(exerciseId) {
         // Получаем ID текущего спортсмена из Alpine.js
         const athleteSelect = document.querySelector('select[x-model="formAthleteId"]');
         const athleteId = athleteSelect?.value;
-        console.log('Выбранный спортсмен ID:', athleteId);
         if (!athleteId) {
-            console.log('Спортсмен не выбран, история не загружается');
             return;
         }
         
@@ -4960,7 +4958,6 @@ async function loadExerciseHistory(exerciseId) {
         const data = await response.json();
         
         if (data.success && data.has_history) {
-            console.log(`История упражнения ${exerciseId}:`, data);
             
             // Автозаполняем поля значениями из последней тренировки
             const fieldsToFill = data.plan;
@@ -5052,12 +5049,10 @@ async function loadExerciseHistory(exerciseId) {
     }
 }
 function toggleExerciseDetails(exerciseId) {
-    console.log('toggleExerciseDetails вызван для упражнения:', exerciseId);
     const detailsElement = document.getElementById(`details-${exerciseId}`);
     const chevronElement = document.getElementById(`chevron-${exerciseId}`);
     
     if (detailsElement.style.display === 'none') {
-        console.log('Разворачиваем упражнение, загружаем историю...');
         // Разворачиваем
         detailsElement.style.display = 'block';
         chevronElement.style.transform = 'rotate(0deg)'; // стрелочка вниз
@@ -5065,7 +5060,6 @@ function toggleExerciseDetails(exerciseId) {
         // Загружаем историю при первом открытии
         loadExerciseHistory(exerciseId);
     } else {
-        console.log('Сворачиваем упражнение');
         // Сворачиваем
         detailsElement.style.display = 'none';
         chevronElement.style.transform = 'rotate(-90deg)'; // стрелочка вправо
@@ -5196,12 +5190,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // Модальное окно истории упражнения
 async function showExerciseHistoryModal(exerciseId) {
     try {
-        console.log('showExerciseHistoryModal вызван для упражнения:', exerciseId);
-        
         // Получаем ID текущего спортсмена из Alpine.js
         const athleteSelect = document.querySelector('select[x-model="formAthleteId"]');
         const athleteId = athleteSelect?.value;
-        console.log('Выбранный спортсмен ID:', athleteId);
         
         if (!athleteId) {
             alert('Сначала выберите спортсмена');
@@ -5210,8 +5201,6 @@ async function showExerciseHistoryModal(exerciseId) {
         
         const response = await fetch(`/trainer/exercises/${exerciseId}/history?athlete_id=${athleteId}`);
         const data = await response.json();
-        
-        console.log('Данные истории упражнения:', data);
         
         if (data.success && data.has_history) {
             // Получаем разрешённые поля для упражнения
@@ -5430,7 +5419,6 @@ async function showExerciseHistoryModal(exerciseId) {
             
             // Добавляем в DOM и показываем
             document.body.appendChild(modal);
-            console.log('Модальное окно добавлено в DOM');
         } else {
             // Если истории нет, показываем сообщение
             alert('История упражнения не найдена');

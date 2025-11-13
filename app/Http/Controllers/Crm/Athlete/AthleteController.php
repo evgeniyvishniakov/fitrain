@@ -904,14 +904,11 @@ class AthleteController extends BaseController
                 $athleteId = $athlete->id;
             }
             
-            \Log::info("Запрос истории упражнения {$exerciseId} для athlete {$athleteId}");
-            
-            // Находим все тренировки с этим упражнением (только ПРОШЛЫЕ тренировки)
+            // Находим все тренировки с этим упражнением (все тренировки, включая завершенные)
             $allWorkouts = \DB::table('workout_exercise')
                 ->join('workouts', 'workout_exercise.workout_id', '=', 'workouts.id')
                 ->where('workouts.athlete_id', $athleteId)
                 ->where('workout_exercise.exercise_id', $exerciseId)
-                ->where('workouts.date', '<=', now()->toDateString()) // Учитываем тренировки до и включая сегодняшнюю дату
                 ->orderBy('workouts.date', 'desc')
                 ->orderBy('workouts.created_at', 'desc')
                 ->select('workouts.id', 'workouts.date', 'workouts.title', 'workouts.status')

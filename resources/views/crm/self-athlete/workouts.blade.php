@@ -2151,8 +2151,8 @@ function workoutApp() {
             }
             
             // Если не удалось распарсить, пробуем через Date (fallback)
-            const date = new Date(dateString);
-            if (!isNaN(date)) {
+                const date = new Date(dateString);
+                if (!isNaN(date)) {
                 // Извлекаем компоненты даты из локального времени
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -2161,7 +2161,7 @@ function workoutApp() {
             }
             
             return '';
-        },
+                },
                 
                 
                 // Открытие модального окна с деталями упражнения (как openVideoModal)
@@ -3211,7 +3211,7 @@ function workoutApp() {
                                     @endforeach
                                 </select>
                             </div>
-                        @else
+        @else
                             <!-- Self-Athlete: скрытое поле с ID текущего пользователя -->
                             <input type="hidden" x-model="formAthleteId" :value="{{ auth()->id() }}">
                         @endif
@@ -4907,7 +4907,7 @@ function displaySelectedExercises(exercises, isViewMode = false) {
 // Загрузка истории упражнения и автозаполнение
 // Вспомогательная функция для форматирования даты (доступна для всех функций)
 function helperFormatDateWithOptions(value, options = {}) {
-    if (!value) return '';
+                if (!value) return '';
     
     // Извлекаем только дату (YYYY-MM-DD) из строки, игнорируя время и часовой пояс
     let dateStr = value.toString();
@@ -4923,8 +4923,8 @@ function helperFormatDateWithOptions(value, options = {}) {
     // Создаем дату в локальном времени, чтобы избежать сдвига из-за часового пояса
     try {
         const date = new Date(year, month - 1, day);
-        return date.toLocaleDateString('ru-RU', options);
-    } catch (e) {
+                            return date.toLocaleDateString('ru-RU', options);
+                        } catch (e) {
         // Fallback: форматируем вручную
         return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
     }
@@ -5169,133 +5169,230 @@ document.addEventListener('DOMContentLoaded', function() {
 // Показать модальное окно с полной историей упражнения
 async function showExerciseHistoryModal(exerciseId) {
     try {
-        console.log('showExerciseHistoryModal вызван для упражнения:', exerciseId);
-        
         const response = await fetch(`/self-athlete/exercises/${exerciseId}/history`);
         const data = await response.json();
-        
-        console.log('Данные истории упражнения:', data);
         
         if (!data.success || !data.has_history) {
             alert('История не найдена');
             return;
         }
         
-        const date = helperFormatDateWithOptions(data.workout_date, { day: '2-digit', month: '2-digit', year: 'numeric' }) || '—';
-        
-        // Функция для проверки разрешённых полей
+        // Получаем разрешённые поля для упражнения
         const allowedFields = data.fields_config || [];
         const isFieldAllowed = (field) => allowedFields.length === 0 || allowedFields.includes(field);
         
-        let modalContent = `
-            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
-                <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; position: relative;" onclick="event.stopPropagation()">
-                    <button onclick="this.closest('[style*=fixed]').remove()" 
-                            style="position: absolute; top: 16px; right: 16px; color: #666; font-size: 28px; background: none; border: none; cursor: pointer; line-height: 1; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s;"
-                            onmouseover="this.style.background='#f3f4f6'; this.style.color='#111';"
-                            onmouseout="this.style.background='none'; this.style.color='#666';">
-                        &times;
-                    </button>
-                    
-                    <h3 style="font-size: 18px; font-weight: 600; color: #111; margin-bottom: 20px; padding-right: 40px;">📊 История упражнения</h3>
-                    
-                    <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">Последняя тренировка: ${date}</div>
-                        <div style="font-weight: 600; color: #111;">${data.workout_title}</div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+        // Функция для форматирования плана
+        const formatPlan = (plan) => {
+            let text = '';
+            if (isFieldAllowed('weight') && plan.weight > 0) text += `${plan.weight} кг`;
+            if (isFieldAllowed('reps') && plan.reps > 0) text += (text ? ' × ' : '') + `${plan.reps} раз`;
+            if (isFieldAllowed('sets') && plan.sets > 0) text += (text ? ' × ' : '') + `${plan.sets} подх`;
+            if (isFieldAllowed('time') && plan.time > 0) text += (text ? ', ' : '') + `${plan.time} мин`;
+            if (isFieldAllowed('distance') && plan.distance > 0) text += (text ? ', ' : '') + `${plan.distance} м`;
+            return text || 'не указан';
+        };
+        
+        // Функция для форматирования факта
+        const formatFact = (fact) => {
+            if (!fact) return '';
+            let text = '';
+            if (isFieldAllowed('weight') && fact.weight > 0) text += `${fact.weight} кг`;
+            if (isFieldAllowed('reps') && fact.reps > 0) text += (text ? ' × ' : '') + `${fact.reps} раз`;
+            if (isFieldAllowed('sets') && fact.sets > 0) text += (text ? ' × ' : '') + `${fact.sets} подх`;
+            if (isFieldAllowed('time') && fact.time > 0) text += (text ? ', ' : '') + `${fact.time} мин`;
+            if (isFieldAllowed('distance') && fact.distance > 0) text += (text ? ', ' : '') + `${fact.distance} м`;
+            return text;
+        };
+        
+        // Создаем модальное окно
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         `;
         
-        // План (только разрешённые поля)
-        modalContent += `
-            <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 12px;">
-                <div style="font-weight: 600; color: #1e40af; margin-bottom: 8px;">📋 План:</div>
-                <div style="font-size: 14px; color: #1e3a8a;">
-                    ${isFieldAllowed('weight') && data.plan.weight > 0 ? `Вес: ${data.plan.weight} кг<br>` : ''}
-                    ${isFieldAllowed('reps') && data.plan.reps > 0 ? `Повторения: ${data.plan.reps}<br>` : ''}
-                    ${isFieldAllowed('sets') && data.plan.sets > 0 ? `Подходы: ${data.plan.sets}<br>` : ''}
-                    ${isFieldAllowed('time') && data.plan.time > 0 ? `Время: ${data.plan.time} мин<br>` : ''}
-                    ${isFieldAllowed('distance') && data.plan.distance > 0 ? `Дистанция: ${data.plan.distance} м<br>` : ''}
-                    ${isFieldAllowed('rest') && data.plan.rest > 0 ? `Отдых: ${data.plan.rest} мин` : ''}
-                </div>
-            </div>
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         `;
         
-        // Факт (если есть)
-        if (data.fact) {
-            const isPartial = data.exercise_status === 'partial';
-            const isCompleted = data.exercise_status === 'completed';
-            
-            const bgColor = isCompleted ? '#d1fae5' : (isPartial ? '#fef3c7' : '#fee2e2');
-            const borderColor = isCompleted ? '#6ee7b7' : (isPartial ? '#fcd34d' : '#fca5a5');
-            const textColor = isCompleted ? '#065f46' : (isPartial ? '#92400e' : '#991b1b');
-            const subTextColor = isCompleted ? '#064e3b' : (isPartial ? '#78350f' : '#7f1d1d');
-            const icon = isCompleted ? '✅ Выполнено:' : (isPartial ? '⚠️ Частично:' : '❌ Не выполнено:');
-            
-            modalContent += `
-                <div style="background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px; padding: 12px;">
-                    <div style="font-weight: 600; color: ${textColor}; margin-bottom: 8px;">
-                        ${icon}
-                    </div>
-                    <div style="font-size: 14px; color: ${subTextColor};">
-                        ${isFieldAllowed('weight') && data.fact.weight > 0 ? `Средний вес: ${data.fact.weight} кг<br>` : ''}
-                        ${isFieldAllowed('reps') && data.fact.reps > 0 ? `Среднее повторений: ${data.fact.reps}<br>` : ''}
-                        ${isFieldAllowed('sets') && data.fact.sets > 0 ? `Выполнено подходов: ${data.fact.sets} из ${data.plan.sets || data.fact.sets}<br>` : ''}
-                        ${isFieldAllowed('time') && data.fact.time > 0 ? `Время: ${data.fact.time} мин<br>` : ''}
-                        ${isFieldAllowed('distance') && data.fact.distance > 0 ? `Дистанция: ${data.fact.distance} м<br>` : ''}
-            `;
-            
-            // Детали подходов (если есть)
-            if (data.sets_details && data.sets_details.length > 0) {
-                modalContent += `
-                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid ${borderColor};">
-                        <div style="font-weight: 600; margin-bottom: 8px;">Детали подходов:</div>
-                `;
+        // Заголовок
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 20px 24px 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9fafb;
+        `;
+        
+        header.innerHTML = `
+            <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #111827;">История упражнения</h3>
+            <button type="button" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; padding: 4px; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#374151';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">&times;</button>
+        `;
+        
+        const closeButton = header.querySelector('button');
+        closeButton.addEventListener('click', () => modal.remove());
+        
+        // Контент
+        const body = document.createElement('div');
+        body.style.cssText = `
+            padding: 24px;
+            max-height: 65vh;
+            overflow-y: auto;
+        `;
+        
+        // Формируем HTML для всех тренировок
+        const allWorkouts = data.all_workouts || [];
+        let workoutsHTML = '';
+        
+        if (allWorkouts.length > 0) {
+            workoutsHTML = allWorkouts.map((workout, index) => {
+                let workoutDate = helperFormatDateWithOptions(workout.workout_date, { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                }) || '—';
                 
-                data.sets_details.forEach((set, index) => {
-                    modalContent += `
-                        <div style="margin-bottom: 4px; padding: 6px; background: rgba(255,255,255,0.5); border-radius: 4px;">
-                            Подход ${index + 1}: ${set.weight || 0} кг × ${set.reps || 0} раз${set.rest ? ` (отдых: ${set.rest} мин)` : ''}
+                const planText = formatPlan(workout.plan);
+                const factText = formatFact(workout.fact);
+                
+                // Определяем статус упражнения
+                const exerciseStatus = workout.exercise_status || null;
+                
+                const factColor = exerciseStatus === 'completed' ? '#15803d' : (exerciseStatus === 'partial' ? '#c2410c' : '#dc2626');
+                const factIcon = exerciseStatus === 'completed' ? '✅' : (exerciseStatus === 'partial' ? '⚠️' : '❌');
+                const factLabel = exerciseStatus === 'completed' ? 'Выполнено:' : (exerciseStatus === 'partial' ? 'Частично:' : 'Факт:');
+                
+                // Определяем фон и границу в зависимости от статуса
+                let factBgColor = '#fef2f2';
+                let factBorderColor = '#fecaca';
+                
+                if (exerciseStatus === 'completed') {
+                    factBgColor = '#f0fdf4';
+                    factBorderColor = '#bbf7d0';
+                } else if (exerciseStatus === 'partial') {
+                    factBgColor = '#fef3c7';
+                    factBorderColor = '#fde68a';
+                }
+                
+                return `
+                    <div style="margin-bottom: ${index < allWorkouts.length - 1 ? '20px' : '0'}; padding-bottom: ${index < allWorkouts.length - 1 ? '20px' : '0'}; border-bottom: ${index < allWorkouts.length - 1 ? '1px solid #e5e7eb' : 'none'};">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <svg style="width: 18px; height: 18px; color: #2563eb;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span style="font-size: 15px; font-weight: 600; color: #1e40af;">${workout.workout_title} (${workoutDate})</span>
                         </div>
-                    `;
-                });
-                
-                modalContent += `
+                        
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <span style="font-size: 13px; font-weight: 600; color: #374151;">📋 План:</span>
+                            </div>
+                            <div style="font-size: 13px; color: #4b5563; margin-left: 20px;">
+                                ${planText}
+                            </div>
+                        </div>
+                        
+                        ${workout.fact && exerciseStatus ? `
+                            <div style="background: ${factBgColor}; border: 1px solid ${factBorderColor}; border-radius: 8px; padding: 12px; margin-bottom: 0;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <span style="font-size: 13px; font-weight: 600; color: ${factColor};">${factIcon} ${factLabel}</span>
+                                </div>
+                                <div style="font-size: 13px; color: #4b5563; margin-left: 20px;">
+                                    ${factText}
+                                </div>
+                                ${workout.sets_details && workout.sets_details.length > 0 && exerciseStatus === 'partial' ? `
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid ${factBorderColor};">
+                                        <div style="font-size: 13px; font-weight: 600; color: ${factColor}; margin-bottom: 8px;">Детали подходов:</div>
+                                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                                            ${workout.sets_details.map((set, setIndex) => `
+                                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255, 255, 255, 0.7); border-radius: 6px; border: 1px solid ${factBorderColor};">
+                                                    <span style="font-size: 12px; font-weight: 500; color: #6b7280;">Подход ${setIndex + 1}</span>
+                                                    <span style="font-size: 12px; color: #374151;">
+                                                        ${set.weight > 0 ? `${set.weight} кг` : ''}
+                                                        ${set.reps > 0 ? (set.weight > 0 ? ' × ' : '') + `${set.reps} раз` : ''}
+                                                        ${set.time > 0 ? (set.weight > 0 || set.reps > 0 ? ', ' : '') + `${set.time} мин` : ''}
+                                                        ${set.distance > 0 ? (set.weight > 0 || set.reps > 0 || set.time > 0 ? ', ' : '') + `${set.distance} м` : ''}
+                                                    </span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : `
+                            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; margin-bottom: 0;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 13px; font-weight: 600; color: #dc2626;">❌ Не выполнено</span>
+                                </div>
+                            </div>
+                        `}
                     </div>
                 `;
-            }
-            
-            modalContent += `
-                    </div>
-                </div>
-            `;
+            }).join('');
+        } else {
+            workoutsHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Нет истории тренировок</div>';
         }
         
-        modalContent += `
-                    </div>
-                    
-                    <div style="margin-top: 20px; display: flex; gap: 12px;">
-                        <button onclick="copyExerciseData(${exerciseId}, 'plan')" 
-                                style="flex: 1; padding: 10px; background: #4f46e5; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                            📋 Скопировать план
-                        </button>
-                        <button onclick="this.closest('[style*=fixed]').remove()" 
-                                style="padding: 10px 20px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer;">
-                            Отмена
-                        </button>
-                    </div>
-                </div>
-            </div>
+        body.innerHTML = workoutsHTML;
+        
+        // Кнопки
+        const footer = document.createElement('div');
+        footer.style.cssText = `
+            padding: 16px 24px 20px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: #f9fafb;
         `;
         
-        // Сохраняем данные в глобальную переменную для copyExerciseData
-        window.currentExerciseHistory = window.currentExerciseHistory || {};
-        window.currentExerciseHistory[exerciseId] = data;
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.textContent = 'Закрыть';
+        closeBtn.style.cssText = 'padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s;';
+        closeBtn.addEventListener('mouseover', function() {
+            this.style.backgroundColor = '#4b5563';
+        });
+        closeBtn.addEventListener('mouseout', function() {
+            this.style.backgroundColor = '#6b7280';
+        });
+        closeBtn.addEventListener('click', () => modal.remove());
         
-        // Добавляем модальное окно в DOM
-        document.body.insertAdjacentHTML('beforeend', modalContent);
-        console.log('Модальное окно добавлено в DOM');
+        footer.appendChild(closeBtn);
+        
+        // Собираем все вместе
+        content.appendChild(header);
+        content.appendChild(body);
+        content.appendChild(footer);
+        modal.appendChild(content);
+        
+        // Закрытие по клику на фон
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+        
+        // Добавляем в DOM и показываем
+        document.body.appendChild(modal);
         
     } catch (error) {
         console.error('Ошибка загрузки истории упражнения:', error);
