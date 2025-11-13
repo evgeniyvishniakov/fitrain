@@ -2139,21 +2139,29 @@ function workoutApp() {
         formatDate(dateString) {
             if (!dateString) return '';
             
-            if (typeof dateString === 'string' && dateString.includes('T')) {
-                const date = new Date(dateString);
-                if (!isNaN(date)) {
-                    return date.toLocaleDateString('ru-RU');
+            // Извлекаем только дату (YYYY-MM-DD) из строки, игнорируя время и часовой пояс
+            if (typeof dateString === 'string') {
+                const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (match) {
+                    const year = parseInt(match[1], 10);
+                    const month = parseInt(match[2], 10);
+                    const day = parseInt(match[3], 10);
+                    return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
                 }
             }
             
-            if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = dateString.split('-');
+            // Если не удалось распарсить, пробуем через Date (fallback)
+            const date = new Date(dateString);
+            if (!isNaN(date)) {
+                // Извлекаем компоненты даты из локального времени
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
                 return `${day}.${month}.${year}`;
             }
             
-            const date = new Date(dateString);
-            return !isNaN(date) ? date.toLocaleDateString('ru-RU') : '';
-                },
+            return '';
+        },
                 
                 
                 // Открытие модального окна с деталями упражнения (как openVideoModal)
@@ -4138,7 +4146,7 @@ function renderExercises() {
         }
 
         const displayImage = getDisplayImage(exercise);
-        const imageUrl = displayImage ? `/storage/${displayImage}` : '';
+        const imageUrl = (displayImage && displayImage !== 'null' && displayImage !== null) ? `/storage/${displayImage}` : '';
         
         // Экранируем специальные символы для безопасного использования в HTML атрибутах
         const displayCategory = (exercise.category && exercise.category !== 'null') ? exercise.category : '';
@@ -4897,35 +4905,37 @@ function displaySelectedExercises(exercises, isViewMode = false) {
 }
 
 // Загрузка истории упражнения и автозаполнение
+// Вспомогательная функция для форматирования даты (доступна для всех функций)
+function helperFormatDateWithOptions(value, options = {}) {
+    if (!value) return '';
+    
+    // Извлекаем только дату (YYYY-MM-DD) из строки, игнорируя время и часовой пояс
+    let dateStr = value.toString();
+    
+    // Если есть время (формат ISO с T), извлекаем только дату
+    const dateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!dateMatch) return '';
+    
+    const year = parseInt(dateMatch[1], 10);
+    const month = parseInt(dateMatch[2], 10);
+    const day = parseInt(dateMatch[3], 10);
+    
+    // Создаем дату в локальном времени, чтобы избежать сдвига из-за часового пояса
+    try {
+        const date = new Date(year, month - 1, day);
+        return date.toLocaleDateString('ru-RU', options);
+    } catch (e) {
+        // Fallback: форматируем вручную
+        return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
+    }
+}
+
 async function loadExerciseHistory(exerciseId) {
     try {
         const response = await fetch(`/self-athlete/exercises/${exerciseId}/history`);
         const data = await response.json();
         
         if (data.success && data.has_history) {
-            const helperFormatDateWithOptions = (value, options = {}) => {
-                if (!value) return '';
-                if (typeof value === 'string' && value.includes('T')) {
-                    const date = new Date(value);
-                    if (!isNaN(date)) {
-                        try {
-                            return date.toLocaleDateString('ru-RU', options);
-                        } catch (e) {
-                            // fallback below
-                        }
-                    }
-                }
-                const match = value.toString().match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (!match) return '';
-                const year = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10);
-                const day = parseInt(match[3], 10);
-                try {
-                    return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('ru-RU', options);
-                } catch (e) {
-                    return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
-                }
-            };
             
             // Автозаполняем поля значениями из последней тренировки
             const fieldsToFill = data.plan;
@@ -5159,37 +5169,17 @@ document.addEventListener('DOMContentLoaded', function() {
 // Показать модальное окно с полной историей упражнения
 async function showExerciseHistoryModal(exerciseId) {
     try {
+        console.log('showExerciseHistoryModal вызван для упражнения:', exerciseId);
+        
         const response = await fetch(`/self-athlete/exercises/${exerciseId}/history`);
         const data = await response.json();
+        
+        console.log('Данные истории упражнения:', data);
         
         if (!data.success || !data.has_history) {
             alert('История не найдена');
             return;
         }
-        
-        const helperFormatDateWithOptions = (value, options = {}) => {
-            if (!value) return '';
-            if (typeof value === 'string' && value.includes('T')) {
-                const date = new Date(value);
-                if (!isNaN(date)) {
-                    try {
-                        return date.toLocaleDateString('ru-RU', options);
-                    } catch (e) {
-                        // fallback below
-                    }
-                }
-            }
-            const match = value.toString().match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (!match) return '';
-            const year = parseInt(match[1], 10);
-            const month = parseInt(match[2], 10);
-            const day = parseInt(match[3], 10);
-            try {
-                return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('ru-RU', options);
-            } catch (e) {
-                return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
-            }
-        };
         
         const date = helperFormatDateWithOptions(data.workout_date, { day: '2-digit', month: '2-digit', year: 'numeric' }) || '—';
         
@@ -5305,9 +5295,11 @@ async function showExerciseHistoryModal(exerciseId) {
         
         // Добавляем модальное окно в DOM
         document.body.insertAdjacentHTML('beforeend', modalContent);
+        console.log('Модальное окно добавлено в DOM');
         
     } catch (error) {
-        alert('Ошибка загрузки истории упражнения');
+        console.error('Ошибка загрузки истории упражнения:', error);
+        alert('Ошибка загрузки истории упражнения: ' + error.message);
     }
 }
 

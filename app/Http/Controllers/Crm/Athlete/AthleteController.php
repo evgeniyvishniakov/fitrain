@@ -1105,7 +1105,7 @@ class AthleteController extends BaseController
                 
                 $allWorkoutsData[] = [
                     'workout_id' => $workout->id,
-                    'workout_date' => $workout->date,
+                    'workout_date' => $workout->date ? $workout->date->format('Y-m-d') : null,
                     'workout_title' => $workout->title,
                     'workout_status' => $workout->status,
                     'plan' => $workoutPlan,
@@ -1119,7 +1119,7 @@ class AthleteController extends BaseController
             return response()->json([
                 'success' => true,
                 'has_history' => true,
-                'workout_date' => $lastWorkout->date,
+                'workout_date' => $lastWorkout->date ? $lastWorkout->date->format('Y-m-d') : null,
                 'workout_title' => $lastWorkout->title,
                 'plan' => $plan,
                 'fact' => $fact,

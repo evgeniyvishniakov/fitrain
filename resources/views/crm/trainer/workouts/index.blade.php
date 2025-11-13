@@ -2215,16 +2215,11 @@ function workoutApp() {
         formatDate(dateString) {
             if (!dateString) return '';
             
-            if (typeof dateString === 'string' && dateString.includes('T')) {
-                const date = new Date(dateString);
-                if (!isNaN(date)) {
-                    return date.toLocaleDateString('ru-RU');
-                }
-            }
-            
+            // Извлекаем только дату (YYYY-MM-DD) из строки, игнорируя время и часовой пояс
             const parts = this.parseDateComponents(dateString);
             if (!parts) return '';
             
+            // Создаем дату в локальном времени, чтобы избежать сдвига из-за часового пояса
             const day = String(parts.day).padStart(2, '0');
             const month = String(parts.month).padStart(2, '0');
             const year = String(parts.year);
@@ -2234,24 +2229,16 @@ function workoutApp() {
         formatDateWithOptions(dateString, options = {}) {
             if (!dateString) return '';
             
-            if (typeof dateString === 'string' && dateString.includes('T')) {
-                const date = new Date(dateString);
-                if (!isNaN(date)) {
-                    try {
-                        return date.toLocaleDateString('ru-RU', options);
-                    } catch (e) {
-                        // noop fallback below
-                    }
-                }
-            }
-            
+            // Извлекаем только дату (YYYY-MM-DD) из строки, игнорируя время и часовой пояс
             const parts = this.parseDateComponents(dateString);
             if (!parts) return '';
             
-            const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+            // Создаем дату в локальном времени, чтобы избежать сдвига из-за часового пояса
             try {
+                const date = new Date(parts.year, parts.month - 1, parts.day);
                 return date.toLocaleDateString('ru-RU', options);
             } catch (e) {
+                // Fallback: форматируем вручную
                 const day = String(parts.day).padStart(2, '0');
                 const month = String(parts.month).padStart(2, '0');
                 const year = String(parts.year);
@@ -4206,7 +4193,7 @@ function renderExercises() {
         }
         
         const displayImage = getDisplayImage(exercise);
-        const imageUrl = displayImage ? `/storage/${displayImage}` : '';
+        const imageUrl = (displayImage && displayImage !== 'null' && displayImage !== null) ? `/storage/${displayImage}` : '';
         
         // Экранируем специальные символы для безопасного использования в HTML атрибутах
         const displayCategory = (exercise.category && exercise.category !== 'null') ? exercise.category : '';
@@ -4933,6 +4920,31 @@ function displaySelectedExercises(exercises, isViewMode = false) {
 
 // Сворачивание/разворачивание деталей упражнения
 // Загрузка истории упражнения
+// Вспомогательная функция для форматирования даты (доступна для всех функций)
+function helperFormatDateWithOptions(value, options = {}) {
+    if (!value) return '';
+    
+    // Извлекаем только дату (YYYY-MM-DD) из строки, игнорируя время и часовой пояс
+    let dateStr = value.toString();
+    
+    // Если есть время (формат ISO с T), извлекаем только дату
+    const dateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!dateMatch) return '';
+    
+    const year = parseInt(dateMatch[1], 10);
+    const month = parseInt(dateMatch[2], 10);
+    const day = parseInt(dateMatch[3], 10);
+    
+    // Создаем дату в локальном времени, чтобы избежать сдвига из-за часового пояса
+    try {
+        const date = new Date(year, month - 1, day);
+        return date.toLocaleDateString('ru-RU', options);
+    } catch (e) {
+        // Fallback: форматируем вручную
+        return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
+    }
+}
+
 async function loadExerciseHistory(exerciseId) {
     try {
         // Получаем ID текущего спортсмена из Alpine.js
@@ -4949,32 +4961,6 @@ async function loadExerciseHistory(exerciseId) {
         
         if (data.success && data.has_history) {
             console.log(`История упражнения ${exerciseId}:`, data);
-            
-            const helperFormatDateWithOptions = (value, options = {}) => {
-                if (!value) return '';
-                
-                if (typeof value === 'string' && value.includes('T')) {
-                    const date = new Date(value);
-                    if (!isNaN(date)) {
-                        try {
-                            return date.toLocaleDateString('ru-RU', options);
-                        } catch (e) {
-                            // fallback to manual parsing below
-                        }
-                    }
-                }
-                
-                const match = value.toString().match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (!match) return '';
-                const year = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10);
-                const day = parseInt(match[3], 10);
-                try {
-                    return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString('ru-RU', options);
-                } catch (e) {
-                    return `${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')}.${year}`;
-                }
-            };
             
             // Автозаполняем поля значениями из последней тренировки
             const fieldsToFill = data.plan;
@@ -5210,9 +5196,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // Модальное окно истории упражнения
 async function showExerciseHistoryModal(exerciseId) {
     try {
+        console.log('showExerciseHistoryModal вызван для упражнения:', exerciseId);
+        
         // Получаем ID текущего спортсмена из Alpine.js
         const athleteSelect = document.querySelector('select[x-model="formAthleteId"]');
         const athleteId = athleteSelect?.value;
+        console.log('Выбранный спортсмен ID:', athleteId);
+        
         if (!athleteId) {
             alert('Сначала выберите спортсмена');
             return;
@@ -5220,6 +5210,8 @@ async function showExerciseHistoryModal(exerciseId) {
         
         const response = await fetch(`/trainer/exercises/${exerciseId}/history?athlete_id=${athleteId}`);
         const data = await response.json();
+        
+        console.log('Данные истории упражнения:', data);
         
         if (data.success && data.has_history) {
             // Получаем разрешённые поля для упражнения
@@ -5429,18 +5421,23 @@ async function showExerciseHistoryModal(exerciseId) {
             content.appendChild(footer);
             modal.appendChild(content);
             
-            // Добавляем в DOM
-            document.body.appendChild(modal);
-            
             // Закрытие по клику на фон
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.remove();
                 }
             });
+            
+            // Добавляем в DOM и показываем
+            document.body.appendChild(modal);
+            console.log('Модальное окно добавлено в DOM');
+        } else {
+            // Если истории нет, показываем сообщение
+            alert('История упражнения не найдена');
         }
     } catch (error) {
         console.error('Ошибка загрузки истории упражнения:', error);
+        alert('Ошибка загрузки истории упражнения: ' + error.message);
     }
 }
 
