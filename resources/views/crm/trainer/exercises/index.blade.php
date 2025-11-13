@@ -2506,26 +2506,8 @@ function exerciseApp() {
                 <!-- Левая колонка: картинки и видео -->
                 <div class="flex-shrink-0" style="width: 35%; max-width: 500px;">
                     <div class="space-y-4">
-                        <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                        <template x-if="shouldShowPrimaryImage(currentExercise)">
-                            <div>
-                                <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
-                                     :alt="currentExercise.name"
-                                     class="w-full rounded-lg shadow-md"
-                                     style="object-fit: contain;">
-                            </div>
-                        </template>
-                        <template x-if="getDisplayImage(currentExercise) && isVideoFile(getDisplayImage(currentExercise))">
-                            <div>
-                                <video :src="`/storage/${getDisplayImage(currentExercise)}`"
-                                       class="w-full rounded-lg shadow-md"
-                                       style="object-fit: contain; pointer-events: none;"
-                                       autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
-                            </div>
-                        </template>
-                        
-                        <!-- Второе изображение -->
-                        <template x-if="shouldShowSecondaryImage(currentExercise)">
+                        <!-- Второе изображение (в зависимости от пола) -->
+                        <template x-if="getDisplayImage2(currentExercise) && !isVideoFile(getDisplayImage2(currentExercise))">
                             <div>
                                 <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
                                      :alt="currentExercise.name"
@@ -2635,26 +2617,8 @@ function exerciseApp() {
             <div class="exercise-view-mobile space-y-6">
                 <!-- Картинки по центру -->
                 <div class="flex flex-col items-center gap-4">
-                    <!-- Главное изображение (скрывается если второе изображение - GIF) -->
-                    <template x-if="shouldShowPrimaryImage(currentExercise)">
-                        <div class="w-full">
-                            <img :src="`/storage/${getDisplayImage(currentExercise)}`" 
-                                 :alt="currentExercise.name"
-                                 class="w-full rounded-lg shadow-md mx-auto"
-                                 style="object-fit: contain; max-height: 400px;">
-                        </div>
-                    </template>
-                    <template x-if="getDisplayImage(currentExercise) && isVideoFile(getDisplayImage(currentExercise))">
-                        <div class="w-full">
-                            <video :src="`/storage/${getDisplayImage(currentExercise)}`" 
-                                   class="w-full rounded-lg shadow-md mx-auto"
-                                   style="object-fit: contain; max-height: 400px; pointer-events: none;"
-                                   autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
-                        </div>
-                    </template>
-                    
-                    <!-- Второе изображение -->
-                    <template x-if="shouldShowSecondaryImage(currentExercise)">
+                    <!-- Второе изображение (в зависимости от пола) -->
+                    <template x-if="getDisplayImage2(currentExercise) && !isVideoFile(getDisplayImage2(currentExercise))">
                         <div class="w-full">
                             <img :src="`/storage/${getDisplayImage2(currentExercise)}`" 
                                  :alt="currentExercise.name"
@@ -2670,6 +2634,56 @@ function exerciseApp() {
                                    autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
                         </div>
                     </template>
+                    
+                    <!-- Пользовательское видео (приоритет) - сразу под изображением -->
+                    <div x-show="userVideos[currentExercise?.id]?.video_url" class="w-full">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
+                        <p class="text-xs text-gray-500 mb-1 text-center">Ваше видео</p>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
+                            <div x-show="!isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="text-center py-4">
+                                <a :href="userVideos[currentExercise?.id]?.video_url" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
+                                    Видео
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Системное видео (если нет пользовательского) - сразу под изображением -->
+                    <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url" class="w-full">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
+                        <p class="text-xs text-gray-500 mb-1 text-center">Системное видео</p>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
+                                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
+                            <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
+                                <a :href="currentExercise?.video_url" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
+                                    Видео
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Описание -->
@@ -2704,56 +2718,6 @@ function exerciseApp() {
                     <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">{{ __('common.execution_instructions') }}</h3>
                     <div class="bg-gray-50 rounded-lg p-4">
                         <p class="text-gray-700 whitespace-pre-line" x-text="currentExercise?.instructions"></p>
-                    </div>
-                </div>
-                
-                <!-- Пользовательское видео (приоритет) -->
-                <div x-show="userVideos[currentExercise?.id]?.video_url">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
-                    <p class="text-xs text-gray-500 mb-1 text-center">Ваше видео</p>
-                    <div class="bg-gray-50 rounded-lg p-2">
-                        <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                            <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                    allowfullscreen>
-                            </iframe>
-                        </div>
-                        <div x-show="!isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="text-center py-4">
-                            <a :href="userVideos[currentExercise?.id]?.video_url" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                </svg>
-                                Видео
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Системное видео (если нет пользовательского) -->
-                <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
-                    <p class="text-xs text-gray-500 mb-1 text-center">Системное видео</p>
-                    <div class="bg-gray-50 rounded-lg p-2">
-                        <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                            <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
-                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
-                                    allowfullscreen>
-                            </iframe>
-                        </div>
-                        <div x-show="!isYouTubeUrl(currentExercise?.video_url)" class="text-center py-4">
-                            <a :href="currentExercise?.video_url" 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                                </svg>
-                                Видео
-                            </a>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -2324,17 +2324,31 @@ function workoutApp() {
             
             let bodyHTML = '';
             
-            // Изображения - показываем только вторую картинку
-            const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
-            
-            if (hasImage2) {
-                const mediaHtml = renderMediaElement(`/storage/${exercise.image_url_2}`, exercise.name || '', {
+            // Первое изображение
+            const hasImage1 = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
+            if (hasImage1) {
+                const mediaHtml1 = renderMediaElement(`/storage/${exercise.image_url}`, exercise.name || '', {
                     style: 'width: 100%; height: 350px; object-fit: contain;'
                 });
                 bodyHTML += `<div style="margin-bottom: 24px;">`;
                 bodyHTML += `
                     <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        ${mediaHtml}
+                        ${mediaHtml1}
+                    </div>
+                `;
+                bodyHTML += '</div>';
+            }
+            
+            // Второе изображение
+            const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
+            if (hasImage2) {
+                const mediaHtml2 = renderMediaElement(`/storage/${exercise.image_url_2}`, exercise.name || '', {
+                    style: 'width: 100%; height: 350px; object-fit: contain;'
+                });
+                bodyHTML += `<div style="margin-bottom: 24px;">`;
+                bodyHTML += `
+                    <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        ${mediaHtml2}
                     </div>
                 `;
                 bodyHTML += '</div>';
@@ -4971,9 +4985,7 @@ async function loadExerciseHistory(exerciseId) {
         // Получаем ID текущего спортсмена из Alpine.js
         const athleteSelect = document.querySelector('select[x-model="formAthleteId"]');
         const athleteId = athleteSelect?.value;
-        console.log('Выбранный спортсмен ID:', athleteId);
         if (!athleteId) {
-            console.log('Спортсмен не выбран, история не загружается');
             return;
         }
         
@@ -4981,7 +4993,6 @@ async function loadExerciseHistory(exerciseId) {
         const data = await response.json();
         
         if (data.success && data.has_history) {
-            console.log(`История упражнения ${exerciseId}:`, data);
             
             // Автозаполняем поля значениями из последней тренировки
             const fieldsToFill = data.plan;
@@ -5073,12 +5084,10 @@ async function loadExerciseHistory(exerciseId) {
     }
 }
 function toggleExerciseDetails(exerciseId) {
-    console.log('toggleExerciseDetails вызван для упражнения:', exerciseId);
     const detailsElement = document.getElementById(`details-${exerciseId}`);
     const chevronElement = document.getElementById(`chevron-${exerciseId}`);
     
     if (detailsElement.style.display === 'none') {
-        console.log('Разворачиваем упражнение, загружаем историю...');
         // Разворачиваем
         detailsElement.style.display = 'block';
         chevronElement.style.transform = 'rotate(0deg)'; // стрелочка вниз
@@ -5086,7 +5095,6 @@ function toggleExerciseDetails(exerciseId) {
         // Загружаем историю при первом открытии
         loadExerciseHistory(exerciseId);
     } else {
-        console.log('Сворачиваем упражнение');
         // Сворачиваем
         detailsElement.style.display = 'none';
         chevronElement.style.transform = 'rotate(-90deg)'; // стрелочка вправо
@@ -5217,12 +5225,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // Модальное окно истории упражнения
 async function showExerciseHistoryModal(exerciseId) {
     try {
-        console.log('showExerciseHistoryModal вызван для упражнения:', exerciseId);
-        
         // Получаем ID текущего спортсмена из Alpine.js
         const athleteSelect = document.querySelector('select[x-model="formAthleteId"]');
         const athleteId = athleteSelect?.value;
-        console.log('Выбранный спортсмен ID:', athleteId);
         
         if (!athleteId) {
             alert('Сначала выберите спортсмена');
@@ -5231,8 +5236,6 @@ async function showExerciseHistoryModal(exerciseId) {
         
         const response = await fetch(`/trainer/exercises/${exerciseId}/history?athlete_id=${athleteId}`);
         const data = await response.json();
-        
-        console.log('Данные истории упражнения:', data);
         
         if (data.success && data.has_history) {
             // Получаем разрешённые поля для упражнения
@@ -5451,7 +5454,6 @@ async function showExerciseHistoryModal(exerciseId) {
             
             // Добавляем в DOM и показываем
             document.body.appendChild(modal);
-            console.log('Модальное окно добавлено в DOM');
         } else {
             // Если истории нет, показываем сообщение
             alert('История упражнения не найдена');
@@ -5548,19 +5550,39 @@ function copyPlanToFields(exerciseId) {
         <!-- Контент с прокруткой -->
         <div style="padding: 20px; overflow-y: auto; flex: 1;">
             
-            <!-- Изображения - показываем только вторую картинку -->
-            <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null" style="margin-bottom: 24px;">
+            <!-- Первое изображение -->
+            <div x-show="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null && !isVideoFile(exerciseDetailModal.exercise?.image_url)" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <template x-if="!isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
-                    <img :src="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null ? '/storage/' + exerciseDetailModal.exercise.image_url_2 : ''" 
+                    <img :src="'/storage/' + exerciseDetailModal.exercise.image_url" 
                          :alt="exerciseDetailModal.exercise?.name"
                          style="width: 100%; height: 280px; object-fit: cover;">
-                    </template>
-                    <template x-if="isVideoFile(exerciseDetailModal.exercise?.image_url_2)">
-                        <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"
-                               style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
-                               autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
-                    </template>
+                </div>
+            </div>
+            
+            <!-- Первое изображение как видео/GIF (если это видео файл) -->
+            <div x-show="exerciseDetailModal.exercise?.image_url && exerciseDetailModal.exercise.image_url !== 'null' && exerciseDetailModal.exercise.image_url !== null && isVideoFile(exerciseDetailModal.exercise?.image_url)" style="margin-bottom: 24px;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <video :src="'/storage/' + exerciseDetailModal.exercise.image_url"
+                           style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
+                           autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                </div>
+            </div>
+            
+            <!-- Второе изображение -->
+            <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null && !isVideoFile(exerciseDetailModal.exercise?.image_url_2)" style="margin-bottom: 24px;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <img :src="'/storage/' + exerciseDetailModal.exercise.image_url_2" 
+                         :alt="exerciseDetailModal.exercise?.name"
+                         style="width: 100%; height: 280px; object-fit: cover;">
+                </div>
+            </div>
+            
+            <!-- Второе изображение как видео/GIF (если это видео файл) -->
+            <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null && isVideoFile(exerciseDetailModal.exercise?.image_url_2)" style="margin-bottom: 24px;">
+                <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"
+                           style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
+                           autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
                 </div>
             </div>
             
