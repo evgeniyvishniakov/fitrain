@@ -448,6 +448,7 @@ class TrainerController extends BaseController
             'birth_date' => 'nullable|date',
             'password' => 'nullable|string|min:8',
             'sport_level' => 'nullable|in:beginner,intermediate,advanced,professional,amateur,pro',
+            'is_active' => 'nullable|boolean',
         ]);
         
         $updateData = $request->all();
@@ -462,6 +463,11 @@ class TrainerController extends BaseController
         
         if (array_key_exists('sport_level', $updateData)) {
             $updateData['sport_level'] = $this->normalizeSportLevel($updateData['sport_level']);
+        }
+
+        // Конвертируем is_active в boolean
+        if (array_key_exists('is_active', $updateData)) {
+            $updateData['is_active'] = filter_var($updateData['is_active'], FILTER_VALIDATE_BOOLEAN);
         }
 
         $athlete->update($updateData);

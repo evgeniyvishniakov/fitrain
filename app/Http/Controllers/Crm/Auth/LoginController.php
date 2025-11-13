@@ -52,8 +52,17 @@ class LoginController extends BaseController
             // Проверяем, что пользователь активен
             if (!$user->is_active) {
                 Auth::logout();
+                
+                // Определяем сообщение в зависимости от роли
+                $message = 'Ваш аккаунт деактивирован. Обратитесь к администратору.';
+                if ($user->hasRole('athlete')) {
+                    $message = 'Ваш аккаунт деактивирован. Обратитесь к тренеру.';
+                } elseif ($user->hasRole('trainer')) {
+                    $message = 'Ваш аккаунт деактивирован. Обратитесь к администратору.';
+                }
+                
                 return back()->withErrors([
-                    'email' => __('auth.account_deactivated'),
+                    'email' => $message,
                 ]);
             }
 

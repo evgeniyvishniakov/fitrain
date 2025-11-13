@@ -13,7 +13,8 @@
     <?php if(!empty($siteFavicon)): ?>
         <?php
             $faviconExtension = strtolower(pathinfo($siteFavicon, PATHINFO_EXTENSION));
-            $faviconMime = in_array($faviconExtension, ['ico', 'x-icon']) ? 'image/x-icon' : 'image/png';
+            // Всегда используем image/x-icon для .ico файлов
+            $faviconMime = ($faviconExtension === 'ico' || $faviconExtension === 'x-icon') ? 'image/x-icon' : 'image/png';
             $faviconExists = false;
             $faviconVersion = time();
             

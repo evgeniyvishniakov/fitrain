@@ -1972,6 +1972,16 @@ function athletesApp() {
                 filtered = filtered.filter(a => this.normalizeSportLevel(a.sport_level) === this.sportLevel);
             }
             
+            // Сортируем: сначала активные, потом неактивные
+            filtered = filtered.sort((a, b) => {
+                // Если оба активные или оба неактивные, сортируем по имени
+                if (a.is_active === b.is_active) {
+                    return a.name.localeCompare(b.name);
+                }
+                // Активные идут первыми (true > false)
+                return b.is_active - a.is_active;
+            });
+            
             return filtered;
         },
         
@@ -2304,18 +2314,22 @@ function athletesApp() {
                     gender: this.formGender,
                     birth_date: this.formBirthDate,
                     password: this.formPassword || null,
-                    sport_level: this.formSportLevel
+                    sport_level: this.formSportLevel,
+                    is_active: this.formIsActive === '1'
                 };
                 
                 // console.log('Отправляем данные:', requestData);
                 // console.log('URL:', `/trainer/athletes/${this.currentAthlete.id}`);
+                
+                // Получаем CSRF токен
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
                 
                 // Отправляем AJAX запрос
                 const response = await fetch(`/trainer/athletes/${this.currentAthlete.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-CSRF-TOKEN': csrfToken,
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify(requestData)
@@ -2340,6 +2354,7 @@ function athletesApp() {
                     this.currentAthlete.gender = this.formGender;
                     this.currentAthlete.birth_date = this.formBirthDate;
                     this.currentAthlete.sport_level = this.normalizeSportLevel(this.formSportLevel);
+                    this.currentAthlete.is_active = this.formIsActive === '1';
                     
                     // Обновляем данные в списке спортсменов
                     const athleteIndex = this.athletes.findIndex(a => a.id === this.currentAthlete.id);
@@ -2353,6 +2368,7 @@ function athletesApp() {
                         this.athletes[athleteIndex].gender = this.formGender;
                         this.athletes[athleteIndex].birth_date = this.formBirthDate;
                         this.athletes[athleteIndex].sport_level = this.currentAthlete.sport_level;
+                        this.athletes[athleteIndex].is_active = this.currentAthlete.is_active;
                     }
                     
                     // Перезагружаем связанные данные (измерения, прогресс и т.д.)
@@ -2371,6 +2387,22 @@ function athletesApp() {
                     this.currentView = 'view';
                     this.activeTab = 'overview';
                 } else {
+                    // Обработка ошибки CSRF token mismatch (419)
+                    if (response.status === 419) {
+                        window.dispatchEvent(new CustomEvent('show-notification', {
+                            detail: {
+                                type: 'error',
+                                title: '{{ __('common.error') }}',
+                                message: 'Сессия истекла. Пожалуйста, обновите страницу и попробуйте снова.'
+                            }
+                        }));
+                        // Обновляем страницу через 2 секунды
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                        return;
+                    }
+                    
                     console.error('{{ __('common.server_error_status') }}:', response.status, responseText);
                     throw new Error(`Ошибка сервера: ${response.status} - ${responseText}`);
                 }
@@ -3132,10 +3164,11 @@ function athletesApp() {
                 <!-- Уровень индикатор -->
                 <div class="absolute top-0 left-0 w-full h-1" 
                      :class="{
-                         'bg-green-500': isSportLevel(athlete.sport_level, 'advanced'),
-                         'bg-yellow-500': isSportLevel(athlete.sport_level, 'intermediate'),
-                         'bg-blue-500': isSportLevel(athlete.sport_level, 'beginner'),
-                         'bg-purple-500': isSportLevel(athlete.sport_level, 'professional')
+                         'bg-red-500': !athlete.is_active,
+                         'bg-green-500': athlete.is_active && isSportLevel(athlete.sport_level, 'advanced'),
+                         'bg-yellow-500': athlete.is_active && isSportLevel(athlete.sport_level, 'intermediate'),
+                         'bg-blue-500': athlete.is_active && isSportLevel(athlete.sport_level, 'beginner'),
+                         'bg-purple-500': athlete.is_active && isSportLevel(athlete.sport_level, 'professional')
                      }">
                 </div>
                 
@@ -3182,12 +3215,13 @@ function athletesApp() {
                         <div class="flex-shrink-0">
                             <span class="px-3 py-1 rounded-full text-xs font-semibold"
                                   :class="{
-                                      'bg-green-100 text-green-800': isSportLevel(athlete.sport_level, 'advanced'),
-                                      'bg-yellow-100 text-yellow-800': isSportLevel(athlete.sport_level, 'intermediate'),
-                                      'bg-blue-100 text-blue-800': isSportLevel(athlete.sport_level, 'beginner'),
-                                      'bg-purple-100 text-purple-800': isSportLevel(athlete.sport_level, 'professional')
+                                      'bg-red-100 text-red-800': !athlete.is_active,
+                                      'bg-green-100 text-green-800': athlete.is_active && isSportLevel(athlete.sport_level, 'advanced'),
+                                      'bg-yellow-100 text-yellow-800': athlete.is_active && isSportLevel(athlete.sport_level, 'intermediate'),
+                                      'bg-blue-100 text-blue-800': athlete.is_active && isSportLevel(athlete.sport_level, 'beginner'),
+                                      'bg-purple-100 text-purple-800': athlete.is_active && isSportLevel(athlete.sport_level, 'professional')
                                   }"
-                                  x-text="getSportLevelLabel(athlete.sport_level)">
+                                  x-text="!athlete.is_active ? '{{ __('common.inactive') }}' : getSportLevelLabel(athlete.sport_level)">
                             </span>
                         </div>
                     </div>
@@ -3219,12 +3253,13 @@ function athletesApp() {
                             <div class="flex-shrink-0">
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold"
                                   :class="{
-                                      'bg-green-100 text-green-800': isSportLevel(athlete.sport_level, 'advanced'),
-                                      'bg-yellow-100 text-yellow-800': isSportLevel(athlete.sport_level, 'intermediate'),
-                                      'bg-blue-100 text-blue-800': isSportLevel(athlete.sport_level, 'beginner'),
-                                      'bg-purple-100 text-purple-800': isSportLevel(athlete.sport_level, 'professional')
+                                      'bg-red-100 text-red-800': !athlete.is_active,
+                                      'bg-green-100 text-green-800': athlete.is_active && isSportLevel(athlete.sport_level, 'advanced'),
+                                      'bg-yellow-100 text-yellow-800': athlete.is_active && isSportLevel(athlete.sport_level, 'intermediate'),
+                                      'bg-blue-100 text-blue-800': athlete.is_active && isSportLevel(athlete.sport_level, 'beginner'),
+                                      'bg-purple-100 text-purple-800': athlete.is_active && isSportLevel(athlete.sport_level, 'professional')
                                   }"
-                                      x-text="getSportLevelLabel(athlete.sport_level)">
+                                      x-text="!athlete.is_active ? '{{ __('common.inactive') }}' : getSportLevelLabel(athlete.sport_level)">
                                 </span>
                             </div>
                         </div>
