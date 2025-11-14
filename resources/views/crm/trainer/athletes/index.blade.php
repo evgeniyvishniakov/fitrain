@@ -348,6 +348,12 @@ function athletesApp() {
             if (this.isAnyModalOpen()) return;
             this.syncMenuState();
 
+            // Проверка: если клик по кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                return;
+            }
+
             const touch = event.touches[0];
             const startX = touch.clientX;
             const startY = touch.clientY;
@@ -3332,17 +3338,20 @@ function athletesApp() {
                         </div>
                         
                         <!-- Нижняя часть: кнопки -->
-                        <div class="flex space-x-2">
+                        <div class="flex space-x-2 relative z-10" style="pointer-events: auto;">
                             <button @click="showView(athlete.id)" 
-                                    class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                    class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors relative z-10"
+                                    style="pointer-events: auto; touch-action: manipulation;">
                                 {{ __('common.view') }}
                             </button>
                             <button @click="showEdit(athlete.id)" 
-                                    class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                    class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors relative z-10"
+                                    style="pointer-events: auto; touch-action: manipulation;">
                                 {{ __('common.edit') }}
                             </button>
                             <button @click="deleteAthlete(athlete.id)" 
-                                    class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                    class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors relative z-10"
+                                    style="pointer-events: auto; touch-action: manipulation;">
                                 {{ __('common.delete') }}
                             </button>
                         </div>
