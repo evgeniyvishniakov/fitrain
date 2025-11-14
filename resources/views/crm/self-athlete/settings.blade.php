@@ -761,6 +761,214 @@ function athleteSettingsApp() {
 
     </script>
 
+<script>
+(function () {
+    if (window.__fitrainDashboardMenuSetup) return;
+    window.__fitrainDashboardMenuSetup = true;
+
+    const getEdgeThreshold = () => {
+        const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+        if (screenWidth >= 1024) {
+            return Math.min(Math.floor(screenWidth * 0.7), 800);
+        } else if (screenWidth >= 768) {
+            return Math.min(Math.floor(screenWidth * 0.6), 500);
+        } else {
+            return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+        }
+    };
+    const menuSwipeThreshold = 60;
+    const menuCloseEdgeGuard = 60;
+    const maxVerticalDeviation = 80;
+
+    let touchStartX = null;
+    let touchStartY = null;
+    let menuGesture = null;
+    let menuGestureHandled = false;
+    let menuIsOpen = false;
+    let menuObserver = null;
+
+    const getMenu = () => document.getElementById('mobile-menu');
+
+    const syncMenuState = () => {
+        const menu = getMenu();
+        menuIsOpen = !!(menu && menu.classList.contains('open'));
+    };
+
+    const setupMenuObserver = () => {
+        const menu = getMenu();
+        if (!menu || menuObserver) return;
+        menuObserver = new MutationObserver(syncMenuState);
+        menuObserver.observe(menu, { attributes: true, attributeFilter: ['class'] });
+    };
+
+    const getMobileMenuWidth = () => {
+        const menu = getMenu();
+        if (!menu) return 0;
+        const content = menu.querySelector('.mobile-menu-content');
+        return content ? content.offsetWidth || 0 : menu.offsetWidth || 0;
+    };
+
+    const openMobileMenu = () => {
+        const menu = getMenu();
+        if (menu && !menu.classList.contains('open')) {
+            menu.classList.add('open');
+            menuIsOpen = true;
+        }
+    };
+
+    const closeMobileMenuIfOpen = () => {
+        const menu = getMenu();
+        if (menu && menu.classList.contains('open')) {
+            menu.classList.remove('open');
+            menuIsOpen = false;
+        }
+    };
+
+    const preventEvent = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.stopImmediatePropagation) {
+            event.stopImmediatePropagation();
+        }
+    };
+
+    const resetTouchState = () => {
+        touchStartX = null;
+        touchStartY = null;
+        menuGesture = null;
+        menuGestureHandled = false;
+    };
+
+    const handleTouchStart = (event) => {
+        if (event.touches.length !== 1) return;
+
+        // Проверка: если клик по кнопке, не обрабатываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton) {
+            return;
+        }
+
+        syncMenuState();
+
+        const touch = event.touches[0];
+        const startX = touch.clientX;
+        const startY = touch.clientY;
+        const menu = getMenu();
+        const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
+        const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
+        const isMenuToggle = event.target.closest('.mobile-menu-btn');
+        const isMenuClose = event.target.closest('.mobile-menu-close');
+
+        menuGesture = null;
+        menuGestureHandled = false;
+
+        if (isMenuToggle || isMenuClose) {
+            resetTouchState();
+            return;
+        }
+
+        if (menuIsOpen) {
+            if (startX <= menuCloseEdgeGuard) {
+                preventEvent(event);
+                resetTouchState();
+                return;
+            }
+            const menuWidth = getMobileMenuWidth();
+            if (targetInsideMenu || startX <= menuWidth + menuCloseEdgeGuard) {
+                resetTouchState();
+                menuGestureHandled = true;
+                return;
+            }
+            menuGesture = 'close';
+        } else {
+            if (startX > getEdgeThreshold()) {
+                resetTouchState();
+                return;
+            }
+            menuGesture = 'open';
+        }
+
+        touchStartX = startX;
+        touchStartY = startY;
+        menuGestureHandled = false;
+        // Не блокируем события здесь, чтобы не мешать выделению текста
+        // Блокировка будет только в handleTouchMove при реальном свайпе
+    };
+
+    const handleTouchMove = (event) => {
+        if (touchStartX === null) return;
+        if (!menuGesture) return;
+
+        // Проверка: если касание идет по кнопке, сбрасываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton) {
+            resetTouchState();
+            return;
+        }
+
+        const touch = event.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - (touchStartY ?? 0);
+        if (Math.abs(deltaY) > maxVerticalDeviation) return;
+
+        if (!menuGestureHandled) {
+            if (menuGesture === 'open' && deltaX > menuSwipeThreshold) {
+                openMobileMenu();
+                menuGestureHandled = true;
+            } else if (menuGesture === 'close' && (touchStartX - touch.clientX) > menuSwipeThreshold) {
+                closeMobileMenuIfOpen();
+                menuGestureHandled = true;
+            }
+        }
+
+        // Блокируем события только при реальном движении (свайпе), чтобы не мешать выделению текста
+        if (!menuGestureHandled && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+            preventEvent(event);
+        }
+    };
+
+    const handleTouchEnd = (event) => {
+        // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton && touchStartX !== null) {
+            resetTouchState();
+            return;
+        }
+
+        if (touchStartX !== null && menuGesture && !menuGestureHandled && event.changedTouches.length === 1) {
+            const touch = event.changedTouches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - (touchStartY ?? 0);
+            if (Math.abs(deltaY) <= maxVerticalDeviation) {
+                if (menuGesture === 'open' && deltaX > menuSwipeThreshold) {
+                    openMobileMenu();
+                } else if (menuGesture === 'close' && (touchStartX - touch.clientX) > menuSwipeThreshold) {
+                    closeMobileMenuIfOpen();
+                }
+            }
+        }
+
+        resetTouchState();
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+
+    setupMenuObserver();
+    syncMenuState();
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            setupMenuObserver();
+            syncMenuState();
+        } else if (menuObserver) {
+            menuObserver.disconnect();
+            menuObserver = null;
+        }
+    });
+})();
+</script>
 
 </div>
 @endsection

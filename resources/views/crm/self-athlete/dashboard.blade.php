@@ -155,7 +155,16 @@ function dashboardCalendar() {
     if (window.__fitrainDashboardMenuSetup) return;
     window.__fitrainDashboardMenuSetup = true;
 
-    const edgeThreshold = 80;
+    const getEdgeThreshold = () => {
+        const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+        if (screenWidth >= 1024) {
+            return Math.min(Math.floor(screenWidth * 0.7), 800);
+        } else if (screenWidth >= 768) {
+            return Math.min(Math.floor(screenWidth * 0.6), 500);
+        } else {
+            return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+        }
+    };
     const menuSwipeThreshold = 60;
     const menuCloseEdgeGuard = 60;
     const maxVerticalDeviation = 80;
@@ -222,6 +231,12 @@ function dashboardCalendar() {
     const handleTouchStart = (event) => {
         if (event.touches.length !== 1) return;
 
+        // Проверка: если клик по кнопке, не обрабатываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton) {
+            return;
+        }
+
         syncMenuState();
 
         const touch = event.touches[0];
@@ -255,7 +270,7 @@ function dashboardCalendar() {
             }
             menuGesture = 'close';
         } else {
-            if (startX > edgeThreshold) {
+            if (startX > getEdgeThreshold()) {
                 resetTouchState();
                 return;
             }
@@ -265,12 +280,20 @@ function dashboardCalendar() {
         touchStartX = startX;
         touchStartY = startY;
         menuGestureHandled = false;
-        preventEvent(event);
+        // Не блокируем события здесь, чтобы не мешать выделению текста
+        // Блокировка будет только в handleTouchMove при реальном свайпе
     };
 
     const handleTouchMove = (event) => {
         if (touchStartX === null) return;
         if (!menuGesture) return;
+
+        // Проверка: если касание идет по кнопке, сбрасываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton) {
+            resetTouchState();
+            return;
+        }
 
         const touch = event.touches[0];
         const deltaX = touch.clientX - touchStartX;
@@ -287,12 +310,20 @@ function dashboardCalendar() {
             }
         }
 
-        if (!menuGestureHandled) {
+        // Блокируем события только при реальном движении (свайпе), чтобы не мешать выделению текста
+        if (!menuGestureHandled && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
             preventEvent(event);
         }
     };
 
     const handleTouchEnd = (event) => {
+        // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton && touchStartX !== null) {
+            resetTouchState();
+            return;
+        }
+
         if (touchStartX !== null && menuGesture && !menuGestureHandled && event.changedTouches.length === 1) {
             const touch = event.changedTouches[0];
             const deltaX = touch.clientX - touchStartX;
