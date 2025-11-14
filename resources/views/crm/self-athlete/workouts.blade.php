@@ -2719,7 +2719,7 @@ function workoutApp() {
                 
                 @media (min-width: 768px) {
                     .sets-fields-grid {
-                        grid-template-columns: repeat(3, 1fr) !important;
+                        grid-template-columns: repeat(2, 1fr) !important;
                     }
                 }
                 
@@ -3696,10 +3696,10 @@ function workoutApp() {
                                                         </div>
                                                     </div>
                                                     
-                                                    <div class="sets-fields-grid">
+                                                    <div class="flex gap-6 w-full">
                                                         <!-- Вес -->
                                                         <div x-show="exercise.fields_config?.includes('weight')" 
-                                                             class="bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
+                                                             class="flex-1 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
                                                              :class="getSetFieldBorderClass(exercise, set, 'weight')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
@@ -3721,7 +3721,7 @@ function workoutApp() {
                                                         
                                                         <!-- Повторения -->
                                                         <div x-show="exercise.fields_config?.includes('reps')" 
-                                                             class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
+                                                             class="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
                                                              :class="getSetFieldBorderClass(exercise, set, 'reps')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
@@ -3739,33 +3739,11 @@ function workoutApp() {
                                                                     min="0">
                                                             </div>
                                                         </div>
-                                                        
-                                                        <!-- Отдых -->
-                                                        <div x-show="exercise.fields_config?.includes('rest')" 
-                                                             class="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3"
-                                                             :class="getSetFieldBorderClass(exercise, set, 'rest')">
-                                                            <div class="text-center">
-                                                                <div class="flex items-center justify-center mb-2">
-                                                                    <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                                    </svg>
-                                                                    <span class="text-xs font-semibold text-orange-800">{{ __('common.rest') }} ({{ __('common.min') }})</span>
-                                                                </div>
-                                                                <input 
-                                                                    type="number" 
-                                                                    step="0.1"
-                                                                    x-model="set.rest"
-                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
-                                                                    placeholder="1.0"
-                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none"
-                                                                    min="0">
-                                                            </div>
-                                                        </div>
-                                                                </div>
-                                                            </div>
+                                                    </div>
+                                                </div>
                                             </template>
-                                                        </div>
-                                                        
+                                        </div>
+                                        
                                             <div class="text-xs text-yellow-600 mt-3">
                                                 💡 {{ __('common.changes_save_automatically') }}
                                                                 </div>

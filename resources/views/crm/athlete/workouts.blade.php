@@ -1256,6 +1256,69 @@ function renderMediaElement(path, altText = '', options = {}) {
                     } catch (error) {
                         showError('Ошибка соединения', 'Проверьте подключение к интернету и попробуйте еще раз.');
                     }
+                },
+                
+                parseDateComponents(value) {
+                    if (!value) return null;
+                    
+                    if (typeof value === 'string') {
+                        // Берём только первую часть до пробела/буквы T или пробела
+                        const dateOnly = value.split('T')[0].split(' ')[0];
+                        const match = dateOnly.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                        if (match) {
+                            return {
+                                year: parseInt(match[1], 10),
+                                month: parseInt(match[2], 10),
+                                day: parseInt(match[3], 10),
+                            };
+                        }
+                    } else if (value instanceof Date && !isNaN(value)) {
+                        // Используем UTC методы, чтобы избежать сдвига из-за часового пояса
+                        return {
+                            year: value.getUTCFullYear(),
+                            month: value.getUTCMonth() + 1,
+                            day: value.getUTCDate(),
+                        };
+                    } else if (value && typeof value === 'object' && value.date) {
+                        // Если это объект после JSON сериализации (например, {date: "2025-11-12"})
+                        return this.parseDateComponents(value.date);
+                    }
+                    return null;
+                },
+                
+                formatDate(dateString) {
+                    if (!dateString) return '';
+                    
+                    // Если это уже отформатированная дата (DD.MM.YYYY), возвращаем как есть
+                    if (typeof dateString === 'string' && /^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
+                        return dateString;
+                    }
+                    
+                    // Извлекаем только дату YYYY-MM-DD из строки, игнорируя все остальное
+                    let dateOnly = '';
+                    if (typeof dateString === 'string') {
+                        // Берем только первую часть до T или пробела
+                        dateOnly = dateString.split('T')[0].split(' ')[0].trim();
+                    } else if (dateString instanceof Date) {
+                        // Если это объект Date, преобразуем в ISO строку и берем только дату
+                        const isoString = dateString.toISOString();
+                        dateOnly = isoString.split('T')[0];
+                    } else {
+                        // Пытаемся преобразовать в строку
+                        const str = String(dateString);
+                        dateOnly = str.split('T')[0].split(' ')[0].trim();
+                    }
+                    
+                    // Извлекаем компоненты даты из формата YYYY-MM-DD
+                    const match = dateOnly.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (match) {
+                        const year = match[1];
+                        const month = match[2];
+                        const day = match[3];
+                        return `${day}.${month}.${year}`;
+                    }
+                    
+                    return '';
                 }
             }
         }
@@ -1428,10 +1491,10 @@ function renderMediaElement(path, altText = '', options = {}) {
                     </div>
 
                     <div class="workout-content p-6">
-                        <!-- Заголовок, мета-информация и статус -->
-                        <div class="workout-header flex items-center justify-between mb-4">
+                        <!-- Десктоп: заголовок, мета-информация и статус -->
+                        <div class="workout-desktop-header workout-header flex items-center justify-between mb-4">
                             <div class="workout-title-section flex items-center gap-4">
-                                <h3 class="workout-title text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{{ $workout->title }}</h3>
+                                <h3 @click="showView({{ $workout->id }})" class="workout-title text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors cursor-pointer">{{ $workout->title }}</h3>
                                 <div class="workout-meta flex flex-wrap items-center gap-3 text-sm text-gray-600">
                                     <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1469,6 +1532,46 @@ function renderMediaElement(path, altText = '', options = {}) {
                                 @else {{ __('common.workout_status_planned') }} @endif
                             </span>
                         </div>
+                        
+                        <!-- Мобилка: название и статус в одной строке, дата/время/тренер под названием -->
+                        <div class="md:hidden mb-4">
+                            <!-- Первая строка: название и статус -->
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <h3 @click="showView({{ $workout->id }})" class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors flex-1 min-w-0 truncate cursor-pointer">{{ $workout->title }}</h3>
+                                
+                                <!-- Статус -->
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0
+                                    @if($workout->status === 'completed') bg-green-100 text-green-800
+                                    @elseif($workout->status === 'cancelled') bg-red-100 text-red-800
+                                    @else bg-blue-100 text-blue-800 @endif">
+                                    @if($workout->status === 'completed') {{ __('common.workout_status_completed') }}
+                                    @elseif($workout->status === 'cancelled') {{ __('common.workout_status_cancelled') }}
+                                    @else {{ __('common.workout_status_planned') }} @endif
+                                </span>
+                            </div>
+                            
+                            <!-- Вторая строка: дата, время, продолжительность в один ряд с иконками -->
+                            <div class="flex flex-row gap-3 text-sm text-gray-600" style="justify-content: flex-start !important; align-items: center !important; text-align: left !important;">
+                                <span style="text-align: left !important; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <span class="text-gray-900 font-semibold">{{ optional($workout->date)->format('d.m.Y') }}</span>
+                                </span>
+                                <span style="text-align: left !important; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-gray-900 font-semibold">{{ $workout->time ? \Carbon\Carbon::parse($workout->time)->format('H:i') : '' }}</span>
+                                </span>
+                                <span style="text-align: left !important; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-gray-900 font-semibold">{{ $workout->duration }} {{ __('common.min') }}</span>
+                                </span>
+                            </div>
+                        </div>
 
                         <!-- Описание -->
                         <div class="mb-4">
@@ -1476,11 +1579,11 @@ function renderMediaElement(path, altText = '', options = {}) {
 
                             <!-- Упражнения -->
                             @if(count($workout->exercises ?? []) > 0)
-                                <div class="mt-3">
-                                    <div class="text-xs font-medium text-gray-500 mb-2">{{ __('common.exercises') }}:</div>
-                                    <div class="flex flex-wrap gap-1">
+                                <div class="mt-3" x-data="{ workoutExercises{{ $workout->id }}: {{ json_encode($workout->exercises ?? []) }} }">
+                                    <div class="flex flex-wrap gap-1 items-center">
+                                        <div class="text-xs font-medium text-gray-500">{{ __('common.exercises') }}</div>
                                         <!-- Отображаем все упражнения через Alpine.js -->
-                                        <template x-for="(exercise, index) in ({{ json_encode($workout->exercises ?? []) }} || [])" :key="`exercise-{{ $workout->id }}-${index}`">
+                                        <template x-for="(exercise, index) in (workoutExercises{{ $workout->id }} || [])" :key="`exercise-{{ $workout->id }}-${index}`">
                                             <span x-show="index < 5 || isExercisesExpanded({{ $workout->id }})"
                                                   class="inline-block px-2 py-1 text-xs rounded-full font-medium"
                                                   :class="{
@@ -1495,12 +1598,11 @@ function renderMediaElement(path, altText = '', options = {}) {
                                         </template>
                                         
                                         <!-- Кнопка разворачивания/сворачивания -->
-                                        @if(count($workout->exercises ?? []) > 3)
-                                            <button @click="toggleExercisesExpanded({{ $workout->id }})" 
-                                                    class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
-                                                <span x-text="isExercisesExpanded({{ $workout->id }}) ? '{{ __('common.collapse') }}' : '+{{ count($workout->exercises ?? []) - 3 }} {{ __('common.more') }}'"></span>
-                                            </button>
-                                        @endif
+                                        <button x-show="(workoutExercises{{ $workout->id }} || []).length > 5" 
+                                                @click.stop="toggleExercisesExpanded({{ $workout->id }})" 
+                                                class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
+                                            <span x-text="isExercisesExpanded({{ $workout->id }}) ? '{{ __('common.collapse') }}' : '+' + ((workoutExercises{{ $workout->id }} || []).length - 5) + ' {{ __('common.more') }}'"></span>
+                                        </button>
                                     </div>
                                 </div>
                             @endif
@@ -1601,12 +1703,13 @@ function renderMediaElement(path, altText = '', options = {}) {
             </div>
             
             <!-- Детали -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;">
                     <div style="margin-bottom: 8px;">
                         <span style="font-size: 14px; font-weight: 500; color: #6b7280;">{{ __('common.date') }}</span>
                     </div>
-                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" x-text="currentWorkout ? new Date(currentWorkout.date + 'T00:00:00').toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : ''"></p>
+                    <p style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;" 
+                       x-text="currentWorkout ? (currentWorkout.formatted_date || formatDate(currentWorkout.date)) : ''"></p>
                 </div>
                 
                 <div style="background-color: #f9fafb; border-radius: 12px; padding: 16px;" x-show="currentWorkout?.time">
@@ -1850,30 +1953,6 @@ function renderMediaElement(path, altText = '', options = {}) {
                                                     </div>
                                                     
                                                     <div class="flex gap-6 w-full">
-                                                        <!-- Повторения -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
-                                                             class="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
-                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
-                                                            <div class="text-center">
-                                                                <div class="flex items-center justify-center mb-2">
-                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                                                    </svg>
-                                                                    <span class="text-xs font-semibold text-green-800">{{ __('common.reps') }}</span>
-                                                                </div>
-                                                                <input 
-                                                                    type="number" 
-                                                                    x-model="set.reps"
-                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
-                                                                    placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none no-spinner"
-                                                                    min="0"
-                                                                    style="-moz-appearance: textfield;"
-                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
-                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
-                                                            </div>
-                                                        </div>
-                                                        
                                                         <!-- Вес -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
                                                              class="flex-1 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
@@ -1899,24 +1978,23 @@ function renderMediaElement(path, altText = '', options = {}) {
                                                             </div>
                                                         </div>
                                                         
-                                                        <!-- Отдых -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('rest')" 
-                                                             class="flex-1 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-3"
-                                                             :class="getSetFieldBorderClass(exercise, set, 'rest')">
+                                                        <!-- Повторения -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
+                                                             class="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
                                                             <div class="text-center">
                                                                 <div class="flex items-center justify-center mb-2">
-                                                                    <svg class="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                                                     </svg>
-                                                                    <span class="text-xs font-semibold text-orange-800">{{ __('common.rest') }} ({{ __('common.min') }})</span>
+                                                                    <span class="text-xs font-semibold text-green-800">{{ __('common.reps') }}</span>
                                                                 </div>
                                                                 <input 
                                                                     type="number" 
-                                                                    step="0.1"
-                                                                    x-model="set.rest"
-                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'rest', $event.target.value)"
-                                                                    placeholder="1.0"
-                                                                    class="w-full text-center text-lg font-bold text-orange-900 bg-transparent border-none outline-none no-spinner"
+                                                                    x-model="set.reps"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none no-spinner"
                                                                     min="0"
                                                                     style="-moz-appearance: textfield;"
                                                                     onfocus="this.style.outline='none'; this.style.boxShadow='none';"
@@ -2076,7 +2154,7 @@ input[type="number"].no-spinner:hover {
 }
 
 /* Мобильная адаптация для карточек тренировок */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
     .workout-card {
         margin: 0;
     }
@@ -2085,55 +2163,13 @@ input[type="number"].no-spinner:hover {
         padding: 1rem;
     }
     
-    .workout-header {
-        flex-direction: row !important;
-        align-items: flex-start !important;
-        gap: 12px !important;
-    }
-    
-    .workout-title-section {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 8px !important;
-        flex: 1 !important;
-        min-width: 0 !important;
-    }
-    
-    .workout-title {
-        font-size: 1.125rem !important;
-        margin-bottom: 0 !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        max-width: 200px !important;
-    }
-    
-    .workout-meta {
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 12px !important;
-        width: 100% !important;
-        flex-wrap: nowrap !important;
-    }
-    
-    .workout-meta > span {
-        flex-shrink: 0 !important;
-        white-space: nowrap !important;
-        display: inline-block !important;
-    }
-    
-    .workout-status {
-        align-self: flex-start !important;
-        margin-top: 0 !important;
-        flex-shrink: 0 !important;
-        font-size: 10px !important;
-        padding: 4px 8px !important;
+    /* Скрываем десктопную версию на мобильных */
+    .workout-desktop-header {
+        display: none !important;
     }
     
     
     .workout-content button {
-        width: 100% !important;
         justify-content: center !important;
     }
     

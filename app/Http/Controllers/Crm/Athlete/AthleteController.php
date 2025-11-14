@@ -243,6 +243,11 @@ class AthleteController extends BaseController
             
             // Загружаем упражнения для каждой тренировки отдельно
             $workouts->getCollection()->transform(function ($workout) use ($athlete, &$trainerVideosCache) {
+                // Форматируем дату как строку YYYY-MM-DD без времени, чтобы избежать проблем с часовым поясом
+                $originalDate = $workout->date;
+                $workout->date = \Carbon\Carbon::parse($originalDate)->format('Y-m-d');
+                $workout->formatted_date = \Carbon\Carbon::parse($originalDate)->format('d.m.Y');
+                
                 $workout->exercises = $workout->exercises()
                     ->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc')
