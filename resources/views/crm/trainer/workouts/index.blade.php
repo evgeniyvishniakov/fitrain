@@ -79,6 +79,7 @@ document.head.appendChild(style);
 // function handleDragLeave(event, targetExerciseId, targetIndex) {
 }
 
+/*
 // function handleDrop(event, targetExerciseId, targetIndex) {
     event.preventDefault();
     event.stopPropagation();
@@ -198,6 +199,7 @@ document.head.appendChild(style);
     
     cleanupDragState();
 }
+*/
 
 // function cleanupDragState() {
     // Удаляем все классы drag-over
@@ -2260,7 +2262,66 @@ function workoutApp() {
         },
         
         // Открытие модального окна с деталями упражнения
-        openExerciseDetailModal(exercise) {
+        async openExerciseDetailModal(exercise) {
+            // Загружаем video_url из API и пользовательские видео
+            // Используем exercise_id из pivot таблицы, если есть, иначе id
+            const exerciseId = exercise.exercise_id || exercise.id;
+            
+            try {
+                // Сначала загружаем пользовательское видео (если есть)
+                try {
+                    const userVideoResponse = await fetch(`/exercises/${exerciseId}/user-video`, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (userVideoResponse.ok) {
+                        const userVideoData = await userVideoResponse.json();
+                        if (userVideoData.video && userVideoData.video.video_url) {
+                            exercise.video_url = userVideoData.video.video_url;
+                        }
+                    }
+                } catch (userVideoError) {
+                    // Пользовательское видео не найдено - это нормально
+                }
+                
+                // Если пользовательского видео нет, загружаем из основного API
+                if (!exercise.video_url || exercise.video_url === null || exercise.video_url === '') {
+                    const response = await fetch(`/exercises/api`, {
+                        method: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.exercises && Array.isArray(data.exercises)) {
+                            const exerciseFromApi = data.exercises.find(ex => ex.id === exerciseId || ex.id === exercise.exercise_id || ex.id === exercise.id);
+                            if (exerciseFromApi) {
+                                if (exerciseFromApi.video_url) {
+                                    exercise.video_url = exerciseFromApi.video_url;
+                                }
+                                // Также обновляем другие поля, если они отсутствуют
+                                if (!exercise.description && exerciseFromApi.description) {
+                                    exercise.description = exerciseFromApi.description;
+                                }
+                                if (!exercise.instructions && exerciseFromApi.instructions) {
+                                    exercise.instructions = exerciseFromApi.instructions;
+                                }
+                                if (!exercise.muscle_groups && exerciseFromApi.muscle_groups) {
+                                    exercise.muscle_groups = exerciseFromApi.muscle_groups;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки данных упражнения из API:', error);
+            }
+            
             // Создаем модальное окно динамически (как openSimpleModal)
             const modal = document.createElement('div');
             modal.style.cssText = `
@@ -2323,34 +2384,93 @@ function workoutApp() {
             
             let bodyHTML = '';
             
-            // Первое изображение
-            const hasImage1 = exercise.image_url && exercise.image_url !== 'null' && exercise.image_url !== null;
-            if (hasImage1) {
-                const mediaHtml1 = renderMediaElement(`/storage/${exercise.image_url}`, exercise.name || '', {
-                    style: 'width: 100%; height: 350px; object-fit: contain;'
-                });
-                bodyHTML += `<div style="margin-bottom: 24px;">`;
-                bodyHTML += `
-                    <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        ${mediaHtml1}
-                    </div>
-                `;
-                bodyHTML += '</div>';
-            }
+            // Второе изображение и видео в одном ряду на десктопе
+            const imageUrl2 = exercise.image_url_2;
+            const hasImage2 = imageUrl2 && 
+                             imageUrl2 !== 'null' && 
+                             imageUrl2 !== null && 
+                             String(imageUrl2).trim() !== '' &&
+                             String(imageUrl2).trim() !== 'null';
             
-            // Второе изображение
-            const hasImage2 = exercise.image_url_2 && exercise.image_url_2 !== 'null' && exercise.image_url_2 !== null;
-            if (hasImage2) {
-                const mediaHtml2 = renderMediaElement(`/storage/${exercise.image_url_2}`, exercise.name || '', {
-                    style: 'width: 100%; height: 350px; object-fit: contain;'
-                });
-                bodyHTML += `<div style="margin-bottom: 24px;">`;
-                bodyHTML += `
-                    <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        ${mediaHtml2}
-                    </div>
-                `;
-                bodyHTML += '</div>';
+            const videoUrl = exercise.video_url;
+            const videoUrlStr = videoUrl ? String(videoUrl).trim() : '';
+            const hasValidVideo = videoUrlStr && 
+                                  videoUrlStr !== '' && 
+                                  videoUrlStr !== 'null' && 
+                                  videoUrlStr !== 'undefined' &&
+                                  videoUrlStr.toLowerCase() !== 'null';
+            
+            // Контейнер для второго изображения и видео (рядом на десктопе)
+            if (hasImage2 || hasValidVideo) {
+                bodyHTML += '<div style="margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px;">';
+                bodyHTML += '<style>@media (min-width: 768px) { .exercise-media-row { flex-direction: row !important; } }</style>';
+                bodyHTML += '<div class="exercise-media-row" style="display: flex; flex-direction: column; gap: 16px;">';
+                
+                // Второе изображение
+                if (hasImage2) {
+                    const imageUrl2Str = String(imageUrl2).trim();
+                    const isVideo = this.isVideoFile(imageUrl2Str);
+                    bodyHTML += '<div style="flex: 1; min-width: 0;">';
+                    if (isVideo) {
+                        bodyHTML += `
+                            <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                <video src="/storage/${imageUrl2Str}" 
+                                       style="width: 100%; height: 350px; object-fit: contain; pointer-events: none;"
+                                       autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                            </div>
+                        `;
+                    } else {
+                        bodyHTML += `
+                            <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                <img src="/storage/${imageUrl2Str}" 
+                                     alt="${exercise.name || ''}"
+                                     style="width: 100%; height: 350px; object-fit: contain;">
+                            </div>
+                        `;
+                    }
+                    bodyHTML += '</div>';
+                }
+                
+                // Видео
+                if (hasValidVideo) {
+                    bodyHTML += '<div style="flex: 1; min-width: 0;">';
+                    
+                    if (this.isYouTubeUrl(videoUrlStr)) {
+                        const embedUrl = this.getYouTubeEmbedUrl(videoUrlStr);
+                        if (embedUrl) {
+                            bodyHTML += `
+                                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                    <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px;" allowfullscreen></iframe>
+                                </div>
+                            `;
+                        } else {
+                            bodyHTML += `
+                                <div class="text-center py-4">
+                                    <a href="${videoUrlStr}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s;">
+                                    <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                    </svg>
+                                        Открыть видео
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        bodyHTML += `
+                            <div class="text-center py-4">
+                                <a href="${videoUrlStr}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s;">
+                                <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                </svg>
+                                    Открыть видео
+                                </a>
+                            </div>
+                        `;
+                    }
+                    bodyHTML += '</div>';
+                }
+                
+                bodyHTML += '</div></div>';
             }
             
             // Описание
@@ -2387,31 +2507,6 @@ function workoutApp() {
                         </div>
                     </div>
                 `;
-            }
-            
-            // Видео
-            if (exercise.video_url) {
-                bodyHTML += '<div style="margin-bottom: 24px;"><h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">Видео</h4>';
-                
-                if (exercise.video_url.includes('youtube.com') || exercise.video_url.includes('youtu.be')) {
-                    const embedUrl = this.getYouTubeEmbedUrl(exercise.video_url);
-                    bodyHTML += `
-                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                            <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px;" allowfullscreen></iframe>
-                        </div>
-                    `;
-                } else {
-                    bodyHTML += `
-                        <a href="${exercise.video_url}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s;">
-                            <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                            </svg>
-                            Открыть видео
-                        </a>
-                    `;
-                }
-                
-                bodyHTML += '</div>';
             }
             
             body.innerHTML = bodyHTML;
@@ -3578,8 +3673,9 @@ function workoutApp() {
                                           x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
                                     <span class="text-xs text-gray-500" x-text="(exercise.category || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (exercise.equipment || '')"></span>
                                 </div>
-                                <div x-show="exercise.video_url" class="exercise-video-link">
-                                    <button @click="openSimpleModal(exercise.video_url, exercise.name)"
+                                <div class="exercise-video-link">
+                                    <button x-show="exercise.video_url && exercise.video_url !== 'null' && exercise.video_url !== null && exercise.video_url !== ''"
+                                            @click="openSimpleModal(exercise.video_url, exercise.name)"
                                             class="inline-flex items-center px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded-full transition-colors cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -5559,9 +5655,33 @@ function copyPlanToFields(exerciseId) {
             <!-- Второе изображение как видео/GIF (если это видео файл) -->
             <div x-show="exerciseDetailModal.exercise?.image_url_2 && exerciseDetailModal.exercise.image_url_2 !== 'null' && exerciseDetailModal.exercise.image_url_2 !== null && isVideoFile(exerciseDetailModal.exercise?.image_url_2)" style="margin-bottom: 24px;">
                 <div style="position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"
-                           style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
-                           autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                        <video :src="'/storage/' + exerciseDetailModal.exercise.image_url_2"
+                               style="width: 100%; height: 280px; object-fit: cover; pointer-events: none;"
+                               autoplay loop muted playsinline controlslist="nodownload noremoteplayback nofullscreen" disablePictureInPicture></video>
+                </div>
+            </div>
+            
+            <!-- Видео -->
+            <div x-show="exerciseDetailModal.exercise?.video_url" style="margin-bottom: 24px;">
+                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">
+                    {{ __('common.video') }}
+                </h4>
+                <div x-show="isYouTubeUrl(exerciseDetailModal.exercise?.video_url)" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                    <iframe :src="getYouTubeEmbedUrl(exerciseDetailModal.exercise?.video_url)" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px;" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+                <div x-show="!isYouTubeUrl(exerciseDetailModal.exercise?.video_url)">
+                    <a :href="exerciseDetailModal.exercise?.video_url" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s;">
+                        <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        {{ __('common.open_video') }}
+                    </a>
                 </div>
             </div>
             
@@ -5592,30 +5712,6 @@ function copyPlanToFields(exerciseId) {
                     <template x-for="muscle in (exerciseDetailModal.exercise?.muscle_groups || [])" :key="muscle">
                         <span style="display: inline-flex; align-items: center; padding: 6px 14px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; border-radius: 9999px; font-size: 13px; font-weight: 500;" x-text="muscle"></span>
                     </template>
-                </div>
-            </div>
-            
-            <!-- Видео -->
-            <div x-show="exerciseDetailModal.exercise?.video_url" style="margin-bottom: 24px;">
-                <h4 style="font-size: 16px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">
-                    {{ __('common.video') }}
-                </h4>
-                <div x-show="isYouTubeUrl(exerciseDetailModal.exercise?.video_url)" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                    <iframe :src="getYouTubeEmbedUrl(exerciseDetailModal.exercise?.video_url)" 
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px;" 
-                            allowfullscreen>
-                    </iframe>
-                </div>
-                <div x-show="!isYouTubeUrl(exerciseDetailModal.exercise?.video_url)">
-                    <a :href="exerciseDetailModal.exercise?.video_url" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       style="display: inline-flex; align-items: center; padding: 12px 24px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 500; transition: all 0.2s;">
-                        <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                        </svg>
-                        {{ __('common.open_video') }}
-                    </a>
                 </div>
             </div>
             

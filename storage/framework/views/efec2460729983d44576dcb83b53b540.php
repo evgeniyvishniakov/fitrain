@@ -1441,8 +1441,14 @@ function athletesApp() {
         },
         
         async saveNutritionPlanForm() {
+            let nutritionData = null;
             try {
-                const nutritionData = {
+                console.log('=== ОТЛАДКА СОХРАНЕНИЯ ПЛАНА ПИТАНИЯ ===');
+                console.log('nutritionMonth:', this.nutritionMonth);
+                console.log('nutritionYear:', this.nutritionYear);
+                console.log('athlete_id:', this.currentAthlete.id);
+                
+                nutritionData = {
                     athlete_id: this.currentAthlete.id,
                     month: this.nutritionMonth,
                     year: this.nutritionYear,
@@ -1454,6 +1460,9 @@ function athletesApp() {
                 
                 // Собираем данные по дням - только заполненные
                 const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
+                console.log('daysInMonth:', daysInMonth);
+                console.log('Начинаем сбор данных по дням...');
+                
                 for (let day = 1; day <= daysInMonth; day++) {
                     const proteinsRaw = document.querySelector(`input[name="proteins_${day}"]`)?.value ?? '';
                     const fatsRaw = document.querySelector(`input[name="fats_${day}"]`)?.value ?? '';
@@ -1464,6 +1473,8 @@ function athletesApp() {
                     if (!hasAny) continue;
 
                     const dateStr = `${this.nutritionYear}-${String(this.nutritionMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    console.log(`День ${day}: дата=${dateStr}, белки=${proteinsRaw}, жиры=${fatsRaw}, углеводы=${carbsRaw}`);
+                    
                     nutritionData.days.push({
                         date: dateStr,
                         proteins: Number.isFinite(parseFloat(proteinsRaw)) ? parseFloat(proteinsRaw) : 0,
@@ -1474,10 +1485,15 @@ function athletesApp() {
                     
                 }
                 
+                console.log('Всего дней для сохранения:', nutritionData.days.length);
+                console.log('Дни:', nutritionData.days.map(d => d.date));
+                
                 // Если нет заполненных дней, создаем план без дней
                 if (nutritionData.days.length === 0) {
                     console.log('Нет заполненных дней, создаем пустой план');
                 }
+                
+                console.log('Отправляем данные на сервер:', nutritionData);
                 
                 const response = await fetch('/trainer/nutrition-plans', {
                     method: 'POST',
@@ -1488,19 +1504,35 @@ function athletesApp() {
                     body: JSON.stringify(nutritionData)
                 });
                 
+                console.log('Ответ сервера:', response.status, response.statusText);
+                
                 if (response.ok) {
+                    const result = await response.json();
+                    console.log('План успешно сохранен:', result);
                     this.currentView = 'view';
                     this.activeTab = 'nutrition';
                     this.loadNutritionPlans(); // Перезагружаем список планов
                 } else {
-                    const error = await response.json();
-                    console.error('<?php echo e(__('common.server_error')); ?>:', error);
-                    alert(error.error || '<?php echo e(__('common.nutrition_plan_creation_error')); ?>');
+                    // Пытаемся получить JSON ошибку, если не получается - показываем текст
+                    let errorText = '';
+                    try {
+                        const error = await response.json();
+                        console.error('ОШИБКА СЕРВЕРА:', error);
+                        console.error('Статус:', response.status);
+                        console.error('Полный ответ:', error);
+                        errorText = error.error || error.message || '<?php echo e(__('common.nutrition_plan_creation_error')); ?>';
+                    } catch (e) {
+                        const text = await response.text();
+                        console.error('ОШИБКА СЕРВЕРА (не JSON):', text);
+                        console.error('Статус:', response.status);
+                        errorText = 'Ошибка сервера (статус ' + response.status + ')';
+                    }
+                    alert(errorText);
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
                 console.error('Данные:', nutritionData);
-                alert('<?php echo e(__('common.nutrition_plan_error')); ?>: ' + error.message);
+                alert('<?php echo e(__('common.nutrition_plan_error')); ?>: ' + (error.message || error));
             }
         },
         
@@ -1843,15 +1875,44 @@ function athletesApp() {
         // Применить быстрое заполнение
         applyQuickFill() {
             const { proteins, fats, carbs, startDay, endDay } = this.quickFillData;
+            // Преобразуем в числа, так как они могут прийти как строки из input
+            const startDayNum = parseInt(startDay, 10);
+            const endDayNum = parseInt(endDay, 10);
             const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
             
-            if (startDay < 1 || endDay > daysInMonth || startDay > endDay) {
+            console.log('=== ОТЛАДКА БЫСТРОГО ЗАПОЛНЕНИЯ ===');
+            console.log('startDay (исходный):', startDay, 'тип:', typeof startDay);
+            console.log('endDay (исходный):', endDay, 'тип:', typeof endDay);
+            console.log('startDayNum (число):', startDayNum);
+            console.log('endDayNum (число):', endDayNum);
+            console.log('daysInMonth:', daysInMonth);
+            console.log('nutritionMonth:', this.nutritionMonth);
+            console.log('nutritionYear:', this.nutritionYear);
+            console.log('Проверка условий:');
+            console.log('  startDayNum < 1:', startDayNum < 1);
+            console.log('  endDayNum > daysInMonth:', endDayNum > daysInMonth);
+            console.log('  startDayNum > endDayNum:', startDayNum > endDayNum);
+            
+            if (isNaN(startDayNum) || isNaN(endDayNum) || startDayNum < 1 || endDayNum > daysInMonth || startDayNum > endDayNum) {
+                console.error('ОШИБКА: Неверные дни!', {
+                    startDay: startDay,
+                    endDay: endDay,
+                    startDayNum: startDayNum,
+                    endDayNum: endDayNum,
+                    daysInMonth,
+                    month: this.nutritionMonth,
+                    year: this.nutritionYear
+                });
                 alert('<?php echo e(__('common.invalid_days_error')); ?>');
                 return;
             }
             
+            // Используем числовые значения для цикла
+            const actualStartDay = startDayNum;
+            const actualEndDay = endDayNum;
+            
             // Заполняем все ячейки
-            for (let day = startDay; day <= endDay; day++) {
+            for (let day = actualStartDay; day <= actualEndDay; day++) {
                 const proteinsInput = document.querySelector(`input[name="proteins_${day}"]`);
                 const fatsInput = document.querySelector(`input[name="fats_${day}"]`);
                 const carbsInput = document.querySelector(`input[name="carbs_${day}"]`);
@@ -2387,9 +2448,9 @@ function athletesApp() {
                         this.currentView = 'list';
                         this.currentPage = 1; // Сбрасываем на первую страницу
                     } else {
-                        // Возвращаемся к карточке спортсмена
-                        this.currentView = 'view';
-                        this.activeTab = 'overview';
+                    // Возвращаемся к карточке спортсмена
+                    this.currentView = 'view';
+                    this.activeTab = 'overview';
                     }
                 } else {
                     // Обработка ошибки CSRF token mismatch (419)

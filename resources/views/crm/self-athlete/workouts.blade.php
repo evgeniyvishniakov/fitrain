@@ -5272,7 +5272,7 @@ async function showExerciseHistoryModal(exerciseId) {
                 
                 const planText = formatPlan(workout.plan);
                 const factText = formatFact(workout.fact);
-                
+        
                 // Определяем статус упражнения
                 const exerciseStatus = workout.exercise_status || null;
                 
@@ -5299,7 +5299,7 @@ async function showExerciseHistoryModal(exerciseId) {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                             <span style="font-size: 15px; font-weight: 600; color: #1e40af;">${workout.workout_title} (${workoutDate})</span>
-                        </div>
+                    </div>
                         
                         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 12px;">
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -5308,16 +5308,16 @@ async function showExerciseHistoryModal(exerciseId) {
                             <div style="font-size: 13px; color: #4b5563; margin-left: 20px;">
                                 ${planText}
                             </div>
-                        </div>
-                        
+                    </div>
+                    
                         ${workout.fact && exerciseStatus ? `
                             <div style="background: ${factBgColor}; border: 1px solid ${factBorderColor}; border-radius: 8px; padding: 12px; margin-bottom: 0;">
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                                     <span style="font-size: 13px; font-weight: 600; color: ${factColor};">${factIcon} ${factLabel}</span>
-                                </div>
+                    </div>
                                 <div style="font-size: 13px; color: #4b5563; margin-left: 20px;">
                                     ${factText}
-                                </div>
+                </div>
                                 ${workout.sets_details && workout.sets_details.length > 0 && exerciseStatus === 'partial' ? `
                                     <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid ${factBorderColor};">
                                         <div style="font-size: 13px; font-weight: 600; color: ${factColor}; margin-bottom: 8px;">Детали подходов:</div>
@@ -5344,8 +5344,8 @@ async function showExerciseHistoryModal(exerciseId) {
                                 </div>
                             </div>
                         `}
-                    </div>
-                `;
+            </div>
+        `;
             }).join('');
         } else {
             workoutsHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Нет истории тренировок</div>';

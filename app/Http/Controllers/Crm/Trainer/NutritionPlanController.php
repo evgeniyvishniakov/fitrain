@@ -52,26 +52,32 @@ class NutritionPlanController extends Controller
     /**
      * Создать новый план питания
      */
-    public function store(Request $request)
-    {
-        \Log::info('Начало создания плана питания', $request->all());
-        
-        try {
-            $request->validate([
-                'athlete_id' => 'required|exists:users,id',
-                'month' => 'required|integer|min:1|max:12',
-                'year' => 'required|integer|min:2020|max:2030',
-                'title' => 'nullable|string|max:255',
-                'description' => 'nullable|string',
-                'days' => 'nullable|array',
-                'days.*.date' => 'nullable|date',
-                'days.*.proteins' => 'nullable|numeric|min:0',
-                'days.*.fats' => 'nullable|numeric|min:0',
-                'days.*.carbs' => 'nullable|numeric|min:0',
-                'days.*.notes' => 'nullable|string'
-            ]);
+        public function store(Request $request)
+        {
+            // Записываем в лог сразу, чтобы убедиться, что метод вызывается
+            \Log::info('=== МЕТОД STORE ВЫЗВАН ===', ['время' => now()]);
             
-            \Log::info('Валидация прошла успешно');
+            try {
+                \Log::info('=== НАЧАЛО СОЗДАНИЯ ПЛАНА ПИТАНИЯ ===');
+                \Log::info('Данные запроса:', $request->all());
+                \Log::info('Месяц: ' . $request->month);
+                \Log::info('Год: ' . $request->year);
+                \Log::info('Количество дней в запросе: ' . ($request->has('days') ? count($request->days) : 0));
+                $request->validate([
+                    'athlete_id' => 'required|exists:users,id',
+                    'month' => 'required|integer|min:1|max:12',
+                    'year' => 'required|integer|min:2020|max:2030',
+                    'title' => 'nullable|string|max:255',
+                    'description' => 'nullable|string',
+                    'days' => 'nullable|array',
+                    'days.*.date' => 'nullable|date',
+                    'days.*.proteins' => 'nullable|numeric|min:0',
+                    'days.*.fats' => 'nullable|numeric|min:0',
+                    'days.*.carbs' => 'nullable|numeric|min:0',
+                    'days.*.notes' => 'nullable|string'
+                ]);
+                
+                \Log::info('Валидация прошла успешно');
 
             // Проверяем доступ
             $athlete = User::where('id', $request->athlete_id)
@@ -101,9 +107,8 @@ class NutritionPlanController extends Controller
                 ]);
                 \Log::info('План питания обновлен с ID: ' . $plan->id);
                 
-                // Удаляем все существующие дни
-                $plan->nutritionDays()->delete();
-                \Log::info('Существующие дни питания удалены');
+                // НЕ удаляем существующие дни - будем обновлять/добавлять только переданные дни
+                // Это позволяет добавлять дни к существующему плану без потери данных
             } else {
                 // Создаем новый план
                 $plan = NutritionPlan::create([
@@ -119,10 +124,16 @@ class NutritionPlanController extends Controller
 
             // Сохраняем данные по дням, если они есть и валидны
             if ($request->has('days') && is_array($request->days) && count($request->days) > 0) {
-                \Log::info('Начинаем сохранение дней, количество: ' . count($request->days));
+                \Log::info('=== НАЧИНАЕМ СОХРАНЕНИЕ ДНЕЙ ===');
+                \Log::info('Количество дней в запросе: ' . count($request->days));
+                \Log::info('Ожидаемый месяц: ' . $request->month);
+                \Log::info('Ожидаемый год: ' . $request->year);
+                
+                $savedCount = 0;
+                $skippedCount = 0;
                 
                 foreach ($request->days as $index => $dayData) {
-                    \Log::info("Обрабатываем день $index", $dayData);
+                    \Log::info("=== Обрабатываем день #$index ===", ['dayData' => $dayData]);
                     
                     // Проверяем, что есть хотя бы одна заполненная ячейка
                     if (!empty($dayData['date']) && 
@@ -131,37 +142,59 @@ class NutritionPlanController extends Controller
                         
                         // Проверяем валидность даты - она должна принадлежать указанному месяцу
                         $dateParts = explode('-', $dayData['date']);
+                        \Log::info("Дата разбита на части: " . implode(', ', $dateParts));
+                        
                         if (count($dateParts) === 3) {
                             $dateYear = (int)$dateParts[0];
                             $dateMonth = (int)$dateParts[1];
                             $dateDay = (int)$dateParts[2];
                             
+                            \Log::info("Парсинг даты: год=$dateYear, месяц=$dateMonth, день=$dateDay");
+                            \Log::info("Сравнение: год запроса={$request->year}, месяц запроса={$request->month}");
+                            
                             // Проверяем, что дата принадлежит указанному месяцу и году
                             if ($dateYear === (int)$request->year && $dateMonth === (int)$request->month) {
                                 // Проверяем, что день не превышает максимальное количество дней в месяце
                                 $daysInMonth = (int)date('t', mktime(0, 0, 0, $dateMonth, 1, $dateYear));
+                                \Log::info("Дней в месяце: $daysInMonth, проверяемый день: $dateDay");
+                                
                                 if ($dateDay >= 1 && $dateDay <= $daysInMonth) {
-                                    $nutritionDay = NutritionDay::create([
-                                        'nutrition_plan_id' => $plan->id,
-                                        'date' => $dayData['date'],
-                                        'proteins' => $dayData['proteins'] ?? 0,
-                                        'fats' => $dayData['fats'] ?? 0,
-                                        'carbs' => $dayData['carbs'] ?? 0,
-                                        'notes' => $dayData['notes'] ?? null
-                                    ]);
+                                    // Используем updateOrCreate для обновления существующих дней или создания новых
+                                    $nutritionDay = NutritionDay::updateOrCreate(
+                                        [
+                                            'nutrition_plan_id' => $plan->id,
+                                            'date' => $dayData['date']
+                                        ],
+                                        [
+                                            'proteins' => $dayData['proteins'] ?? 0,
+                                            'fats' => $dayData['fats'] ?? 0,
+                                            'carbs' => $dayData['carbs'] ?? 0,
+                                            'notes' => $dayData['notes'] ?? null
+                                        ]
+                                    );
                                     
-                                    \Log::info('День питания создан с ID: ' . $nutritionDay->id);
+                                    $savedCount++;
+                                    \Log::info("✓ День питания сохранен/обновлен с ID: {$nutritionDay->id}, дата: {$dayData['date']}");
                                 } else {
-                                    \Log::warning("Пропущен день с невалидной датой: {$dayData['date']} (день $dateDay не существует в месяце $dateMonth)");
+                                    $skippedCount++;
+                                    \Log::warning("✗ Пропущен день с невалидной датой: {$dayData['date']} (день $dateDay не существует в месяце $dateMonth, максимум $daysInMonth)");
                                 }
                             } else {
-                                \Log::warning("Пропущен день с датой из другого месяца: {$dayData['date']}");
+                                $skippedCount++;
+                                \Log::warning("✗ Пропущен день с датой из другого месяца/года: {$dayData['date']} (ожидалось: {$request->year}-{$request->month})");
                             }
                         } else {
-                            \Log::warning("Пропущен день с неправильным форматом даты: {$dayData['date']}");
+                            $skippedCount++;
+                            \Log::warning("✗ Пропущен день с неправильным форматом даты: {$dayData['date']}");
                         }
+                    } else {
+                        \Log::info("Пропущен день (пустые данные):", ['dayData' => $dayData]);
                     }
                 }
+                
+                \Log::info("=== ИТОГИ СОХРАНЕНИЯ ===");
+                \Log::info("Сохранено дней: $savedCount");
+                \Log::info("Пропущено дней: $skippedCount");
             } else {
                 \Log::info('Нет данных по дням для сохранения');
             }
@@ -183,10 +216,20 @@ class NutritionPlanController extends Controller
             return response()->json(['error' => 'Ошибка валидации: ' . json_encode($e->errors())], 422);
         } catch (\Exception $e) {
             DB::rollback();
-            \Log::error('Ошибка при создании плана питания: ' . $e->getMessage());
+            \Log::error('=== ОШИБКА ПРИ СОЗДАНИИ ПЛАНА ПИТАНИЯ ===');
+            \Log::error('Сообщение: ' . $e->getMessage());
+            \Log::error('Файл: ' . $e->getFile() . ':' . $e->getLine());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
             \Log::error('Данные запроса: ' . json_encode($request->all()));
-            return response()->json(['error' => 'Ошибка при создании плана питания: ' . $e->getMessage()], 500);
+            
+            return response()->json([
+                'error' => 'Ошибка при создании плана питания: ' . $e->getMessage(),
+                'details' => config('app.debug') ? [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ] : null
+            ], 500);
         }
     }
 

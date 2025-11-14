@@ -15,7 +15,8 @@ class WorkoutController extends BaseController
         
         if ($user->hasRole('trainer')) {
             $workouts = $user->trainerWorkouts()->with(['athlete', 'exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
+                $query->select('exercises.*')
+                    ->addSelect('workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = $user->athletes()->get();
@@ -23,14 +24,16 @@ class WorkoutController extends BaseController
         } elseif ($user->hasRole('self-athlete')) {
             // Self-Athlete видит только свои тренировки
             $workouts = Workout::where('athlete_id', $user->id)->with(['exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
+                $query->select('exercises.*')
+                    ->addSelect('workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = [$user]; // Self-Athlete сам себе спортсмен
             
         } else {
             $workouts = $user->workouts()->with(['trainer', 'exercises' => function($query) {
-                $query->select('exercises.id', 'exercises.name', 'exercises.description', 'exercises.category', 'exercises.equipment', 'exercises.muscle_groups', 'exercises.instructions', 'exercises.video_url', 'exercises.fields_config', 'exercises.image_url', 'exercises.image_url_2', 'exercises.image_url_female', 'exercises.image_url_female_2', 'workout_exercise.*')
+                $query->select('exercises.*')
+                    ->addSelect('workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc');
             }])->latest()->paginate(10);
             $athletes = [];
@@ -56,6 +59,15 @@ class WorkoutController extends BaseController
                         }
                     }
                     // Для мужчин всегда используются обычные изображения (image_url, image_url_2)
+                    
+                    // Явно убеждаемся, что video_url загружен и доступен
+                    // Загружаем video_url напрямую из базы, если он не загружен или null
+                    if (!isset($exercise->video_url) || $exercise->video_url === null) {
+                        $exerciseFromDb = \App\Models\Trainer\Exercise::find($exercise->id);
+                        if ($exerciseFromDb) {
+                            $exercise->video_url = $exerciseFromDb->video_url;
+                        }
+                    }
                     
                     if ($exercise->pivot) {
                         foreach (['sets', 'reps', 'weight', 'rest', 'time', 'distance', 'tempo', 'notes'] as $field) {
@@ -136,7 +148,8 @@ class WorkoutController extends BaseController
         
         // Загружаем связанные данные для фронтенда
         $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
-            $query->select('exercises.*', 'workout_exercise.*')
+            $query->select('exercises.*')
+                ->addSelect('workout_exercise.*')
                 ->orderBy('workout_exercise.order_index', 'asc');
         }]);
         
@@ -284,7 +297,8 @@ class WorkoutController extends BaseController
         
         // Загружаем связанные данные для фронтенда
         $workout->load(['athlete', 'trainer', 'exercises' => function($query) {
-            $query->select('exercises.*', 'workout_exercise.*')
+            $query->select('exercises.*')
+                ->addSelect('workout_exercise.*')
                 ->orderBy('workout_exercise.order_index', 'asc');
         }]);
         
@@ -329,7 +343,8 @@ class WorkoutController extends BaseController
         }
 
         $originalWorkout = Workout::with(['exercises' => function ($query) {
-            $query->select('exercises.*', 'workout_exercise.*')
+            $query->select('exercises.*')
+                ->addSelect('workout_exercise.*')
                 ->orderBy('workout_exercise.order_index', 'asc');
         }])->findOrFail($id);
 
