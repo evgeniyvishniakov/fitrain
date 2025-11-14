@@ -173,6 +173,13 @@ function renderMediaElement(path, altText = '', options = {}) {
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
             if (this.isAnyModalOpen()) return;
+            
+            // Проверка: если клик по кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                return;
+            }
+
             if (this.popStateLocked) return;
 
             const touch = event.touches[0];
@@ -256,6 +263,20 @@ function renderMediaElement(path, altText = '', options = {}) {
 
         handleTouchMove(event) {
             if (this.touchStartX === null) return;
+            
+            // Проверка: если касание идет по кнопке, сбрасываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+            
             if (this.popStateLocked) return;
             if (this.currentView === 'list') {
                 if (!this.menuGesture) return;
@@ -293,6 +314,19 @@ function renderMediaElement(path, altText = '', options = {}) {
         },
 
         handleTouchEnd(event) {
+            // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton && this.touchStartX !== null) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+
             if (this.popStateLocked) {
                 this.touchStartX = null;
                 this.touchStartY = null;
