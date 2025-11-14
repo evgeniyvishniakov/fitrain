@@ -442,9 +442,11 @@ function workoutApp() {
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
             if (this.isAnyModalOpen()) return;
-            if (this.popStateLocked) return;
+            this.syncMenuState();
 
-            if (event.target.closest('[data-swipe-ignore="true"]')) {
+            // Проверка: если клик по кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
                 return;
             }
 
@@ -457,7 +459,8 @@ function workoutApp() {
             const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
             const isMenuToggle = event.target.closest('.mobile-menu-btn');
             const isMenuClose = event.target.closest('.mobile-menu-close');
-            const menuOpen = this.isMobileMenuOpen();
+            const menuOpen = this.menuIsOpen;
+
             this.menuGesture = null;
             this.menuGestureHandled = false;
 
@@ -467,28 +470,26 @@ function workoutApp() {
 
             if (this.currentView === 'list') {
                 if (menuOpen) {
-                    const guard = this.menuCloseEdgeGuard;
-                    const menuWidth = this.getMobileMenuWidth();
-                    if (startX <= guard) {
+                    if (startX <= this.menuCloseEdgeGuard) {
                         event.preventDefault();
                         event.stopPropagation();
                         if (event.stopImmediatePropagation) {
                             event.stopImmediatePropagation();
                         }
-                        this.menuGesture = null;
-                        this.menuGestureHandled = false;
+                        this.touchStartX = null;
+                        this.touchStartY = null;
                         return;
                     }
-                    if (targetInsideMenu || startX <= menuWidth + guard) {
-                        this.menuGesture = null;
-                        this.menuGestureHandled = false;
+                    const menuWidth = this.getMobileMenuWidth();
+                    if (targetInsideMenu || startX <= menuWidth + this.menuCloseEdgeGuard) {
+                        this.touchStartX = null;
+                        this.touchStartY = null;
+                        this.menuGestureHandled = true;
                         return;
                     }
                     this.menuGesture = 'close';
                 } else {
-                    if (!nearEdge) {
-                        return;
-                    }
+                    if (!nearEdge) return;
                     this.menuGesture = 'open';
                 }
 
@@ -510,7 +511,7 @@ function workoutApp() {
             if (!['view', 'create', 'edit'].includes(this.currentView)) return;
             if (!nearEdge) return;
 
-            this.closeGlobalMobileMenu();
+            this.closeMobileMenuIfOpen();
             this.clearSwipeAnimationTimeout();
             this.swipeHandled = false;
             this.touchStartX = startX;
@@ -529,7 +530,7 @@ function workoutApp() {
 
         handleTouchMove(event) {
             if (this.touchStartX === null) return;
-            if (this.popStateLocked) return;
+            if (this.isAnyModalOpen()) return;
             if (this.currentView === 'list') {
                 if (!this.menuGesture) return;
                 if (this.menuGestureHandled) return;
@@ -544,10 +545,17 @@ function workoutApp() {
                     this.closeMobileMenuIfOpen();
                     this.menuGestureHandled = true;
                 }
+                if (!this.menuGestureHandled) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.stopImmediatePropagation) {
+                        event.stopImmediatePropagation();
+                    }
+                }
                 return;
             }
+
             if (!['view', 'create', 'edit'].includes(this.currentView)) return;
-            if (this.isAnyModalOpen()) return;
             const touch = event.touches[0];
             const deltaX = Math.max(0, touch.clientX - this.touchStartX);
             const deltaY = touch.clientY - (this.touchStartY ?? 0);
@@ -562,19 +570,13 @@ function workoutApp() {
             if (event && this.touchStartX <= this.edgeThreshold) {
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
         },
 
         handleTouchEnd(event) {
-            if (this.popStateLocked) {
-                this.touchStartX = null;
-                this.touchStartY = null;
-                this.touchStartTime = null;
-                this.swipeTargetElement = null;
-                this.menuGesture = null;
-                this.menuGestureHandled = false;
-                return;
-            }
             if (this.currentView === 'list') {
                 if (this.menuGesture && !this.menuGestureHandled && event.changedTouches.length === 1) {
                     const touch = event.changedTouches[0];
@@ -605,6 +607,7 @@ function workoutApp() {
                 this.touchStartTime = null;
                 return;
             }
+
             const targetElement = this.swipeTargetElement;
             if (this.swipeHandled) {
                 this.touchStartX = null;
@@ -613,6 +616,7 @@ function workoutApp() {
                 this.swipeHandled = false;
                 return;
             }
+
             const touch = event.changedTouches[0];
             const startX = this.touchStartX;
             const startY = this.touchStartY ?? 0;
@@ -662,9 +666,11 @@ function workoutApp() {
                     this.showList();
                     this.resetSwipeTransform(true, target);
                     this.swipeTargetElement = null;
+                    this.swipeHandled = false;
                     this.swipeAnimationTimeout = null;
                 }, 180);
             } else {
+                this.swipeHandled = false;
                 this.showList();
             }
         },
