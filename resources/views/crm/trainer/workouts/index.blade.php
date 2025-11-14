@@ -26,6 +26,13 @@
             margin-left: 0.5rem;
         }
     }
+
+    /* Скрываем десктопную версию на мобильных */
+    @media (max-width: 767px) {
+        .workout-desktop-header {
+            display: none !important;
+        }
+    }
 </style>
 
 <!-- Drag and Drop функциональность для упражнений -->
@@ -3217,8 +3224,8 @@ function workoutApp() {
                 </div>
                 
                 <div class="p-6">
-                    <!-- Вся информация в одной строке -->
-                    <div class="flex items-center gap-4 mb-4">
+                    <!-- Десктоп: вся информация в одной строке -->
+                    <div class="workout-desktop-header flex items-center gap-4 mb-4">
                         <!-- Аватарка спортсмена -->
                         <div class="flex-shrink-0">
                             <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg text-white font-semibold text-lg">
@@ -3256,6 +3263,56 @@ function workoutApp() {
                               }"
                               x-text="getStatusLabel(workout.status)">
                         </span>
+                    </div>
+                    
+                    <!-- Мобилка: аватарка, название и статус в одной строке, дата/время/участник под названием -->
+                    <div class="md:hidden mb-4">
+                        <!-- Первая строка: аватарка, название и статус -->
+                        <div class="flex items-center gap-3 mb-3">
+                            <!-- Аватарка спортсмена -->
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg text-white font-semibold text-lg">
+                                    <span x-text="(workout.athlete?.name || workout.trainer?.name || '?').charAt(0).toUpperCase()"></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Название тренировки и статус -->
+                            <div class="flex-1 flex items-center justify-between gap-2 min-w-0">
+                                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors flex-1 min-w-0 truncate" x-text="workout.title"></h3>
+                                
+                                <!-- Статус -->
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0"
+                                      :class="{
+                                          'bg-green-100 text-green-800': workout.status === 'completed',
+                                          'bg-red-100 text-red-800': workout.status === 'cancelled',
+                                          'bg-blue-100 text-blue-800': workout.status === 'planned'
+                                      }"
+                                      x-text="getStatusLabel(workout.status)">
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Вторая строка: дата, время, участник в один ряд - ОТДЕЛЬНЫЙ БЛОК -->
+                        <div class="flex flex-row gap-3 text-sm text-gray-600" style="justify-content: flex-start !important; align-items: center !important; text-align: left !important;">
+                            <span style="text-align: left !important; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span x-text="workout.formatted_date || formatDate(workout.date)" class="text-gray-900 font-semibold"></span>
+                            </span>
+                            <span style="text-align: left !important; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span x-text="workout.time ? workout.time.substring(0, 5) : '{{ __('common.not_specified') }}'" class="text-gray-900 font-semibold"></span>
+                            </span>
+                            <span style="text-align: left !important; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <span x-text="workout.athlete?.name || workout.trainer?.name || '{{ __('common.not_specified') }}'" class="text-gray-900 font-semibold"></span>
+                            </span>
+                        </div>
                     </div>
                     
                     <!-- Описание -->
