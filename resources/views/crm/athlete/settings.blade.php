@@ -70,10 +70,16 @@
 
     let touchStartX = null;
     let touchStartY = null;
+    let touchStartTime = null;
     let menuGesture = null;
     let menuGestureHandled = false;
     let menuIsOpen = false;
     let menuObserver = null;
+    let swipeTargetElement = null;
+    let swipeHandled = false;
+    let swipeAnimationTimeout = null;
+    const swipeActivationThreshold = 120;
+    const swipeVisualLimit = 140;
 
     const getMenu = () => document.getElementById('mobile-menu');
 
@@ -123,12 +129,99 @@
     const resetTouchState = () => {
         touchStartX = null;
         touchStartY = null;
+        touchStartTime = null;
         menuGesture = null;
         menuGestureHandled = false;
     };
 
+    const getSwipeTargetElement = () => {
+        const editSection = document.getElementById('profile-edit-section');
+        if (!editSection) return null;
+        
+        // Проверяем, что мы в режиме редактирования через Alpine.js
+        const settingsAppElement = document.querySelector('[x-data*="athleteSettingsApp"]');
+        if (settingsAppElement) {
+            const settingsApp = Alpine.$data(settingsAppElement);
+            if (settingsApp && settingsApp.isEditing) {
+                return editSection;
+            }
+        }
+        return null;
+    };
+
+    const applySwipeTransform = (distance) => {
+        if (!swipeTargetElement) return;
+        const clamped = Math.max(0, Math.min(distance, swipeVisualLimit));
+        swipeTargetElement.style.transform = `translateX(${clamped}px)`;
+    };
+
+    const resetSwipeTransform = (immediate = false, targetElement = null) => {
+        const target = targetElement || swipeTargetElement;
+        if (!target) return;
+        if (immediate) {
+            target.style.transition = '';
+            target.style.transform = '';
+            return;
+        }
+        target.style.transition = 'transform 0.2s ease';
+        requestAnimationFrame(() => {
+            target.style.transform = 'translateX(0px)';
+        });
+        setTimeout(() => {
+            target.style.transition = '';
+            target.style.transform = '';
+        }, 200);
+    };
+
+    const clearSwipeAnimationTimeout = () => {
+        if (swipeAnimationTimeout) {
+            clearTimeout(swipeAnimationTimeout);
+            swipeAnimationTimeout = null;
+        }
+    };
+
+    const handleSwipeRight = (event, targetElement = null) => {
+        if (!targetElement && !swipeTargetElement) return;
+        if (event) {
+            preventEvent(event);
+        }
+        swipeHandled = true;
+        closeMobileMenuIfOpen();
+        clearSwipeAnimationTimeout();
+        const target = targetElement || swipeTargetElement;
+        if (target) {
+            swipeTargetElement = target;
+            target.style.transition = 'transform 0.18s ease';
+            requestAnimationFrame(() => {
+                target.style.transform = 'translateX(100%)';
+            });
+            swipeAnimationTimeout = setTimeout(() => {
+                // Закрываем режим редактирования
+                const settingsApp = Alpine.$data(document.querySelector('[x-data*="athleteSettingsApp"]'));
+                if (settingsApp && settingsApp.isEditing) {
+                    settingsApp.isEditing = false;
+                }
+                resetSwipeTransform(true, target);
+                swipeTargetElement = null;
+                swipeAnimationTimeout = null;
+            }, 180);
+        } else {
+            // Закрываем режим редактирования
+            const settingsApp = Alpine.$data(document.querySelector('[x-data*="athleteSettingsApp"]'));
+            if (settingsApp && settingsApp.isEditing) {
+                settingsApp.isEditing = false;
+            }
+        }
+    };
+
     const handleTouchStart = (event) => {
         if (event.touches.length !== 1) return;
+
+        // Проверка: если клик по кнопке, не обрабатываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton) {
+            return;
+        }
 
         syncMenuState();
 
@@ -151,6 +244,7 @@
 
         if (menuIsOpen) {
             if (startX <= menuCloseEdgeGuard) {
+                // Блокируем системный жест "назад", но меню не трогаем
                 preventEvent(event);
                 resetTouchState();
                 return;
@@ -163,6 +257,42 @@
             }
             menuGesture = 'close';
         } else {
+            // Проверяем, находимся ли мы в режиме редактирования профиля
+            const settingsAppElement = document.querySelector('[x-data*="athleteSettingsApp"]');
+            let isEditing = false;
+            if (settingsAppElement) {
+                const settingsApp = Alpine.$data(settingsAppElement);
+                isEditing = settingsApp && settingsApp.isEditing;
+            }
+            
+            if (isEditing) {
+                // Режим редактирования - обрабатываем свайп назад
+                const nearEdge = startX <= getEdgeThreshold();
+                if (!nearEdge) {
+                    resetTouchState();
+                    return;
+                }
+                
+                // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
+                if (startX <= menuCloseEdgeGuard) {
+                    // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
+                    preventEvent(event);
+                    // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
+                }
+                
+                closeMobileMenuIfOpen();
+                clearSwipeAnimationTimeout();
+                swipeHandled = false;
+                touchStartX = startX;
+                touchStartY = startY;
+                touchStartTime = performance.now();
+                swipeTargetElement = getSwipeTargetElement();
+                if (swipeTargetElement) {
+                    swipeTargetElement.style.transition = 'transform 0s';
+                }
+                return;
+            }
+            
             // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
             if (startX <= menuCloseEdgeGuard) {
                 // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
@@ -188,6 +318,39 @@
 
     const handleTouchMove = (event) => {
         if (touchStartX === null) return;
+        
+        // Проверка: если касание идет по кнопке, сбрасываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton) {
+            if (swipeTargetElement) {
+                resetSwipeTransform(true);
+                swipeTargetElement = null;
+            }
+            resetTouchState();
+            return;
+        }
+        
+        // Обработка свайпа назад в режиме редактирования
+        if (swipeTargetElement) {
+            const touch = event.touches[0];
+            const deltaX = Math.max(0, touch.clientX - touchStartX);
+            const deltaY = touch.clientY - (touchStartY ?? 0);
+            if (Math.abs(deltaY) > maxVerticalDeviation) return;
+            
+            if (swipeTargetElement) {
+                applySwipeTransform(deltaX);
+            }
+            if (deltaX > swipeActivationThreshold && !swipeHandled) {
+                handleSwipeRight(event, swipeTargetElement);
+                return;
+            }
+            // Блокируем события только при реальном движении вправо (свайпе), чтобы не мешать выделению текста
+            if (event && touchStartX <= getEdgeThreshold() && deltaX > 10) {
+                preventEvent(event);
+            }
+            return;
+        }
+        
         if (!menuGesture) return;
 
         const touch = event.touches[0];
@@ -212,6 +375,39 @@
     };
 
     const handleTouchEnd = (event) => {
+        // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+        if (isButton && touchStartX !== null) {
+            if (swipeTargetElement) {
+                resetSwipeTransform(true);
+                swipeTargetElement = null;
+            }
+            resetTouchState();
+            return;
+        }
+        
+        // Обработка свайпа назад в режиме редактирования
+        if (swipeTargetElement && touchStartX !== null && event.changedTouches.length === 1) {
+            const touch = event.changedTouches[0];
+            const deltaX = Math.max(0, touch.clientX - touchStartX);
+            const deltaY = touch.clientY - (touchStartY ?? 0);
+            const duration = touchStartTime ? performance.now() - touchStartTime : 0;
+            
+            if (Math.abs(deltaY) <= maxVerticalDeviation) {
+                if (deltaX > swipeActivationThreshold && duration < 600 && !swipeHandled) {
+                    handleSwipeRight(event, swipeTargetElement);
+                } else {
+                    resetSwipeTransform(false, swipeTargetElement);
+                    swipeTargetElement = null;
+                }
+            } else {
+                resetSwipeTransform(false, swipeTargetElement);
+                swipeTargetElement = null;
+            }
+            resetTouchState();
+            return;
+        }
+        
         if (touchStartX !== null && menuGesture && !menuGestureHandled && event.changedTouches.length === 1) {
             const touch = event.changedTouches[0];
             const deltaX = touch.clientX - touchStartX;
@@ -489,7 +685,7 @@ function athleteSettingsApp() {
 <div x-data="athleteSettingsApp()" x-cloak class="space-y-6">
 
     <!-- Профиль спортсмена -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="profile-edit-section" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-6">{{ __('common.profile') }}</h2>
         
         <!-- Режим просмотра -->
