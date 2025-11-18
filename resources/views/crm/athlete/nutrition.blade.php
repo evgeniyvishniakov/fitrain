@@ -295,12 +295,12 @@
 
 @section('content')
 <div class="min-h-screen ">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 py-8">
+    <div>
         <!-- Описание -->
     
-        <div x-data="nutritionApp()" x-init="loadNutritionPlans()" x-cloak>
+        <div x-data="nutritionApp()" x-init="loadNutritionPlans(); init();" x-cloak>
             <!-- Статистика питания -->
-            <div class="stats-container">
+            <div x-show="currentView === 'list'" class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon stat-icon-red">
                         <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,8 +351,8 @@
                 </div>
             </div>
             
-            <!-- Планы питания -->
-            <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <!-- Планы питания - Список -->
+            <div x-show="currentView === 'list'" class="bg-white border border-gray-200 rounded-lg p-6">
                 <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.nutrition_plans') }}</h4>
                 
                 <!-- Индикатор загрузки -->
@@ -387,7 +387,7 @@
                                     </h5>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <button @click="showDetailedNutritionPlan(plan)" 
+                                    <button @click="showView(plan)" 
                                             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                             title="{{ __('common.details') }}">
                                         <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -402,61 +402,43 @@
                     </template>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Модальное окно детального просмотра плана питания -->
-<div x-data="{ 
-    detailedNutritionPlan: null,
-    hasNotes(plan) {
-        if (!plan || !plan.nutrition_days) return false;
-        return plan.nutrition_days.some(day => day.notes && day.notes.trim() !== '');
-    },
-    formatNumber(num) {
-        // Если число целое, возвращаем без точки и нуля
-        if (num % 1 === 0) {
-            return num.toString();
-        }
-        // Иначе возвращаем с одной цифрой после точки
-        return num.toFixed(1);
-    }
-}" x-show="detailedNutritionPlan" x-cloak x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; display: none !important;">
-    <div class="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[85vh] overflow-hidden">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${detailedNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>
-            <button @click="detailedNutritionPlan = null" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-        
-        <div class="p-5 overflow-y-auto max-h-[calc(85vh-120px)]">
-            <template x-if="detailedNutritionPlan">
-                <div>
+            
+            <!-- Просмотр плана питания -->
+            <div id="athlete-nutrition-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <!-- Кнопка назад -->
+                <div class="flex items-center justify-between mb-6">
+                    <button @click="showList()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                        {{ __('common.back') }}
+                    </button>
+                </div>
+                
+                <div x-show="currentNutritionPlan" class="space-y-6">
+                    <!-- Заголовок -->
+                    <h3 class="text-xl font-semibold text-gray-900" x-text="currentNutritionPlan ? (currentNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, currentNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${currentNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>
+                    
                     <!-- Описание плана -->
-                    <div class="mb-6" x-show="detailedNutritionPlan.description">
+                    <div class="mb-6" x-show="currentNutritionPlan.description">
                         <h4 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.description') }}</h4>
-                        <p class="text-gray-600" x-text="detailedNutritionPlan.description"></p>
+                        <p class="text-gray-600" x-text="currentNutritionPlan.description"></p>
                     </div>
                     
                     <!-- Статистика -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-red-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-red-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
+                            <div class="text-2xl font-bold text-red-600" x-text="currentNutritionPlan.nutrition_days ? Math.round(currentNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
                             <div class="text-sm text-red-800">{{ __('common.total_calories') }}</div>
                         </div>
                         <div class="bg-blue-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-blue-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
+                            <div class="text-2xl font-bold text-blue-600" x-text="currentNutritionPlan.nutrition_days ? Math.round(currentNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
                             <div class="text-sm text-blue-800">{{ __('common.total_proteins') }} ({{ __('common.g') }})</div>
                         </div>
                         <div class="bg-yellow-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-yellow-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
+                            <div class="text-2xl font-bold text-yellow-600" x-text="currentNutritionPlan.nutrition_days ? Math.round(currentNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
                             <div class="text-sm text-yellow-800">{{ __('common.total_carbs') }} ({{ __('common.g') }})</div>
                         </div>
                         <div class="bg-green-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-green-600" x-text="detailedNutritionPlan.nutrition_days ? Math.round(detailedNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
+                            <div class="text-2xl font-bold text-green-600" x-text="currentNutritionPlan.nutrition_days ? Math.round(currentNutritionPlan.nutrition_days.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
                             <div class="text-sm text-green-800">{{ __('common.total_fats') }} ({{ __('common.g') }})</div>
                         </div>
                     </div>
@@ -480,18 +462,18 @@
                                         </span>
                                     </th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
-                                    <th x-show="hasNotes(detailedNutritionPlan)" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
+                                    <th x-show="hasNotes(currentNutritionPlan)" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-300">
-                                <template x-for="day in (detailedNutritionPlan.nutrition_days || [])" :key="day.id">
+                                <template x-for="day in (currentNutritionPlan.nutrition_days || [])" :key="day.id">
                                     <tr>
                                         <td class="px-3 py-2 text-sm font-medium text-gray-900" x-text="new Date(day.date).getDate()"></td>
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.proteins || 0))"></td>
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.fats || 0))"></td>
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.carbs || 0))"></td>
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.calories || 0))"></td>
-                                        <td x-show="hasNotes(detailedNutritionPlan)" class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
+                                        <td x-show="hasNotes(currentNutritionPlan)" class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -499,14 +481,14 @@
                     </div>
                     
                     <!-- Пустое состояние для дней -->
-                    <div x-show="!detailedNutritionPlan.nutrition_days || detailedNutritionPlan.nutrition_days.length === 0" class="text-center py-8 text-gray-500">
+                    <div x-show="!currentNutritionPlan.nutrition_days || currentNutritionPlan.nutrition_days.length === 0" class="text-center py-8 text-gray-500">
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         <p>{{ __('common.no_day_data') }}</p>
                     </div>
                 </div>
-            </template>
+            </div>
         </div>
     </div>
 </div>
@@ -515,8 +497,22 @@
 function nutritionApp() {
     return {
         // Переменные для планов питания
+        currentView: 'list', // list, view
         nutritionPlans: [],
         loadingNutritionPlans: true,
+        currentNutritionPlan: null,
+        touchStartX: null,
+        touchStartY: null,
+        touchStartTime: null,
+        swipeHandled: false,
+        swipeActivationThreshold: 120,
+        swipeVisualLimit: 140,
+        swipeTargetElement: null,
+        swipeAnimationTimeout: null,
+        swipeHandlersSetup: false,
+        boundTouchStart: null,
+        boundTouchMove: null,
+        boundTouchEnd: null,
         
         // Загрузить планы питания
         async loadNutritionPlans() {
@@ -541,13 +537,258 @@ function nutritionApp() {
         },
         
         // Показать детальный просмотр плана
-        showDetailedNutritionPlan(plan) {
-            // Находим модальное окно и устанавливаем данные
-            const modal = document.querySelector('[x-data*="detailedNutritionPlan"]');
-            if (modal && window.Alpine) {
-                const modalData = window.Alpine.$data(modal);
-                modalData.detailedNutritionPlan = plan;
+        showView(plan) {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
+            this.currentView = 'view';
+            this.currentNutritionPlan = plan;
+            this.$nextTick(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        },
+        
+        // Вернуться к списку
+        showList() {
+            this.clearSwipeAnimationTimeout();
+            this.resetSwipeTransform(true);
+            this.swipeTargetElement = null;
+            this.currentView = 'list';
+            this.currentNutritionPlan = null;
+        },
+        
+        // Получить элемент для свайпа
+        getSwipeTargetElement() {
+            if (this.currentView === 'view') {
+                return document.getElementById('athlete-nutrition-view-section');
             }
+            return null;
+        },
+        
+        // Применить трансформацию при свайпе
+        applySwipeTransform(distance) {
+            if (!this.swipeTargetElement) return;
+            const clamped = Math.max(0, Math.min(distance, this.swipeVisualLimit));
+            this.swipeTargetElement.style.transform = `translateX(${clamped}px)`;
+        },
+        
+        // Сбросить трансформацию
+        resetSwipeTransform(immediate = false, targetElement = null) {
+            const target = targetElement || this.swipeTargetElement;
+            if (!target) return;
+            if (immediate) {
+                target.style.transition = '';
+                target.style.transform = '';
+                return;
+            }
+            target.style.transition = 'transform 0.2s ease';
+            requestAnimationFrame(() => {
+                target.style.transform = 'translateX(0px)';
+            });
+            setTimeout(() => {
+                target.style.transition = '';
+                target.style.transform = '';
+            }, 200);
+        },
+        
+        // Очистить таймер анимации
+        clearSwipeAnimationTimeout() {
+            if (this.swipeAnimationTimeout) {
+                clearTimeout(this.swipeAnimationTimeout);
+                this.swipeAnimationTimeout = null;
+            }
+        },
+        
+        // Обработка свайпа вправо
+        handleSwipeRight(event, targetElement = null) {
+            if (!targetElement && !this.swipeTargetElement) return;
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            this.swipeHandled = true;
+            this.clearSwipeAnimationTimeout();
+            const target = targetElement || this.swipeTargetElement;
+            if (target) {
+                this.swipeTargetElement = target;
+                target.style.transition = 'transform 0.18s ease';
+                requestAnimationFrame(() => {
+                    target.style.transform = 'translateX(100%)';
+                });
+                this.swipeAnimationTimeout = setTimeout(() => {
+                    this.showList();
+                    this.resetSwipeTransform(true, target);
+                    this.swipeTargetElement = null;
+                    this.swipeAnimationTimeout = null;
+                }, 180);
+            } else {
+                this.showList();
+            }
+        },
+        
+        // Настройка обработчиков свайпа
+        setupSwipeHandlers() {
+            if (this.swipeHandlersSetup) return;
+            this.swipeHandlersSetup = true;
+            this.boundTouchStart = this.handleTouchStart.bind(this);
+            this.boundTouchMove = this.handleTouchMove.bind(this);
+            this.boundTouchEnd = this.handleTouchEnd.bind(this);
+            document.addEventListener('touchstart', this.boundTouchStart, { passive: false, capture: true });
+            document.addEventListener('touchmove', this.boundTouchMove, { passive: false, capture: true });
+            document.addEventListener('touchend', this.boundTouchEnd, { passive: false, capture: true });
+        },
+        
+        // Обработка начала касания
+        handleTouchStart(event) {
+            if (event.touches.length !== 1) return;
+            if (this.currentView !== 'view') return;
+            
+            // Проверка: если клик по кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                return;
+            }
+            
+            const touch = event.touches[0];
+            const startX = touch.clientX;
+            const startY = touch.clientY;
+            const nearEdge = startX <= this.getEdgeThreshold();
+            
+            if (!nearEdge) return;
+            
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
+            const menuCloseEdgeGuard = 60;
+            if (startX <= menuCloseEdgeGuard) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            this.swipeHandled = false;
+            this.touchStartX = startX;
+            this.touchStartY = startY;
+            this.touchStartTime = performance.now();
+            this.swipeTargetElement = this.getSwipeTargetElement();
+            if (this.swipeTargetElement) {
+                this.swipeTargetElement.style.transition = 'transform 0s';
+            }
+        },
+        
+        // Обработка движения касания
+        handleTouchMove(event) {
+            if (this.touchStartX === null) return;
+            if (this.currentView !== 'view') return;
+            
+            // Проверка: если касание идет по кнопке, сбрасываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                if (this.swipeTargetElement) {
+                    this.resetSwipeTransform(true);
+                    this.swipeTargetElement = null;
+                }
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            
+            const touch = event.touches[0];
+            const deltaX = Math.max(0, touch.clientX - this.touchStartX);
+            const deltaY = touch.clientY - (this.touchStartY ?? 0);
+            const maxVerticalDeviation = 80;
+            
+            if (Math.abs(deltaY) > maxVerticalDeviation) return;
+            
+            if (this.swipeTargetElement) {
+                this.applySwipeTransform(deltaX);
+            }
+            if (deltaX > this.swipeActivationThreshold && !this.swipeHandled) {
+                this.handleSwipeRight(event, this.swipeTargetElement);
+                return;
+            }
+            // Блокируем события только при реальном движении вправо (свайпе), чтобы не мешать выделению текста
+            if (event && this.touchStartX <= this.getEdgeThreshold() && deltaX > 10) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        },
+        
+        // Обработка окончания касания
+        handleTouchEnd(event) {
+            if (this.touchStartX === null) return;
+            if (this.currentView !== 'view') return;
+            
+            // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                if (this.swipeTargetElement) {
+                    this.resetSwipeTransform(true);
+                    this.swipeTargetElement = null;
+                }
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                return;
+            }
+            
+            if (this.swipeTargetElement && event.changedTouches.length === 1) {
+                const touch = event.changedTouches[0];
+                const deltaX = Math.max(0, touch.clientX - this.touchStartX);
+                const deltaY = touch.clientY - (this.touchStartY ?? 0);
+                const duration = this.touchStartTime ? performance.now() - this.touchStartTime : 0;
+                const maxVerticalDeviation = 80;
+                
+                if (Math.abs(deltaY) <= maxVerticalDeviation) {
+                    if (deltaX > this.swipeActivationThreshold && duration < 600 && !this.swipeHandled) {
+                        this.handleSwipeRight(event, this.swipeTargetElement);
+                    } else {
+                        this.resetSwipeTransform(false, this.swipeTargetElement);
+                        this.swipeTargetElement = null;
+                    }
+                } else {
+                    this.resetSwipeTransform(false, this.swipeTargetElement);
+                    this.swipeTargetElement = null;
+                }
+            }
+            
+            this.touchStartX = null;
+            this.touchStartY = null;
+            this.touchStartTime = null;
+        },
+        
+        // Получить порог для свайпа
+        getEdgeThreshold() {
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+            if (screenWidth >= 1024) {
+                return Math.min(Math.floor(screenWidth * 0.7), 800);
+            } else if (screenWidth >= 768) {
+                return Math.min(Math.floor(screenWidth * 0.6), 500);
+            } else {
+                return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+            }
+        },
+        
+        // Инициализация
+        init() {
+            this.setupSwipeHandlers();
+        },
+        
+        // Проверить наличие заметок
+        hasNotes(plan) {
+            if (!plan || !plan.nutrition_days) return false;
+            return plan.nutrition_days.some(day => day.notes && day.notes.trim() !== '');
+        },
+        
+        // Форматировать число (убирать .0 если целое)
+        formatNumber(num) {
+            // Если число целое, возвращаем без точки и нуля
+            if (num % 1 === 0) {
+                return num.toString();
+            }
+            // Иначе возвращаем с одной цифрой после точки
+            return num.toFixed(1);
         },
         
         // Получить сегодняшнюю дату в формате YYYY-MM-DD

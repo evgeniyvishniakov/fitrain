@@ -35,7 +35,6 @@ function renderMediaElement(path, altText = '', options = {}) {
         touchHandlersSetup: false,
         touchStartTime: null,
         maxVerticalDeviation: 80,
-        edgeThreshold: 80,
         swipeHandled: false,
         swipeActivationThreshold: 120,
         swipeVisualLimit: 140,
@@ -86,6 +85,20 @@ function renderMediaElement(path, altText = '', options = {}) {
             document.addEventListener('touchstart', this.boundTouchStart, { passive: false, capture: true });
             document.addEventListener('touchmove', this.boundTouchMove, { passive: false, capture: true });
             document.addEventListener('touchend', this.boundTouchEnd, { passive: false, capture: true });
+        },
+
+        getEdgeThreshold() {
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+            if (screenWidth >= 1024) {
+                // Для больших экранов делаем свайп практически по центру (до 70% ширины экрана, но не более 800px)
+                return Math.min(Math.floor(screenWidth * 0.7), 800);
+            } else if (screenWidth >= 768) {
+                // Для средних экранов (до 60% ширины экрана, но не более 500px)
+                return Math.min(Math.floor(screenWidth * 0.6), 500);
+            } else {
+                // Для маленьких экранов (телефоны) - до 50% ширины экрана, но не менее 150px и не более 300px
+                return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+            }
         },
 
         getSwipeTargetElement() {
@@ -171,12 +184,19 @@ function renderMediaElement(path, altText = '', options = {}) {
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
             if (this.isAnyModalOpen()) return;
+            
+            // Проверка: если клик по кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                return;
+            }
+
             if (this.popStateLocked) return;
 
             const touch = event.touches[0];
             const startX = touch.clientX;
             const startY = touch.clientY;
-            const nearEdge = startX <= this.edgeThreshold;
+            const nearEdge = startX <= this.getEdgeThreshold();
             const menu = document.getElementById('mobile-menu');
             const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
             const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
@@ -211,6 +231,17 @@ function renderMediaElement(path, altText = '', options = {}) {
                     }
                     this.menuGesture = 'close';
                 } else {
+                    // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
+                    const guard = this.menuCloseEdgeGuard;
+                    if (startX <= guard) {
+                        // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
+                    }
                     if (!nearEdge) {
                         return;
                     }
@@ -224,15 +255,25 @@ function renderMediaElement(path, altText = '', options = {}) {
                 this.touchStartTime = performance.now();
                 this.swipeTargetElement = null;
 
+                // Не блокируем события здесь, чтобы не мешать выделению текста
+                // Блокировка будет только в handleTouchMove при реальном свайпе
+                return;
+            }
+
+            if (this.currentView !== 'view') return;
+            
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
+            const guard = this.menuCloseEdgeGuard;
+            if (startX <= guard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
                 event.preventDefault();
                 event.stopPropagation();
                 if (event.stopImmediatePropagation) {
                     event.stopImmediatePropagation();
                 }
-                return;
+                // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
             }
-
-            if (this.currentView !== 'view') return;
+            
             if (!nearEdge) return;
 
             this.closeMobileMenuIfOpen();
@@ -245,15 +286,26 @@ function renderMediaElement(path, altText = '', options = {}) {
             if (this.swipeTargetElement) {
                 this.swipeTargetElement.style.transition = 'transform 0s';
             }
-            event.preventDefault();
-            event.stopPropagation();
-            if (event.stopImmediatePropagation) {
-                event.stopImmediatePropagation();
-            }
+            // Не блокируем события здесь, чтобы не мешать выделению текста
+            // Блокировка будет только в handleTouchMove при реальном свайпе
         },
 
         handleTouchMove(event) {
             if (this.touchStartX === null) return;
+            
+            // Проверка: если касание идет по кнопке, сбрасываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+            
             if (this.popStateLocked) return;
             if (this.currentView === 'list') {
                 if (!this.menuGesture) return;
@@ -284,13 +336,26 @@ function renderMediaElement(path, altText = '', options = {}) {
                 this.handleSwipeRight(event, this.swipeTargetElement);
                 return;
             }
-            if (event && this.touchStartX <= this.edgeThreshold) {
+            if (event && this.touchStartX <= this.getEdgeThreshold() && deltaX > 10) {
                 event.preventDefault();
                 event.stopPropagation();
             }
         },
 
         handleTouchEnd(event) {
+            // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton && this.touchStartX !== null) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+
             if (this.popStateLocked) {
                 this.touchStartX = null;
                 this.touchStartY = null;
@@ -353,7 +418,7 @@ function renderMediaElement(path, altText = '', options = {}) {
                 this.swipeTargetElement = null;
                 return;
             }
-            if (startX > this.edgeThreshold) {
+            if (startX > this.getEdgeThreshold()) {
                 this.resetSwipeTransform(false, targetElement);
                 this.swipeTargetElement = null;
                 return;
@@ -1967,30 +2032,6 @@ function renderMediaElement(path, altText = '', options = {}) {
                                                     </div>
                                                     
                                                     <div class="flex gap-6 w-full">
-                                                        <!-- Повторения -->
-                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
-                                                             class="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
-                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
-                                                            <div class="text-center">
-                                                                <div class="flex items-center justify-center mb-2">
-                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                                                    </svg>
-                                                                    <span class="text-xs font-semibold text-green-800"><?php echo e(__('common.reps')); ?></span>
-                                                                </div>
-                                                                <input 
-                                                                    type="number" 
-                                                                    x-model="set.reps"
-                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
-                                                                    placeholder="0"
-                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none no-spinner"
-                                                                    min="0"
-                                                                    style="-moz-appearance: textfield;"
-                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
-                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
-                                                            </div>
-                                                        </div>
-                                                        
                                                         <!-- Вес -->
                                                         <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('weight')" 
                                                              class="flex-1 bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 rounded-lg p-3"
@@ -2009,6 +2050,30 @@ function renderMediaElement(path, altText = '', options = {}) {
                                                                     @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'weight', $event.target.value)"
                                                                     placeholder="0"
                                                                     class="w-full text-center text-lg font-bold text-purple-900 bg-transparent border-none outline-none no-spinner"
+                                                                    min="0"
+                                                                    style="-moz-appearance: textfield;"
+                                                                    onfocus="this.style.outline='none'; this.style.boxShadow='none';"
+                                                                    onblur="this.style.outline='none'; this.style.boxShadow='none';">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Повторения -->
+                                                        <div x-show="(exercise.fields_config || ['sets', 'reps', 'weight', 'rest']).includes('reps')" 
+                                                             class="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-3"
+                                                             :class="getSetFieldBorderClass(exercise, set, 'reps')">
+                                                            <div class="text-center">
+                                                                <div class="flex items-center justify-center mb-2">
+                                                                    <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                                    </svg>
+                                                                    <span class="text-xs font-semibold text-green-800"><?php echo e(__('common.reps')); ?></span>
+                                                                </div>
+                                                                <input 
+                                                                    type="number" 
+                                                                    x-model="set.reps"
+                                                                    @input="updateSetData(exercise.exercise_id || exercise.id, setIndex, 'reps', $event.target.value)"
+                                                                    placeholder="0"
+                                                                    class="w-full text-center text-lg font-bold text-green-900 bg-transparent border-none outline-none no-spinner"
                                                                     min="0"
                                                                     style="-moz-appearance: textfield;"
                                                                     onfocus="this.style.outline='none'; this.style.boxShadow='none';"
