@@ -37,7 +37,6 @@ function templatesApp() {
         touchHandlersSetup: false,
         touchStartTime: null,
         maxVerticalDeviation: 80,
-        edgeThreshold: 80,
         swipeHandled: false,
         swipeActivationThreshold: 120,
         swipeVisualLimit: 140,
@@ -148,6 +147,20 @@ function templatesApp() {
             }
         },
         
+        getEdgeThreshold() {
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+            if (screenWidth >= 1024) {
+                // Для больших экранов делаем свайп практически по центру (до 70% ширины экрана, но не более 800px)
+                return Math.min(Math.floor(screenWidth * 0.7), 800);
+            } else if (screenWidth >= 768) {
+                // Для средних экранов (до 60% ширины экрана, но не более 500px)
+                return Math.min(Math.floor(screenWidth * 0.6), 500);
+            } else {
+                // Для маленьких экранов (телефоны) - до 50% ширины экрана, но не менее 150px и не более 300px
+                return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+            }
+        },
+        
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
             if (this.isAnyModalOpen()) return;
@@ -156,7 +169,7 @@ function templatesApp() {
             const touch = event.touches[0];
             const startX = touch.clientX;
             const startY = touch.clientY;
-            const nearEdge = startX <= this.edgeThreshold;
+            const nearEdge = startX <= this.getEdgeThreshold();
             const menu = document.getElementById('mobile-menu');
             const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
             const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
@@ -192,7 +205,20 @@ function templatesApp() {
                     }
                     this.menuGesture = 'close';
                 } else {
-                    if (!nearEdge) return;
+                    // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
+                    const guard = this.menuCloseEdgeGuard;
+                    if (startX <= guard) {
+                        // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
+                    }
+                    if (!nearEdge) {
+                        return;
+                    }
                     this.menuGesture = 'open';
                 }
                 
@@ -203,15 +229,25 @@ function templatesApp() {
                 this.touchStartTime = performance.now();
                 this.swipeTargetElement = null;
                 
+                // Не блокируем события здесь, чтобы не мешать выделению текста
+                // Блокировка будет только в handleTouchMove при реальном свайпе
+                return;
+            }
+            
+            if (!['create', 'edit', 'view'].includes(this.currentView)) return;
+            
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
+            const guard = this.menuCloseEdgeGuard;
+            if (startX <= guard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
                 event.preventDefault();
                 event.stopPropagation();
                 if (event.stopImmediatePropagation) {
                     event.stopImmediatePropagation();
                 }
-                return;
+                // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
             }
             
-            if (!['create', 'edit', 'view'].includes(this.currentView)) return;
             if (!nearEdge) return;
             
             this.closeMobileMenuIfOpen();
@@ -224,11 +260,8 @@ function templatesApp() {
             if (this.swipeTargetElement) {
                 this.swipeTargetElement.style.transition = 'transform 0s';
             }
-            event.preventDefault();
-            event.stopPropagation();
-            if (event.stopImmediatePropagation) {
-                event.stopImmediatePropagation();
-            }
+            // Не блокируем события здесь, чтобы не мешать выделению текста
+            // Блокировка будет только в handleTouchMove при реальном свайпе
         },
         
         handleTouchMove(event) {
@@ -248,7 +281,8 @@ function templatesApp() {
                     this.closeMobileMenuIfOpen();
                     this.menuGestureHandled = true;
                 }
-                if (!this.menuGestureHandled) {
+                // Блокируем события только при реальном движении (свайпе), чтобы не мешать выделению текста
+                if (event && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
                     event.preventDefault();
                     event.stopPropagation();
                     if (event.stopImmediatePropagation) {
@@ -270,7 +304,7 @@ function templatesApp() {
                 this.handleSwipeRight(event, this.swipeTargetElement);
                 return;
             }
-            if (event && this.touchStartX <= this.edgeThreshold) {
+            if (event && this.touchStartX <= this.getEdgeThreshold() && deltaX > 10) {
                 event.preventDefault();
                 event.stopPropagation();
                 if (event.stopImmediatePropagation) {
@@ -280,6 +314,19 @@ function templatesApp() {
         },
         
         handleTouchEnd(event) {
+            // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton && this.touchStartX !== null) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+
             if (this.currentView === 'list') {
                 if (this.menuGesture && !this.menuGestureHandled && event.changedTouches.length === 1) {
                     const touch = event.changedTouches[0];
@@ -333,7 +380,7 @@ function templatesApp() {
                 this.swipeTargetElement = null;
                 return;
             }
-            if (startX > this.edgeThreshold) {
+            if (startX > this.getEdgeThreshold()) {
                 this.resetSwipeTransform(false, targetElement);
                 this.swipeTargetElement = null;
                 return;
