@@ -264,7 +264,6 @@ function workoutApp() {
         touchHandlersSetup: false,
         touchStartTime: null,
         maxVerticalDeviation: 80,
-        edgeThreshold: 80, // Базовое значение, будет переопределено в init
         swipeHandled: false,
         swipeActivationThreshold: 120,
         swipeVisualLimit: 140,

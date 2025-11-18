@@ -113,7 +113,6 @@ function exerciseApp() {
         touchHandlersSetup: false,
         touchStartTime: null,
         maxVerticalDeviation: 80,
-        edgeThreshold: 80,
         swipeHandled: false,
         swipeActivationThreshold: 120,
         swipeVisualLimit: 140,
@@ -226,6 +225,20 @@ function exerciseApp() {
             document.addEventListener('touchend', this.boundTouchEnd, { passive: false, capture: true });
         },
 
+        getEdgeThreshold() {
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+            if (screenWidth >= 1024) {
+                // Для больших экранов делаем свайп практически по центру (до 70% ширины экрана, но не более 800px)
+                return Math.min(Math.floor(screenWidth * 0.7), 800);
+            } else if (screenWidth >= 768) {
+                // Для средних экранов (до 60% ширины экрана, но не более 500px)
+                return Math.min(Math.floor(screenWidth * 0.6), 500);
+            } else {
+                // Для маленьких экранов (телефоны) - до 50% ширины экрана, но не менее 150px и не более 300px
+                return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+            }
+        },
+
         getSwipeTargetElement() {
             if (this.currentView === 'view') {
                 return document.getElementById('athlete-exercise-view-section');
@@ -313,7 +326,7 @@ function exerciseApp() {
             const touch = event.touches[0];
             const startX = touch.clientX;
             const startY = touch.clientY;
-            const nearEdge = startX <= this.edgeThreshold;
+            const nearEdge = startX <= this.getEdgeThreshold();
             const menu = document.getElementById('mobile-menu');
             const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
             const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
@@ -348,6 +361,17 @@ function exerciseApp() {
                     }
                     this.menuGesture = 'close';
                 } else {
+                    // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
+                    const guard = this.menuCloseEdgeGuard;
+                    if (startX <= guard) {
+                        // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
+                    }
                     if (!nearEdge) {
                         return;
                     }
@@ -361,15 +385,25 @@ function exerciseApp() {
                 this.touchStartTime = performance.now();
                 this.swipeTargetElement = null;
 
+                // Не блокируем события здесь, чтобы не мешать выделению текста
+                // Блокировка будет только в handleTouchMove при реальном свайпе
+                return;
+            }
+
+            if (this.currentView !== 'view') return;
+            
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
+            const guard = this.menuCloseEdgeGuard;
+            if (startX <= guard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
                 event.preventDefault();
                 event.stopPropagation();
                 if (event.stopImmediatePropagation) {
                     event.stopImmediatePropagation();
                 }
-                return;
+                // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
             }
-
-            if (this.currentView !== 'view') return;
+            
             if (!nearEdge) return;
 
             this.closeMobileMenuIfOpen();
@@ -382,11 +416,8 @@ function exerciseApp() {
             if (this.swipeTargetElement) {
                 this.swipeTargetElement.style.transition = 'transform 0s';
             }
-            event.preventDefault();
-            event.stopPropagation();
-            if (event.stopImmediatePropagation) {
-                event.stopImmediatePropagation();
-            }
+            // Не блокируем события здесь, чтобы не мешать выделению текста
+            // Блокировка будет только в handleTouchMove при реальном свайпе
         },
 
         handleTouchMove(event) {
@@ -420,7 +451,7 @@ function exerciseApp() {
                 this.handleSwipeRight(event, this.swipeTargetElement);
                 return;
             }
-            if (event && this.touchStartX <= this.edgeThreshold) {
+            if (event && this.touchStartX <= this.getEdgeThreshold() && deltaX > 10) {
                 event.preventDefault();
                 event.stopPropagation();
             }
@@ -489,7 +520,7 @@ function exerciseApp() {
                 this.swipeTargetElement = null;
                 return;
             }
-            if (startX > this.edgeThreshold) {
+            if (startX > this.getEdgeThreshold()) {
                 this.resetSwipeTransform(false, targetElement);
                 this.swipeTargetElement = null;
                 return;

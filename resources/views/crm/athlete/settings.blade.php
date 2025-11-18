@@ -54,7 +54,16 @@
     if (window.__fitrainDashboardMenuSetup) return;
     window.__fitrainDashboardMenuSetup = true;
 
-    const edgeThreshold = 80;
+    const getEdgeThreshold = () => {
+        const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+        if (screenWidth >= 1024) {
+            return Math.min(Math.floor(screenWidth * 0.7), 800);
+        } else if (screenWidth >= 768) {
+            return Math.min(Math.floor(screenWidth * 0.6), 500);
+        } else {
+            return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+        }
+    };
     const menuSwipeThreshold = 60;
     const menuCloseEdgeGuard = 60;
     const maxVerticalDeviation = 80;
@@ -154,7 +163,16 @@
             }
             menuGesture = 'close';
         } else {
-            if (startX > edgeThreshold) {
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
+            if (startX <= menuCloseEdgeGuard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
+                preventEvent(event);
+                // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
+            }
+            
+            // Проверяем, что касание в пределах зоны свайпа (как в тренировках)
+            const nearEdge = startX <= getEdgeThreshold();
+            if (!nearEdge) {
                 resetTouchState();
                 return;
             }
@@ -164,7 +182,8 @@
         touchStartX = startX;
         touchStartY = startY;
         menuGestureHandled = false;
-        preventEvent(event);
+        // Не блокируем события здесь, чтобы не мешать выделению текста
+        // Блокировка будет только в handleTouchMove при реальном свайпе
     };
 
     const handleTouchMove = (event) => {
@@ -186,7 +205,8 @@
             }
         }
 
-        if (!menuGestureHandled) {
+        // Блокируем события только при реальном движении (свайпе), чтобы не мешать выделению текста
+        if (!menuGestureHandled && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
             preventEvent(event);
         }
     };
