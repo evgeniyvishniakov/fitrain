@@ -4966,16 +4966,29 @@ async function loadExerciseHistory(exerciseId) {
         
         if (data.success && data.has_history) {
             
-            // Автозаполняем поля значениями из последней тренировки
-            const fieldsToFill = data.plan;
+            // Проверяем, находимся ли мы в режиме редактирования (тренировка уже существует)
+            const appElement = document.querySelector('[x-data*="workoutApp"]');
+            let isEditMode = false;
+            if (appElement) {
+                const workoutApp = Alpine.$data(appElement);
+                if (workoutApp && workoutApp.currentWorkout && workoutApp.currentWorkout.id) {
+                    isEditMode = true;
+                }
+            }
             
-            // Если есть факт - используем его, иначе план
-            const valuesToUse = data.fact || fieldsToFill;
-            
-            for (const [field, value] of Object.entries(valuesToUse)) {
-                const input = document.querySelector(`input[name="${field}_${exerciseId}"]`);
-                if (input && value) {
-                    input.value = value;
+            // Автозаполняем поля значениями из последней тренировки ТОЛЬКО если не в режиме редактирования
+            if (!isEditMode) {
+                const fieldsToFill = data.plan;
+                
+                // Если есть факт - используем его, иначе план
+                const valuesToUse = data.fact || fieldsToFill;
+                
+                for (const [field, value] of Object.entries(valuesToUse)) {
+                    const input = document.querySelector(`input[name="${field}_${exerciseId}"]`);
+                    // Заполняем только если поле пустое
+                    if (input && value && (!input.value || input.value === '' || input.value === '0')) {
+                        input.value = value;
+                    }
                 }
             }
             
