@@ -36,7 +36,6 @@ function exerciseApp() {
         touchHandlersSetup: false,
         touchStartTime: null,
         maxVerticalDeviation: 80,
-        edgeThreshold: 80,
         swipeHandled: false,
         swipeActivationThreshold: 120,
         swipeVisualLimit: 140,
@@ -440,9 +439,29 @@ function exerciseApp() {
             document.addEventListener('touchend', this.boundTouchEnd, { passive: false, capture: true });
         },
 
+        getEdgeThreshold() {
+            const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+            if (screenWidth >= 1024) {
+                // Для больших экранов делаем свайп практически по центру (до 70% ширины экрана, но не более 800px)
+                return Math.min(Math.floor(screenWidth * 0.7), 800);
+            } else if (screenWidth >= 768) {
+                // Для средних экранов (до 60% ширины экрана, но не более 500px)
+                return Math.min(Math.floor(screenWidth * 0.6), 500);
+            } else {
+                // Для маленьких экранов (телефоны) - до 50% ширины экрана, но не менее 150px и не более 300px
+                return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+            }
+        },
+
         getSwipeTargetElement() {
             if (this.currentView === 'view') {
                 return document.getElementById('trainer-exercise-view-section');
+            }
+            if (this.currentView === 'create' || this.currentView === 'edit') {
+                return document.getElementById('trainer-exercise-form-section');
+            }
+            if (this.currentView === 'add-video') {
+                return document.getElementById('trainer-exercise-add-video-section');
             }
             return null;
         },
@@ -527,7 +546,7 @@ function exerciseApp() {
             const touch = event.touches[0];
             const startX = touch.clientX;
             const startY = touch.clientY;
-            const nearEdge = startX <= this.edgeThreshold;
+            const nearEdge = startX <= this.getEdgeThreshold();
             const menu = document.getElementById('mobile-menu');
             const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
             const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
@@ -562,6 +581,17 @@ function exerciseApp() {
                     }
                     this.menuGesture = 'close';
                 } else {
+                    // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
+                    const guard = this.menuCloseEdgeGuard;
+                    if (startX <= guard) {
+                        // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
+                    }
                     if (!nearEdge) {
                         return;
                     }
@@ -575,15 +605,25 @@ function exerciseApp() {
                 this.touchStartTime = performance.now();
                 this.swipeTargetElement = null;
 
+                // Не блокируем события здесь, чтобы не мешать выделению текста
+                // Блокировка будет только в handleTouchMove при реальном свайпе
+                return;
+            }
+
+            if (!['view', 'create', 'edit', 'add-video'].includes(this.currentView)) return;
+            
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
+            const guard = this.menuCloseEdgeGuard;
+            if (startX <= guard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
                 event.preventDefault();
                 event.stopPropagation();
                 if (event.stopImmediatePropagation) {
                     event.stopImmediatePropagation();
                 }
-                return;
+                // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
             }
-
-            if (this.currentView !== 'view') return;
+            
             if (!nearEdge) return;
 
             this.closeGlobalMobileMenu();
@@ -596,11 +636,8 @@ function exerciseApp() {
             if (this.swipeTargetElement) {
                 this.swipeTargetElement.style.transition = 'transform 0s';
             }
-            event.preventDefault();
-            event.stopPropagation();
-            if (event.stopImmediatePropagation) {
-                event.stopImmediatePropagation();
-            }
+            // Не блокируем события здесь, чтобы не мешать выделению текста
+            // Блокировка будет только в handleTouchMove при реальном свайпе
         },
 
         handleTouchMove(event) {
@@ -620,9 +657,17 @@ function exerciseApp() {
                     this.closeMobileMenuIfOpen();
                     this.menuGestureHandled = true;
                 }
+                // Блокируем события только при реальном движении (свайпе), чтобы не мешать выделению текста
+                if (event && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.stopImmediatePropagation) {
+                        event.stopImmediatePropagation();
+                    }
+                }
                 return;
             }
-            if (this.currentView !== 'view') return;
+            if (!['view', 'create', 'edit', 'add-video'].includes(this.currentView)) return;
             const touch = event.touches[0];
             const deltaX = Math.max(0, touch.clientX - this.touchStartX);
             const deltaY = touch.clientY - (this.touchStartY ?? 0);
@@ -634,13 +679,30 @@ function exerciseApp() {
                 this.handleSwipeRight(event, this.swipeTargetElement);
                 return;
             }
-            if (event && this.touchStartX <= this.edgeThreshold) {
+            // Блокируем события только при реальном движении вправо (свайпе), чтобы не мешать выделению текста
+            if (event && this.touchStartX <= this.getEdgeThreshold() && deltaX > 10) {
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
         },
 
         handleTouchEnd(event) {
+            // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton && this.touchStartX !== null) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+
             if (this.popStateLocked) {
                 this.touchStartX = null;
                 this.touchStartY = null;
@@ -703,7 +765,7 @@ function exerciseApp() {
                 this.swipeTargetElement = null;
                 return;
             }
-            if (startX > this.edgeThreshold) {
+            if (startX > this.getEdgeThreshold()) {
                 this.resetSwipeTransform(false, targetElement);
                 this.swipeTargetElement = null;
                 return;
@@ -717,10 +779,13 @@ function exerciseApp() {
         },
 
         handleSwipeRight(event, targetElement = null) {
-            if (this.currentView !== 'view') return;
+            if (!['view', 'create', 'edit', 'add-video'].includes(this.currentView)) return;
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
             this.swipeHandled = true;
             this.closeGlobalMobileMenu();
@@ -733,13 +798,23 @@ function exerciseApp() {
                     target.style.transform = 'translateX(100%)';
                 });
                 this.swipeAnimationTimeout = setTimeout(() => {
-                    this.showList();
+                    // Если свайп из add-video, возвращаемся к view того же упражнения
+                    if (this.currentView === 'add-video' && this.currentExercise) {
+                        this.showView(this.currentExercise.id);
+                    } else {
+                        this.showList();
+                    }
                     this.resetSwipeTransform(true, target);
                     this.swipeTargetElement = null;
                     this.swipeAnimationTimeout = null;
                 }, 180);
             } else {
-                this.showList();
+                // Если свайп из add-video, возвращаемся к view того же упражнения
+                if (this.currentView === 'add-video' && this.currentExercise) {
+                    this.showView(this.currentExercise.id);
+                } else {
+                    this.showList();
+                }
             }
         },
 
@@ -1974,7 +2049,7 @@ function exerciseApp() {
     </div>
 
     <!-- Форма создания/редактирования -->
-    <div x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-exercise-form-section" x-show="currentView === 'create' || currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6 flex justify-between items-start">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '{{ __('common.create_exercise') }}' : '{{ __('common.edit_exercise') }}'"></h2>
@@ -2393,7 +2468,7 @@ function exerciseApp() {
     </div>
 
     <!-- Форма добавления пользовательского видео -->
-    <div x-show="currentView === 'add-video'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div id="trainer-exercise-add-video-section" x-show="currentView === 'add-video'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="mb-6 flex justify-between items-start">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900">{{ __('common.add_video_to_exercise') }}</h2>
