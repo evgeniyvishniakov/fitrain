@@ -333,7 +333,19 @@ function calendarApp() {
             }
             menuGesture = 'close';
         } else {
-            // Убрали проверку startX > getEdgeThreshold(), чтобы меню открывалось свайпом из любой точки
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
+            if (startX <= menuCloseEdgeGuard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
+                preventEvent(event);
+                // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
+            }
+            
+            // Проверяем, что касание в пределах зоны свайпа (как в тренировках)
+            const nearEdge = startX <= getEdgeThreshold();
+            if (!nearEdge) {
+                resetTouchState();
+                return;
+            }
             menuGesture = 'open';
         }
 
