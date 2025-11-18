@@ -367,6 +367,17 @@ function exerciseApp() {
                     // свайп из остальной части экрана – закрываем
                     this.menuGesture = 'close';
                 } else {
+                    // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
+                    const guard = this.menuCloseEdgeGuard;
+                    if (startX <= guard) {
+                        // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (event.stopImmediatePropagation) {
+                            event.stopImmediatePropagation();
+                        }
+                        // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
+                    }
                     if (!nearEdge) {
                         return;
                     }
@@ -386,6 +397,19 @@ function exerciseApp() {
             }
 
             if (!['view', 'create', 'edit', 'add-video'].includes(this.currentView)) return;
+            
+            // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
+            const guard = this.menuCloseEdgeGuard;
+            if (startX <= guard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+                // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
+            }
+            
             if (!nearEdge) return;
 
             this.closeMobileMenuIfOpen();
