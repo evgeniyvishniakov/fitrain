@@ -410,7 +410,17 @@
 </div>
 
 <!-- Модальное окно детального просмотра плана питания -->
-<div x-data="{ detailedNutritionPlan: null }" x-show="detailedNutritionPlan" x-cloak x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; display: none !important;">
+<div x-data="{ 
+    detailedNutritionPlan: null,
+    formatNumber(num) {
+        // Если число целое, возвращаем без точки и нуля
+        if (num % 1 === 0) {
+            return num.toString();
+        }
+        // Иначе возвращаем с одной цифрой после точки
+        return num.toFixed(1);
+    }
+}" x-show="detailedNutritionPlan" x-cloak x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; display: none !important;">
     <div class="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[85vh] overflow-hidden">
         <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${detailedNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>
@@ -467,10 +477,10 @@
                                 <template x-for="day in (detailedNutritionPlan.nutrition_days || [])" :key="day.id">
                                     <tr>
                                         <td class="px-3 py-2 text-sm font-medium text-gray-900" x-text="new Date(day.date).getDate()"></td>
-                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.proteins || 0).toFixed(1)"></td>
-                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1)"></td>
-                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1)"></td>
-                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.calories || 0).toFixed(1)"></td>
+                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.proteins || 0))"></td>
+                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.fats || 0))"></td>
+                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.carbs || 0))"></td>
+                                        <td class="px-3 py-2 text-sm text-gray-900" x-text="formatNumber(parseFloat(day.calories || 0))"></td>
                                         <td class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
                                     </tr>
                                 </template>
