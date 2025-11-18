@@ -313,6 +313,7 @@
 
         if (menuIsOpen) {
             if (startX <= menuCloseEdgeGuard) {
+                // Блокируем системный жест "назад", но меню не трогаем
                 preventEvent(event);
                 resetTouchState();
                 return;
@@ -325,7 +326,9 @@
             }
             menuGesture = 'close';
         } else {
-            if (startX > getEdgeThreshold()) {
+            // Проверяем, что касание в пределах зоны свайпа (как в тренировках)
+            const nearEdge = startX <= getEdgeThreshold();
+            if (!nearEdge) {
                 resetTouchState();
                 return;
             }
