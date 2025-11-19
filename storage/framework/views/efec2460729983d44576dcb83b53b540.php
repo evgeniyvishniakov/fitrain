@@ -1,7 +1,5 @@
-@extends("crm.layouts.app")
-
-@section("title", __('common.athletes'))
-@section("page-title", __('common.athletes'))
+<?php $__env->startSection("title", __('common.athletes')); ?>
+<?php $__env->startSection("page-title", __('common.athletes')); ?>
 
 <style>
 @media (max-width: 767px) {
@@ -168,7 +166,7 @@
 function athletesApp() {
     return {
         currentView: 'list', // list, create, edit, view, addMeasurement, editMeasurement, addPayment, editPayment, addNutrition
-        athletes: @json($athletes->items()),
+        athletes: <?php echo json_encode($athletes->items(), 15, 512) ?>,
         currentAthlete: null,
         activeTab: 'overview', // для вкладок в просмотре
         measurements: [], // Массив для хранения измерений
@@ -256,7 +254,7 @@ function athletesApp() {
             package_price: 0,
             purchase_date: '',
             expires_date: '',
-            payment_method: '{{ __('common.cash') }}',
+            payment_method: '<?php echo e(__('common.cash')); ?>',
             description: ''
         },
 
@@ -911,13 +909,13 @@ function athletesApp() {
             if (!bmi || isNaN(bmi)) return { text: '—', color: 'text-gray-500', bg: 'bg-gray-100' };
             
             if (bmi < 18.5) {
-                return { text: '{{ __('common.underweight') }}', color: 'text-blue-600', bg: 'bg-blue-100' };
+                return { text: '<?php echo e(__('common.underweight')); ?>', color: 'text-blue-600', bg: 'bg-blue-100' };
             } else if (bmi < 25) {
-                return { text: '{{ __('common.normal_weight') }}', color: 'text-green-600', bg: 'bg-green-100' };
+                return { text: '<?php echo e(__('common.normal_weight')); ?>', color: 'text-green-600', bg: 'bg-green-100' };
             } else if (bmi < 30) {
-                return { text: '{{ __('common.overweight') }}', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+                return { text: '<?php echo e(__('common.overweight')); ?>', color: 'text-yellow-600', bg: 'bg-yellow-100' };
             } else {
-                return { text: '{{ __('common.obesity') }}', color: 'text-red-600', bg: 'bg-red-100' };
+                return { text: '<?php echo e(__('common.obesity')); ?>', color: 'text-red-600', bg: 'bg-red-100' };
             }
         },
 
@@ -930,11 +928,11 @@ function athletesApp() {
             const change = lastWeight - firstWeight;
             
             if (change > 0) {
-                return '+' + this.formatNumber(change, '{{ __('common.weight_change_kg') }}');
+                return '+' + this.formatNumber(change, '<?php echo e(__('common.weight_change_kg')); ?>');
             } else if (change < 0) {
-                return this.formatNumber(change, '{{ __('common.weight_change_kg') }}');
+                return this.formatNumber(change, '<?php echo e(__('common.weight_change_kg')); ?>');
             } else {
-                return '{{ __('common.weight_change_zero') }}';
+                return '<?php echo e(__('common.weight_change_zero')); ?>';
             }
         },
 
@@ -984,7 +982,7 @@ function athletesApp() {
             const sortedMeasurements = [...filteredMeasurements].reverse();
             const labels = sortedMeasurements.map(m => {
                 const date = new Date(m.measurement_date);
-                return date.toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', { month: 'short', day: 'numeric' });
+                return date.toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>', { month: 'short', day: 'numeric' });
             });
             
             this.createMeasurementsChart(labels, sortedMeasurements);
@@ -1031,7 +1029,7 @@ function athletesApp() {
             
             // Проверяем, что Chart.js загружен
             if (typeof Chart === 'undefined') {
-                console.error('{{ __('common.chart_js_not_loaded') }}');
+                console.error('<?php echo e(__('common.chart_js_not_loaded')); ?>');
                 return;
             }
             // console.log('Chart.js загружен успешно');
@@ -1052,7 +1050,7 @@ function athletesApp() {
             const sortedMeasurements = [...filteredMeasurements].reverse(); // Сортируем по дате
             const labels = sortedMeasurements.map(m => {
                 const date = new Date(m.measurement_date);
-                return date.toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', { month: 'short', day: 'numeric' });
+                return date.toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>', { month: 'short', day: 'numeric' });
             });
 
             // console.log('Отсортированные измерения:', sortedMeasurements);
@@ -1080,7 +1078,7 @@ function athletesApp() {
             // console.log('=== СОЗДАНИЕ ГРАФИКА ВЕСА ===');
             const ctx = document.getElementById('weightChart');
             if (!ctx) {
-                console.error('{{ __('common.weight_canvas_not_found') }}');
+                console.error('<?php echo e(__('common.weight_canvas_not_found')); ?>');
                 return;
             }
             // console.log('Canvas элемент найден:', ctx);
@@ -1100,7 +1098,7 @@ function athletesApp() {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '{{ __('common.weight_kg') }}',
+                        label: '<?php echo e(__('common.weight_kg')); ?>',
                         data: measurements.map(m => m.weight),
                         borderColor: '#3B82F6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -1150,7 +1148,7 @@ function athletesApp() {
             });
             // console.log('График веса создан успешно');
             } catch (error) {
-                console.error('{{ __('common.weight_chart_error') }}:', error);
+                console.error('<?php echo e(__('common.weight_chart_error')); ?>:', error);
             }
         },
 
@@ -1168,14 +1166,14 @@ function athletesApp() {
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '{{ __('common.body_fat_percentage') }}',
+                        label: '<?php echo e(__('common.body_fat_percentage')); ?>',
                         data: measurements.map(m => m.body_fat_percentage),
                         borderColor: '#EF4444',
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         borderWidth: 2,
                         yAxisID: 'y'
                     }, {
-                        label: '{{ __('common.muscle_mass_kg') }}',
+                        label: '<?php echo e(__('common.muscle_mass_kg')); ?>',
                         data: measurements.map(m => m.muscle_mass),
                         borderColor: '#10B981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -1206,7 +1204,7 @@ function athletesApp() {
                             position: 'left',
                             title: {
                                 display: true,
-                                text: '{{ __('common.body_fat_percentage_short') }}'
+                                text: '<?php echo e(__('common.body_fat_percentage_short')); ?>'
                             },
                             min: function(context) {
                                 const values = context.chart.data.datasets[0].data;
@@ -1223,7 +1221,7 @@ function athletesApp() {
                             position: 'right',
                             title: {
                                 display: true,
-                                text: '{{ __('common.muscle_mass_kg_short') }}'
+                                text: '<?php echo e(__('common.muscle_mass_kg_short')); ?>'
                             },
                             grid: {
                                 drawOnChartArea: false,
@@ -1258,12 +1256,12 @@ function athletesApp() {
 
             // Получаем данные для выбранного измерения
             const measurementConfig = {
-                chest: { label: '{{ __('common.chest_cm') }}', color: '#8B5CF6', bgColor: 'rgba(139, 92, 246, 0.1)' },
-                waist: { label: '{{ __('common.waist_cm') }}', color: '#F59E0B', bgColor: 'rgba(245, 158, 11, 0.1)' },
-                hips: { label: '{{ __('common.hips_cm') }}', color: '#EC4899', bgColor: 'rgba(236, 72, 153, 0.1)' },
-                bicep: { label: '{{ __('common.bicep_cm') }}', color: '#10B981', bgColor: 'rgba(16, 185, 129, 0.1)' },
-                thigh: { label: '{{ __('common.thigh_cm') }}', color: '#EF4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
-                neck: { label: '{{ __('common.neck_cm') }}', color: '#6B7280', bgColor: 'rgba(107, 114, 128, 0.1)' }
+                chest: { label: '<?php echo e(__('common.chest_cm')); ?>', color: '#8B5CF6', bgColor: 'rgba(139, 92, 246, 0.1)' },
+                waist: { label: '<?php echo e(__('common.waist_cm')); ?>', color: '#F59E0B', bgColor: 'rgba(245, 158, 11, 0.1)' },
+                hips: { label: '<?php echo e(__('common.hips_cm')); ?>', color: '#EC4899', bgColor: 'rgba(236, 72, 153, 0.1)' },
+                bicep: { label: '<?php echo e(__('common.bicep_cm')); ?>', color: '#10B981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+                thigh: { label: '<?php echo e(__('common.thigh_cm')); ?>', color: '#EF4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
+                neck: { label: '<?php echo e(__('common.neck_cm')); ?>', color: '#6B7280', bgColor: 'rgba(107, 114, 128, 0.1)' }
             };
 
             let datasets = [];
@@ -1380,11 +1378,11 @@ function athletesApp() {
                         }
                     }
                 } else {
-                    console.error('{{ __('common.measurements_loading_error') }}:', result.message);
+                    console.error('<?php echo e(__('common.measurements_loading_error')); ?>:', result.message);
                     this.measurements = [];
                 }
             } catch (error) {
-                console.error('{{ __('common.measurements_loading_error') }}:', error);
+                console.error('<?php echo e(__('common.measurements_loading_error')); ?>:', error);
                 this.measurements = [];
             }
         },
@@ -1581,7 +1579,7 @@ function athletesApp() {
                         console.error('ОШИБКА СЕРВЕРА:', error);
                         console.error('Статус:', response.status);
                         console.error('Полный ответ:', error);
-                        errorText = error.error || error.message || '{{ __('common.nutrition_plan_creation_error') }}';
+                        errorText = error.error || error.message || '<?php echo e(__('common.nutrition_plan_creation_error')); ?>';
                     } catch (e) {
                         const text = await response.text();
                         console.error('ОШИБКА СЕРВЕРА (не JSON):', text);
@@ -1593,16 +1591,16 @@ function athletesApp() {
             } catch (error) {
                 console.error('Ошибка:', error);
                 console.error('Данные:', nutritionData);
-                alert('{{ __('common.nutrition_plan_error') }}: ' + (error.message || error));
+                alert('<?php echo e(__('common.nutrition_plan_error')); ?>: ' + (error.message || error));
             }
         },
         
         // Быстрое заполнение колонки
         fillColumn(column) {
             const columnNames = {
-                'proteins': '{{ __('common.proteins_g_header') }}',
-                'fats': '{{ __('common.fats_g_header') }}', 
-                'carbs': '{{ __('common.carbs_g_header') }}'
+                'proteins': '<?php echo e(__('common.proteins_g_header')); ?>',
+                'fats': '<?php echo e(__('common.fats_g_header')); ?>', 
+                'carbs': '<?php echo e(__('common.carbs_g_header')); ?>'
             };
             
             const value = prompt(`Введите значение для ${columnNames[column]}:`, '');
@@ -1620,13 +1618,13 @@ function athletesApp() {
         
         // Заполнение всех колонок сразу
         fillAllColumns() {
-            const proteins = prompt('{{ __('common.proteins_g_header') }}:', '');
+            const proteins = prompt('<?php echo e(__('common.proteins_g_header')); ?>:', '');
             if (proteins === null) return;
             
-            const fats = prompt('{{ __('common.fats_g_header') }}:', '');
+            const fats = prompt('<?php echo e(__('common.fats_g_header')); ?>:', '');
             if (fats === null) return;
             
-            const carbs = prompt('{{ __('common.carbs_g_header') }}:', '');
+            const carbs = prompt('<?php echo e(__('common.carbs_g_header')); ?>:', '');
             if (carbs === null) return;
             
             const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
@@ -1649,7 +1647,7 @@ function athletesApp() {
         
         // Очистка всех полей
         clearAll() {
-            if (!confirm('{{ __('common.clear_all_fields_confirm') }}')) return;
+            if (!confirm('<?php echo e(__('common.clear_all_fields_confirm')); ?>')) return;
             
             const daysInMonth = this.getDaysInMonth(this.nutritionMonth, this.nutritionYear);
             for (let day = 1; day <= daysInMonth; day++) {
@@ -1774,15 +1772,15 @@ function athletesApp() {
         // Удалить план питания
         deleteNutritionPlan(planId) {
             const plan = this.nutritionPlans.find(p => p.id === planId);
-            const planTitle = plan ? (plan.title || `{{ __('common.nutrition_plan_on') }} ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} {{ __('common.year_short') }}`) : '{{ __('common.nutrition_plan_default') }}';
+            const planTitle = plan ? (plan.title || `<?php echo e(__('common.nutrition_plan_on')); ?> ${new Date(0, plan.month - 1).toLocaleString('ru-RU', {month: 'long'})} ${plan.year} <?php echo e(__('common.year_short')); ?>`) : '<?php echo e(__('common.nutrition_plan_default')); ?>';
             
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: '{{ __('common.delete') }} {{ __('common.nutrition_plan') }}',
+                    title: '<?php echo e(__('common.delete')); ?> <?php echo e(__('common.nutrition_plan')); ?>',
                     message: `Вы уверены, что хотите удалить "${planTitle}"?`,
-                    confirmText: '{{ __('common.delete') }}',
-                    cancelText: '{{ __('common.cancel') }}',
+                    confirmText: '<?php echo e(__('common.delete')); ?>',
+                    cancelText: '<?php echo e(__('common.cancel')); ?>',
                     onConfirm: () => this.performDeleteNutritionPlan(planId)
                 }
             }));
@@ -1800,11 +1798,11 @@ function athletesApp() {
                 if (response.ok) {
                     this.loadNutritionPlans(); // Перезагружаем список
                 } else {
-                    alert('{{ __('common.delete_nutrition_plan_error') }}');
+                    alert('<?php echo e(__('common.delete_nutrition_plan_error')); ?>');
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
-                alert('{{ __('common.delete_nutrition_plan_error') }}');
+                alert('<?php echo e(__('common.delete_nutrition_plan_error')); ?>');
             }
         },
         
@@ -1964,7 +1962,7 @@ function athletesApp() {
                     month: this.nutritionMonth,
                     year: this.nutritionYear
                 });
-                alert('{{ __('common.invalid_days_error') }}');
+                alert('<?php echo e(__('common.invalid_days_error')); ?>');
                 return;
             }
             
@@ -1998,7 +1996,7 @@ function athletesApp() {
                 package_price: 0,
                 purchase_date: new Date().toISOString().split('T')[0],
                 expires_date: '',
-                payment_method: '{{ __('common.cash') }}',
+                payment_method: '<?php echo e(__('common.cash')); ?>',
                 description: ''
             };
         },
@@ -2006,12 +2004,12 @@ function athletesApp() {
         // Функция для отображения типов пакетов
         getPackageTypeLabel(type) {
             const labels = {
-                'single': '{{ __('common.single_workout') }}',
-                '4_sessions': '{{ __('common.4_workouts') }}',
-                '8_sessions': '{{ __('common.8_workouts') }}',
-                '12_sessions': '{{ __('common.12_workouts') }}',
-                'unlimited': '{{ __('common.unlimited_month') }}',
-                'custom': '{{ __('common.custom_amount') }}'
+                'single': '<?php echo e(__('common.single_workout')); ?>',
+                '4_sessions': '<?php echo e(__('common.4_workouts')); ?>',
+                '8_sessions': '<?php echo e(__('common.8_workouts')); ?>',
+                '12_sessions': '<?php echo e(__('common.12_workouts')); ?>',
+                'unlimited': '<?php echo e(__('common.unlimited_month')); ?>',
+                'custom': '<?php echo e(__('common.custom_amount')); ?>'
             };
             return labels[type] || type;
         },
@@ -2228,10 +2226,10 @@ function athletesApp() {
         getSportLevelLabel(level) {
             const normalized = this.normalizeSportLevel(level);
             const labels = {
-                'beginner': '{{ __('common.beginner') }}',
-                'intermediate': '{{ __('common.intermediate') }}', 
-                'advanced': '{{ __('common.advanced') }}',
-                'professional': '{{ __('common.professional') }}'
+                'beginner': '<?php echo e(__('common.beginner')); ?>',
+                'intermediate': '<?php echo e(__('common.intermediate')); ?>', 
+                'advanced': '<?php echo e(__('common.advanced')); ?>',
+                'professional': '<?php echo e(__('common.professional')); ?>'
             };
 
             if (labels[normalized]) {
@@ -2239,8 +2237,8 @@ function athletesApp() {
             }
 
             const legacyLabels = {
-                'amateur': '{{ __('common.intermediate') }}',
-                'pro': '{{ __('common.advanced') }}'
+                'amateur': '<?php echo e(__('common.intermediate')); ?>',
+                'pro': '<?php echo e(__('common.advanced')); ?>'
             };
 
             return legacyLabels[level] || level;
@@ -2253,10 +2251,10 @@ function athletesApp() {
         // Метки способов оплаты
         getPaymentMethodText(method) {
             const labels = {
-                'cash': '{{ __('common.cash') }}',
-                'card': '{{ __('common.bank_card') }}',
-                'transfer': '{{ __('common.bank_transfer') }}',
-                'other': '{{ __('common.other') }}'
+                'cash': '<?php echo e(__('common.cash')); ?>',
+                'card': '<?php echo e(__('common.bank_card')); ?>',
+                'transfer': '<?php echo e(__('common.bank_transfer')); ?>',
+                'other': '<?php echo e(__('common.other')); ?>'
             };
             return labels[method] || method;
         },
@@ -2295,10 +2293,10 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: this.currentAthlete && this.currentAthlete.id ? '{{ __('common.athlete_updated') }}' : '{{ __('common.athlete_added') }}',
+                            title: this.currentAthlete && this.currentAthlete.id ? '<?php echo e(__('common.athlete_updated')); ?>' : '<?php echo e(__('common.athlete_added')); ?>',
                             message: this.currentAthlete && this.currentAthlete.id ? 
-                                '{{ __('common.athlete_data_updated') }}' : 
-                                '{{ __('common.athlete_successfully_added') }}'
+                                '<?php echo e(__('common.athlete_data_updated')); ?>' : 
+                                '<?php echo e(__('common.athlete_successfully_added')); ?>'
                         }
                     }));
                     
@@ -2336,8 +2334,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.saving_error') }}',
-                            message: result.message || '{{ __('common.athlete_saving_error') }}'
+                            title: '<?php echo e(__('common.saving_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.athlete_saving_error')); ?>'
                         }
                     }));
                 }
@@ -2347,8 +2345,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.athlete_saving_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.athlete_saving_error')); ?>'
                     }
                 }));
             }
@@ -2367,10 +2365,11 @@ function athletesApp() {
                     sport_level: this.formSportLevel,
                     goals: this.formGoals,
                     is_active: this.formIsActive === '1',
-                    trainer_id: {{ auth()->id() }}
+                    trainer_id: <?php echo e(auth()->id()); ?>
+
                 };
                 
-                const response = await fetch('{{ route("crm.trainer.store-athlete") }}', {
+                const response = await fetch('<?php echo e(route("crm.trainer.store-athlete")); ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2390,8 +2389,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.success') }}',
-                            message: '{{ __('common.athlete_successfully_created') }}'
+                            title: '<?php echo e(__('common.success')); ?>',
+                            message: '<?php echo e(__('common.athlete_successfully_created')); ?>'
                         }
                     }));
                     
@@ -2402,8 +2401,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.error') }}',
-                            message: result.message || '{{ __('common.athlete_creation_error') }}'
+                            title: '<?php echo e(__('common.error')); ?>',
+                            message: result.message || '<?php echo e(__('common.athlete_creation_error')); ?>'
                         }
                     }));
                 }
@@ -2412,8 +2411,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.athlete_creation_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.athlete_creation_error')); ?>'
                     }
                 }));
             }
@@ -2498,8 +2497,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.success') }}',
-                            message: '{{ __('common.athlete_data_updated_success') }}'
+                            title: '<?php echo e(__('common.success')); ?>',
+                            message: '<?php echo e(__('common.athlete_data_updated_success')); ?>'
                         }
                     }));
                     
@@ -2518,7 +2517,7 @@ function athletesApp() {
                         window.dispatchEvent(new CustomEvent('show-notification', {
                             detail: {
                                 type: 'error',
-                                title: '{{ __('common.error') }}',
+                                title: '<?php echo e(__('common.error')); ?>',
                                 message: 'Сессия истекла. Пожалуйста, обновите страницу и попробуйте снова.'
                             }
                         }));
@@ -2529,7 +2528,7 @@ function athletesApp() {
                         return;
                     }
                     
-                    console.error('{{ __('common.server_error_status') }}:', response.status, responseText);
+                    console.error('<?php echo e(__('common.server_error_status')); ?>:', response.status, responseText);
                     throw new Error(`Ошибка сервера: ${response.status} - ${responseText}`);
                 }
             } catch (error) {
@@ -2537,7 +2536,7 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
+                        title: '<?php echo e(__('common.error')); ?>',
                         message: `Не удалось обновить данные спортсмена: ${error.message}`
                     }
                 }));
@@ -2623,8 +2622,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.success') }}',
-                            message: isEdit ? '{{ __('common.measurement_updated') }}' : '{{ __('common.measurements_saved') }}'
+                            title: '<?php echo e(__('common.success')); ?>',
+                            message: isEdit ? '<?php echo e(__('common.measurement_updated')); ?>' : '<?php echo e(__('common.measurements_saved')); ?>'
                         }
                     }));
                     
@@ -2636,8 +2635,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.saving_error') }}',
-                            message: result.message || '{{ __('common.measurement_saving_error') }}'
+                            title: '<?php echo e(__('common.saving_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.measurement_saving_error')); ?>'
                         }
                     }));
                 }
@@ -2647,8 +2646,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.measurement_saving_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.measurement_saving_error')); ?>'
                     }
                 }));
             }
@@ -2797,8 +2796,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.success') }}',
-                            message: isEdit ? '{{ __('common.payment_updated') }}' : '{{ __('common.payment_saved') }}'
+                            title: '<?php echo e(__('common.success')); ?>',
+                            message: isEdit ? '<?php echo e(__('common.payment_updated')); ?>' : '<?php echo e(__('common.payment_saved')); ?>'
                         }
                     }));
                     
@@ -2810,8 +2809,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.saving_error') }}',
-                            message: result.message || '{{ __('common.payment_saving_error') }}'
+                            title: '<?php echo e(__('common.saving_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.payment_saving_error')); ?>'
                         }
                     }));
                 }
@@ -2821,8 +2820,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.payment_saving_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.payment_saving_error')); ?>'
                     }
                 }));
             }
@@ -2839,7 +2838,7 @@ function athletesApp() {
                 package_price: payment.package_price || 0,
                 purchase_date: payment.purchase_date || '',
                 expires_date: payment.expires_date || '',
-                payment_method: payment.payment_method || '{{ __('common.cash') }}',
+                payment_method: payment.payment_method || '<?php echo e(__('common.cash')); ?>',
                 description: payment.description || ''
             };
         },
@@ -2863,7 +2862,7 @@ function athletesApp() {
                 package_price: payment.amount || 0,
                 purchase_date: formatDateForInput(payment.date),
                 expires_date: formatDateForInput(this.currentAthlete?.finance?.expires_date),
-                payment_method: payment.payment_method || '{{ __('common.cash') }}',
+                payment_method: payment.payment_method || '<?php echo e(__('common.cash')); ?>',
                 description: payment.description || ''
             };
         },
@@ -2873,10 +2872,10 @@ function athletesApp() {
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: '{{ __('common.delete_package_title') }}',
-                    message: '{{ __('common.delete_package_confirm') }}',
-                    confirmText: '{{ __('common.delete') }}',
-                    cancelText: '{{ __('common.cancel') }}',
+                    title: '<?php echo e(__('common.delete_package_title')); ?>',
+                    message: '<?php echo e(__('common.delete_package_confirm')); ?>',
+                    confirmText: '<?php echo e(__('common.delete')); ?>',
+                    cancelText: '<?php echo e(__('common.cancel')); ?>',
                     onConfirm: () => this.performDeletePayment(paymentId)
                 }
             }));
@@ -2946,8 +2945,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.payment_deleted') }}',
-                            message: '{{ __('common.payment_successfully_deleted') }}'
+                            title: '<?php echo e(__('common.payment_deleted')); ?>',
+                            message: '<?php echo e(__('common.payment_successfully_deleted')); ?>'
                         }
                     }));
                 } else {
@@ -2955,8 +2954,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.delete_error') }}',
-                            message: result.message || '{{ __('common.payment_delete_error') }}'
+                            title: '<?php echo e(__('common.delete_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.payment_delete_error')); ?>'
                         }
                     }));
                 }
@@ -2966,8 +2965,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.delete_package_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.delete_package_error')); ?>'
                     }
                 }));
             }
@@ -2978,10 +2977,10 @@ function athletesApp() {
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: '{{ __('common.delete_measurement_title') }}',
-                    message: '{{ __('common.delete_measurement_confirm') }}',
-                    confirmText: '{{ __('common.delete') }}',
-                    cancelText: '{{ __('common.cancel') }}',
+                    title: '<?php echo e(__('common.delete_measurement_title')); ?>',
+                    message: '<?php echo e(__('common.delete_measurement_confirm')); ?>',
+                    confirmText: '<?php echo e(__('common.delete')); ?>',
+                    cancelText: '<?php echo e(__('common.cancel')); ?>',
                     onConfirm: () => this.performDeleteMeasurement(measurementId)
                 }
             }));
@@ -3006,8 +3005,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.measurement_deleted') }}',
-                            message: '{{ __('common.measurement_successfully_deleted') }}'
+                            title: '<?php echo e(__('common.measurement_deleted')); ?>',
+                            message: '<?php echo e(__('common.measurement_successfully_deleted')); ?>'
                         }
                     }));
                 } else {
@@ -3015,8 +3014,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.delete_error') }}',
-                            message: result.message || '{{ __('common.measurement_delete_error') }}'
+                            title: '<?php echo e(__('common.delete_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.measurement_delete_error')); ?>'
                         }
                     }));
                 }
@@ -3026,8 +3025,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.measurement_delete_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.measurement_delete_error')); ?>'
                     }
                 }));
             }
@@ -3036,15 +3035,15 @@ function athletesApp() {
         // Удаление
         deleteAthlete(id) {
             const athlete = this.athletes.find(a => a.id === id);
-            const athleteName = athlete ? athlete.name : '{{ __('common.athlete_name_default') }}';
+            const athleteName = athlete ? athlete.name : '<?php echo e(__('common.athlete_name_default')); ?>';
             
             // Используем глобальное модальное окно подтверждения
             window.dispatchEvent(new CustomEvent('show-confirm', {
                 detail: {
-                    title: '{{ __('common.delete_athlete_title') }}',
+                    title: '<?php echo e(__('common.delete_athlete_title')); ?>',
                     message: `Вы уверены, что хотите удалить спортсмена "${athleteName}"?`,
-                    confirmText: '{{ __('common.delete') }}',
-                    cancelText: '{{ __('common.cancel') }}',
+                    confirmText: '<?php echo e(__('common.delete')); ?>',
+                    cancelText: '<?php echo e(__('common.cancel')); ?>',
                     onConfirm: () => this.performDelete(id)
                 }
             }));
@@ -3067,8 +3066,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'success',
-                            title: '{{ __('common.athlete_deleted') }}',
-                            message: result.message || '{{ __('common.athlete_successfully_deleted') }}'
+                            title: '<?php echo e(__('common.athlete_deleted')); ?>',
+                            message: result.message || '<?php echo e(__('common.athlete_successfully_deleted')); ?>'
                         }
                     }));
                     
@@ -3090,8 +3089,8 @@ function athletesApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: '{{ __('common.delete_error') }}',
-                            message: result.message || '{{ __('common.athlete_delete_error') }}'
+                            title: '<?php echo e(__('common.delete_error')); ?>',
+                            message: result.message || '<?php echo e(__('common.athlete_delete_error')); ?>'
                         }
                     }));
                 }
@@ -3101,8 +3100,8 @@ function athletesApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: '{{ __('common.error') }}',
-                        message: '{{ __('common.athlete_delete_error') }}'
+                        title: '<?php echo e(__('common.error')); ?>',
+                        message: '<?php echo e(__('common.athlete_delete_error')); ?>'
                     }
                 }));
             }
@@ -3111,59 +3110,61 @@ function athletesApp() {
 }
 </script>
 
-@section("sidebar")
-    <a href="{{ route("crm.dashboard.main") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+<?php $__env->startSection("sidebar"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        {{ __('common.dashboard') }}
+        <?php echo e(__('common.dashboard')); ?>
+
     </a>
-    <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
         Календарь
     </a>
-    <a href="{{ route("crm.workouts.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.workouts.index")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        {{ __('common.workouts') }}
+        <?php echo e(__('common.workouts')); ?>
+
     </a>
-    <a href="{{ route("crm.exercises.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.exercises.index")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
         </svg>
         Упражнения
     </a>
-    <a href="{{ route("crm.workout-templates.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.workout-templates.index")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
         Шаблоны тренировок
     </a>
-    <a href="{{ route("crm.progress.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.progress.index")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
         Прогресс
     </a>
-    <a href="{{ route("crm.trainer.athletes") }}" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2">
+    <a href="<?php echo e(route("crm.trainer.athletes")); ?>" class="nav-link active flex items-center px-4 py-3 rounded-xl mb-2">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
         Спортсмены
     </a>
-    <a href="{{ route('crm.trainer.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.trainer.settings')); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
         Настройки
     </a>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section("content")
+<?php $__env->startSection("content"); ?>
 <div id="trainer-athletes-root" x-data="athletesApp()" x-init="init()" x-cloak class="space-y-6">
     
     <!-- Фильтры и поиск -->
@@ -3237,7 +3238,7 @@ function athletesApp() {
                 <div class="search-container">
                     <input type="text" 
                            x-model="search" 
-                           placeholder="{{ __('common.search_athletes') }}" 
+                           placeholder="<?php echo e(__('common.search_athletes')); ?>" 
                            class="w-full px-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
@@ -3245,11 +3246,11 @@ function athletesApp() {
                 <div class="status-container">
                     <select x-model="sportLevel" 
                             class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors appearance-none cursor-pointer">
-                        <option value="">{{ __('common.all_levels') }}</option>
-                        <option value="beginner">{{ __('common.beginner') }}</option>
-                        <option value="intermediate">{{ __('common.intermediate') }}</option>
-                        <option value="advanced">{{ __('common.advanced') }}</option>
-                        <option value="professional">{{ __('common.professional') }}</option>
+                        <option value=""><?php echo e(__('common.all_levels')); ?></option>
+                        <option value="beginner"><?php echo e(__('common.beginner')); ?></option>
+                        <option value="intermediate"><?php echo e(__('common.intermediate')); ?></option>
+                        <option value="advanced"><?php echo e(__('common.advanced')); ?></option>
+                        <option value="professional"><?php echo e(__('common.professional')); ?></option>
                     </select>
                 </div>
                 
@@ -3257,7 +3258,8 @@ function athletesApp() {
                 <div class="buttons-container">
                     <button @click="showCreate()" 
                             class="px-4 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors whitespace-nowrap">
-                        {{ __('common.add_athlete') }}
+                        <?php echo e(__('common.add_athlete')); ?>
+
                     </button>
                 </div>
             </div>
@@ -3265,7 +3267,7 @@ function athletesApp() {
             <!-- Активные фильтры -->
             <div x-show="search || sportLevel" class="mt-4 pt-4 border-t border-gray-100">
                 <div class="flex flex-wrap gap-2">
-                    <span class="text-sm text-gray-500">{{ __('common.active_filters') }}:</span>
+                    <span class="text-sm text-gray-500"><?php echo e(__('common.active_filters')); ?>:</span>
                     
                     <span x-show="search" 
                           class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -3275,7 +3277,7 @@ function athletesApp() {
                     
                     <span x-show="sportLevel" 
                           class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                        {{ __('common.level') }}: <span x-text="getSportLevelLabel(sportLevel)"></span>
+                        <?php echo e(__('common.level')); ?>: <span x-text="getSportLevelLabel(sportLevel)"></span>
                         <button @click="sportLevel = ''" class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
                     </span>
                 </div>
@@ -3315,8 +3317,8 @@ function athletesApp() {
                                 <div class="flex items-center flex-wrap gap-4">
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
                                     <!-- Возраст скрыт по запросу -->
-                                    <span x-show="athlete.current_weight" class="text-sm text-gray-500" x-text="'{{ __('common.weight') }}: ' + formatNumber(athlete.current_weight, ' {{ __('common.weight_change_kg') }}')"></span>
-                                    <span x-show="athlete.current_height" class="text-sm text-gray-500" x-text="'{{ __('common.height') }}: ' + formatNumber(athlete.current_height, ' см')"></span>
+                                    <span x-show="athlete.current_weight" class="text-sm text-gray-500" x-text="'<?php echo e(__('common.weight')); ?>: ' + formatNumber(athlete.current_weight, ' <?php echo e(__('common.weight_change_kg')); ?>')"></span>
+                                    <span x-show="athlete.current_height" class="text-sm text-gray-500" x-text="'<?php echo e(__('common.height')); ?>: ' + formatNumber(athlete.current_height, ' см')"></span>
                                 </div>
                             </div>
                         </div>
@@ -3325,15 +3327,18 @@ function athletesApp() {
                         <div class="flex items-center space-x-2 mx-4">
                             <button @click="showView(athlete.id)" 
                                     class="px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
-                                {{ __('common.view') }}
+                                <?php echo e(__('common.view')); ?>
+
                             </button>
                             <button @click="showEdit(athlete.id)" 
                                     class="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                                {{ __('common.edit') }}
+                                <?php echo e(__('common.edit')); ?>
+
                             </button>
                             <button @click="deleteAthlete(athlete.id)" 
                                     class="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                                {{ __('common.delete') }}
+                                <?php echo e(__('common.delete')); ?>
+
                             </button>
                         </div>
                         
@@ -3347,7 +3352,7 @@ function athletesApp() {
                                       'bg-blue-100 text-blue-800': athlete.is_active && isSportLevel(athlete.sport_level, 'beginner'),
                                       'bg-purple-100 text-purple-800': athlete.is_active && isSportLevel(athlete.sport_level, 'professional')
                                   }"
-                                  x-text="!athlete.is_active ? '{{ __('common.inactive') }}' : getSportLevelLabel(athlete.sport_level)">
+                                  x-text="!athlete.is_active ? '<?php echo e(__('common.inactive')); ?>' : getSportLevelLabel(athlete.sport_level)">
                             </span>
                         </div>
                     </div>
@@ -3369,8 +3374,8 @@ function athletesApp() {
                                     <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors" x-text="athlete.name"></h3>
                                     <div class="flex flex-wrap gap-2 text-sm text-gray-500 mt-1">
                                         <!-- Возраст скрыт по запросу -->
-                                        <span x-show="athlete.current_weight" x-text="'{{ __('common.weight') }}: ' + formatNumber(athlete.current_weight, ' {{ __('common.weight_change_kg') }}')"></span>
-                                        <span x-show="athlete.current_height" x-text="'{{ __('common.height') }}: ' + formatNumber(athlete.current_height, ' см')"></span>
+                                        <span x-show="athlete.current_weight" x-text="'<?php echo e(__('common.weight')); ?>: ' + formatNumber(athlete.current_weight, ' <?php echo e(__('common.weight_change_kg')); ?>')"></span>
+                                        <span x-show="athlete.current_height" x-text="'<?php echo e(__('common.height')); ?>: ' + formatNumber(athlete.current_height, ' см')"></span>
                                     </div>
                                 </div>
                             </div>
@@ -3385,7 +3390,7 @@ function athletesApp() {
                                       'bg-blue-100 text-blue-800': athlete.is_active && isSportLevel(athlete.sport_level, 'beginner'),
                                       'bg-purple-100 text-purple-800': athlete.is_active && isSportLevel(athlete.sport_level, 'professional')
                                   }"
-                                      x-text="!athlete.is_active ? '{{ __('common.inactive') }}' : getSportLevelLabel(athlete.sport_level)">
+                                      x-text="!athlete.is_active ? '<?php echo e(__('common.inactive')); ?>' : getSportLevelLabel(athlete.sport_level)">
                                 </span>
                             </div>
                         </div>
@@ -3395,17 +3400,20 @@ function athletesApp() {
                             <button @click="showView(athlete.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors relative z-10"
                                     style="pointer-events: auto; touch-action: manipulation;">
-                                {{ __('common.view') }}
+                                <?php echo e(__('common.view')); ?>
+
                             </button>
                             <button @click="showEdit(athlete.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors relative z-10"
                                     style="pointer-events: auto; touch-action: manipulation;">
-                                {{ __('common.edit') }}
+                                <?php echo e(__('common.edit')); ?>
+
                             </button>
                             <button @click="deleteAthlete(athlete.id)" 
                                     class="flex-1 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors relative z-10"
                                     style="pointer-events: auto; touch-action: manipulation;">
-                                {{ __('common.delete') }}
+                                <?php echo e(__('common.delete')); ?>
+
                             </button>
                         </div>
                     </div>
@@ -3457,11 +3465,12 @@ function athletesApp() {
             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <span class="text-3xl text-gray-400">👥</span>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ __('common.no_athletes') }}</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ __('common.no_athletes_text') }}</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2"><?php echo e(__('common.no_athletes')); ?></h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto"><?php echo e(__('common.no_athletes_text')); ?></p>
             <button @click="showCreate()" 
                     class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.add_first_athlete') }}
+                <?php echo e(__('common.add_first_athlete')); ?>
+
             </button>
         </div>
     </div>
@@ -3469,10 +3478,11 @@ function athletesApp() {
     <!-- ДОБАВЛЕНИЕ ПЛАТЕЖА -->
     <div id="trainer-athletes-add-payment-section" x-show="currentView === 'addPayment'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.add_payment') }}</h3>
+            <h3 class="text-xl font-semibold text-gray-900"><?php echo e(__('common.add_payment')); ?></h3>
             <button @click="currentView = 'view'; activeTab = 'finance'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.back') }}
+                <?php echo e(__('common.back')); ?>
+
             </button>
         </div>
         
@@ -3480,49 +3490,50 @@ function athletesApp() {
             <form @submit.prevent="savePayment" class="space-y-6">
                 <!-- Информация о пакете -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.package_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.package_info')); ?></h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.package_type') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.package_type')); ?></label>
                             <select x-model="paymentData.package_type" 
                                     @change="updateSessionsByPackageType()"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">{{ __('common.select_package_type') }}</option>
-                                <option value="single">{{ __('common.single_workout') }}</option>
-                                <option value="4_sessions">{{ __('common.4_workouts') }}</option>
-                                <option value="8_sessions">{{ __('common.8_workouts') }}</option>
-                                <option value="12_sessions">{{ __('common.12_workouts') }}</option>
-                                <option value="unlimited">{{ __('common.unlimited_month') }}</option>
-                                <option value="custom">{{ __('common.custom_amount') }}</option>
+                                <option value=""><?php echo e(__('common.select_package_type')); ?></option>
+                                <option value="single"><?php echo e(__('common.single_workout')); ?></option>
+                                <option value="4_sessions"><?php echo e(__('common.4_workouts')); ?></option>
+                                <option value="8_sessions"><?php echo e(__('common.8_workouts')); ?></option>
+                                <option value="12_sessions"><?php echo e(__('common.12_workouts')); ?></option>
+                                <option value="unlimited"><?php echo e(__('common.unlimited_month')); ?></option>
+                                <option value="custom"><?php echo e(__('common.custom_amount')); ?></option>
                             </select>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.workouts_count_label') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.workouts_count_label')); ?></label>
                             <input type="number" x-model="paymentData.total_sessions" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0"
                                    :disabled="paymentData.package_type && paymentData.package_type !== 'custom'">
                             <p class="text-xs text-gray-500 mt-1" x-show="paymentData.package_type && paymentData.package_type !== 'custom'">
-                                {{ __('common.auto_filled_by_package_type') }}
+                                <?php echo e(__('common.auto_filled_by_package_type')); ?>
+
                             </p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.cost_uah') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.cost_uah')); ?></label>
                             <input type="number" x-model="paymentData.package_price" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.payment_method') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.payment_method')); ?></label>
                             <select x-model="paymentData.payment_method" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="cash">{{ __('common.cash') }}</option>
-                                <option value="card">{{ __('common.bank_card') }}</option>
-                                <option value="transfer">{{ __('common.bank_transfer') }}</option>
-                                <option value="other">{{ __('common.other') }}</option>
+                                <option value="cash"><?php echo e(__('common.cash')); ?></option>
+                                <option value="card"><?php echo e(__('common.bank_card')); ?></option>
+                                <option value="transfer"><?php echo e(__('common.bank_transfer')); ?></option>
+                                <option value="other"><?php echo e(__('common.other')); ?></option>
                             </select>
                         </div>
                     </div>
@@ -3530,32 +3541,32 @@ function athletesApp() {
 
                 <!-- Даты -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.dates') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.dates')); ?></h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.purchase_date') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.purchase_date')); ?></label>
                             <input type="date" x-model="paymentData.purchase_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.validity_period') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.validity_period')); ?></label>
                             <input type="date" x-model="paymentData.expires_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="text-xs text-gray-500 mt-1">{{ __('common.validity_period_help') }}</p>
+                            <p class="text-xs text-gray-500 mt-1"><?php echo e(__('common.validity_period_help')); ?></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Дополнительная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.additional_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.additional_info')); ?></h4>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.description')); ?></label>
                             <textarea x-model="paymentData.description" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                      placeholder="{{ __('common.payment_additional_info') }}"></textarea>
+                                      placeholder="<?php echo e(__('common.payment_additional_info')); ?>"></textarea>
                         </div>
                     </div>
                 </div>
@@ -3564,11 +3575,13 @@ function athletesApp() {
                 <div class="flex justify-end gap-4 pt-6 border-t">
                     <button type="button" @click="currentView = 'view'; activeTab = 'finance'" 
                             class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
-                        {{ __('common.cancel') }}
+                        <?php echo e(__('common.cancel')); ?>
+
                     </button>
                     <button type="submit" 
                             class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
-                        {{ __('common.save_payment') }}
+                        <?php echo e(__('common.save_payment')); ?>
+
                     </button>
                 </div>
             </form>
@@ -3578,10 +3591,11 @@ function athletesApp() {
     <!-- РЕДАКТИРОВАНИЕ ПЛАТЕЖА -->
     <div id="trainer-athletes-edit-payment-section" x-show="currentView === 'editPayment'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.edit_payment') }}</h3>
+            <h3 class="text-xl font-semibold text-gray-900"><?php echo e(__('common.edit_payment')); ?></h3>
             <button @click="currentView = 'view'; activeTab = 'finance'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.back') }}
+                <?php echo e(__('common.back')); ?>
+
             </button>
         </div>
         
@@ -3589,56 +3603,57 @@ function athletesApp() {
             <form @submit.prevent="savePayment" class="space-y-6">
                 <!-- Информация о пакете -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.package_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.package_info')); ?></h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.package_type') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.package_type')); ?></label>
                             <select x-model="paymentData.package_type" 
                                     @change="updateSessionsByPackageType()"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">{{ __('common.select_package_type') }}</option>
-                                <option value="single">{{ __('common.single_workout') }}</option>
-                                <option value="4_sessions">{{ __('common.4_workouts') }}</option>
-                                <option value="8_sessions">{{ __('common.8_workouts') }}</option>
-                                <option value="12_sessions">{{ __('common.12_workouts') }}</option>
-                                <option value="unlimited">{{ __('common.unlimited_month') }}</option>
-                                <option value="custom">{{ __('common.custom_amount') }}</option>
+                                <option value=""><?php echo e(__('common.select_package_type')); ?></option>
+                                <option value="single"><?php echo e(__('common.single_workout')); ?></option>
+                                <option value="4_sessions"><?php echo e(__('common.4_workouts')); ?></option>
+                                <option value="8_sessions"><?php echo e(__('common.8_workouts')); ?></option>
+                                <option value="12_sessions"><?php echo e(__('common.12_workouts')); ?></option>
+                                <option value="unlimited"><?php echo e(__('common.unlimited_month')); ?></option>
+                                <option value="custom"><?php echo e(__('common.custom_amount')); ?></option>
                             </select>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.workouts_count_label') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.workouts_count_label')); ?></label>
                             <input type="number" x-model="paymentData.total_sessions" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0"
                                    :disabled="paymentData.package_type && paymentData.package_type !== 'custom'">
                             <p class="text-xs text-gray-500 mt-1" x-show="paymentData.package_type && paymentData.package_type !== 'custom'">
-                                {{ __('common.auto_filled_by_package_type') }}
+                                <?php echo e(__('common.auto_filled_by_package_type')); ?>
+
                             </p>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.used_workouts') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.used_workouts')); ?></label>
                             <input type="number" x-model="paymentData.used_sessions" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.cost_uah') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.cost_uah')); ?></label>
                             <input type="number" x-model="paymentData.package_price" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                    placeholder="0">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.payment_method') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.payment_method')); ?></label>
                             <select x-model="paymentData.payment_method" 
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="cash">{{ __('common.cash') }}</option>
-                                <option value="card">{{ __('common.bank_card') }}</option>
-                                <option value="transfer">{{ __('common.bank_transfer') }}</option>
-                                <option value="other">{{ __('common.other') }}</option>
+                                <option value="cash"><?php echo e(__('common.cash')); ?></option>
+                                <option value="card"><?php echo e(__('common.bank_card')); ?></option>
+                                <option value="transfer"><?php echo e(__('common.bank_transfer')); ?></option>
+                                <option value="other"><?php echo e(__('common.other')); ?></option>
                             </select>
                         </div>
                     </div>
@@ -3646,32 +3661,32 @@ function athletesApp() {
 
                 <!-- Даты -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.dates') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.dates')); ?></h4>
                     <div class="package-info-grid">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.purchase_date') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.purchase_date')); ?></label>
                             <input type="date" x-model="paymentData.purchase_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.validity_period') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.validity_period')); ?></label>
                             <input type="date" x-model="paymentData.expires_date" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <p class="text-xs text-gray-500 mt-1">{{ __('common.validity_period_help') }}</p>
+                            <p class="text-xs text-gray-500 mt-1"><?php echo e(__('common.validity_period_help')); ?></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Дополнительная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.additional_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.additional_info')); ?></h4>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.description')); ?></label>
                             <textarea x-model="paymentData.description" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                      placeholder="{{ __('common.payment_additional_info') }}"></textarea>
+                                      placeholder="<?php echo e(__('common.payment_additional_info')); ?>"></textarea>
                         </div>
                     </div>
                 </div>
@@ -3680,11 +3695,13 @@ function athletesApp() {
                 <div class="flex justify-end gap-4 pt-6 border-t">
                     <button type="button" @click="currentView = 'view'; activeTab = 'finance'" 
                             class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
-                        {{ __('common.cancel') }}
+                        <?php echo e(__('common.cancel')); ?>
+
                     </button>
                     <button type="submit" 
                             class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
-                        {{ __('common.save_changes') }}
+                        <?php echo e(__('common.save_changes')); ?>
+
                     </button>
                 </div>
             </form>
@@ -3697,10 +3714,10 @@ function athletesApp() {
             <!-- Заголовок карточки -->
             <div class="p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900">{{ __('common.athlete_profile') }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900"><?php echo e(__('common.athlete_profile')); ?></h1>
                     <button @click="showList()" 
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                        {{ __('common.back') }} к списку
+                        <?php echo e(__('common.back')); ?> к списку
                     </button>
                 </div>
 
@@ -3721,22 +3738,22 @@ function athletesApp() {
                                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentAthlete?.name"></h2>
                                 <div class="athlete-profile-data text-sm text-gray-500 mt-2">
                                     <div class="athlete-profile-item">
-                                        <span class="athlete-profile-label">{{ __('common.age') }}:</span>
-                                        <span class="athlete-profile-value" x-text="currentAthlete?.age ? currentAthlete.age + ' {{ __('common.age_years') }}' : '—'"></span>
+                                        <span class="athlete-profile-label"><?php echo e(__('common.age')); ?>:</span>
+                                        <span class="athlete-profile-value" x-text="currentAthlete?.age ? currentAthlete.age + ' <?php echo e(__('common.age_years')); ?>' : '—'"></span>
                                     </div>
                                     <div class="athlete-profile-item">
-                                        <span class="athlete-profile-label">{{ __('common.weight') }}:</span>
+                                        <span class="athlete-profile-label"><?php echo e(__('common.weight')); ?>:</span>
                                         <span class="athlete-profile-value" x-show="!loadingAthleteData" x-text="getCurrentWeight()"></span>
                                         <span class="athlete-profile-value animate-pulse bg-gray-200 rounded" x-show="loadingAthleteData" style="width: 60px; height: 16px;"></span>
                                     </div>
                                     <div class="athlete-profile-item">
-                                        <span class="athlete-profile-label">{{ __('common.height') }}:</span>
+                                        <span class="athlete-profile-label"><?php echo e(__('common.height')); ?>:</span>
                                         <span class="athlete-profile-value" x-show="!loadingAthleteData" x-text="getCurrentHeight()"></span>
                                         <span class="athlete-profile-value animate-pulse bg-gray-200 rounded" x-show="loadingAthleteData" style="width: 60px; height: 16px;"></span>
                                     </div>
                                     <div class="athlete-profile-item">
-                                        <span class="athlete-profile-label">{{ __('common.sport_level') }}:</span>
-                                        <span class="athlete-profile-value" x-text="getSportLevelLabel(currentAthlete?.sport_level) || '{{ __('common.not_specified') }}'"></span>
+                                        <span class="athlete-profile-label"><?php echo e(__('common.sport_level')); ?>:</span>
+                                        <span class="athlete-profile-value" x-text="getSportLevelLabel(currentAthlete?.sport_level) || '<?php echo e(__('common.not_specified')); ?>'"></span>
                                     </div>
                                 </div>
                             </div>
@@ -3755,15 +3772,15 @@ function athletesApp() {
                                         </svg>
                                         <!-- Всплывающая подсказка -->
                                         <div class="absolute bottom-full right-0 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                                            <div class="font-semibold mb-2">{{ __('common.bmi_index') }}</div>
+                                            <div class="font-semibold mb-2"><?php echo e(__('common.bmi_index')); ?></div>
                                             <div class="space-y-1">
-                                                <div class="flex justify-between"><span class="text-blue-300">Менее 18.5:</span> <span>{{ __('common.bmi_categories.underweight') }}</span></div>
-                                                <div class="flex justify-between"><span class="text-green-300">18.5 - 24.9:</span> <span>{{ __('common.bmi_categories.normal') }}</span></div>
-                                                <div class="flex justify-between"><span class="text-yellow-300">25 - 29.9:</span> <span>{{ __('common.bmi_categories.overweight') }}</span></div>
-                                                <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span>{{ __('common.bmi_categories.obese') }}</span></div>
+                                                <div class="flex justify-between"><span class="text-blue-300">Менее 18.5:</span> <span><?php echo e(__('common.bmi_categories.underweight')); ?></span></div>
+                                                <div class="flex justify-between"><span class="text-green-300">18.5 - 24.9:</span> <span><?php echo e(__('common.bmi_categories.normal')); ?></span></div>
+                                                <div class="flex justify-between"><span class="text-yellow-300">25 - 29.9:</span> <span><?php echo e(__('common.bmi_categories.overweight')); ?></span></div>
+                                                <div class="flex justify-between"><span class="text-red-300">30 и более:</span> <span><?php echo e(__('common.bmi_categories.obese')); ?></span></div>
                                             </div>
                                             <div class="mt-2 pt-2 border-t border-gray-700 text-gray-300">
-                                                <div x-text="(measurements.length > 0 && measurements[0].weight && measurements[0].height) ? '{{ __('common.your_bmi_calculated') }}: ' + formatNumber(measurements[0].weight / Math.pow(measurements[0].height/100, 2)) + ' (' + getBMICategory(measurements[0].weight / Math.pow(measurements[0].height/100, 2)).text + ')' : (currentAthlete?.weight && currentAthlete?.height ? '{{ __('common.your_bmi_calculated') }}: ' + formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) + ' (' + getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).text + ')' : '{{ __('common.bmi_not_calculated') }}')"></div>
+                                                <div x-text="(measurements.length > 0 && measurements[0].weight && measurements[0].height) ? '<?php echo e(__('common.your_bmi_calculated')); ?>: ' + formatNumber(measurements[0].weight / Math.pow(measurements[0].height/100, 2)) + ' (' + getBMICategory(measurements[0].weight / Math.pow(measurements[0].height/100, 2)).text + ')' : (currentAthlete?.weight && currentAthlete?.height ? '<?php echo e(__('common.your_bmi_calculated')); ?>: ' + formatNumber(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)) + ' (' + getBMICategory(currentAthlete.weight / Math.pow(currentAthlete.height/100, 2)).text + ')' : '<?php echo e(__('common.bmi_not_calculated')); ?>')"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -3778,42 +3795,50 @@ function athletesApp() {
                             <button @click="activeTab = 'overview'" 
                                     :class="activeTab === 'overview' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.overview') }}
+                                <?php echo e(__('common.overview')); ?>
+
                                 </button>
                             <button @click="activeTab = 'workouts'" 
                                     :class="activeTab === 'workouts' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.workouts') }}
+                                <?php echo e(__('common.workouts')); ?>
+
                             </button>
                             <button @click="activeTab = 'progress'; $nextTick(() => updateCharts())" 
                                     :class="activeTab === 'progress' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.progress') }}
+                                <?php echo e(__('common.progress')); ?>
+
                             </button>
                             <button @click="activeTab = 'measurements'" 
                                     :class="activeTab === 'measurements' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.measurements') }}
+                                <?php echo e(__('common.measurements')); ?>
+
                             </button>
                             <button @click="activeTab = 'nutrition'; loadNutritionPlans()" 
                                     :class="activeTab === 'nutrition' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.nutrition') }}
+                                <?php echo e(__('common.nutrition')); ?>
+
                             </button>
                             <button @click="activeTab = 'medical'" 
                                     :class="activeTab === 'medical' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.medical_data') }}
+                                <?php echo e(__('common.medical_data')); ?>
+
                             </button>
                             <button @click="activeTab = 'finance'" 
                                     :class="activeTab === 'finance' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.finance') }}
+                                <?php echo e(__('common.finance')); ?>
+
                             </button>
                             <button @click="activeTab = 'general'" 
                                     :class="activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
-                                {{ __('common.general') }}
+                                <?php echo e(__('common.general')); ?>
+
                             </button>
                         </nav>
                     </div>
@@ -3825,19 +3850,19 @@ function athletesApp() {
                             <div class="athlete-stats-container grid grid-cols-1 md:flex md:flex-row md:gap-6">
                                 <div class="bg-green-50 rounded-lg p-4 text-center flex-1">
                                     <div class="text-2xl font-bold text-green-600" x-text="currentAthlete?.progress?.length || 0"></div>
-                                    <div class="text-sm text-green-800">{{ __('common.measurement_records_label') }}</div>
+                                    <div class="text-sm text-green-800"><?php echo e(__('common.measurement_records_label')); ?></div>
                                 </div>
                                 <div class="bg-blue-50 rounded-lg p-4 text-center flex-1">
                                     <div class="text-2xl font-bold text-blue-600" x-text="(currentAthlete?.workouts || []).filter(workout => workout.status === 'completed').length"></div>
-                                    <div class="text-sm text-blue-800">{{ __('common.workouts') }}</div>
+                                    <div class="text-sm text-blue-800"><?php echo e(__('common.workouts')); ?></div>
                                 </div>
                                 <div class="bg-orange-50 rounded-lg p-4 text-center flex-1">
                                     <div class="text-2xl font-bold text-orange-600" x-text="(currentAthlete?.finance?.total_sessions || 0) - (currentAthlete?.workouts || []).filter(workout => workout.status === 'completed').length"></div>
-                                    <div class="text-sm text-orange-800">{{ __('common.remaining') }}</div>
+                                    <div class="text-sm text-orange-800"><?php echo e(__('common.remaining')); ?></div>
                                 </div>
                                 <div class="bg-purple-50 rounded-lg p-4 text-center flex-1">
-                                    <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.is_active ? '{{ __('common.yes') }}' : '{{ __('common.no') }}'"></div>
-                                    <div class="text-sm text-purple-800">{{ __('common.active') }}</div>
+                                    <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.is_active ? '<?php echo e(__('common.yes')); ?>' : '<?php echo e(__('common.no')); ?>'"></div>
+                                    <div class="text-sm text-purple-800"><?php echo e(__('common.active')); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -3846,45 +3871,46 @@ function athletesApp() {
                         <div x-show="activeTab === 'finance'" class="space-y-6">
                             <!-- Заголовок с кнопкой добавления -->
                             <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.financial_data') }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.financial_data')); ?></h3>
                                 <button @click="showAddPayment()" 
                                         class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    {{ __('common.add_payment') }}
+                                    <?php echo e(__('common.add_payment')); ?>
+
                                 </button>
                             </div>
 
 
                             <!-- Общая статистика -->
                             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.general_statistics') }}</h4>
+                                <h4 class="text-md font-semibold text-gray-900 mb-4"><?php echo e(__('common.general_statistics')); ?></h4>
                                 <div class="flex flex-wrap items-center justify-between gap-4">
                                     <div class="text-center">
                                         <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.finance?.total_paid) || 0).toFixed(2)">0.00</div>
-                                        <div class="text-sm text-gray-500">{{ __('common.total_paid') }}</div>
+                                        <div class="text-sm text-gray-500"><?php echo e(__('common.total_paid')); ?></div>
                                     </div>
                                     <div class="text-center">
                                         <div class="text-2xl font-bold text-blue-600" x-text="currentAthlete?.finance?.payment_history?.length || 0">0</div>
-                                        <div class="text-sm text-gray-500">{{ __('common.payments_count') }}</div>
+                                        <div class="text-sm text-gray-500"><?php echo e(__('common.payments_count')); ?></div>
                                     </div>
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.finance?.last_payment_date ? new Date(currentAthlete.finance.last_payment_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') : '—'">—</div>
-                                        <div class="text-sm text-gray-500">{{ __('common.last_payment') }}</div>
+                                        <div class="text-2xl font-bold text-purple-600" x-text="currentAthlete?.finance?.last_payment_date ? new Date(currentAthlete.finance.last_payment_date).toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>') : '—'">—</div>
+                                        <div class="text-sm text-gray-500"><?php echo e(__('common.last_payment')); ?></div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- История платежей -->
                             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                                <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.payment_history') }}</h4>
+                                <h4 class="text-md font-semibold text-gray-900 mb-4"><?php echo e(__('common.payment_history')); ?></h4>
                                 <div class="space-y-3">
                                     <template x-for="(payment, index) in (currentAthlete?.finance?.payment_history || [])" :key="index">
                                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                             <div class="flex-1">
-                                                <div class="font-medium text-gray-900" x-text="payment.description">{{ __('common.package') }} 12 {{ __('common.workouts') }}</div>
-                                                <div class="text-sm text-gray-500" x-text="new Date(payment.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}')">15.01.2024</div>
+                                                <div class="font-medium text-gray-900" x-text="payment.description"><?php echo e(__('common.package')); ?> 12 <?php echo e(__('common.workouts')); ?></div>
+                                                <div class="text-sm text-gray-500" x-text="new Date(payment.date).toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>')">15.01.2024</div>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <div class="text-right">
@@ -3894,14 +3920,14 @@ function athletesApp() {
                                                 <div class="flex space-x-1">
                                                     <button @click="editPaymentFromHistory(payment)" 
                                                             class="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
-                                                            title="{{ __('common.edit_payment') }}">
+                                                            title="<?php echo e(__('common.edit_payment')); ?>">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                         </svg>
                                                     </button>
                                                     <button @click="deletePayment(payment.id)" 
                                                             class="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                                            title="{{ __('common.delete_payment') }}">
+                                                            title="<?php echo e(__('common.delete_payment')); ?>">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                         </svg>
@@ -3916,7 +3942,7 @@ function athletesApp() {
                                         <svg class="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
                                         </svg>
-                                        <p>{{ __('common.no_payment_records') }}</p>
+                                        <p><?php echo e(__('common.no_payment_records')); ?></p>
                                     </div>
                                 </div>
                             </div>
@@ -3926,38 +3952,38 @@ function athletesApp() {
                         <div x-show="activeTab === 'general'" class="space-y-6">
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 <div class="lg:col-span-2">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.personal_info') }}</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.personal_info')); ?></h3>
                                     <div class="package-info-grid">
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">{{ __('common.full_name') }}</label>
+                                            <label class="text-sm font-medium text-gray-500"><?php echo e(__('common.full_name')); ?></label>
                                             <div class="text-gray-900 font-medium" x-text="currentAthlete?.name"></div>
                                         </div>
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">{{ __('common.phone') }}</label>
+                                            <label class="text-sm font-medium text-gray-500"><?php echo e(__('common.phone')); ?></label>
                                             <div class="text-gray-900" x-text="currentAthlete?.phone || '—'"></div>
                                         </div>
                                         <div>
                                             <label class="text-sm font-medium text-gray-500">Возраст</label>
-                                            <div class="text-gray-900 font-semibold" x-text="currentAthlete?.age ? currentAthlete.age + ' {{ __('common.age_years') }}' : '—'"></div>
+                                            <div class="text-gray-900 font-semibold" x-text="currentAthlete?.age ? currentAthlete.age + ' <?php echo e(__('common.age_years')); ?>' : '—'"></div>
                                         </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.sports_info') }}</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.sports_info')); ?></h3>
                                     <div class="space-y-4">
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">{{ __('common.sport_level') }}</label>
+                                            <label class="text-sm font-medium text-gray-500"><?php echo e(__('common.sport_level')); ?></label>
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" 
-                                                      x-text="getSportLevelLabel(currentAthlete?.sport_level) || '{{ __('common.not_specified') }}'"></span>
+                                                      x-text="getSportLevelLabel(currentAthlete?.sport_level) || '<?php echo e(__('common.not_specified')); ?>'"></span>
                                             </div>
                                         </div>
                                         <div>
-                                            <label class="text-sm font-medium text-gray-500">{{ __('common.status') }}</label>
+                                            <label class="text-sm font-medium text-gray-500"><?php echo e(__('common.status')); ?></label>
                                             <div class="mt-1">
                                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                                       :class="currentAthlete?.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                                                      x-text="currentAthlete?.is_active ? '{{ __('common.active') }}' : '{{ __('common.inactive') }}'"></span>
+                                                      x-text="currentAthlete?.is_active ? '<?php echo e(__('common.active')); ?>' : '<?php echo e(__('common.inactive')); ?>'"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -3971,13 +3997,13 @@ function athletesApp() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">Медицинские данные</h3>
-                            <p class="mb-4">{{ __('common.medical_data_placeholder') }}</p>
+                            <p class="mb-4"><?php echo e(__('common.medical_data_placeholder')); ?></p>
                         </div>
 
                         <div x-show="activeTab === 'measurements'" class="space-y-6">
                             <div class="flex items-center justify-between">
                                 <h3 class="text-lg font-semibold text-gray-900">
-                                    {{ __('common.body_measurements') }} (<span x-text="measurements.length"></span>)
+                                    <?php echo e(__('common.body_measurements')); ?> (<span x-text="measurements.length"></span>)
                                 </h3>
                                 <button @click="showAddMeasurement()" 
                                         class="px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center text-xs md:text-base">
@@ -3996,18 +4022,18 @@ function athletesApp() {
                                         <div class="card hover:shadow-lg transition-shadow duration-200">
                                             <div class="card-header">
                                                 <div class="flex items-center justify-between">
-                                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}')"></h4>
+                                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>')"></h4>
                                                     <div class="flex space-x-2">
                                                         <button @click="editMeasurement(measurement)" 
                                                                 class="text-indigo-600 hover:text-indigo-800" 
-                                                                title="{{ __('common.edit') }}">
+                                                                title="<?php echo e(__('common.edit')); ?>">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                             </svg>
                                                         </button>
                                                         <button @click="deleteMeasurement(measurement.id)" 
                                                                 class="text-red-600 hover:text-red-800" 
-                                                                title="{{ __('common.delete') }}">
+                                                                title="<?php echo e(__('common.delete')); ?>">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                             </svg>
@@ -4020,52 +4046,52 @@ function athletesApp() {
                                                 <div class="grid grid-cols-2 gap-4 mb-4">
                                                     <div class="text-center p-3 bg-blue-50 rounded-lg">
                                                         <div class="text-xl font-bold text-blue-600" x-text="measurement.weight || '—'"></div>
-                                                        <div class="text-xs text-blue-800">{{ __('common.weight_kg') }}</div>
+                                                        <div class="text-xs text-blue-800"><?php echo e(__('common.weight_kg')); ?></div>
                                                     </div>
                                                     <div class="text-center p-3 rounded-lg" x-show="measurement.weight && measurement.height" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).bg">
                                                         <div class="text-xl font-bold" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color" x-text="formatNumber(measurement.weight / Math.pow(measurement.height/100, 2), '')"></div>
-                                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">{{ __('common.bmi') }}</div>
+                                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color"><?php echo e(__('common.bmi')); ?></div>
                                                     </div>
                                                 </div>
                                                 
                                                 <!-- Объемы тела -->
                                                 <template x-if="measurement.chest || measurement.waist || measurement.hips || measurement.bicep || measurement.thigh || measurement.neck">
                                                     <div class="mt-4 pt-4 pb-4 border-t border-b border-gray-200">
-                                                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes_label') }}</h5>
+                                                        <h5 class="text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.body_volumes_label')); ?></h5>
                                                         <div class="grid grid-cols-2 gap-2 text-sm">
                                                             <template x-if="measurement.chest">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">{{ __('common.chest_label') }}:</span>
+                                                                    <span class="text-gray-500"><?php echo e(__('common.chest_label')); ?>:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.chest, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.waist">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">{{ __('common.waist_label') }}:</span>
+                                                                    <span class="text-gray-500"><?php echo e(__('common.waist_label')); ?>:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.waist, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.hips">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">{{ __('common.hips_label') }}:</span>
+                                                                    <span class="text-gray-500"><?php echo e(__('common.hips_label')); ?>:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.hips, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.bicep">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">{{ __('common.bicep_label') }}:</span>
+                                                                    <span class="text-gray-500"><?php echo e(__('common.bicep_label')); ?>:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.bicep, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.thigh">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">{{ __('common.thigh_label') }}:</span>
+                                                                    <span class="text-gray-500"><?php echo e(__('common.thigh_label')); ?>:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.thigh, ' см')"></span>
                                                                 </div>
                                                             </template>
                                                             <template x-if="measurement.neck">
                                                                 <div class="flex justify-between">
-                                                                    <span class="text-gray-500">{{ __('common.neck_label') }}:</span>
+                                                                    <span class="text-gray-500"><?php echo e(__('common.neck_label')); ?>:</span>
                                                                     <span class="font-medium" x-text="formatNumber(measurement.neck, ' см')"></span>
                                                                 </div>
                                                             </template>
@@ -4073,28 +4099,28 @@ function athletesApp() {
                                                     </div>
                                                 </template>
                                                 
-                                                <!-- {{ __('common.additional_params_label') }} -->
+                                                <!-- <?php echo e(__('common.additional_params_label')); ?> -->
                                                 <div class="mt-4">
-                                                    <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_params_label') }}</h5>
+                                                    <h5 class="text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.additional_params_label')); ?></h5>
                                                     <div class="grid grid-cols-2 gap-2 text-sm mb-4">
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">{{ __('common.body_fat_label') }}:</span>
+                                                        <span class="text-gray-500"><?php echo e(__('common.body_fat_label')); ?>:</span>
                                                         <span class="font-medium" x-text="measurement.body_fat_percentage ? formatNumber(measurement.body_fat_percentage, '%') : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">{{ __('common.muscle_mass_label') }}:</span>
+                                                        <span class="text-gray-500"><?php echo e(__('common.muscle_mass_label')); ?>:</span>
                                                         <span class="font-medium" x-text="measurement.muscle_mass ? formatNumber(measurement.muscle_mass, ' кг') : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">{{ __('common.water_percentage_label') }}:</span>
+                                                        <span class="text-gray-500"><?php echo e(__('common.water_percentage_label')); ?>:</span>
                                                         <span class="font-medium" x-text="measurement.water_percentage ? formatNumber(measurement.water_percentage, '%') : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">{{ __('common.resting_heart_rate_label') }}:</span>
-                                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' {{ __('common.bpm') }}' : '—'"></span>
+                                                        <span class="text-gray-500"><?php echo e(__('common.resting_heart_rate_label')); ?>:</span>
+                                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' <?php echo e(__('common.bpm')); ?>' : '—'"></span>
                                                     </div>
                                                     <div class="flex justify-between">
-                                                        <span class="text-gray-500">{{ __('common.blood_pressure_label') }}:</span>
+                                                        <span class="text-gray-500"><?php echo e(__('common.blood_pressure_label')); ?>:</span>
                                                         <span class="font-medium" x-text="measurement.blood_pressure_systolic && measurement.blood_pressure_diastolic ? Math.round(parseFloat(measurement.blood_pressure_systolic)) + '/' + Math.round(parseFloat(measurement.blood_pressure_diastolic)) : '—'"></span>
                                                     </div>
                                                     </div>
@@ -4103,7 +4129,7 @@ function athletesApp() {
                                                 <!-- Комментарии -->
                                                 <template x-if="measurement.notes">
                                                     <div class="mt-4 pt-4 border-t border-gray-200">
-                                                        <h5 class="text-sm font-medium text-gray-700 mb-1">{{ __('common.comments_label') }}</h5>
+                                                        <h5 class="text-sm font-medium text-gray-700 mb-1"><?php echo e(__('common.comments_label')); ?></h5>
                                                         <p class="text-sm text-gray-600" x-text="measurement.notes"></p>
                                                     </div>
                                                 </template>
@@ -4154,25 +4180,25 @@ function athletesApp() {
                                 <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.no_measurements') }}</h3>
-                                <p class="mb-4">{{ __('common.add_first_measurement') }}</p>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2"><?php echo e(__('common.no_measurements')); ?></h3>
+                                <p class="mb-4"><?php echo e(__('common.add_first_measurement')); ?></p>
                             </div>
                         </div>
 
                         <div x-show="activeTab === 'progress'" class="space-y-6">
                             <!-- Заголовок с фильтром периодов -->
                             <div class="progress-header flex items-center justify-between mb-6">
-                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.athlete_progress') }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.athlete_progress')); ?></h3>
                                 <div class="progress-controls flex items-center gap-4">
-                                    <span class="text-sm font-medium text-gray-700">{{ __('common.period') }}:</span>
+                                    <span class="text-sm font-medium text-gray-700"><?php echo e(__('common.period')); ?>:</span>
                                     <select x-model="selectedPeriod" @change="updatePeriodFilter()" class="progress-select px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                        <option value="all">{{ __('common.all_data') }}</option>
-                                        <option value="1">{{ __('common.last_month') }}</option>
-                                        <option value="3">{{ __('common.last_3_months') }}</option>
-                                        <option value="6">{{ __('common.last_6_months') }}</option>
-                                        <option value="12">{{ __('common.last_year') }}</option>
+                                        <option value="all"><?php echo e(__('common.all_data')); ?></option>
+                                        <option value="1"><?php echo e(__('common.last_month')); ?></option>
+                                        <option value="3"><?php echo e(__('common.last_3_months')); ?></option>
+                                        <option value="6"><?php echo e(__('common.last_6_months')); ?></option>
+                                        <option value="12"><?php echo e(__('common.last_year')); ?></option>
                                     </select>
-                                    <span class="progress-count text-sm text-gray-500" x-text="getFilteredMeasurementsCount() + ' {{ __('common.measurements_count') }}'"></span>
+                                    <span class="progress-count text-sm text-gray-500" x-text="getFilteredMeasurementsCount() + ' <?php echo e(__('common.measurements_count')); ?>'"></span>
                                 </div>
                             </div>
 
@@ -4181,10 +4207,11 @@ function athletesApp() {
                                 <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                                 </svg>
-                                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.no_measurements') }}</h3>
-                                <p class="mb-4">{{ __('common.add_measurements_for_progress') }}</p>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2"><?php echo e(__('common.no_measurements')); ?></h3>
+                                <p class="mb-4"><?php echo e(__('common.add_measurements_for_progress')); ?></p>
                                 <button @click="activeTab = 'measurements'" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                                    {{ __('common.add_measurement') }}
+                                    <?php echo e(__('common.add_measurement')); ?>
+
                                 </button>
                             </div>
 
@@ -4192,7 +4219,7 @@ function athletesApp() {
                             <div x-show="measurements.length > 0" class="progress-chart-container space-y-6">
                                 <!-- График веса -->
                                 <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
-                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.weight_dynamics') }}</h4>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.weight_dynamics')); ?></h4>
                                     <div class="chart-container relative" style="height: 400px;">
                                         <canvas id="weightChart"></canvas>
                                     </div>
@@ -4200,7 +4227,7 @@ function athletesApp() {
 
                                 <!-- График процента жира и мышечной массы -->
                                 <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
-                                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.body_composition')); ?></h4>
                                     <div class="chart-container relative" style="height: 400px;">
                                         <canvas id="bodyCompositionChart"></canvas>
                                     </div>
@@ -4209,15 +4236,15 @@ function athletesApp() {
                                 <!-- График объемов -->
                                 <div class="progress-chart-card bg-white border border-gray-200 rounded-lg p-6">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h4 class="text-lg font-semibold text-gray-900">{{ __('common.body_volumes') }}</h4>
+                                        <h4 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.body_volumes')); ?></h4>
                                         <select x-model="selectedMeasurement" @change="updateMeasurementsChart()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                            <option value="all">{{ __('common.all') }}</option>
-                                            <option value="chest">{{ __('common.chest_label') }}</option>
-                                            <option value="waist">{{ __('common.waist_label') }}</option>
-                                            <option value="hips">{{ __('common.hips_label') }}</option>
-                                            <option value="bicep">{{ __('common.bicep_label') }}</option>
-                                            <option value="thigh">{{ __('common.thigh_label') }}</option>
-                                            <option value="neck">{{ __('common.neck_label') }}</option>
+                                            <option value="all"><?php echo e(__('common.all')); ?></option>
+                                            <option value="chest"><?php echo e(__('common.chest_label')); ?></option>
+                                            <option value="waist"><?php echo e(__('common.waist_label')); ?></option>
+                                            <option value="hips"><?php echo e(__('common.hips_label')); ?></option>
+                                            <option value="bicep"><?php echo e(__('common.bicep_label')); ?></option>
+                                            <option value="thigh"><?php echo e(__('common.thigh_label')); ?></option>
+                                            <option value="neck"><?php echo e(__('common.neck_label')); ?></option>
                                         </select>
                                     </div>
                                     <div class="chart-container relative" style="height: 400px;">
@@ -4245,8 +4272,8 @@ function athletesApp() {
 
                         <div x-show="activeTab === 'workouts'" class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.athlete_workouts') }}</h3>
-                                <span class="text-sm text-gray-500" x-text="(currentAthlete?.workouts || []).length + ' {{ __('common.workouts_count') }}'"></span>
+                                <h3 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.athlete_workouts')); ?></h3>
+                                <span class="text-sm text-gray-500" x-text="(currentAthlete?.workouts || []).length + ' <?php echo e(__('common.workouts_count')); ?>'"></span>
                             </div>
                             
                             <!-- Пустое состояние -->
@@ -4271,13 +4298,13 @@ function athletesApp() {
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                                             </svg>
-                                                            <span x-text="new Date(workout.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') + (workout.time ? ' в ' + workout.time : '')"></span>
+                                                            <span x-text="new Date(workout.date).toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>') + (workout.time ? ' в ' + workout.time : '')"></span>
                                                         </div>
                                                         <div class="workout-info-item">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                             </svg>
-                                                            <span x-text="workout.duration + ' {{ __('common.min') }}'"></span>
+                                                            <span x-text="workout.duration + ' <?php echo e(__('common.min')); ?>'"></span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -4288,7 +4315,7 @@ function athletesApp() {
                                                 <!-- Упражнения -->
                                                 <div x-show="(workout.exercises || []).length > 0" class="mt-3">
                                                     <div class="flex flex-wrap gap-1 items-center">
-                                                        <div class="text-xs font-medium text-gray-500">{{ __('common.exercises') }}</div>
+                                                        <div class="text-xs font-medium text-gray-500"><?php echo e(__('common.exercises')); ?></div>
                                                         <!-- Отображаем все упражнения через Alpine.js -->
                                                         <template x-for="(exercise, index) in (workout.exercises || [])" :key="`exercise-${workout.id}-${index}`">
                                                             <span x-show="index < 5 || isExercisesExpanded(workout.id)"
@@ -4299,7 +4326,7 @@ function athletesApp() {
                                                                       'bg-red-100 text-red-800': getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id) === 'not_done',
                                                                       'bg-gray-100 text-gray-600': !getExerciseStatusForList(workout.id, exercise.exercise_id || exercise.id)
                                                                   }"
-                                                                  x-text="exercise.name || '{{ __('common.no_title') }}'">
+                                                                  x-text="exercise.name || '<?php echo e(__('common.no_title')); ?>'">
                                                             </span>
                                                         </template>
                                                         
@@ -4307,7 +4334,7 @@ function athletesApp() {
                                                         <button x-show="(workout.exercises || []).length > 5" 
                                                                 @click.stop="toggleExercisesExpanded(workout.id)" 
                                                                 class="inline-block px-2 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs rounded-full transition-colors cursor-pointer">
-                                                            <span x-text="isExercisesExpanded(workout.id) ? '{{ __('common.collapse') }}' : '+' + ((workout.exercises || []).length - 5) + ' {{ __('common.more') }}'"></span>
+                                                            <span x-text="isExercisesExpanded(workout.id) ? '<?php echo e(__('common.collapse')); ?>' : '+' + ((workout.exercises || []).length - 5) + ' <?php echo e(__('common.more')); ?>'"></span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -4322,9 +4349,9 @@ function athletesApp() {
                                                           'bg-red-100 text-red-800': workout.status === 'cancelled'
                                                       }"
                                                       x-text="{
-                                                          'completed': '{{ __('common.workout_completed') }}',
-                                                          'planned': '{{ __('common.planned') }}', 
-                                                          'cancelled': '{{ __('common.cancelled') }}'
+                                                          'completed': '<?php echo e(__('common.workout_completed')); ?>',
+                                                          'planned': '<?php echo e(__('common.planned')); ?>', 
+                                                          'cancelled': '<?php echo e(__('common.cancelled')); ?>'
                                                       }[workout.status] || workout.status"></span>
                                             </div>
                                         </div>
@@ -4335,12 +4362,13 @@ function athletesApp() {
                 
                         <div x-show="activeTab === 'nutrition'" class="p-6">
                             <div class="flex items-center justify-between mb-6">
-                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.nutrition_plans') }}</h3>
+                                <h3 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.nutrition_plans')); ?></h3>
                                 <button @click="showAddNutritionPlan()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    {{ __('common.create_nutrition_plan') }}
+                                    <?php echo e(__('common.create_nutrition_plan')); ?>
+
                                 </button>
                             </div>
                             
@@ -4351,7 +4379,7 @@ function athletesApp() {
                                 <!-- Загрузка -->
                                 <div x-show="loadingNutritionPlans" class="text-center py-8">
                                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                                    <p class="mt-2 text-gray-500">{{ __('common.loading_nutrition_plans') }}</p>
+                                    <p class="mt-2 text-gray-500"><?php echo e(__('common.loading_nutrition_plans')); ?></p>
                                 </div>
                                 
                                 <!-- Список планов -->
@@ -4361,18 +4389,18 @@ function athletesApp() {
                                             <div class="nutrition-plan-card">
                                                 <div class="nutrition-plan-title">
                                                     <h5 class="text-lg font-medium text-gray-900">
-                                                        <span x-text="plan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, plan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${plan.year} {{ __('common.year') }}.`"></span>
-                                                        <span class="text-sm text-gray-600" x-text="`(${plan.nutrition_days ? plan.nutrition_days.length : 0} {{ __('common.days') }})`"></span>
+                                                        <span x-text="plan.title || `<?php echo e(__('common.nutrition_plan_for')); ?> ${new Date(0, plan.month - 1).toLocaleString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>', {month: 'long'})} ${plan.year} <?php echo e(__('common.year')); ?>.`"></span>
+                                                        <span class="text-sm text-gray-600" x-text="`(${plan.nutrition_days ? plan.nutrition_days.length : 0} <?php echo e(__('common.days')); ?>)`"></span>
                                                     </h5>
                                                 </div>
                                                 <div class="nutrition-plan-buttons">
                                                     <button @click.stop="editNutritionPlan(plan)" 
                                                             class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                            title="{{ __('common.edit') }} {{ __('common.nutrition_plan') }}">
+                                                            title="<?php echo e(__('common.edit')); ?> <?php echo e(__('common.nutrition_plan')); ?>">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                         </svg>
-                                                        <span class="mobile-button-text">{{ __('common.edit') }}</span>
+                                                        <span class="mobile-button-text"><?php echo e(__('common.edit')); ?></span>
                                                     </button>
                                                     <button @click.stop="showDetailedNutritionPlan(plan)" 
                                                             class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
@@ -4381,15 +4409,15 @@ function athletesApp() {
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                         </svg>
-                                                        <span class="mobile-button-text">{{ __('common.details') }}</span>
+                                                        <span class="mobile-button-text"><?php echo e(__('common.details')); ?></span>
                                                     </button>
                                                     <button @click.stop="deleteNutritionPlan(plan.id)" 
                                                             class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                                            title="{{ __('common.delete') }} {{ __('common.nutrition_plan') }}">
+                                                            title="<?php echo e(__('common.delete')); ?> <?php echo e(__('common.nutrition_plan')); ?>">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                         </svg>
-                                                        <span class="mobile-button-text">{{ __('common.delete') }}</span>
+                                                        <span class="mobile-button-text"><?php echo e(__('common.delete')); ?></span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -4402,8 +4430,8 @@ function athletesApp() {
                                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                         </svg>
-                                        <p>{{ __('common.no_nutrition_plans') }}</p>
-                                        <p class="text-sm">{{ __('common.create_first_nutrition_plan') }}</p>
+                                        <p><?php echo e(__('common.no_nutrition_plans')); ?></p>
+                                        <p class="text-sm"><?php echo e(__('common.create_first_nutrition_plan')); ?></p>
                                 </div>
                             </div>
                         </div>
@@ -4419,14 +4447,16 @@ function athletesApp() {
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
-                        {{ __('common.edit') }}
+                        <?php echo e(__('common.edit')); ?>
+
                     </button>
                     <button @click="deleteAthlete(currentAthlete.id)" 
                             class="px-4 py-2 text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 flex items-center transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                        {{ __('common.delete') }}
+                        <?php echo e(__('common.delete')); ?>
+
                     </button>
                 </div>
             </div>
@@ -4437,7 +4467,7 @@ function athletesApp() {
     <!-- Форма создания спортсмена -->
     <div id="trainer-athletes-create-section" x-show="currentView === 'create'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.adding_athlete') }}</h3>
+            <h3 class="text-xl font-semibold text-gray-900"><?php echo e(__('common.adding_athlete')); ?></h3>
         </div>
         
         <form @submit.prevent="createAthlete" class="space-y-6">
@@ -4445,31 +4475,31 @@ function athletesApp() {
                 <!-- Левая колонка -->
                 <div class="form-column-left">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }} *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.name')); ?> *</label>
                         <input type="text" x-model="formName" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.email') }} *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.email')); ?> *</label>
                         <input type="email" x-model="formEmail" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
         </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.password') }} *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.password')); ?> *</label>
                         <div class="relative">
                             <input :type="showPassword ? 'text' : 'password'" x-model="formPassword" required
                                    class="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <div class="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
                                 <button type="button" @click="generatePassword()" 
                                         class="px-2 py-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
-                                        title="{{ __('common.generate_password') }}">
+                                        title="<?php echo e(__('common.generate_password')); ?>">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                     </svg>
                                 </button>
                                 <button type="button" @click="showPassword = !showPassword" 
                                         class="px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
-                                        title="{{ __('common.show_hide_password') }}">
+                                        title="<?php echo e(__('common.show_hide_password')); ?>">
                                     <svg x-show="!showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -4482,21 +4512,21 @@ function athletesApp() {
 </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.phone') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.phone')); ?></label>
                         <input type="tel" x-model="formPhone"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.birth_date') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.birth_date')); ?></label>
                         <input type="date" x-model="formBirthDate"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.gender') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.gender')); ?></label>
                         <select x-model="formGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">{{ __('common.select_gender') }}</option>
-                            <option value="male">{{ __('common.male') }}</option>
-                            <option value="female">{{ __('common.female') }}</option>
+                            <option value=""><?php echo e(__('common.select_gender')); ?></option>
+                            <option value="male"><?php echo e(__('common.male')); ?></option>
+                            <option value="female"><?php echo e(__('common.female')); ?></option>
                         </select>
                     </div>
                 </div>
@@ -4504,26 +4534,26 @@ function athletesApp() {
                 <!-- Правая колонка -->
                 <div class="form-column-right">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.sport_level') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.sport_level')); ?></label>
                         <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">{{ __('common.select_level') }}</option>
-                            <option value="beginner">{{ __('common.beginner') }}</option>
-                            <option value="intermediate">{{ __('common.intermediate') }}</option>
-                            <option value="advanced">{{ __('common.advanced') }}</option>
-                            <option value="professional">{{ __('common.professional') }}</option>
+                            <option value=""><?php echo e(__('common.select_level')); ?></option>
+                            <option value="beginner"><?php echo e(__('common.beginner')); ?></option>
+                            <option value="intermediate"><?php echo e(__('common.intermediate')); ?></option>
+                            <option value="advanced"><?php echo e(__('common.advanced')); ?></option>
+                            <option value="professional"><?php echo e(__('common.professional')); ?></option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.goals')); ?></label>
                         <textarea x-model="formGoals" rows="3"
                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  placeholder="{{ __('common.goals_placeholder') }}"></textarea>
+                                  placeholder="<?php echo e(__('common.goals_placeholder')); ?>"></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.status') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.status')); ?></label>
                         <select x-model="formIsActive" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="1">{{ __('common.active') }}</option>
-                            <option value="0">{{ __('common.inactive') }}</option>
+                            <option value="1"><?php echo e(__('common.active')); ?></option>
+                            <option value="0"><?php echo e(__('common.inactive')); ?></option>
                         </select>
                     </div>
                     
@@ -4534,8 +4564,8 @@ function athletesApp() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                             <div>
-                                <h4 class="text-sm font-medium text-blue-800">{{ __('common.athlete_measurements') }}</h4>
-                                <p class="text-sm text-blue-600 mt-1">{{ __('common.athlete_measurements_info') }}</p>
+                                <h4 class="text-sm font-medium text-blue-800"><?php echo e(__('common.athlete_measurements')); ?></h4>
+                                <p class="text-sm text-blue-600 mt-1"><?php echo e(__('common.athlete_measurements_info')); ?></p>
                             </div>
                         </div>
                     </div>
@@ -4545,11 +4575,13 @@ function athletesApp() {
             <div class="flex justify-end space-x-3">
                 <button type="submit" 
                         class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    {{ __('common.create_athlete') }}
+                    <?php echo e(__('common.create_athlete')); ?>
+
                 </button>
                 <button type="button" @click="showList()" 
                         class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                    {{ __('common.cancel') }}
+                    <?php echo e(__('common.cancel')); ?>
+
                 </button>
             </div>
         </form>
@@ -4558,10 +4590,11 @@ function athletesApp() {
     <!-- Форма редактирования спортсмена -->
     <div id="trainer-athletes-edit-section" x-show="currentView === 'edit'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.editing_athlete') }}</h3>
+            <h3 class="text-xl font-semibold text-gray-900"><?php echo e(__('common.editing_athlete')); ?></h3>
             <button @click="currentView = 'view'; activeTab = 'overview'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.back') }}
+                <?php echo e(__('common.back')); ?>
+
                     </button>
                 </div>
         
@@ -4571,31 +4604,31 @@ function athletesApp() {
                     <!-- Левая колонка -->
                     <div class="form-column-left">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.name') }} *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.name')); ?> *</label>
                             <input type="text" x-model="formName" required
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.email') }} *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.email')); ?> *</label>
                             <input type="email" x-model="formEmail" required
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.password_leave_empty') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.password_leave_empty')); ?></label>
                             <div class="relative">
                                 <input :type="showPassword ? 'text' : 'password'" x-model="formPassword"
                                        class="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <div class="absolute inset-y-0 right-0 flex items-center space-x-1 pr-2">
                                     <button type="button" @click="generatePassword()" 
                                             class="px-2 py-1 text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors"
-                                            title="{{ __('common.generate_password') }}">
+                                            title="<?php echo e(__('common.generate_password')); ?>">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                                         </svg>
                                     </button>
                                     <button type="button" @click="showPassword = !showPassword" 
                                             class="px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded transition-colors"
-                                            title="{{ __('common.show_hide_password') }}">
+                                            title="<?php echo e(__('common.show_hide_password')); ?>">
                                         <svg x-show="!showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -4608,21 +4641,21 @@ function athletesApp() {
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.phone') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.phone')); ?></label>
                             <input type="tel" x-model="formPhone"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.birth_date') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.birth_date')); ?></label>
                             <input type="date" x-model="formBirthDate"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.gender') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.gender')); ?></label>
                             <select x-model="formGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">{{ __('common.select_gender') }}</option>
-                                <option value="male">{{ __('common.male') }}</option>
-                                <option value="female">{{ __('common.female') }}</option>
+                                <option value=""><?php echo e(__('common.select_gender')); ?></option>
+                                <option value="male"><?php echo e(__('common.male')); ?></option>
+                                <option value="female"><?php echo e(__('common.female')); ?></option>
                             </select>
                         </div>
                     </div>
@@ -4630,26 +4663,26 @@ function athletesApp() {
                     <!-- Правая колонка -->
                     <div class="form-column-right">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.sport_level') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.sport_level')); ?></label>
                             <select x-model="formSportLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">{{ __('common.select_level') }}</option>
-                                <option value="beginner">{{ __('common.beginner') }}</option>
-                                <option value="intermediate">{{ __('common.intermediate') }}</option>
-                                <option value="advanced">{{ __('common.advanced') }}</option>
-                                <option value="professional">{{ __('common.professional') }}</option>
+                                <option value=""><?php echo e(__('common.select_level')); ?></option>
+                                <option value="beginner"><?php echo e(__('common.beginner')); ?></option>
+                                <option value="intermediate"><?php echo e(__('common.intermediate')); ?></option>
+                                <option value="advanced"><?php echo e(__('common.advanced')); ?></option>
+                                <option value="professional"><?php echo e(__('common.professional')); ?></option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.goals')); ?></label>
                             <textarea x-model="formGoals" rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                      placeholder="{{ __('common.goals_placeholder') }}"></textarea>
+                                      placeholder="<?php echo e(__('common.goals_placeholder')); ?>"></textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.status') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.status')); ?></label>
                             <select x-model="formIsActive" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="1">{{ __('common.active') }}</option>
-                                <option value="0">{{ __('common.inactive') }}</option>
+                                <option value="1"><?php echo e(__('common.active')); ?></option>
+                                <option value="0"><?php echo e(__('common.inactive')); ?></option>
                             </select>
                         </div>
                         
@@ -4671,11 +4704,13 @@ function athletesApp() {
                 <div class="flex justify-end space-x-3">
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.save_changes') }}
+                        <?php echo e(__('common.save_changes')); ?>
+
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'overview'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.cancel') }}
+                        <?php echo e(__('common.cancel')); ?>
+
                     </button>
                 </div>
             </form>
@@ -4688,7 +4723,8 @@ function athletesApp() {
             <h3 class="text-xl font-semibold text-gray-900">Добавить измерение</h3>
             <button @click="currentView = 'view'; activeTab = 'measurements'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.back') }}
+                <?php echo e(__('common.back')); ?>
+
             </button>
         </div>
         
@@ -4696,7 +4732,7 @@ function athletesApp() {
             <form @submit.prevent="saveMeasurement" class="space-y-6">
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.basic_info')); ?></h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
@@ -4704,12 +4740,12 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.weight_kg') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.weight_kg')); ?></label>
                             <input type="number" step="0.1" x-model="measurementWeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.height_cm') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.height_cm')); ?></label>
                             <input type="number" step="0.1" x-model="measurementHeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4718,7 +4754,7 @@ function athletesApp() {
 
                 <!-- Состав тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.body_composition')); ?></h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
@@ -4726,7 +4762,7 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.muscle_mass_kg') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.muscle_mass_kg')); ?></label>
                             <input type="number" step="0.1" x-model="measurementMuscleMass" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4740,7 +4776,7 @@ function athletesApp() {
 
                 <!-- Объемы тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.body_volumes')); ?> (<?php echo e(__('common.cm')); ?>)</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
@@ -4780,7 +4816,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.resting_heart_rate') }} ({{ __('common.bpm') }})</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.resting_heart_rate')); ?> (<?php echo e(__('common.bpm')); ?>)</label>
                             <input type="number" x-model="measurementHeartRate" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4799,7 +4835,7 @@ function athletesApp() {
 
                 <!-- Заметки -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.notes') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.notes')); ?></h4>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Дополнительная информация</label>
                         <textarea x-model="measurementNotes" rows="3" 
@@ -4811,11 +4847,13 @@ function athletesApp() {
                 <div class="flex space-x-4">
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.save_measurement') }}
+                        <?php echo e(__('common.save_measurement')); ?>
+
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'measurements'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.cancel') }}
+                        <?php echo e(__('common.cancel')); ?>
+
                     </button>
                 </div>
             </form>
@@ -4825,10 +4863,11 @@ function athletesApp() {
     <!-- РЕДАКТИРОВАНИЕ ИЗМЕРЕНИЙ -->
     <div id="trainer-athletes-edit-measurement-section" x-show="currentView === 'editMeasurement'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.edit') }} {{ __('common.measurement') }}</h3>
+            <h3 class="text-xl font-semibold text-gray-900"><?php echo e(__('common.edit')); ?> <?php echo e(__('common.measurement')); ?></h3>
             <button @click="currentView = 'view'; activeTab = 'measurements'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.back') }}
+                <?php echo e(__('common.back')); ?>
+
             </button>
         </div>
         
@@ -4836,7 +4875,7 @@ function athletesApp() {
             <form @submit.prevent="saveMeasurement" class="space-y-6">
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.basic_info')); ?></h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
@@ -4844,12 +4883,12 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.weight_kg') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.weight_kg')); ?></label>
                             <input type="number" step="0.1" x-model="measurementWeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.height_cm') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.height_cm')); ?></label>
                             <input type="number" step="0.1" x-model="measurementHeight" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4858,7 +4897,7 @@ function athletesApp() {
 
                 <!-- Состав тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.body_composition')); ?></h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
@@ -4866,7 +4905,7 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.muscle_mass_kg') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.muscle_mass_kg')); ?></label>
                             <input type="number" step="0.1" x-model="measurementMuscleMass" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4880,7 +4919,7 @@ function athletesApp() {
 
                 <!-- Объемы тела -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.body_volumes')); ?> (<?php echo e(__('common.cm')); ?>)</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
@@ -4920,7 +4959,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.resting_heart_rate') }} ({{ __('common.bpm') }})</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.resting_heart_rate')); ?> (<?php echo e(__('common.bpm')); ?>)</label>
                             <input type="number" x-model="measurementHeartRate" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4939,7 +4978,7 @@ function athletesApp() {
 
                 <!-- Заметки -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.notes') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.notes')); ?></h4>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Дополнительная информация</label>
                         <textarea x-model="measurementNotes" rows="3" 
@@ -4951,11 +4990,13 @@ function athletesApp() {
                 <div class="flex space-x-4">
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.save_changes') }}
+                        <?php echo e(__('common.save_changes')); ?>
+
                     </button>
                     <button type="button" @click="currentView = 'view'; activeTab = 'measurements'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.cancel') }}
+                        <?php echo e(__('common.cancel')); ?>
+
                     </button>
                 </div>
             </form>
@@ -4968,7 +5009,8 @@ function athletesApp() {
             <h3 class="text-xl font-semibold text-gray-900">Создать план питания</h3>
             <button @click="currentView = 'view'; activeTab = 'nutrition'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                {{ __('common.back') }}
+                <?php echo e(__('common.back')); ?>
+
             </button>
         </div>
         
@@ -4976,10 +5018,10 @@ function athletesApp() {
             <form @submit.prevent="saveNutritionPlanForm">
                 <!-- Основная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.basic_info')); ?></h4>
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.month') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.month')); ?></label>
                             <select x-model="nutritionMonth" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="1">Январь</option>
                                 <option value="2">Февраль</option>
@@ -4996,7 +5038,7 @@ function athletesApp() {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.year') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.year')); ?></label>
                             <select x-model="nutritionYear" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <template x-for="year in [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2]" :key="year">
                                     <option :value="year" :selected="year === new Date().getFullYear()" x-text="year"></option>
@@ -5008,16 +5050,16 @@ function athletesApp() {
 
                 <!-- Дополнительная информация -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.additional_info') }}</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4"><?php echo e(__('common.additional_info')); ?></h4>
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.plan_title_optional') }}</label>
-                            <input type="text" x-model="nutritionTitle" placeholder="{{ __('common.nutrition_plan_example') }}" 
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.plan_title_optional')); ?></label>
+                            <input type="text" x-model="nutritionTitle" placeholder="<?php echo e(__('common.nutrition_plan_example')); ?>" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description_optional') }}</label>
-                            <textarea x-model="nutritionDescription" rows="3" placeholder="{{ __('common.trainer_comments') }}"
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.description_optional')); ?></label>
+                            <textarea x-model="nutritionDescription" rows="3" placeholder="<?php echo e(__('common.trainer_comments')); ?>"
                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                         </div>
                     </div>
@@ -5026,42 +5068,47 @@ function athletesApp() {
                 <!-- Таблица Excel для заполнения питания по дням -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-lg font-semibold text-gray-900">{{ __('common.nutrition_plan_by_days') }}</h4>
+                        <h4 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.nutrition_plan_by_days')); ?></h4>
                         <div class="flex gap-2">
                             <button type="button" @click="clearAll()" class="px-3 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200">
-                                🗑️ {{ __('common.clear_all') }}
+                                🗑️ <?php echo e(__('common.clear_all')); ?>
+
                             </button>
                             <button type="button" @click="showQuickFillModal()" class="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200">
-                                🚀 {{ __('common.quick_fill') }}
+                                🚀 <?php echo e(__('common.quick_fill')); ?>
+
                             </button>
                         </div>
                     </div>
                     
                     <!-- Подсказки -->
                     <div class="mb-4 text-sm text-gray-600">
-                        <p>💡 <strong>{{ __('common.tip') }}:</strong> {{ __('common.calories_calculated') }}</p>
-                        <p>📝 {{ __('common.fill_only_days') }}</p>
+                        <p>💡 <strong><?php echo e(__('common.tip')); ?>:</strong> <?php echo e(__('common.calories_calculated')); ?></p>
+                        <p>📝 <?php echo e(__('common.fill_only_days')); ?></p>
                     </div>
                     
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-white border border-gray-300 rounded-lg">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.day') }}</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.day')); ?></th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                                        {{ __('common.proteins_g_header') }}
-                                        <button type="button" @click="fillColumn('proteins')" class="ml-1 text-blue-600 hover:text-blue-800" title="{{ __('common.quick_fill') }}">⚡</button>
+                                        <?php echo e(__('common.proteins_g_header')); ?>
+
+                                        <button type="button" @click="fillColumn('proteins')" class="ml-1 text-blue-600 hover:text-blue-800" title="<?php echo e(__('common.quick_fill')); ?>">⚡</button>
                                     </th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                                        {{ __('common.fats_g_header') }}
-                                        <button type="button" @click="fillColumn('fats')" class="ml-1 text-blue-600 hover:text-blue-800" title="{{ __('common.quick_fill') }}">⚡</button>
+                                        <?php echo e(__('common.fats_g_header')); ?>
+
+                                        <button type="button" @click="fillColumn('fats')" class="ml-1 text-blue-600 hover:text-blue-800" title="<?php echo e(__('common.quick_fill')); ?>">⚡</button>
                                     </th>
                                     <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">
-                                        {{ __('common.carbs_g_header') }}
-                                        <button type="button" @click="fillColumn('carbs')" class="ml-1 text-blue-600 hover:text-blue-800" title="{{ __('common.quick_fill') }}">⚡</button>
+                                        <?php echo e(__('common.carbs_g_header')); ?>
+
+                                        <button type="button" @click="fillColumn('carbs')" class="ml-1 text-blue-600 hover:text-blue-800" title="<?php echo e(__('common.quick_fill')); ?>">⚡</button>
                                     </th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.calories')); ?></th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.notes')); ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-300">
@@ -5094,7 +5141,7 @@ function athletesApp() {
                                         <td class="px-3 py-2">
                                             <input type="text" :name="'notes_' + day" 
                                                    class="w-full px-2 py-1 text-sm border-0 focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
-                                                   placeholder="{{ __('common.notes_placeholder') }}">
+                                                   placeholder="<?php echo e(__('common.notes_placeholder')); ?>">
                                         </td>
                                     </tr>
                                 </template>
@@ -5146,21 +5193,21 @@ function athletesApp() {
                         <div>
                             <div>
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('common.proteins_g') }}</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo e(__('common.proteins_g')); ?></label>
                                     <input type="number" step="0.1" x-model="quickFillData.proteins" 
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                            placeholder="120" required>
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('common.fats_g') }}</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo e(__('common.fats_g')); ?></label>
                                     <input type="number" step="0.1" x-model="quickFillData.fats" 
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                            placeholder="50" required>
                                 </div>
                                 
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('common.carbs_g') }}</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1"><?php echo e(__('common.carbs_g')); ?></label>
                                     <input type="number" step="0.1" x-model="quickFillData.carbs" 
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                            placeholder="200" required>
@@ -5192,7 +5239,8 @@ function athletesApp() {
                             <div class="flex gap-3 mt-6">
                                 <button type="button" @click.prevent="quickFillModalVisible = false" 
                                         class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-                                    {{ __('common.cancel') }}
+                                    <?php echo e(__('common.cancel')); ?>
+
                                 </button>
                                 <button type="button" @click="applyQuickFill()"
                                         class="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
@@ -5207,11 +5255,13 @@ function athletesApp() {
                 <div class="flex justify-end space-x-4 mt-6">
                     <button type="button" @click="currentView = 'view'; activeTab = 'nutrition'" 
                             class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.cancel') }}
+                        <?php echo e(__('common.cancel')); ?>
+
                     </button>
                     <button type="submit" 
                             class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
-                        {{ __('common.save') }}
+                        <?php echo e(__('common.save')); ?>
+
                     </button>
                 </div>
             </form>
@@ -5222,7 +5272,7 @@ function athletesApp() {
     <div x-show="detailedNutritionPlan" x-transition class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important;">
         <div class="bg-white rounded-lg w-full max-w-6xl mx-4 max-h-[85vh] overflow-hidden">
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${detailedNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>
+                <h3 class="text-xl font-semibold text-gray-900" x-text="detailedNutritionPlan ? (detailedNutritionPlan.title || `<?php echo e(__('common.nutrition_plan_for')); ?> ${new Date(0, detailedNutritionPlan.month - 1).toLocaleString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>', {month: 'long'})} ${detailedNutritionPlan.year} <?php echo e(__('common.year')); ?>.`) : ''"></h3>
                 <button @click="closeDetailedNutritionPlan()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -5243,19 +5293,19 @@ function athletesApp() {
                         <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
                             <div class="bg-red-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-red-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.calories || 0), 0)) : 0"></div>
-                                <div class="text-sm text-red-800">{{ __('common.total_calories') }}</div>
+                                <div class="text-sm text-red-800"><?php echo e(__('common.total_calories')); ?></div>
                             </div>
                             <div class="bg-blue-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-blue-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.proteins || 0), 0)) : 0"></div>
-                                <div class="text-sm text-blue-800">{{ __('common.total_proteins_g') }}</div>
+                                <div class="text-sm text-blue-800"><?php echo e(__('common.total_proteins_g')); ?></div>
                             </div>
                             <div class="bg-yellow-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-yellow-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.carbs || 0), 0)) : 0"></div>
-                                <div class="text-sm text-yellow-800">{{ __('common.total_carbs_g') }}</div>
+                                <div class="text-sm text-yellow-800"><?php echo e(__('common.total_carbs_g')); ?></div>
                             </div>
                             <div class="bg-green-50 rounded-lg p-4 text-center" style="flex: 1;">
                                 <div class="text-2xl font-bold text-green-600" x-text="filteredNutritionDays ? Math.round(filteredNutritionDays.reduce((sum, day) => sum + parseFloat(day.fats || 0), 0)) : 0"></div>
-                                <div class="text-sm text-green-800">{{ __('common.total_fats_g') }}</div>
+                                <div class="text-sm text-green-800"><?php echo e(__('common.total_fats_g')); ?></div>
                             </div>
                         </div>
                         
@@ -5264,12 +5314,12 @@ function athletesApp() {
                             <table class="min-w-full bg-white border border-gray-300 rounded-lg">
                                 <thead class="bg-gray-100">
                                     <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.day') }}</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.proteins_g') }}</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.fats_g') }}</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.carbs_g') }}</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.calories') }}</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">{{ __('common.notes') }}</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.day')); ?></th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.proteins_g')); ?></th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.fats_g')); ?></th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.carbs_g')); ?></th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.calories')); ?></th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300"><?php echo e(__('common.notes')); ?></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-300">
@@ -5735,7 +5785,7 @@ function showCreatePlanForm() {
         <div class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.month') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.month')); ?></label>
                     <select id="plan-month" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="1" ${currentMonth === 1 ? 'selected' : ''}>Январь</option>
                         <option value="2" ${currentMonth === 2 ? 'selected' : ''}>Февраль</option>
@@ -5752,7 +5802,7 @@ function showCreatePlanForm() {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.year') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.year')); ?></label>
                     <select id="plan-year" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         ${generateYearOptions(currentYear)}
                     </select>
@@ -5760,14 +5810,14 @@ function showCreatePlanForm() {
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.plan_title_optional') }}</label>
-                <input type="text" id="plan-title" placeholder="{{ __('common.nutrition_plan_example') }}" 
+                <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.plan_title_optional')); ?></label>
+                <input type="text" id="plan-title" placeholder="<?php echo e(__('common.nutrition_plan_example')); ?>" 
                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.description_optional') }}</label>
-                <textarea id="plan-description" rows="3" placeholder="{{ __('common.trainer_comments') }}"
+                <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.description_optional')); ?></label>
+                <textarea id="plan-description" rows="3" placeholder="<?php echo e(__('common.trainer_comments')); ?>"
                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
             </div>
         </div>
@@ -5813,7 +5863,7 @@ async function saveNutritionPlan_DISABLED() {
         if (response.ok) {
             closeNutritionPlanModal();
             loadNutritionPlans();
-            alert('{{ __('common.nutrition_plan_created') }}');
+            alert('<?php echo e(__('common.nutrition_plan_created')); ?>');
         } else {
             const error = await response.json();
             alert(error.error || 'Ошибка при создании плана');
@@ -5859,4 +5909,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/trainer/athletes/index.blade.php ENDPATH**/ ?>
