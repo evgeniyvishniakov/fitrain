@@ -700,23 +700,25 @@
                 <div id="formMethod" style="display: none;"></div>
                 
                 <!-- Основные параметры -->
-                <div class="grid grid-cols-3 gap-4 mb-6">
-                    <div>
+                <div class="mb-6">
+                    <div class="mb-4">
                         <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.measurement_date') }} *</label>
                         <input type="date" name="measurement_date" id="measurement_date" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
-                    <div>
-                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.weight') }} ({{ __('common.kg') }}) *</label>
-                        <input type="number" name="weight" id="weight" step="0.1" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.height') }} ({{ __('common.cm') }})</label>
-                        <input type="number" name="height" id="height" step="0.1" readonly
-                               value="{{ auth()->user()->height ?? '' }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
-                        <p class='text-xs text-gray-500 mt-1'>{{ __('common.height_from_profile') }}</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.weight') }} ({{ __('common.kg') }}) *</label>
+                            <input type="number" name="weight" id="weight" step="0.1" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.height') }} ({{ __('common.cm') }})</label>
+                            <input type="number" name="height" id="height" step="0.1" readonly
+                                   value="{{ auth()->user()->height ?? '' }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+                            <p class='text-xs text-gray-500 mt-1'>{{ __('common.height_from_profile') }}</p>
+                        </div>
                     </div>
                 </div>
                 
