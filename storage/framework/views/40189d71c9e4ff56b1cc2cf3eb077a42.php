@@ -1,145 +1,164 @@
-@extends("crm.layouts.app")
+<?php $__env->startSection("title", __("common.measurements")); ?>
+<?php $__env->startSection("page-title", __('common.measurements')); ?>
 
-@section("title", __("common.measurements"))
-@section("page-title", __('common.measurements'))
-
-@section("sidebar")
-    <a href="{{ route("crm.dashboard.main") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+<?php $__env->startSection("sidebar"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        {{ __('common.dashboard') }}
+        <?php echo e(__('common.dashboard')); ?>
+
     </a>
-    <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        {{ __('common.calendar') }}
+        <?php echo e(__('common.calendar')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.workouts") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.workouts")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        {{ __('common.workouts') }}
+        <?php echo e(__('common.workouts')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.exercises") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.exercises")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        {{ __('common.exercises') }}
+        <?php echo e(__('common.exercises')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.progress") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.athlete.progress")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        {{ __('common.progress') }}
+        <?php echo e(__('common.progress')); ?>
+
     </a>
-    <a href="{{ route("crm.nutrition.index") }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route("crm.nutrition.index")); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        {{ __('common.nutrition_diary') }}
+        <?php echo e(__('common.nutrition_diary')); ?>
+
     </a>
-    <a href="{{ route('crm.athlete.settings') }}" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+    <a href="<?php echo e(route('crm.athlete.settings')); ?>" class="nav-link flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        {{ __('common.settings') }}
-    </a>
-@endsection
+        <?php echo e(__('common.settings')); ?>
 
-@section("mobile-menu")
-    <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link">
+    </a>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection("mobile-menu"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        {{ __('common.dashboard') }}
+        <?php echo e(__('common.dashboard')); ?>
+
     </a>
-    <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?>">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        {{ __('common.calendar') }}
+        <?php echo e(__('common.calendar')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.workouts")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        {{ __('common.workouts') }}
+        <?php echo e(__('common.workouts')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.exercises")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        {{ __('common.exercises') }}
+        <?php echo e(__('common.exercises')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.progress")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        {{ __('common.progress') }}
+        <?php echo e(__('common.progress')); ?>
+
     </a>
-    <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.nutrition.index")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        {{ __('common.nutrition_diary') }}
+        <?php echo e(__('common.nutrition_diary')); ?>
+
     </a>
-    <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
+    <a href="<?php echo e(route('crm.athlete.settings')); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        {{ __('common.settings') }}
-    </a>
-@endsection
+        <?php echo e(__('common.settings')); ?>
 
-@section("mobile-menu")
-    <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link">
+    </a>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection("mobile-menu"); ?>
+    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/>
         </svg>
-        {{ __('common.dashboard') }}
+        <?php echo e(__('common.dashboard')); ?>
+
     </a>
-    <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
+    <a href="<?php echo e(route('crm.calendar')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?>">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        {{ __('common.calendar') }}
+        <?php echo e(__('common.calendar')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.workouts") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.workouts")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
         </svg>
-        {{ __('common.workouts') }}
+        <?php echo e(__('common.workouts')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.exercises") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.exercises")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
         </svg>
-        {{ __('common.exercises') }}
+        <?php echo e(__('common.exercises')); ?>
+
     </a>
-    <a href="{{ route("crm.athlete.progress") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.athlete.progress")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
-        {{ __('common.progress') }}
+        <?php echo e(__('common.progress')); ?>
+
     </a>
-    <a href="{{ route("crm.nutrition.index") }}" class="mobile-nav-link">
+    <a href="<?php echo e(route("crm.nutrition.index")); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
         </svg>
-        {{ __('common.nutrition_diary') }}
+        <?php echo e(__('common.nutrition_diary')); ?>
+
     </a>
-    <a href="{{ route('crm.athlete.settings') }}" class="mobile-nav-link">
+    <a href="<?php echo e(route('crm.athlete.settings')); ?>" class="mobile-nav-link">
         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        {{ __('common.settings') }}
+        <?php echo e(__('common.settings')); ?>
+
     </a>
-@endsection
+<?php $__env->stopSection(); ?>
 
 <style>
 .pagination-container {
@@ -411,7 +430,7 @@
 })();
 </script>
 
-@section("content")
+<?php $__env->startSection("content"); ?>
 <div class="p-6">
     <div x-data="measurementApp()" x-init="init();" x-cloak>
         <!-- Статистические карточки -->
@@ -424,8 +443,8 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.total_measurements') }}</div>
-                <div class="stat-value">{{ $totalMeasurements }}</div>
+                <div class="stat-label"><?php echo e(__('common.total_measurements')); ?></div>
+                <div class="stat-value"><?php echo e($totalMeasurements); ?></div>
             </div>
         </div>
 
@@ -436,8 +455,8 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.last_measurement') }}</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : '—' }}</div>
+                <div class="stat-label"><?php echo e(__('common.last_measurement')); ?></div>
+                <div class="stat-value"><?php echo e($lastMeasurement ? $lastMeasurement->measurement_date->format('d.m.Y') : '—'); ?></div>
             </div>
         </div>
 
@@ -448,8 +467,8 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">{{ __('common.current_weight') }}</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->weight . ' кг' : '—' }}</div>
+                <div class="stat-label"><?php echo e(__('common.current_weight')); ?></div>
+                <div class="stat-value"><?php echo e($lastMeasurement ? $lastMeasurement->weight . ' кг' : '—'); ?></div>
             </div>
         </div>
 
@@ -461,7 +480,7 @@
             </div>
             <div class="stat-content">
                 <div class="stat-label flex items-center gap-1">
-                    <span>{{ __('common.bmi') }}</span>
+                    <span><?php echo e(__('common.bmi')); ?></span>
                     <!-- Иконка знака вопроса с подсказкой -->
                     <div class="relative group">
                         <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" fill="currentColor" viewBox="0 0 20 20">
@@ -469,17 +488,17 @@
                         </svg>
                         <!-- Всплывающая подсказка -->
                         <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
-                            <div class="font-semibold mb-2">{{ __('common.bmi_tooltip') }}</div>
+                            <div class="font-semibold mb-2"><?php echo e(__('common.bmi_tooltip')); ?></div>
                             <div class="space-y-1">
-                                <div class="flex justify-between"><span class="text-blue-300">{{ __('common.less_than_18_5') }}:</span> <span>{{ __('common.underweight') }}</span></div>
-                                <div class="flex justify-between"><span class="text-green-300">{{ __('common.18_5_to_24_9') }}:</span> <span>{{ __('common.normal_weight') }}</span></div>
-                                <div class="flex justify-between"><span class="text-yellow-300">{{ __('common.25_to_29_9') }}:</span> <span>{{ __('common.overweight') }}</span></div>
-                                <div class="flex justify-between"><span class="text-red-300">{{ __('common.30_and_more') }}:</span> <span>{{ __('common.obesity') }}</span></div>
+                                <div class="flex justify-between"><span class="text-blue-300"><?php echo e(__('common.less_than_18_5')); ?>:</span> <span><?php echo e(__('common.underweight')); ?></span></div>
+                                <div class="flex justify-between"><span class="text-green-300"><?php echo e(__('common.18_5_to_24_9')); ?>:</span> <span><?php echo e(__('common.normal_weight')); ?></span></div>
+                                <div class="flex justify-between"><span class="text-yellow-300"><?php echo e(__('common.25_to_29_9')); ?>:</span> <span><?php echo e(__('common.overweight')); ?></span></div>
+                                <div class="flex justify-between"><span class="text-red-300"><?php echo e(__('common.30_and_more')); ?>:</span> <span><?php echo e(__('common.obesity')); ?></span></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                @php
+                <?php
                     $bmi = null;
                     $bmiCategory = ['text' => '—', 'color' => 'text-gray-500'];
                     if ($lastMeasurement && $lastMeasurement->weight && auth()->user()->height) {
@@ -494,8 +513,8 @@
                             $bmiCategory = ['text' => __('common.obesity'), 'color' => 'text-red-600'];
                         }
                     }
-                @endphp
-                <div class="stat-value {{ $bmiCategory['color'] }}">{{ $bmi ? number_format($bmi, 1) : '—' }}</div>
+                ?>
+                <div class="stat-value <?php echo e($bmiCategory['color']); ?>"><?php echo e($bmi ? number_format($bmi, 1) : '—'); ?></div>
             </div>
             </div>
         </template>
@@ -504,12 +523,13 @@
         <div x-show="currentView === 'list'" class="space-y-6" x-data="measurementPagination()">
         <!-- Заголовок с кнопкой добавления -->
         <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">{{ __('common.measurement_history') }}</h3>
+            <h3 class="text-lg font-semibold text-gray-900"><?php echo e(__('common.measurement_history')); ?></h3>
             <button @click="window.showMeasurementForm()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                 </svg>
-                {{ __('common.add_measurement') }}
+                <?php echo e(__('common.add_measurement')); ?>
+
             </button>
         </div>
         
@@ -521,14 +541,14 @@
                         <div class="card hover:shadow-lg transition-shadow duration-200">
                             <div class="card-header">
                                 <div class="flex items-center justify-between">
-                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}')"></h4>
+                                    <h4 class="card-title text-lg" x-text="new Date(measurement.measurement_date).toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>')"></h4>
                                     <div class="flex space-x-2">
-                                        <button @click="editMeasurement(measurement.id)" class="text-indigo-600 hover:text-indigo-800" title="{{ __('common.edit_measurement') }}">
+                                        <button @click="editMeasurement(measurement.id)" class="text-indigo-600 hover:text-indigo-800" title="<?php echo e(__('common.edit_measurement')); ?>">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                             </svg>
                                         </button>
-                                        <button @click="deleteMeasurement(measurement.id)" class="text-red-600 hover:text-red-800" title="{{ __('common.delete_measurement') }}">
+                                        <button @click="deleteMeasurement(measurement.id)" class="text-red-600 hover:text-red-800" title="<?php echo e(__('common.delete_measurement')); ?>">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
@@ -541,52 +561,52 @@
                                 <div class="grid grid-cols-2 gap-4 mb-4">
                                     <div class="text-center p-3 bg-blue-50 rounded-lg">
                                         <div class="text-xl font-bold text-blue-600" x-text="measurement.weight || '—'"></div>
-                                        <div class="text-xs text-blue-800">{{ __('common.weight') }} ({{ __('common.kg') }})</div>
+                                        <div class="text-xs text-blue-800"><?php echo e(__('common.weight')); ?> (<?php echo e(__('common.kg')); ?>)</div>
                                     </div>
                                     <div class="text-center p-3 rounded-lg" x-show="measurement.weight && measurement.height" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).bg">
                                         <div class="text-xl font-bold" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color" x-text="formatNumber(measurement.weight / Math.pow(measurement.height/100, 2), '')"></div>
-                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color">{{ __('common.bmi') }}</div>
+                                        <div class="text-xs" :class="getBMICategory(measurement.weight / Math.pow(measurement.height/100, 2)).color"><?php echo e(__('common.bmi')); ?></div>
                                     </div>
                                 </div>
                                 
                                 <!-- Объемы тела -->
                                 <template x-if="measurement.chest || measurement.waist || measurement.hips || measurement.bicep || measurement.thigh || measurement.neck">
                                     <div class="mt-4 pt-4 pb-4 border-t border-b border-gray-200">
-                                        <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.body_volumes') }}</h5>
+                                        <h5 class="text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.body_volumes')); ?></h5>
                                         <div class="grid grid-cols-2 gap-2 text-sm">
                                             <template x-if="measurement.chest">
                                                 <div class="flex justify-between">
-                                                    <span class="text-gray-500">{{ __('common.chest') }}:</span>
+                                                    <span class="text-gray-500"><?php echo e(__('common.chest')); ?>:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.chest, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.waist">
                                                 <div class="flex justify-between">
-                                                    <span class='text-gray-500'>{{ __('common.waist') }}:</span>
+                                                    <span class='text-gray-500'><?php echo e(__('common.waist')); ?>:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.waist, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.hips">
                                                 <div class="flex justify-between">
-                                                    <span class='text-gray-500'>{{ __('common.hips') }}:</span>
+                                                    <span class='text-gray-500'><?php echo e(__('common.hips')); ?>:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.hips, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.bicep">
                                                 <div class="flex justify-between">
-                                                    <span class='text-gray-500'>{{ __('common.bicep') }}:</span>
+                                                    <span class='text-gray-500'><?php echo e(__('common.bicep')); ?>:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.bicep, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.thigh">
                                                 <div class="flex justify-between">
-                                                    <span class='text-gray-500'>{{ __('common.thigh') }}:</span>
+                                                    <span class='text-gray-500'><?php echo e(__('common.thigh')); ?>:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.thigh, ' см')"></span>
                                                 </div>
                                             </template>
                                             <template x-if="measurement.neck">
                                                 <div class="flex justify-between">
-                                                    <span class='text-gray-500'>{{ __('common.neck') }}:</span>
+                                                    <span class='text-gray-500'><?php echo e(__('common.neck')); ?>:</span>
                                                     <span class="font-medium" x-text="formatNumber(measurement.neck, ' см')"></span>
                                                 </div>
                                             </template>
@@ -596,26 +616,26 @@
                                 
                                 <!-- Дополнительные параметры -->
                                 <div class="mt-4">
-                                    <h5 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_parameters') }}</h5>
+                                    <h5 class="text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.additional_parameters')); ?></h5>
                                     <div class="grid grid-cols-2 gap-2 text-sm mb-4">
                                     <div class="flex justify-between">
-                                        <span class="text-gray-500">{{ __('common.fat_percentage') }}:</span>
+                                        <span class="text-gray-500"><?php echo e(__('common.fat_percentage')); ?>:</span>
                                         <span class="font-medium" x-text="measurement.body_fat_percentage ? formatNumber(measurement.body_fat_percentage, '%') : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class='text-gray-500'>{{ __('common.muscles') }}:</span>
+                                        <span class='text-gray-500'><?php echo e(__('common.muscles')); ?>:</span>
                                         <span class="font-medium" x-text="measurement.muscle_mass ? formatNumber(measurement.muscle_mass, ' кг') : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class='text-gray-500'>{{ __('common.water') }}:</span>
+                                        <span class='text-gray-500'><?php echo e(__('common.water')); ?>:</span>
                                         <span class="font-medium" x-text="measurement.water_percentage ? formatNumber(measurement.water_percentage, '%') : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class='text-gray-500'>{{ __('common.pulse') }}:</span>
-                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' {{ __('common.bpm') }}' : '—'"></span>
+                                        <span class='text-gray-500'><?php echo e(__('common.pulse')); ?>:</span>
+                                        <span class="font-medium" x-text="measurement.resting_heart_rate ? Math.round(parseFloat(measurement.resting_heart_rate)) + ' <?php echo e(__('common.bpm')); ?>' : '—'"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class='text-gray-500'>{{ __('common.pressure') }}:</span>
+                                        <span class='text-gray-500'><?php echo e(__('common.pressure')); ?>:</span>
                                         <span class="font-medium" x-text="measurement.blood_pressure_systolic && measurement.blood_pressure_diastolic ? Math.round(parseFloat(measurement.blood_pressure_systolic)) + '/' + Math.round(parseFloat(measurement.blood_pressure_diastolic)) : '—'"></span>
                                     </div>
                                     </div>
@@ -624,7 +644,7 @@
                                 <!-- Комментарии -->
                                 <template x-if="measurement.notes">
                                     <div class="mt-4 pt-4 border-t border-gray-200">
-                                        <h5 class='text-sm font-medium text-gray-700 mb-1'>{{ __('common.comments') }}</h5>
+                                        <h5 class='text-sm font-medium text-gray-700 mb-1'><?php echo e(__('common.comments')); ?></h5>
                                         <p class="text-sm text-gray-600" x-text="measurement.notes"></p>
                                     </div>
                                 </template>
@@ -678,10 +698,11 @@
                     <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.no_data') }}</h3>
-                    <p class="text-gray-500 mb-4">{{ __('common.no_data_to_display') }}</p>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2"><?php echo e(__('common.no_data')); ?></h3>
+                    <p class="text-gray-500 mb-4"><?php echo e(__('common.no_data_to_display')); ?></p>
                     <button @click="window.showMeasurementForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-                        {{ __('common.add_measurement') }}
+                        <?php echo e(__('common.add_measurement')); ?>
+
                     </button>
                 </div>
             </div>
@@ -692,50 +713,50 @@
         <div id="athlete-measurement-form-section" x-show="currentView === 'form'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <!-- Заголовок -->
             <div class="flex items-center justify-center mb-6">
-                <h3 class="text-lg font-medium text-gray-900" x-text="currentMeasurementId ? '{{ __('common.edit_measurement_title') }}' : '{{ __('common.create_measurement_title') }}'"></h3>
+                <h3 class="text-lg font-medium text-gray-900" x-text="currentMeasurementId ? '<?php echo e(__('common.edit_measurement_title')); ?>' : '<?php echo e(__('common.create_measurement_title')); ?>'"></h3>
             </div>
             
             <form id="measurementForm" method="POST" onsubmit="submitMeasurementForm(); return false;">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div id="formMethod" style="display: none;"></div>
                 
                 <!-- Основные параметры -->
                 <div class="grid grid-cols-3 gap-4 mb-6">
                     <div>
-                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.measurement_date') }} *</label>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.measurement_date')); ?> *</label>
                         <input type="date" name="measurement_date" id="measurement_date" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.weight') }} ({{ __('common.kg') }}) *</label>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.weight')); ?> (<?php echo e(__('common.kg')); ?>) *</label>
                         <input type="number" name="weight" id="weight" step="0.1" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.height') }} ({{ __('common.cm') }})</label>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.height')); ?> (<?php echo e(__('common.cm')); ?>)</label>
                         <input type="number" name="height" id="height" step="0.1" readonly
-                               value="{{ auth()->user()->height ?? '' }}"
+                               value="<?php echo e(auth()->user()->height ?? ''); ?>"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
-                        <p class='text-xs text-gray-500 mt-1'>{{ __('common.height_from_profile') }}</p>
+                        <p class='text-xs text-gray-500 mt-1'><?php echo e(__('common.height_from_profile')); ?></p>
                     </div>
                 </div>
                 
                 <!-- Состав тела -->
                 <div class="mb-6">
-                    <h4 class='text-md font-semibold text-gray-900 mb-4'>{{ __('common.body_composition') }}</h4>
+                    <h4 class='text-md font-semibold text-gray-900 mb-4'><?php echo e(__('common.body_composition')); ?></h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.water_percentage_pct') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.water_percentage_pct')); ?></label>
                             <input type="number" name="body_fat_percentage" id="body_fat_percentage" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.muscle_mass_kg') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.muscle_mass_kg')); ?></label>
                             <input type="number" name="muscle_mass" id="muscle_mass" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.water_percentage_pct') }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2"><?php echo e(__('common.water_percentage_pct')); ?></label>
                             <input type="number" name="water_percentage" id="water_percentage" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -744,20 +765,20 @@
                 
                 <!-- Медицинские показатели -->
                 <div class="mb-6">
-                    <h4 class='text-md font-semibold text-gray-900 mb-4'>{{ __('common.medical_indicators') }}</h4>
+                    <h4 class='text-md font-semibold text-gray-900 mb-4'><?php echo e(__('common.medical_indicators')); ?></h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.resting_heart_rate_bpm') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.resting_heart_rate_bpm')); ?></label>
                             <input type="number" name="resting_heart_rate" id="resting_heart_rate" step="1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.systolic_pressure') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.systolic_pressure')); ?></label>
                             <input type="number" name="blood_pressure_systolic" id="blood_pressure_systolic" step="1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.diastolic_pressure') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.diastolic_pressure')); ?></label>
                             <input type="number" name="blood_pressure_diastolic" id="blood_pressure_diastolic" step="1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -766,7 +787,7 @@
                 
                 <!-- Объемы тела -->
                 <div class="mb-6">
-                    <h4 class='text-md font-semibold text-gray-900 mb-4'>{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
+                    <h4 class='text-md font-semibold text-gray-900 mb-4'><?php echo e(__('common.body_volumes')); ?> (<?php echo e(__('common.cm')); ?>)</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
@@ -774,27 +795,27 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.waist') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.waist')); ?></label>
                             <input type="number" name="waist" id="waist" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.hips') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.hips')); ?></label>
                             <input type="number" name="hips" id="hips" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.bicep') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.bicep')); ?></label>
                             <input type="number" name="bicep" id="bicep" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.thigh') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.thigh')); ?></label>
                             <input type="number" name="thigh" id="thigh" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.neck') }}</label>
+                            <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.neck')); ?></label>
                             <input type="number" name="neck" id="neck" step="0.1"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -803,21 +824,23 @@
                 
                 <!-- Комментарии -->
                 <div class="mb-6">
-                    <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.comments') }}</label>
+                    <label class='block text-sm font-medium text-gray-700 mb-2'><?php echo e(__('common.comments')); ?></label>
                     <textarea name="notes" id="notes" rows="3"
                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                              placeholder='{{ __('common.add_notes_placeholder') }}'></textarea>
+                              placeholder='<?php echo e(__('common.add_notes_placeholder')); ?>'></textarea>
                 </div>
                 
                 <!-- Кнопки -->
                 <div class="flex justify-end space-x-3">
                     <button type="button" @click="showList()"
                             class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
-                        {{ __('common.cancel') }}
+                        <?php echo e(__('common.cancel')); ?>
+
                     </button>
                     <button type="submit"
                             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                        {{ __('common.save') }}
+                        <?php echo e(__('common.save')); ?>
+
                     </button>
                 </div>
             </form>
@@ -833,20 +856,23 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                 </svg>
             </div>
-            <h3 class='text-lg font-medium text-gray-900 mb-2'>{{ __('common.confirm_delete') }}</h3>
+            <h3 class='text-lg font-medium text-gray-900 mb-2'><?php echo e(__('common.confirm_delete')); ?></h3>
             <div class="mt-2 px-7 py-3">
                 <p class="text-sm text-gray-500">
-                    {{ __('common.confirm_delete_measurement') }}
+                    <?php echo e(__('common.confirm_delete_measurement')); ?>
+
                 </p>
             </div>
             <div class="flex justify-center space-x-3 mt-4">
                 <button onclick="closeDeleteConfirmationModal()" 
                         class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                    {{ __('common.cancel') }}
+                    <?php echo e(__('common.cancel')); ?>
+
                 </button>
                 <button onclick="confirmDeleteMeasurement()" 
                         class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                    {{ __('common.delete') }}
+                    <?php echo e(__('common.delete')); ?>
+
                 </button>
             </div>
         </div>
@@ -1145,10 +1171,10 @@
     // Функция для пагинации измерений
     function measurementPagination() {
         return {
-            measurements: @json($measurements->all()),
+            measurements: <?php echo json_encode($measurements->all(), 15, 512) ?>,
             currentPage: 1,
             itemsPerPage: 6,
-            totalPages: Math.ceil(@json($measurements->all()).length / 6),
+            totalPages: Math.ceil(<?php echo json_encode($measurements->all(), 15, 512) ?>.length / 6),
             
             get paginatedMeasurements() {
                 const start = (this.currentPage - 1) * this.itemsPerPage;
@@ -1254,7 +1280,7 @@ function showAddMeasurementModal() {
     const formMethod = document.getElementById('formMethod');
     const measurementDate = document.getElementById('measurement_date');
     
-    if (measurementForm) measurementForm.action = '{{ route("crm.athlete.measurements.store") }}';
+    if (measurementForm) measurementForm.action = '<?php echo e(route("crm.athlete.measurements.store")); ?>';
     if (formMethod) formMethod.innerHTML = '';
     if (measurementForm) measurementForm.reset();
     if (measurementDate) measurementDate.value = new Date().toISOString().split('T')[0];
@@ -1280,7 +1306,7 @@ function editMeasurement(measurementId) {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
         }
     })
     .then(response => response.json())
@@ -1327,7 +1353,7 @@ function editMeasurement(measurementId) {
                 console.log('Значение поля даты после установки:', measurementDate.value);
             }
             if (weight) weight.value = measurement.weight || '';
-            if (height) height.value = {{ auth()->user()->height ?? 'null' }};
+            if (height) height.value = <?php echo e(auth()->user()->height ?? 'null'); ?>;
             if (bodyFatPercentage) bodyFatPercentage.value = measurement.body_fat_percentage || '';
             if (muscleMass) muscleMass.value = measurement.muscle_mass || '';
             if (waterPercentage) waterPercentage.value = measurement.water_percentage || '';
@@ -1482,7 +1508,7 @@ async function submitMeasurementForm() {
         const isEdit = currentMeasurementId !== null;
         const url = isEdit 
             ? `/athlete/measurements/${currentMeasurementId}`
-            : '{{ route("crm.athlete.measurements.store") }}';
+            : '<?php echo e(route("crm.athlete.measurements.store")); ?>';
         const method = isEdit ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
@@ -1490,7 +1516,7 @@ async function submitMeasurementForm() {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>'
             },
             body: JSON.stringify(measurementData)
         });
@@ -1694,7 +1720,7 @@ function updateStatisticsCards(measurements) {
             const lastMeasurementCard = statsContainer.children[1];
             const lastMeasurementValue = lastMeasurementCard.querySelector('.stat-value');
             if (lastMeasurementValue) {
-                lastMeasurementValue.textContent = lastMeasurementDate.toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}');
+                lastMeasurementValue.textContent = lastMeasurementDate.toLocaleDateString('<?php echo e(app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US')); ?>');
             }
         }
         
@@ -1703,7 +1729,7 @@ function updateStatisticsCards(measurements) {
             const currentWeightCard = statsContainer.children[2];
             const currentWeightValue = currentWeightCard.querySelector('.stat-value');
             if (currentWeightValue && lastMeasurement.weight) {
-                currentWeightValue.textContent = lastMeasurement.weight + ' {{ __('common.kg') }}';
+                currentWeightValue.textContent = lastMeasurement.weight + ' <?php echo e(__('common.kg')); ?>';
             }
         }
         
@@ -1712,7 +1738,7 @@ function updateStatisticsCards(measurements) {
             const bmiCard = statsContainer.children[3];
             const bmiValue = bmiCard.querySelector('.stat-value');
             if (bmiValue && lastMeasurement.weight) {
-                const height = {{ auth()->user()->height ?? 170 }};
+                const height = <?php echo e(auth()->user()->height ?? 170); ?>;
                 const bmi = lastMeasurement.weight / ((height/100) ** 2);
                 bmiValue.textContent = bmi.toFixed(1);
                 
@@ -1762,4 +1788,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make("crm.layouts.app", \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/athlete/measurements.blade.php ENDPATH**/ ?>
