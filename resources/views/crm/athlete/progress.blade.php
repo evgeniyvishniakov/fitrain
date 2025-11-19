@@ -411,6 +411,62 @@
 
 </div>
 
+<style>
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 640px) {
+    .bg-white.rounded-2xl {
+        padding: 1rem !important;
+        margin: 0 !important;
+        border-radius: 0.5rem !important;
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .bg-white.rounded-2xl .p-6 {
+        padding: 1rem !important;
+    }
+    
+    .bg-white.rounded-2xl select,
+    .bg-white.rounded-2xl input,
+    .bg-white.rounded-2xl textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0.5rem 0.75rem !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+    
+    .bg-gray-50.rounded-lg {
+        padding: 1rem !important;
+    }
+    
+    .bg-gray-50.rounded-lg .flex {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    .bg-gray-50.rounded-lg .flex > div {
+        width: 100% !important;
+    }
+    
+    .bg-gray-50.rounded-lg select {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .bg-white.rounded-lg {
+        padding: 1rem !important;
+        overflow-x: hidden !important;
+    }
+    
+    .bg-white.rounded-lg canvas {
+        max-width: 100% !important;
+    }
+}
+</style>
+
 <script>
 // Инициализируем графики после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
