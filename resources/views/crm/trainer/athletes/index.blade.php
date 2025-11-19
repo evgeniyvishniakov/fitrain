@@ -3708,10 +3708,6 @@ function athletesApp() {
             <div class="p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between mb-6">
                     <h1 class="text-2xl font-bold text-gray-900">{{ __('common.athlete_profile') }}</h1>
-                    <button @click="showList()" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
-                        {{ __('common.back') }} к списку
-                    </button>
                 </div>
 
                 <!-- Карточка спортсмена с вкладками -->
@@ -3720,7 +3716,7 @@ function athletesApp() {
                     <div class="p-6 border-b border-gray-200">
                         <div class="flex items-center">
                             <!-- Аватар -->
-                            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mr-6">
+                            <div class="athlete-view-avatar w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mr-6">
                                 <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
@@ -4423,21 +4419,41 @@ function athletesApp() {
             
             <!-- Кнопки действий внизу справа -->
             <div class="p-6 border-t border-gray-200">
-                <div class="flex justify-end gap-3">
-                    <button @click="showEdit(currentAthlete.id)" 
-                            class="athlete-action-btn athlete-action-btn-edit px-4 py-2 text-sm font-medium rounded-lg flex items-center transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                <div class="flex justify-between gap-3">
+                    <button @click="showList()" 
+                            class="inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                        <svg class="w-5 h-5 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
-                        {{ __('common.edit') }}
+                        <span class="athlete-view-cancel-text">{{ __('common.cancel') }}</span>
                     </button>
-                    <button @click="deleteAthlete(currentAthlete.id)" 
-                            class="athlete-action-btn athlete-action-btn-delete px-4 py-2 text-sm font-medium rounded-lg flex items-center transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                        {{ __('common.delete') }}
-                    </button>
+                    <div class="flex gap-3">
+                        <!-- Десктоп: текстовые кнопки -->
+                        <button @click="showEdit(currentAthlete.id)" 
+                                class="athlete-action-btn athlete-action-btn-text athlete-action-btn-edit">
+                            {{ __('common.edit') }}
+                        </button>
+                        <button @click="deleteAthlete(currentAthlete.id)" 
+                                class="athlete-action-btn athlete-action-btn-text athlete-action-btn-delete">
+                            {{ __('common.delete') }}
+                        </button>
+                        
+                        <!-- Мобилка: иконки -->
+                        <button @click="showEdit(currentAthlete.id)" 
+                                class="athlete-action-btn athlete-action-btn-icon athlete-action-btn-edit"
+                                title="{{ __('common.edit') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                        <button @click="deleteAthlete(currentAthlete.id)" 
+                                class="athlete-action-btn athlete-action-btn-icon athlete-action-btn-delete"
+                                title="{{ __('common.delete') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -5492,7 +5508,7 @@ function athletesApp() {
 /* Специальный медиа-запрос для вкладки питания на мобилке */
 @media (max-width: 767px) {
     .p-6 {
-        padding: 0.5rem !important;
+        padding: 0.8rem !important;
     }
 }
 
@@ -5531,6 +5547,7 @@ function athletesApp() {
         display: flex;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
     }
     
     .athlete-profile-label {
@@ -5540,12 +5557,17 @@ function athletesApp() {
         text-transform: uppercase;
         letter-spacing: 0.5px;
         min-width: 50px;
+        flex-shrink: 0;
     }
     
     .athlete-profile-value {
         font-weight: 600;
         color: #374151;
         font-size: 14px;
+        word-break: keep-all;
+        white-space: normal;
+        flex: 1;
+        min-width: 0;
     }
 }
 
@@ -5759,6 +5781,51 @@ function athletesApp() {
     transition: all 0.2s ease;
 }
 
+/* Текстовые кнопки для десктопа */
+.athlete-action-btn-text {
+    display: none;
+    padding: 0.7rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+}
+
+.athlete-action-btn-text:first-of-type {
+    color: #166534 !important;
+    background-color: #f0fdf4 !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+.athlete-action-btn-text:first-of-type:hover,
+.athlete-action-btn-text:first-of-type:active {
+    background-color: #dcfce7 !important;
+}
+
+.athlete-action-btn-text:nth-of-type(2) {
+    color: #991b1b !important;
+    background-color: #fef2f2 !important;
+    border: 1px solid #fecaca !important;
+}
+
+.athlete-action-btn-text:nth-of-type(2):hover,
+.athlete-action-btn-text:nth-of-type(2):active {
+    background-color: #fee2e2 !important;
+}
+
+/* Иконки для мобильных */
+.athlete-action-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.athlete-action-btn-icon:active {
+    transform: scale(0.95);
+}
+
 .athlete-action-btn-edit {
     color: #166534 !important;
     background-color: #f0fdf4 !important;
@@ -5779,6 +5846,44 @@ function athletesApp() {
 .athlete-action-btn-delete:hover,
 .athlete-action-btn-delete:active {
     background-color: #fee2e2 !important;
+}
+
+/* Медиа-запросы */
+@media (min-width: 768px) {
+    .athlete-action-btn-text {
+        display: inline-flex;
+    }
+    .athlete-action-btn-icon {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .athlete-action-btn-text {
+        display: none;
+    }
+    .athlete-action-btn-icon {
+        display: inline-flex;
+    }
+}
+
+/* Кнопка Отмена в просмотре спортсмена */
+@media (min-width: 768px) {
+    .athlete-view-cancel-text {
+        display: inline-block !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .athlete-view-cancel-text {
+        display: none !important;
+    }
+    
+    /* Скрытие аватара на мобилке */
+    .athlete-view-avatar {
+        display: none !important;
+        margin-right: 0 !important;
+    }
 }
 
 /* Исправление полей на мобильных устройствах (iPhone) */
