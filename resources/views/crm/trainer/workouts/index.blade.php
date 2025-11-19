@@ -33,6 +33,116 @@
             display: none !important;
         }
     }
+
+    /* Кнопки действий в просмотре тренировки */
+    .workout-action-btn {
+        transition: all 0.2s ease;
+    }
+
+    /* Текстовые кнопки для десктопа */
+    .workout-action-btn-text {
+        display: none;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+    }
+
+    .workout-action-btn-text:first-of-type {
+        color: #4338ca;
+        background-color: #eef2ff;
+        border: 1px solid #c7d2fe;
+    }
+
+    .workout-action-btn-text:first-of-type:hover {
+        background-color: #e0e7ff;
+    }
+
+    .workout-action-btn-text:nth-of-type(2) {
+        color: #166534;
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    .workout-action-btn-text:nth-of-type(2):hover {
+        background-color: #dcfce7;
+    }
+
+    .workout-action-btn-text:nth-of-type(3) {
+        color: #991b1b;
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+    .workout-action-btn-text:nth-of-type(3):hover {
+        background-color: #fee2e2;
+    }
+
+    /* Иконки для мобильных */
+    .workout-action-btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .workout-action-btn-icon:active {
+        transform: scale(0.95);
+    }
+
+    .workout-action-btn-duplicate {
+        color: #4338ca !important;
+        background-color: #eef2ff !important;
+        border: 1px solid #c7d2fe !important;
+    }
+
+    .workout-action-btn-duplicate:hover,
+    .workout-action-btn-duplicate:active {
+        background-color: #e0e7ff !important;
+    }
+
+    .workout-action-btn-edit {
+        color: #166534 !important;
+        background-color: #f0fdf4 !important;
+        border: 1px solid #bbf7d0 !important;
+    }
+
+    .workout-action-btn-edit:hover,
+    .workout-action-btn-edit:active {
+        background-color: #dcfce7 !important;
+    }
+
+    .workout-action-btn-delete {
+        color: #991b1b !important;
+        background-color: #fef2f2 !important;
+        border: 1px solid #fecaca !important;
+    }
+
+    .workout-action-btn-delete:hover,
+    .workout-action-btn-delete:active {
+        background-color: #fee2e2 !important;
+    }
+
+    /* Медиа-запросы */
+    @media (min-width: 768px) {
+        .workout-action-btn-text {
+            display: inline-flex;
+        }
+        .workout-action-btn-icon {
+            display: none;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .workout-action-btn-text {
+            display: none;
+        }
+        .workout-action-btn-icon {
+            display: inline-flex;
+        }
+    }
 </style>
 
 <!-- Drag and Drop функциональность для упражнений -->
@@ -4025,30 +4135,55 @@ function workoutApp() {
             </div>
             
             <!-- Действия -->
-            <div class="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4 pt-6 border-t border-gray-200">
+            <div class="flex items-center justify-between gap-2 pt-6 border-t border-gray-200">
                 <button type="button" @click="showList()" data-swipe-ignore="true"
-                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors self-start md:self-auto">
+                        class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                     <span class="back-button-label">{{ __('common.back_to_list') }}</span>
                 </button>
                 @if(auth()->user()->hasRole('trainer'))
-                    <div class="flex space-x-2">
+                    <div class="flex items-center gap-2">
+                        <!-- Десктоп: текстовые кнопки -->
                         <button @click="duplicateWorkout(currentWorkout?.id)" 
                                 :disabled="isProcessing"
-                                class="px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
+                                class="workout-action-btn workout-action-btn-text"
                                 :class="{'opacity-50': isProcessing, 'cursor-not-allowed': isProcessing}">
                             {{ __('common.duplicate') }}
                         </button>
                         <button @click="showEdit(currentWorkout?.id)" 
-                                class="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                                class="workout-action-btn workout-action-btn-text">
                             {{ __('common.edit') }}
                         </button>
-                        
                         <button @click="deleteWorkout(currentWorkout?.id)" 
-                                class="px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
+                                class="workout-action-btn workout-action-btn-text">
                             {{ __('common.delete') }}
+                        </button>
+                        
+                        <!-- Мобилка: иконки -->
+                        <button @click="duplicateWorkout(currentWorkout?.id)" 
+                                :disabled="isProcessing"
+                                class="workout-action-btn workout-action-btn-icon workout-action-btn-duplicate"
+                                :class="{'opacity-50': isProcessing, 'cursor-not-allowed': isProcessing}"
+                                title="{{ __('common.duplicate') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </button>
+                        <button @click="showEdit(currentWorkout?.id)" 
+                                class="workout-action-btn workout-action-btn-icon workout-action-btn-edit"
+                                title="{{ __('common.edit') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </button>
+                        <button @click="deleteWorkout(currentWorkout?.id)" 
+                                class="workout-action-btn workout-action-btn-icon workout-action-btn-delete"
+                                title="{{ __('common.delete') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
                         </button>
                     </div>
                 @endif
