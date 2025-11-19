@@ -94,6 +94,15 @@ function dashboardCalendar() {
             this.loadWorkouts();
         },
         
+        getFirstWord(title) {
+            if (!title) return '';
+            const words = title.trim().split(/\s+/);
+            if (words.length <= 1) {
+                return title;
+            }
+            return words[0] + '...';
+        },
+        
         async loadWorkouts() {
             try {
                 const startDate = new Date(this.currentDate);
@@ -569,7 +578,7 @@ function dashboardCalendar() {
                                                  'calendar-workout-cancelled': workout.status === 'cancelled'
                                              }">
                                             <div class="calendar-workout-time" x-text="workout.time ? workout.time.substring(0, 5) : ''"></div>
-                                            <div class="calendar-workout-title" x-text="workout.title"></div>
+                                            <div class="calendar-workout-title" x-text="getFirstWord(workout.title)"></div>
                                         </div>
                                     </template>
                                     <template x-if="day.workouts.length > 2">
@@ -1193,6 +1202,7 @@ function dashboardCalendar() {
     text-align: center !important;
     border: 1px solid #d1d5db !important;
 }
+
 
 </style>
 
