@@ -177,6 +177,35 @@
     .p-6 {
         padding: 0.5rem !important;
     }
+    
+    #athlete-measurement-form-section {
+        padding: 1rem !important;
+        margin: 0 !important;
+        border-radius: 0.5rem !important;
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    #athlete-measurement-form-section form {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+    
+    #athlete-measurement-form-section input[type="date"],
+    #athlete-measurement-form-section input[type="number"],
+    #athlete-measurement-form-section textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0.5rem 0.75rem !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+    
+    #athlete-measurement-form-section input[type="date"] {
+        min-width: 0 !important;
+    }
 }
 
 .stats-container {
@@ -449,7 +478,17 @@
             </div>
             <div class="stat-content">
                 <div class="stat-label">{{ __('common.current_weight') }}</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->weight . ' кг' : '—' }}</div>
+                <div class="stat-value">
+                    @if($lastMeasurement)
+                        @php
+                            $weight = $lastMeasurement->weight;
+                            $formattedWeight = $weight == floor($weight) ? number_format($weight, 0, '.', '') : rtrim(rtrim(number_format($weight, 2, '.', ''), '0'), '.');
+                        @endphp
+                        {{ $formattedWeight }} кг
+                    @else
+                        —
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -1705,7 +1744,8 @@ function updateStatisticsCards(measurements) {
             const currentWeightCard = statsContainer.children[2];
             const currentWeightValue = currentWeightCard.querySelector('.stat-value');
             if (currentWeightValue && lastMeasurement.weight) {
-                currentWeightValue.textContent = lastMeasurement.weight + ' {{ __('common.kg') }}';
+                const formattedWeight = parseFloat(lastMeasurement.weight).toString().replace(/\.?0+$/, '');
+                currentWeightValue.textContent = formattedWeight + ' {{ __('common.kg') }}';
             }
         }
         
