@@ -776,6 +776,16 @@ function athletesApp() {
             });
         },
         
+        // Переключение цели
+        toggleGoal(goal) {
+            const index = this.formGoals.indexOf(goal);
+            if (index > -1) {
+                this.formGoals.splice(index, 1);
+            } else {
+                this.formGoals.push(goal);
+            }
+        },
+        
         // Генерация пароля
         generatePassword() {
             const length = 12;
@@ -4513,11 +4523,51 @@ function athletesApp() {
                             <option value="professional">{{ __('common.professional') }}</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
-                        <textarea x-model="formGoals" rows="3"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  placeholder="{{ __('common.goals_placeholder') }}"></textarea>
+                    <div style="grid-column: 1 / -1;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.training_goals') }}</label>
+                        <div class="goals-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <div class="goal-card" 
+                                 :class="formGoals.includes('weight_loss') ? 'goal-card-selected' : ''"
+                                 @click="toggleGoal('weight_loss')">
+                                <span class="goal-checkbox" x-show="formGoals.includes('weight_loss')">✓</span>
+                                <span class="goal-text">{{ __('common.weight_loss') }}</span>
+                            </div>
+                            
+                            <div class="goal-card" 
+                                 :class="formGoals.includes('muscle_gain') ? 'goal-card-selected' : ''"
+                                 @click="toggleGoal('muscle_gain')">
+                                <span class="goal-checkbox" x-show="formGoals.includes('muscle_gain')">✓</span>
+                                <span class="goal-text">{{ __('common.muscle_gain') }}</span>
+                            </div>
+                            
+                            <div class="goal-card" 
+                                 :class="formGoals.includes('muscle_tone') ? 'goal-card-selected' : ''"
+                                 @click="toggleGoal('muscle_tone')">
+                                <span class="goal-checkbox" x-show="formGoals.includes('muscle_tone')">✓</span>
+                                <span class="goal-text">{{ __('common.muscle_tone') }}</span>
+                            </div>
+                            
+                            <div class="goal-card" 
+                                 :class="formGoals.includes('endurance') ? 'goal-card-selected' : ''"
+                                 @click="toggleGoal('endurance')">
+                                <span class="goal-checkbox" x-show="formGoals.includes('endurance')">✓</span>
+                                <span class="goal-text">{{ __('common.endurance') }}</span>
+                            </div>
+                            
+                            <div class="goal-card" 
+                                 :class="formGoals.includes('strength') ? 'goal-card-selected' : ''"
+                                 @click="toggleGoal('strength')">
+                                <span class="goal-checkbox" x-show="formGoals.includes('strength')">✓</span>
+                                <span class="goal-text">{{ __('common.strength') }}</span>
+                            </div>
+                            
+                            <div class="goal-card" 
+                                 :class="formGoals.includes('flexibility') ? 'goal-card-selected' : ''"
+                                 @click="toggleGoal('flexibility')">
+                                <span class="goal-checkbox" x-show="formGoals.includes('flexibility')">✓</span>
+                                <span class="goal-text">{{ __('common.flexibility') }}</span>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.status') }}</label>
@@ -4639,11 +4689,51 @@ function athletesApp() {
                                 <option value="professional">{{ __('common.professional') }}</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.goals') }}</label>
-                            <textarea x-model="formGoals" rows="3"
-                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                      placeholder="{{ __('common.goals_placeholder') }}"></textarea>
+                        <div style="grid-column: 1 / -1;">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.training_goals') }}</label>
+                            <div class="goals-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                <div class="goal-card" 
+                                     :class="formGoals.includes('weight_loss') ? 'goal-card-selected' : ''"
+                                     @click="toggleGoal('weight_loss')">
+                                    <span class="goal-checkbox" x-show="formGoals.includes('weight_loss')">✓</span>
+                                    <span class="goal-text">{{ __('common.weight_loss') }}</span>
+                                </div>
+                                
+                                <div class="goal-card" 
+                                     :class="formGoals.includes('muscle_gain') ? 'goal-card-selected' : ''"
+                                     @click="toggleGoal('muscle_gain')">
+                                    <span class="goal-checkbox" x-show="formGoals.includes('muscle_gain')">✓</span>
+                                    <span class="goal-text">{{ __('common.muscle_gain') }}</span>
+                                </div>
+                                
+                                <div class="goal-card" 
+                                     :class="formGoals.includes('muscle_tone') ? 'goal-card-selected' : ''"
+                                     @click="toggleGoal('muscle_tone')">
+                                    <span class="goal-checkbox" x-show="formGoals.includes('muscle_tone')">✓</span>
+                                    <span class="goal-text">{{ __('common.muscle_tone') }}</span>
+                                </div>
+                                
+                                <div class="goal-card" 
+                                     :class="formGoals.includes('endurance') ? 'goal-card-selected' : ''"
+                                     @click="toggleGoal('endurance')">
+                                    <span class="goal-checkbox" x-show="formGoals.includes('endurance')">✓</span>
+                                    <span class="goal-text">{{ __('common.endurance') }}</span>
+                                </div>
+                                
+                                <div class="goal-card" 
+                                     :class="formGoals.includes('strength') ? 'goal-card-selected' : ''"
+                                     @click="toggleGoal('strength')">
+                                    <span class="goal-checkbox" x-show="formGoals.includes('strength')">✓</span>
+                                    <span class="goal-text">{{ __('common.strength') }}</span>
+                                </div>
+                                
+                                <div class="goal-card" 
+                                     :class="formGoals.includes('flexibility') ? 'goal-card-selected' : ''"
+                                     @click="toggleGoal('flexibility')">
+                                    <span class="goal-checkbox" x-show="formGoals.includes('flexibility')">✓</span>
+                                    <span class="goal-text">{{ __('common.flexibility') }}</span>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.status') }}</label>
@@ -5617,6 +5707,53 @@ function athletesApp() {
     }
 }
 
+/* Стили для карточек целей */
+.goal-card {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: none;
+}
+
+.goal-card:hover {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.goal-card-selected {
+    border-color: #3b82f6 !important;
+    background: #dbeafe !important;
+}
+
+.goal-checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    margin-right: 12px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.goal-text {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+    flex: 1;
+}
+
 /* Исправление полей на мобильных устройствах (iPhone) */
 @media (max-width: 767px) {
     #trainer-athletes-create-section,
@@ -5682,6 +5819,12 @@ function athletesApp() {
         box-sizing: border-box !important;
         -webkit-appearance: none !important;
         appearance: none !important;
+    }
+    
+    /* Grid для целей на мобильных */
+    .goals-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
     }
 }
 </style>
