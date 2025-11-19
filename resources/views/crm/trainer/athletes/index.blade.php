@@ -4425,14 +4425,14 @@ function athletesApp() {
             <div class="p-6 border-t border-gray-200">
                 <div class="flex justify-end gap-3">
                     <button @click="showEdit(currentAthlete.id)" 
-                            class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center transition-colors">
+                            class="athlete-action-btn athlete-action-btn-edit px-4 py-2 text-sm font-medium rounded-lg flex items-center transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                         {{ __('common.edit') }}
                     </button>
                     <button @click="deleteAthlete(currentAthlete.id)" 
-                            class="px-4 py-2 text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 flex items-center transition-colors">
+                            class="athlete-action-btn athlete-action-btn-delete px-4 py-2 text-sm font-medium rounded-lg flex items-center transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
@@ -5752,6 +5752,33 @@ function athletesApp() {
     color: #374151;
     font-weight: 500;
     flex: 1;
+}
+
+/* Стили для кнопок действий в просмотре спортсмена */
+.athlete-action-btn {
+    transition: all 0.2s ease;
+}
+
+.athlete-action-btn-edit {
+    color: #166534 !important;
+    background-color: #f0fdf4 !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+.athlete-action-btn-edit:hover,
+.athlete-action-btn-edit:active {
+    background-color: #dcfce7 !important;
+}
+
+.athlete-action-btn-delete {
+    color: #991b1b !important;
+    background-color: #fef2f2 !important;
+    border: 1px solid #fecaca !important;
+}
+
+.athlete-action-btn-delete:hover,
+.athlete-action-btn-delete:active {
+    background-color: #fee2e2 !important;
 }
 
 /* Исправление полей на мобильных устройствах (iPhone) */

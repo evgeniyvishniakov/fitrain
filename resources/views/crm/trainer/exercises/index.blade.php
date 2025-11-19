@@ -2530,8 +2530,8 @@ function exerciseApp() {
                         type="button" 
                         @click="deleteUserVideo()" 
                         class="px-6 py-3 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 transition-colors">
-                    <span class="md:hidden">Удалить</span>
-                    <span class="hidden md:inline">{{ __('common.delete_video') }}</span>
+                    <span class="add-video-delete-text-mobile">Удалить</span>
+                    <span class="add-video-delete-text-desktop">{{ __('common.delete_video') }}</span>
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -3068,6 +3068,27 @@ function exerciseApp() {
 
 @media (max-width: 767px) {
     .add-video-cancel-text {
+        display: none !important;
+    }
+}
+
+/* Кнопка Удалить в форме добавления видео */
+@media (min-width: 768px) {
+    .add-video-delete-text-mobile {
+        display: none !important;
+    }
+    
+    .add-video-delete-text-desktop {
+        display: inline-block !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .add-video-delete-text-mobile {
+        display: inline-block !important;
+    }
+    
+    .add-video-delete-text-desktop {
         display: none !important;
     }
 }
