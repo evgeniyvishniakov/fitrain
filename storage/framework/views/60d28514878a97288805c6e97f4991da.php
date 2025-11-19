@@ -631,7 +631,16 @@ window.onclick = function(event) {
     if (window.__fitrainDashboardMenuSetup) return;
     window.__fitrainDashboardMenuSetup = true;
 
-    const edgeThreshold = 80;
+    const getEdgeThreshold = () => {
+        const screenWidth = window.innerWidth || document.documentElement.clientWidth;
+        if (screenWidth >= 1024) {
+            return Math.min(Math.floor(screenWidth * 0.7), 800);
+        } else if (screenWidth >= 768) {
+            return Math.min(Math.floor(screenWidth * 0.6), 500);
+        } else {
+            return Math.max(150, Math.min(Math.floor(screenWidth * 0.5), 300));
+        }
+    };
     const menuSwipeThreshold = 60;
     const menuCloseEdgeGuard = 60;
     const maxVerticalDeviation = 80;
@@ -731,7 +740,9 @@ window.onclick = function(event) {
             }
             menuGesture = 'close';
         } else {
-            if (startX > edgeThreshold) {
+            // Проверяем, что касание в пределах зоны свайпа (как в self-athlete)
+            const nearEdge = startX <= getEdgeThreshold();
+            if (!nearEdge) {
                 resetTouchState();
                 return;
             }
@@ -741,7 +752,8 @@ window.onclick = function(event) {
         touchStartX = startX;
         touchStartY = startY;
         menuGestureHandled = false;
-        preventEvent(event);
+        // Не блокируем события здесь, чтобы не мешать выделению текста
+        // Блокировка будет только в handleTouchMove при реальном свайпе
     };
 
     const handleTouchMove = (event) => {
@@ -1186,6 +1198,93 @@ window.onclick = function(event) {
     padding: 20px;
     max-height: 400px;
     overflow-y: auto;
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 767px) {
+    .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 0 auto !important;
+        max-height: 90vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
+    
+    .modal-header {
+        padding: 1rem !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .modal-header h3 {
+        font-size: 1rem !important;
+    }
+    
+    .modal-body {
+        padding: 1rem !important;
+        max-height: none !important;
+        flex: 1 !important;
+        overflow-y: auto !important;
+        min-height: 0 !important;
+    }
+    
+    .modal-footer {
+        padding: 1rem !important;
+        flex-shrink: 0 !important;
+        border-top: 1px solid #e5e7eb !important;
+        text-align: center !important;
+    }
+    
+    .workout-row {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        gap: 0.5rem 0.75rem !important;
+        padding: 0.75rem !important;
+        align-items: center !important;
+    }
+    
+    .workout-title {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        min-width: auto !important;
+        width: auto !important;
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .workout-status {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        align-self: center !important;
+    }
+    
+    .workout-athlete {
+        grid-column: 1 !important;
+        grid-row: 2 !important;
+        min-width: auto !important;
+        width: auto !important;
+        font-size: 0.875rem !important;
+    }
+    
+    .workout-time {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        min-width: auto !important;
+        width: auto !important;
+        font-size: 0.875rem !important;
+        justify-self: end !important;
+    }
+}
+
+/* Убираем стиль --tw-space-y-reverse для space-y-6 */
+.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: unset !important;
 }
 
 .modal-footer {
