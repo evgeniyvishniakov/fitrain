@@ -1016,7 +1016,7 @@
             </header>
 
             <!-- Контент -->
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-3">
                 <div class="max-w-7xl mx-auto">
                     @yield("content")
                 </div>
