@@ -46,6 +46,38 @@
         width: auto !important;
     }
 }
+
+/* Центрирование модального окна упражнений на мобильных */
+@media (max-width: 767px) {
+    #simple-exercise-modal {
+        padding: 1rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    #simple-exercise-modal > div {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 0 auto !important;
+        position: relative !important;
+    }
+    
+    /* Стили для фильтров на мобильных */
+    .exercise-filters-container {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    
+    .exercise-filter-input,
+    .exercise-filter-select {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+}
 </style>
 
 <script>
@@ -1105,6 +1137,7 @@ function templatesApp() {
     // Создаем модальное окно
     const modal = document.createElement('div');
     modal.id = 'simple-exercise-modal';
+    const isMobile = window.innerWidth <= 767;
     modal.style.cssText = `
         position: fixed;
         top: 0;
@@ -1116,17 +1149,22 @@ function templatesApp() {
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: ${isMobile ? '1rem' : '0'};
+        box-sizing: border-box;
     `;
     
+    const modalContentWidth = isMobile ? '95%' : '80%';
     modal.innerHTML = `
         <div style="
             background: white;
             border-radius: 8px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            max-width: 80%;
-            max-height: 80%;
-            width: 100%;
+            max-width: ${isMobile ? '95%' : '80%'};
+            max-height: ${isMobile ? '90vh' : '80%'};
+            width: ${modalContentWidth};
+            margin: 0 auto;
             overflow: hidden;
+            position: relative;
         ">
             <div style="
                 padding: 20px;
@@ -1152,11 +1190,12 @@ function templatesApp() {
             </div>
             <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
                 <!-- Поиск и фильтры в одну линию -->
-                <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+                <div class="exercise-filters-container" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
                     <!-- Поиск -->
                     <input type="text" 
                            id="exercise-search" 
                            placeholder="{{ __('common.search_exercises') }}" 
+                           class="exercise-filter-input"
                            style="
                                flex: 1;
                                min-width: 200px;
@@ -1174,6 +1213,7 @@ function templatesApp() {
                     <!-- Фильтр категории -->
                     <select id="category-filter" 
                             onchange="filterExercises()"
+                            class="exercise-filter-select"
                             style="
                                 min-width: 150px;
                                 padding: 12px 16px;
@@ -1192,13 +1232,14 @@ function templatesApp() {
                     <!-- Фильтр оборудования -->
                     <select id="equipment-filter" 
                             onchange="filterExercises()"
+                            class="exercise-filter-select"
                             style="
                                 min-width: 150px;
                                 padding: 12px 16px;
                                 border: 1px solid #d1d5db;
                                 border-radius: 8px;
                                 font-size: 14px;
-                                font-weight: 600;
+                                font-weight: normal;
                                 outline: none;
                                 background: white;
                                 transition: border-color 0.2s;
@@ -1211,13 +1252,14 @@ function templatesApp() {
                     <!-- Фильтр типа упражнений -->
                     <select id="type-filter"
                             onchange="filterExercises()"
+                            class="exercise-filter-select"
                             style="
                                 min-width: 160px;
                                 padding: 12px 16px;
                                 border: 1px solid #d1d5db;
                                 border-radius: 8px;
                                 font-size: 14px;
-                                font-weight: 600;
+                                font-weight: normal;
                                 outline: none;
                                 background: white;
                                 transition: border-color 0.2s;

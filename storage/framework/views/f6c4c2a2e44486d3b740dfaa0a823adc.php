@@ -44,6 +44,22 @@
         width: auto !important;
     }
 }
+
+/* Центрирование модального окна упражнений на мобильных */
+@media (max-width: 767px) {
+    #simple-exercise-modal {
+        padding: 1rem !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    #simple-exercise-modal > div {
+        width: 95% !important;
+        max-width: 95% !important;
+        margin: 0 auto !important;
+        position: relative !important;
+    }
+}
 </style>
 
 <script>
@@ -1103,6 +1119,7 @@ function templatesApp() {
     // Создаем модальное окно
     const modal = document.createElement('div');
     modal.id = 'simple-exercise-modal';
+    const isMobile = window.innerWidth <= 767;
     modal.style.cssText = `
         position: fixed;
         top: 0;
@@ -1114,17 +1131,22 @@ function templatesApp() {
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: ${isMobile ? '1rem' : '0'};
+        box-sizing: border-box;
     `;
     
+    const modalContentWidth = isMobile ? '95%' : '80%';
     modal.innerHTML = `
         <div style="
             background: white;
             border-radius: 8px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            max-width: 80%;
-            max-height: 80%;
-            width: 100%;
+            max-width: ${isMobile ? '95%' : '80%'};
+            max-height: ${isMobile ? '90vh' : '80%'};
+            width: ${modalContentWidth};
+            margin: 0 auto;
             overflow: hidden;
+            position: relative;
         ">
             <div style="
                 padding: 20px;
