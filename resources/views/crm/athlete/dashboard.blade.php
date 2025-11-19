@@ -654,7 +654,17 @@ function dashboardCalendar() {
             </div>
             <div class="stat-content">
                 <div class="stat-label">{{ __('common.current_weight') }}</div>
-                <div class="stat-value">{{ $lastMeasurement ? $lastMeasurement->weight . ' ' . __('common.kg') : '—' }}</div>
+                <div class="stat-value">
+                    @if($lastMeasurement && $lastMeasurement->weight)
+                        @php
+                            $weight = $lastMeasurement->weight;
+                            $formattedWeight = $weight == floor($weight) ? number_format($weight, 0, '.', '') : rtrim(rtrim(number_format($weight, 2, '.', ''), '0'), '.');
+                        @endphp
+                        {{ $formattedWeight }} {{ __('common.kg') }}
+                    @else
+                        —
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -700,7 +710,16 @@ function dashboardCalendar() {
                         }
                     }
                 @endphp
-                <div class="stat-value {{ $bmiCategory['color'] }}">{{ $bmi ? number_format($bmi, 1) : '—' }}</div>
+                <div class="stat-value {{ $bmiCategory['color'] }}">
+                    @if($bmi)
+                        @php
+                            $formattedBmi = $bmi == floor($bmi) ? number_format($bmi, 0, '.', '') : rtrim(rtrim(number_format($bmi, 1, '.', ''), '0'), '.');
+                        @endphp
+                        {{ $formattedBmi }}
+                    @else
+                        —
+                    @endif
+                </div>
             </div>
         </div>
     </div>

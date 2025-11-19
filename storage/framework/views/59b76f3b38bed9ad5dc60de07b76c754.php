@@ -676,7 +676,18 @@ function dashboardCalendar() {
             </div>
             <div class="stat-content">
                 <div class="stat-label"><?php echo e(__('common.current_weight')); ?></div>
-                <div class="stat-value"><?php echo e($lastMeasurement ? $lastMeasurement->weight . ' ' . __('common.kg') : '—'); ?></div>
+                <div class="stat-value">
+                    <?php if($lastMeasurement && $lastMeasurement->weight): ?>
+                        <?php
+                            $weight = $lastMeasurement->weight;
+                            $formattedWeight = $weight == floor($weight) ? number_format($weight, 0, '.', '') : rtrim(rtrim(number_format($weight, 2, '.', ''), '0'), '.');
+                        ?>
+                        <?php echo e($formattedWeight); ?> <?php echo e(__('common.kg')); ?>
+
+                    <?php else: ?>
+                        —
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 
@@ -722,7 +733,17 @@ function dashboardCalendar() {
                         }
                     }
                 ?>
-                <div class="stat-value <?php echo e($bmiCategory['color']); ?>"><?php echo e($bmi ? number_format($bmi, 1) : '—'); ?></div>
+                <div class="stat-value <?php echo e($bmiCategory['color']); ?>">
+                    <?php if($bmi): ?>
+                        <?php
+                            $formattedBmi = $bmi == floor($bmi) ? number_format($bmi, 0, '.', '') : rtrim(rtrim(number_format($bmi, 1, '.', ''), '0'), '.');
+                        ?>
+                        <?php echo e($formattedBmi); ?>
+
+                    <?php else: ?>
+                        —
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
