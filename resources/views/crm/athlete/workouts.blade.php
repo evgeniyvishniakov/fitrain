@@ -514,14 +514,9 @@ function renderMediaElement(path, altText = '', options = {}) {
                     this.closeMobileMenuIfOpen();
                     
                     this.currentView = 'list';
+                    const previousWorkoutId = this.currentWorkout ? this.currentWorkout.id : null;
                     this.currentWorkout = null;
                     this.$nextTick(() => {
-                        const viewSection = document.getElementById('athlete-workout-view-section');
-                        if (viewSection) viewSection.style.display = 'none';
-                        const listStats = document.getElementById('athlete-workout-list-stats');
-                        if (listStats) listStats.style.display = '';
-                        const listSection = document.getElementById('athlete-workout-list-section');
-                        if (listSection) listSection.style.display = '';
                 if (previousView === 'view' && this.lastScrollPositions.list !== null) {
                     window.scrollTo({
                         top: this.lastScrollPositions.list,
@@ -543,12 +538,6 @@ function renderMediaElement(path, altText = '', options = {}) {
                 // Load saved progress when opening workout
                 this.loadExerciseProgress(workoutId);
                 this.$nextTick(() => {
-                    const viewSection = document.getElementById('athlete-workout-view-section');
-                    if (viewSection) viewSection.style.display = '';
-                    const listStats = document.getElementById('athlete-workout-list-stats');
-                    if (listStats) listStats.style.display = 'none';
-                    const listSection = document.getElementById('athlete-workout-list-section');
-                    if (listSection) listSection.style.display = 'none';
                     window.scrollTo({
                         top: 0,
                         behavior: 'smooth'
@@ -1493,7 +1482,8 @@ function renderMediaElement(path, altText = '', options = {}) {
     </div>
 
     <!-- Статистика -->
-    <div id="athlete-workout-list-stats" x-show="currentView === 'list' && !isLoading" x-cloak class="stats-container">
+    <template x-if="currentView === 'list' && !isLoading">
+        <div id="athlete-workout-list-stats" class="stats-container">
         <div class="stat-card">
             <div class="stat-icon stat-icon-blue">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1541,7 +1531,7 @@ function renderMediaElement(path, altText = '', options = {}) {
                 <div class="stat-value">{{ $plannedCount ?? 0 }}</div>
             </div>
         </div>
-    </div>
+    </template>
 
     <!-- Список тренировок -->
     <div id="athlete-workout-list-section" x-show="currentView === 'list' && !isLoading" x-cloak class="space-y-4">
