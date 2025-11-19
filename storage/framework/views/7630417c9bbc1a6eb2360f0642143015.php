@@ -292,9 +292,30 @@ function calendarApp() {
     const handleTouchStart = (event) => {
         if (event.touches.length !== 1) return;
 
-        // Проверка: если клик по кнопке, не обрабатываем свайп
-        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
-        if (isButton) {
+        // Проверка: если клик по интерактивному элементу, не обрабатываем свайп (проверяем в самом начале)
+        const isInteractive = event.target.closest('button') || 
+                              event.target.closest('a') || 
+                              event.target.closest('input') || 
+                              event.target.closest('select') || 
+                              event.target.closest('textarea') ||
+                              event.target.tagName === 'BUTTON' ||
+                              event.target.tagName === 'A' ||
+                              event.target.tagName === 'INPUT' ||
+                              event.target.tagName === 'SELECT' ||
+                              event.target.tagName === 'TEXTAREA';
+        if (isInteractive) {
+            return;
+        }
+
+        // Проверка: если клик по ячейке календаря или элементам внутри нее, не обрабатываем свайп
+        const isCalendarCell = event.target.closest('.calendar-day-cell') ||
+                              event.target.closest('.desktop-workouts') ||
+                              event.target.closest('.mobile-workouts') ||
+                              event.target.closest('[class*="cursor-pointer"]') ||
+                              (event.target.closest('[x-data*="calendarApp"]') && 
+                               (event.target.closest('.calendar-day-cell') || 
+                                event.target.closest('[class*="cursor-pointer"]')));
+        if (isCalendarCell) {
             return;
         }
 
@@ -358,9 +379,28 @@ function calendarApp() {
         if (touchStartX === null) return;
         if (!menuGesture) return;
 
-        // Проверка: если касание идет по кнопке, сбрасываем свайп
-        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
-        if (isButton) {
+        // Проверка: если касание идет по интерактивному элементу, сбрасываем свайп
+        const isInteractive = event.target.closest('button') || 
+                              event.target.closest('a') || 
+                              event.target.closest('input') || 
+                              event.target.closest('select') || 
+                              event.target.closest('textarea') ||
+                              event.target.tagName === 'BUTTON' ||
+                              event.target.tagName === 'A' ||
+                              event.target.tagName === 'INPUT' ||
+                              event.target.tagName === 'SELECT' ||
+                              event.target.tagName === 'TEXTAREA';
+        if (isInteractive) {
+            resetTouchState();
+            return;
+        }
+
+        // Проверка: если касание идет по ячейке календаря, сбрасываем свайп
+        const isCalendarCell = event.target.closest('.calendar-day-cell') ||
+                              event.target.closest('.desktop-workouts') ||
+                              event.target.closest('.mobile-workouts') ||
+                              event.target.closest('[class*="cursor-pointer"]');
+        if (isCalendarCell) {
             resetTouchState();
             return;
         }
@@ -387,9 +427,28 @@ function calendarApp() {
     };
 
     const handleTouchEnd = (event) => {
-        // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
-        const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
-        if (isButton && touchStartX !== null) {
+        // Проверка: если касание закончилось на интерактивном элементе, не обрабатываем свайп
+        const isInteractive = event.target.closest('button') || 
+                              event.target.closest('a') || 
+                              event.target.closest('input') || 
+                              event.target.closest('select') || 
+                              event.target.closest('textarea') ||
+                              event.target.tagName === 'BUTTON' ||
+                              event.target.tagName === 'A' ||
+                              event.target.tagName === 'INPUT' ||
+                              event.target.tagName === 'SELECT' ||
+                              event.target.tagName === 'TEXTAREA';
+        if (isInteractive && touchStartX !== null) {
+            resetTouchState();
+            return;
+        }
+
+        // Проверка: если касание закончилось на ячейке календаря, не обрабатываем свайп
+        const isCalendarCell = event.target.closest('.calendar-day-cell') ||
+                              event.target.closest('.desktop-workouts') ||
+                              event.target.closest('.mobile-workouts') ||
+                              event.target.closest('[class*="cursor-pointer"]');
+        if (isCalendarCell && touchStartX !== null) {
             resetTouchState();
             return;
         }
