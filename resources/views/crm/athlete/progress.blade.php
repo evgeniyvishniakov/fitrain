@@ -310,9 +310,8 @@
             <div class="bg-gray-50 rounded-lg p-4 mb-6">
                 <div class="flex flex-wrap gap-4 items-center">
                     <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700">{{ __('common.period') }}:</label>
                         <select id="timeFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                            <option value="all">{{ __('common.all_measurements') }}</option>
+                            <option value="all">За все время</option>
                             <option value="month">{{ __('common.last_month') }}</option>
                             <option value="3months">{{ __('common.last_3_months') }}</option>
                             <option value="6months">{{ __('common.last_6_months') }}</option>
@@ -320,7 +319,6 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700">{{ __('common.filter') }}:</label>
                         <select id="chartFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                             <option value="all">{{ __('common.all_parameters') }}</option>
                             <option value="weight">{{ __('common.weight_and_bmi') }}</option>

@@ -322,9 +322,8 @@
             <div class="bg-gray-50 rounded-lg p-4 mb-6">
                 <div class="flex flex-wrap gap-4 items-center">
                     <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700"><?php echo e(__('common.period')); ?>:</label>
                         <select id="timeFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                            <option value="all"><?php echo e(__('common.all_measurements')); ?></option>
+                            <option value="all">За все время</option>
                             <option value="month"><?php echo e(__('common.last_month')); ?></option>
                             <option value="3months"><?php echo e(__('common.last_3_months')); ?></option>
                             <option value="6months"><?php echo e(__('common.last_6_months')); ?></option>
@@ -332,7 +331,6 @@
                         </select>
                     </div>
                     <div class="flex items-center gap-2">
-                        <label class="text-sm font-medium text-gray-700"><?php echo e(__('common.filter')); ?>:</label>
                         <select id="chartFilter" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
                             <option value="all"><?php echo e(__('common.all_parameters')); ?></option>
                             <option value="weight"><?php echo e(__('common.weight_and_bmi')); ?></option>
@@ -422,6 +420,62 @@
     </div>
 
 </div>
+
+<style>
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 640px) {
+    .bg-white.rounded-2xl {
+        padding: 1rem !important;
+        margin: 0 !important;
+        border-radius: 0.5rem !important;
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .bg-white.rounded-2xl .p-6 {
+        padding: 1rem !important;
+    }
+    
+    .bg-white.rounded-2xl select,
+    .bg-white.rounded-2xl input,
+    .bg-white.rounded-2xl textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0.5rem 0.75rem !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+    }
+    
+    .bg-gray-50.rounded-lg {
+        padding: 1rem !important;
+    }
+    
+    .bg-gray-50.rounded-lg .flex {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    .bg-gray-50.rounded-lg .flex > div {
+        width: 100% !important;
+    }
+    
+    .bg-gray-50.rounded-lg select {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .bg-white.rounded-lg {
+        padding: 1rem !important;
+        overflow-x: hidden !important;
+    }
+    
+    .bg-white.rounded-lg canvas {
+        max-width: 100% !important;
+    }
+}
+</style>
 
 <script>
 // Инициализируем графики после загрузки DOM
