@@ -176,6 +176,14 @@
     const handleTouchStart = (event) => {
         if (event.touches.length !== 1) return;
 
+        // Проверяем, находимся ли мы в режиме просмотра питания
+        // Если да, то не обрабатываем открытие меню - это будет делать Alpine.js обработчик
+        const nutritionViewSection = document.getElementById('athlete-nutrition-view-section');
+        if (nutritionViewSection && nutritionViewSection.offsetParent !== null) {
+            // Элемент видим, значит мы в режиме просмотра - не обрабатываем меню
+            return;
+        }
+
         syncMenuState();
 
         const touch = event.touches[0];
@@ -300,7 +308,8 @@
     
         <div x-data="nutritionApp()" x-init="loadNutritionPlans(); init();" x-cloak>
             <!-- Статистика питания -->
-            <div x-show="currentView === 'list'" class="stats-container">
+            <template x-if="currentView === 'list'">
+                <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon stat-icon-red">
                         <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -349,7 +358,7 @@
                         <div class="stat-value" x-text="getTodayFats()"></div>
                     </div>
                 </div>
-            </div>
+            </template>
             
             <!-- Планы питания - Список -->
             <div x-show="currentView === 'list'" class="bg-white border border-gray-200 rounded-lg p-6">
@@ -563,7 +572,10 @@ function nutritionApp() {
         // Получить элемент для свайпа
         getSwipeTargetElement() {
             if (this.currentView === 'view') {
-                return document.getElementById('athlete-nutrition-view-section');
+                const element = document.getElementById('athlete-nutrition-view-section');
+                if (element) {
+                    return element;
+                }
             }
             return null;
         },
@@ -662,8 +674,13 @@ function nutritionApp() {
             // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
             const menuCloseEdgeGuard = 60;
             if (startX <= menuCloseEdgeGuard) {
+                // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+                // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
             }
             
             this.swipeHandled = false;
@@ -674,6 +691,8 @@ function nutritionApp() {
             if (this.swipeTargetElement) {
                 this.swipeTargetElement.style.transition = 'transform 0s';
             }
+            // Не блокируем события здесь, чтобы не мешать выделению текста
+            // Блокировка будет только в handleTouchMove при реальном свайпе
         },
         
         // Обработка движения касания
@@ -700,6 +719,11 @@ function nutritionApp() {
             const maxVerticalDeviation = 80;
             
             if (Math.abs(deltaY) > maxVerticalDeviation) return;
+            
+            // Убеждаемся, что элемент для свайпа существует
+            if (!this.swipeTargetElement) {
+                this.swipeTargetElement = this.getSwipeTargetElement();
+            }
             
             if (this.swipeTargetElement) {
                 this.applySwipeTransform(deltaX);
