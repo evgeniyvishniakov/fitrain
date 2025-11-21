@@ -5418,10 +5418,10 @@ function athletesApp() {
                                     <template x-for="day in fullMonthNutritionDays" :key="day.id">
                                         <tr>
                                             <td class="px-3 py-2 text-sm font-medium text-gray-900" x-text="(() => { const p = parseDateParts(day.date); return p ? p.d : '-'; })()"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.proteins || 0).toFixed(1)"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1)"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1)"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.calories || 0).toFixed(1)"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.proteins || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.calories || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
                                             <td class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
                                         </tr>
                                     </template>
