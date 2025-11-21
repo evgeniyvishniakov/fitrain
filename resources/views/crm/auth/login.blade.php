@@ -34,7 +34,7 @@
             </div>
 
             <!-- Форма входа -->
-            <form method="POST" action="{{ route('crm.login') }}" class="space-y-6">
+            <form method="POST" action="{{ route('crm.login') }}" class="space-y-6" id="loginForm">
                 @csrf
                 
                 <!-- Email -->
@@ -51,6 +51,7 @@
                             type="email" 
                             name="email" 
                             value="{{ old('email') }}"
+                            autocomplete="email"
                             class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('email') border-red-500 @enderror" 
                             placeholder="{{ __('auth.enter_email') }}"
                             required
@@ -74,6 +75,7 @@
                             id="password" 
                             type="password" 
                             name="password" 
+                            autocomplete="current-password"
                             class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('password') border-red-500 @enderror" 
                             placeholder="{{ __('auth.enter_password') }}"
                             required
@@ -135,5 +137,51 @@
             </p>
         </div>
     </div>
+
+    <script>
+        // Безопасное сохранение email в localStorage
+        (function() {
+            try {
+                const loginForm = document.getElementById('loginForm');
+                const emailInput = document.getElementById('email');
+                
+                if (!loginForm || !emailInput) return;
+                
+                // Сохранение email при успешной отправке формы
+                loginForm.addEventListener('submit', function() {
+                    const email = emailInput.value.trim();
+                    // Валидация email на клиенте
+                    if (email && email.includes('@') && email.length > 5) {
+                        try {
+                            localStorage.setItem('rememberedEmail', email);
+                        } catch (e) {
+                            // Если localStorage недоступен (например, в приватном режиме), просто игнорируем
+                            console.warn('Не удалось сохранить email:', e);
+                        }
+                    }
+                });
+
+                // Автозаполнение email при загрузке страницы
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Заполняем только если поле пустое (нет значения из формы или ошибки)
+                    if (!emailInput.value) {
+                        try {
+                            const rememberedEmail = localStorage.getItem('rememberedEmail');
+                            // Дополнительная проверка формата email
+                            if (rememberedEmail && rememberedEmail.includes('@') && rememberedEmail.length > 5) {
+                                emailInput.value = rememberedEmail;
+                            }
+                        } catch (e) {
+                            // Если localStorage недоступен, просто игнорируем
+                            console.warn('Не удалось загрузить email:', e);
+                        }
+                    }
+                });
+            } catch (error) {
+                // Если что-то пошло не так, просто продолжаем работу без сохранения
+                console.warn('Ошибка при работе с localStorage:', error);
+            }
+        })();
+    </script>
 </body>
 </html>
