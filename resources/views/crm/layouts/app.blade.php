@@ -15,6 +15,7 @@
 
     @php
         $faviconUrl = null;
+        $appleTouchIconUrl = null;
         $faviconMime = 'image/x-icon';
         
         if(!empty($siteFavicon)) {
@@ -27,7 +28,9 @@
                 $faviconExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon);
                 if ($faviconExists) {
                     $faviconVersion = \Illuminate\Support\Facades\Storage::disk('public')->lastModified($siteFavicon);
-                    $faviconUrl = url('storage/' . $siteFavicon) . '?v=' . $faviconVersion . '&nocache=' . time();
+                    $faviconUrl = url('storage/' . $siteFavicon) . '?v=' . $faviconVersion;
+                    // Используем тот же файл для Apple Touch Icon (iOS может работать с ICO)
+                    $appleTouchIconUrl = $faviconUrl;
                 }
             } catch (\Exception $e) {
                 // Ignore
@@ -37,10 +40,22 @@
         // Если фавикон из настроек не загрузился, используем стандартный
         if (!$faviconUrl) {
             $faviconUrl = asset('favicon.ico') . '?v=' . time();
+            $appleTouchIconUrl = $faviconUrl;
         }
     @endphp
     <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconUrl }}">
     <link rel="shortcut icon" href="{{ $faviconUrl }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ $appleTouchIconUrl }}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{{ $appleTouchIconUrl }}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{{ $appleTouchIconUrl }}">
+    <link rel="apple-touch-icon" href="{{ $appleTouchIconUrl }}">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="{{ $appleTouchIconUrl }}">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="{{ $appleTouchIconUrl }}">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="{{ $appleTouchIconUrl }}">
+    <link rel="apple-touch-icon-precomposed" href="{{ $appleTouchIconUrl }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ $siteName }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", "Fitrain CRM")</title>
     
