@@ -275,7 +275,7 @@ function renderMediaElement(path, altText = '', options = {}) {
                 }
                 // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
             }
-            
+
             if (!nearEdge) return;
 
             this.closeMobileMenuIfOpen();

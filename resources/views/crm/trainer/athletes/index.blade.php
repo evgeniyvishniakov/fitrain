@@ -3850,13 +3850,13 @@ function athletesApp() {
 
                         <!-- Вкладка "Финансы" -->
                         <div x-show="activeTab === 'finance'" class="space-y-6">
-                            <button @click="showAddPayment()" 
+                                <button @click="showAddPayment()" 
                                     class="w-full px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center text-xs md:text-base">
                                 <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                </svg>
-                                {{ __('common.add_payment') }}
-                            </button>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    {{ __('common.add_payment') }}
+                                </button>
 
 
                             <!-- Общая статистика -->
@@ -3977,13 +3977,13 @@ function athletesApp() {
                         </div>
 
                         <div x-show="activeTab === 'measurements'" class="space-y-6">
-                            <button @click="showAddMeasurement()" 
+                                <button @click="showAddMeasurement()" 
                                     class="w-full px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center text-xs md:text-base">
-                                <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                </svg>
-                                Добавить измерение
-                            </button>
+                                    <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Добавить измерение
+                                </button>
                             
                             <!-- История измерений -->
                             <div x-show="measurements.length > 0" class="space-y-4">
@@ -4277,18 +4277,18 @@ function athletesApp() {
                                             
                                             <div class="workout-content">
                                                 <!-- Информация о тренировке -->
-                                                <div class="workout-info">
-                                                    <div class="workout-info-item">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                        </svg>
+                                                    <div class="workout-info">
+                                                        <div class="workout-info-item">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                            </svg>
                                                         <span x-text="new Date(workout.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') + (workout.time ? ' в ' + (workout.time.length >= 5 ? workout.time.substring(0, 5) : workout.time) : '')"></span>
-                                                    </div>
-                                                    <div class="workout-info-item">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                        </svg>
-                                                        <span x-text="workout.duration + ' {{ __('common.min') }}'"></span>
+                                                        </div>
+                                                        <div class="workout-info-item">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                            </svg>
+                                                            <span x-text="workout.duration + ' {{ __('common.min') }}'"></span>
                                                     </div>
                                                 </div>
                                                 
@@ -4331,10 +4331,10 @@ function athletesApp() {
                         <div x-show="activeTab === 'nutrition'" >
                             <button @click="showAddNutritionPlan()" class="w-full mb-6 px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center text-xs md:text-base">
                                 <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                </svg>
-                                {{ __('common.create_nutrition_plan') }}
-                            </button>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    {{ __('common.create_nutrition_plan') }}
+                                </button>
                             
                             <!-- Планы питания -->
                             <div>
@@ -4415,7 +4415,7 @@ function athletesApp() {
                     </button>
                     <div class="flex gap-3">
                         <!-- Десктоп: текстовые кнопки -->
-                        <button @click="showEdit(currentAthlete.id)" 
+                    <button @click="showEdit(currentAthlete.id)" 
                                 class="athlete-action-btn athlete-action-btn-text athlete-action-btn-edit">
                             {{ __('common.edit') }}
                         </button>
@@ -4429,16 +4429,16 @@ function athletesApp() {
                                 class="athlete-action-btn athlete-action-btn-icon athlete-action-btn-edit"
                                 title="{{ __('common.edit') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
-                        </button>
-                        <button @click="deleteAthlete(currentAthlete.id)" 
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </button>
+                    <button @click="deleteAthlete(currentAthlete.id)" 
                                 class="athlete-action-btn athlete-action-btn-icon athlete-action-btn-delete"
                                 title="{{ __('common.delete') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
                     </div>
                 </div>
             </div>
@@ -4450,7 +4450,7 @@ function athletesApp() {
     <div id="trainer-athletes-create-section" x-show="currentView === 'create'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">{{ __('common.adding_athlete') }}</h3>
-        </div>
+                </div>
         
         <form @submit.prevent="createAthlete" class="space-y-6">
             <div class="form-columns">

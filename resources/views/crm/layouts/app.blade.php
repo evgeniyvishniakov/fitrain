@@ -1,6 +1,8 @@
 ﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
         $siteFavicon = \App\Models\SystemSetting::get('site.favicon');
         $siteName = \App\Models\SystemSetting::get('site.name', 'Fitrain');
@@ -10,10 +12,13 @@
         $crmLogoLight = $siteLogoLight ?: $siteLogoDefault;
         $crmLogoDark = $siteLogoDark ?: ($siteLogoLight ?: $siteLogoDefault);
     @endphp
-    @if(!empty($siteFavicon))
-        @php
+
+    @php
+        $faviconUrl = null;
+        $faviconMime = 'image/x-icon';
+        
+        if(!empty($siteFavicon)) {
             $faviconExtension = strtolower(pathinfo($siteFavicon, PATHINFO_EXTENSION));
-            // Всегда используем image/x-icon для .ico файлов
             $faviconMime = ($faviconExtension === 'ico' || $faviconExtension === 'x-icon') ? 'image/x-icon' : 'image/png';
             $faviconExists = false;
             $faviconVersion = time();
@@ -22,19 +27,20 @@
                 $faviconExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon);
                 if ($faviconExists) {
                     $faviconVersion = \Illuminate\Support\Facades\Storage::disk('public')->lastModified($siteFavicon);
+                    $faviconUrl = url('storage/' . $siteFavicon) . '?v=' . $faviconVersion . '&nocache=' . time();
                 }
             } catch (\Exception $e) {
                 // Ignore
             }
-            $faviconFullUrl = url('storage/' . $siteFavicon) . '?v=' . $faviconVersion . '&nocache=' . time();
-        @endphp
-        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="32x32">
-        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="16x16">
-        <link rel="shortcut icon" href="{{ $faviconFullUrl }}">
-        <link rel="apple-touch-icon" href="{{ $faviconFullUrl }}">
-    @endif
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        }
+        
+        // Если фавикон из настроек не загрузился, используем стандартный
+        if (!$faviconUrl) {
+            $faviconUrl = asset('favicon.ico') . '?v=' . time();
+        }
+    @endphp
+    <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconUrl }}">
+    <link rel="shortcut icon" href="{{ $faviconUrl }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", "Fitrain CRM")</title>
     

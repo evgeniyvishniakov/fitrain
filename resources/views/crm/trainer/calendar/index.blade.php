@@ -735,16 +735,16 @@ function calendarApp() {
                                     <span x-text="workout.time ? workout.time.substring(0, 5) : '{{ __('common.time_not_specified') }}'"></span>
                                 </span>
                                 <span class="workout-status"
-                                      :class="{
-                                          'bg-green-100 text-green-800 border border-green-200': workout.status === 'completed',
-                                          'bg-blue-100 text-blue-800 border border-blue-200': workout.status === 'planned',
-                                          'bg-red-100 text-red-800 border border-red-200': workout.status === 'cancelled'
-                                      }"
-                                      x-text="{
-                                          'completed': '✓ {{ __('common.completed_status') }}',
-                                          'planned': '⏰ {{ __('common.planned_status') }}',
-                                          'cancelled': '✗ {{ __('common.cancelled_status') }}'
-                                      }[workout.status] || workout.status"></span>
+                                          :class="{
+                                              'bg-green-100 text-green-800 border border-green-200': workout.status === 'completed',
+                                              'bg-blue-100 text-blue-800 border border-blue-200': workout.status === 'planned',
+                                              'bg-red-100 text-red-800 border border-red-200': workout.status === 'cancelled'
+                                          }"
+                                          x-text="{
+                                              'completed': '✓ {{ __('common.completed_status') }}',
+                                              'planned': '⏰ {{ __('common.planned_status') }}',
+                                              'cancelled': '✗ {{ __('common.cancelled_status') }}'
+                                          }[workout.status] || workout.status"></span>
                             </div>
                         </template>
                     </div>

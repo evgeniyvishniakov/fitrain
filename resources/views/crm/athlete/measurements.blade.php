@@ -443,9 +443,9 @@
 @section("content")
 <div class="p-6">
     <div x-data="measurementApp()" x-init="init();" x-cloak>
-        <!-- Статистические карточки -->
+    <!-- Статистические карточки -->
         <template x-if="currentView === 'list'">
-            <div class="stats-container mb-8">
+    <div class="stats-container mb-8">
         <div class="stat-card">
             <div class="stat-icon stat-icon-blue">
                 <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,10 +536,10 @@
                 @endphp
                 <div class="stat-value {{ $bmiCategory['color'] }}">{{ $bmi ? number_format($bmi, 1) : '—' }}</div>
             </div>
-            </div>
+        </div>
         </template>
 
-        <!-- Основной контент -->
+    <!-- Основной контент -->
         <div x-show="currentView === 'list'" class="space-y-6" x-data="measurementPagination()">
         <!-- Заголовок с кнопкой добавления -->
         <div class="flex items-center justify-between">
@@ -725,7 +725,7 @@
                 </div>
             </div>
         </template>
-        </div>
+</div>
 
         <!-- Форма добавления/редактирования измерения -->
         <div id="athlete-measurement-form-section" x-show="currentView === 'form'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -746,17 +746,17 @@
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.weight') }} ({{ __('common.kg') }}) *</label>
-                            <input type="number" name="weight" id="weight" step="0.1" required
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.height') }} ({{ __('common.cm') }})</label>
-                            <input type="number" name="height" id="height" step="0.1" readonly
-                                   value="{{ auth()->user()->height ?? '' }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
-                            <p class='text-xs text-gray-500 mt-1'>{{ __('common.height_from_profile') }}</p>
+                    <div>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.weight') }} ({{ __('common.kg') }}) *</label>
+                        <input type="number" name="weight" id="weight" step="0.1" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class='block text-sm font-medium text-gray-700 mb-2'>{{ __('common.height') }} ({{ __('common.cm') }})</label>
+                        <input type="number" name="height" id="height" step="0.1" readonly
+                               value="{{ auth()->user()->height ?? '' }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600">
+                        <p class='text-xs text-gray-500 mt-1'>{{ __('common.height_from_profile') }}</p>
                         </div>
                     </div>
                 </div>
@@ -862,8 +862,8 @@
                     </button>
                 </div>
             </form>
-        </div>
     </div>
+</div>
 
 <!-- Модальное окно подтверждения удаления -->
 <div id="deleteConfirmationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
@@ -1267,7 +1267,7 @@
                 const app = Alpine.$data(document.querySelector('[x-data*="measurementApp"]'));
                 if (app && app.showForm) {
                     app.showForm(measurementId);
-                }
+                    }
             },
             
             deleteMeasurement(measurementId) {

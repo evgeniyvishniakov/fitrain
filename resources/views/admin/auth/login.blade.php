@@ -1,6 +1,35 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    @php
+        $siteFavicon = \App\Models\SystemSetting::get('site.favicon');
+    @endphp
+    @if(!empty($siteFavicon))
+        @php
+            $faviconExtension = strtolower(pathinfo($siteFavicon, PATHINFO_EXTENSION));
+            // Всегда используем image/x-icon для .ico файлов
+            $faviconMime = ($faviconExtension === 'ico' || $faviconExtension === 'x-icon') ? 'image/x-icon' : 'image/png';
+            $faviconExists = false;
+            $faviconVersion = time();
+            
+            try {
+                $faviconExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($siteFavicon);
+                if ($faviconExists) {
+                    $faviconVersion = \Illuminate\Support\Facades\Storage::disk('public')->lastModified($siteFavicon);
+                }
+            } catch (\Exception $e) {
+                // Ignore
+            }
+            $faviconFullUrl = url('storage/' . $siteFavicon) . '?v=' . $faviconVersion . '&nocache=' . time();
+        @endphp
+        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="32x32">
+        <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconFullUrl }}" sizes="16x16">
+        <link rel="shortcut icon" href="{{ $faviconFullUrl }}">
+        <link rel="apple-touch-icon" href="{{ $faviconFullUrl }}">
+    @else
+        <!-- Фолбэк фавикон, если не настроен в системе -->
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    @endif
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход в админ панель - Fitrain Admin</title>

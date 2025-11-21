@@ -802,7 +802,7 @@ function exerciseApp() {
                     if (this.currentView === 'add-video' && this.currentExercise) {
                         this.showView(this.currentExercise.id);
                     } else {
-                        this.showList();
+                    this.showList();
                     }
                     this.resetSwipeTransform(true, target);
                     this.swipeTargetElement = null;
@@ -812,8 +812,8 @@ function exerciseApp() {
                 // Если свайп из add-video, возвращаемся к view того же упражнения
                 if (this.currentView === 'add-video' && this.currentExercise) {
                     this.showView(this.currentExercise.id);
-                } else {
-                    this.showList();
+            } else {
+                this.showList();
                 }
             }
         },

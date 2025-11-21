@@ -309,7 +309,7 @@
         <div x-data="nutritionApp()" x-init="loadNutritionPlans(); init();" x-cloak>
             <!-- Статистика питания -->
             <template x-if="currentView === 'list'">
-                <div class="stats-container">
+            <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon stat-icon-red">
                         <svg class="stat-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,9 +409,9 @@
                             </div>
                         </div>
                     </template>
-                </div>
-            </div>
-            
+    </div>
+</div>
+
             <!-- Просмотр плана питания -->
             <div id="athlete-nutrition-view-section" x-show="currentView === 'view'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <!-- Кнопка назад -->
@@ -419,9 +419,9 @@
                     <button @click="showList()" 
                             class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
                         {{ __('common.back') }}
-                    </button>
-                </div>
-                
+            </button>
+        </div>
+        
                 <div x-show="currentNutritionPlan" class="space-y-6">
                     <!-- Заголовок -->
                     <h3 class="text-xl font-semibold text-gray-900" x-text="currentNutritionPlan ? (currentNutritionPlan.title || `{{ __('common.nutrition_plan_for') }} ${new Date(0, currentNutritionPlan.month - 1).toLocaleString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}', {month: 'long'})} ${currentNutritionPlan.year} {{ __('common.year') }}.`) : ''"></h3>

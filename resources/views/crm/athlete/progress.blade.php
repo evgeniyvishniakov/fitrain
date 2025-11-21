@@ -299,7 +299,7 @@
 
 @section("content")
 <div class="space-y-6 fade-in-up">
-    
+
     <!-- Графики прогресса -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
         <div class="p-6 border-b border-gray-200">
