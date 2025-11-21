@@ -41,11 +41,8 @@ class HomeController extends BaseController
         
         // Загружаем данные для лендинга
         $data = [
-            // Слайдер - берем первый слайд для Hero секции
-            'hero_title' => SystemSetting::get("landing.slider.1.title.{$lang}", 'Профессиональная CRM для фитнес-тренеров'),
-            'hero_subtitle' => SystemSetting::get("landing.slider.1.subtitle.{$lang}", 'Управляйте спортсменами, создавайте тренировки, отслеживайте прогресс и многое другое в одной удобной системе.'),
-            'hero_button_1' => SystemSetting::get("landing.slider.1.button_1.{$lang}", 'Попробовать бесплатно'),
-            'hero_button_2' => SystemSetting::get("landing.slider.1.button_2.{$lang}", 'Узнать больше'),
+            // Слайдер - загружаем все 3 слайда
+            'sliders' => [],
             
             // Возможности
             'features_title' => SystemSetting::get("landing.features.title.{$lang}", 'Возможности системы'),
@@ -62,6 +59,33 @@ class HomeController extends BaseController
             'athletes_subtitle' => SystemSetting::get("landing.athletes.subtitle.{$lang}", 'Следите за своими тренировками, прогрессом и планами питания'),
             'athlete_items' => [],
         ];
+        
+        // Загружаем данные для всех слайдов (3 слайда)
+        for ($i = 1; $i <= 3; $i++) {
+            $sliderImage = SystemSetting::get("landing.slider.{$i}.image", '');
+            $heroImage = SystemSetting::get('landing.hero_image', '');
+            
+            // Если первый слайд и нет изображения для слайда, используем hero_image
+            if ($i === 1 && empty($sliderImage) && !empty($heroImage)) {
+                $sliderImage = $heroImage;
+            }
+            
+            $data['sliders'][] = [
+                'title' => SystemSetting::get("landing.slider.{$i}.title.{$lang}", ''),
+                'subtitle' => SystemSetting::get("landing.slider.{$i}.subtitle.{$lang}", ''),
+                'button_1' => SystemSetting::get("landing.slider.{$i}.button_1.{$lang}", ''),
+                'button_2' => SystemSetting::get("landing.slider.{$i}.button_2.{$lang}", ''),
+                'image' => $sliderImage,
+            ];
+        }
+        
+        // Для обратной совместимости оставляем старые переменные (берем первый слайд)
+        if (!empty($data['sliders'][0])) {
+            $data['hero_title'] = $data['sliders'][0]['title'] ?: SystemSetting::get("landing.slider.1.title.{$lang}", 'Профессиональная CRM для фитнес-тренеров');
+            $data['hero_subtitle'] = $data['sliders'][0]['subtitle'] ?: SystemSetting::get("landing.slider.1.subtitle.{$lang}", 'Управляйте спортсменами, создавайте тренировки, отслеживайте прогресс и многое другое в одной удобной системе.');
+            $data['hero_button_1'] = $data['sliders'][0]['button_1'] ?: SystemSetting::get("landing.slider.1.button_1.{$lang}", 'Попробовать бесплатно');
+            $data['hero_button_2'] = $data['sliders'][0]['button_2'] ?: SystemSetting::get("landing.slider.1.button_2.{$lang}", 'Узнать больше');
+        }
         
         // Загружаем 9 возможностей
         for ($i = 1; $i <= 9; $i++) {
@@ -86,10 +110,9 @@ class HomeController extends BaseController
         $data['current_lang'] = $lang;
         
         // Добавляем изображения для лендинга
-        // Hero-секция использует либо landing.hero_image, либо изображение из первого слайда
         $heroImage = SystemSetting::get('landing.hero_image', '');
-        if (empty($heroImage)) {
-            $heroImage = SystemSetting::get('landing.slider.1.image', '');
+        if (empty($heroImage) && !empty($data['sliders'][0]['image'])) {
+            $heroImage = $data['sliders'][0]['image'];
         }
         $data['landing_hero_image'] = $heroImage;
         

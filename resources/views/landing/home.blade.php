@@ -117,6 +117,10 @@
                 width: 100%;
             }
         }
+        
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -188,58 +192,148 @@
         </nav>
         
         <!-- Hero Section -->
-        <section class="hero-bg pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto">
+        <section class="hero-bg pt-32 pb-20 px-4 sm:px-6 lg:px-8" 
+                 x-data="sliderData()"
+                 @mouseenter.stop="stopAutoplay()"
+                 @mouseleave.stop="startAutoplay()">
+            <div class="max-w-7xl mx-auto relative">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
-                    <div class="fade-in">
-                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                            {{ $hero_title }}
-                        </h1>
-                        <p class="text-xl text-gray-600 mb-8">
-                            {{ $hero_subtitle }}
-                        </p>
-                        <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-8 py-4 rounded-lg font-semibold text-center">
-                                {{ $hero_button_1 }}
-                            </a>
-                            <a href="#features" class="btn-secondary px-8 py-4 rounded-lg font-semibold text-center">
-                                {{ $hero_button_2 }}
-                            </a>
-                        </div>
+                    <div class="fade-in relative" style="min-height: 400px;">
+                        <template x-for="(slide, index) in slides" :key="index">
+                            <div x-show="currentSlide === index" 
+                                 x-transition:enter="transition ease-in-out duration-700"
+                                 x-transition:enter-start="opacity-0 transform translate-x-8"
+                                 x-transition:enter-end="opacity-100 transform translate-x-0"
+                                 x-transition:leave="transition ease-in-out duration-700"
+                                 x-transition:leave-start="opacity-100 transform translate-x-0"
+                                 x-transition:leave-end="opacity-0 transform -translate-x-8"
+                                 class="absolute inset-0">
+                                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6" x-text="slide.title || ''"></h1>
+                                <p class="text-xl text-gray-600 mb-8" x-text="slide.subtitle || ''"></p>
+                                <div class="flex flex-col sm:flex-row gap-4">
+                                    <a x-show="slide.button_1" 
+                                       x-cloak
+                                       href="{{ route('crm.trainer.register') }}" 
+                                       class="btn-primary text-white px-8 py-4 rounded-lg font-semibold text-center">
+                                        <span x-text="slide.button_1"></span>
+                                    </a>
+                                    <a x-show="slide.button_2" 
+                                       x-cloak
+                                       href="#features" 
+                                       class="btn-secondary px-8 py-4 rounded-lg font-semibold text-center">
+                                        <span x-text="slide.button_2"></span>
+                                    </a>
+                                </div>
+                            </div>
+                        </template>
                     </div>
-                    <div class="fade-in hero-image-container">
-                        @if(!empty($landingHeroImage))
-                            @php
-                                try {
-                                    $heroImagePath = asset('storage/' . $landingHeroImage);
-                                    $heroImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage);
-                                } catch (\Exception $e) {
-                                    $heroImageExists = false;
-                                    $heroImagePath = '';
-                                }
-                            @endphp
-                            @if($heroImageExists)
-                                <img src="{{ $heroImagePath }}" alt="Fitrain CRM" class="rounded-2xl shadow-2xl w-full h-auto object-contain">
-                            @else
-                                <div class="gradient-primary rounded-2xl shadow-2xl p-12 text-center">
+                    
+                    <div class="fade-in hero-image-container relative" style="min-height: 400px;">
+                        <template x-for="(slide, index) in slides" :key="index">
+                            <div x-show="currentSlide === index" 
+                                 x-transition:enter="transition ease-in-out duration-700"
+                                 x-transition:enter-start="opacity-0 transform scale-95"
+                                 x-transition:enter-end="opacity-100 transform scale-100"
+                                 x-transition:leave="transition ease-in-out duration-700"
+                                 x-transition:leave-start="opacity-100 transform scale-100"
+                                 x-transition:leave-end="opacity-0 transform scale-95"
+                                 class="absolute inset-0">
+                                <img x-show="slide.image" 
+                                     x-cloak
+                                     :src="slide.image ? '{{ asset('storage/') }}/' + slide.image : ''" 
+                                     alt="Fitrain CRM" 
+                                     class="rounded-2xl shadow-2xl w-full h-auto object-contain">
+                                <div x-show="!slide.image" 
+                                     x-cloak
+                                     class="gradient-primary rounded-2xl shadow-2xl p-12 text-center h-full flex flex-col items-center justify-center">
                                     <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
-                                    <p class="text-white text-lg mt-4">Изображение не найдено</p>
+                                    <p class="text-white text-lg mt-4">Загрузите изображение через настройки системы</p>
                                 </div>
-                            @endif
-                        @else
-                            <div class="gradient-primary rounded-2xl shadow-2xl p-12 text-center">
-                                <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                </svg>
-                                <p class="text-white text-lg mt-4">Загрузите изображение через настройки системы (вкладка "Слайдер", первый слайд)</p>
                             </div>
-                        @endif
+                        </template>
                     </div>
+                </div>
+                
+                <div x-show="slides.length > 1" x-cloak class="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                    <template x-for="(slide, index) in slides" :key="index">
+                        <button @click="goToSlide(index)" 
+                                :class="currentSlide === index ? 'bg-green-600' : 'bg-gray-300'"
+                                class="w-3 h-3 rounded-full transition-all duration-300 hover:bg-green-500"></button>
+                    </template>
                 </div>
             </div>
         </section>
+        
+        <script>
+        function sliderData() {
+            const slides = @json($sliders ?? []);
+            const filteredSlides = slides.filter(slide => {
+                return (slide.title && slide.title.trim()) || 
+                       (slide.subtitle && slide.subtitle.trim()) || 
+                       (slide.image && slide.image.trim());
+            });
+            
+            let finalSlides = filteredSlides.length > 0 ? filteredSlides : [{
+                title: '{{ $hero_title ?? 'Профессиональная CRM для фитнес-тренеров' }}',
+                subtitle: '{{ $hero_subtitle ?? '' }}',
+                button_1: '{{ $hero_button_1 ?? 'Попробовать бесплатно' }}',
+                button_2: '{{ $hero_button_2 ?? 'Узнать больше' }}',
+                image: '{{ $landing_hero_image ?? '' }}'
+            }];
+            
+            return {
+                currentSlide: 0,
+                slides: finalSlides,
+                autoplayInterval: null,
+                isPlaying: false,
+                init() {
+                    if (this.slides.length > 1) {
+                        this.startAutoplay();
+                    }
+                },
+                startAutoplay() {
+                    this.stopAutoplay();
+                    if (!this.isPlaying && this.slides.length > 1) {
+                        this.isPlaying = true;
+                        this.autoplayInterval = setInterval(() => {
+                            this.nextSlide();
+                        }, 5000);
+                    }
+                },
+                stopAutoplay() {
+                    if (this.autoplayInterval) {
+                        clearInterval(this.autoplayInterval);
+                        this.autoplayInterval = null;
+                    }
+                    this.isPlaying = false;
+                },
+                nextSlide() {
+                    this.stopAutoplay();
+                    this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+                    setTimeout(() => {
+                        this.startAutoplay();
+                    }, 100);
+                },
+                prevSlide() {
+                    this.stopAutoplay();
+                    this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+                    setTimeout(() => {
+                        this.startAutoplay();
+                    }, 100);
+                },
+                goToSlide(index) {
+                    if (index === this.currentSlide) return;
+                    this.stopAutoplay();
+                    this.currentSlide = index;
+                    setTimeout(() => {
+                        this.startAutoplay();
+                    }, 500);
+                }
+            };
+        }
+        </script>
         
         <!-- Features Section -->
         <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
