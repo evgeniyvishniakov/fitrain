@@ -98,6 +98,27 @@
         .hero-bg {
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
         }
+        
+        .hero-image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+        }
+        
+        .hero-image-container img {
+            max-width: 120%;
+            width: 120%;
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 767px) {
+            .hero-image-container img {
+                max-width: 100%;
+                width: 100%;
+                transform: scale(1);
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -194,25 +215,33 @@
                             </a>
                         </div>
                     </div>
-                    <div class="fade-in">
-                        <?php
-                            $heroImageExists = false;
-                            if(!empty($landingHeroImage)) {
+                    <div class="fade-in hero-image-container">
+                        <?php if(!empty($landingHeroImage)): ?>
+                            <?php
                                 try {
+                                    $heroImagePath = asset('storage/' . $landingHeroImage);
                                     $heroImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage);
                                 } catch (\Exception $e) {
                                     $heroImageExists = false;
+                                    $heroImagePath = '';
                                 }
-                            }
-                        ?>
-                        <?php if($heroImageExists): ?>
-                            <img src="<?php echo e(asset('storage/' . $landingHeroImage)); ?>" alt="Fitrain CRM" class="rounded-2xl shadow-2xl w-full h-auto">
+                            ?>
+                            <?php if($heroImageExists): ?>
+                                <img src="<?php echo e($heroImagePath); ?>" alt="Fitrain CRM" class="rounded-2xl shadow-2xl w-full h-auto object-contain">
+                            <?php else: ?>
+                                <div class="gradient-primary rounded-2xl shadow-2xl p-12 text-center">
+                                    <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                    <p class="text-white text-lg mt-4">Изображение не найдено</p>
+                                </div>
+                            <?php endif; ?>
                         <?php else: ?>
                             <div class="gradient-primary rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                 </svg>
-                                <p class="text-white text-lg mt-4">Загрузите изображение через настройки системы</p>
+                                <p class="text-white text-lg mt-4">Загрузите изображение через настройки системы (вкладка "Слайдер", первый слайд)</p>
                             </div>
                         <?php endif; ?>
                     </div>

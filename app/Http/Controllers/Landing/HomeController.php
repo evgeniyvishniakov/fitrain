@@ -86,7 +86,13 @@ class HomeController extends BaseController
         $data['current_lang'] = $lang;
         
         // Добавляем изображения для лендинга
-        $data['landing_hero_image'] = SystemSetting::get('landing.hero_image', '');
+        // Hero-секция использует либо landing.hero_image, либо изображение из первого слайда
+        $heroImage = SystemSetting::get('landing.hero_image', '');
+        if (empty($heroImage)) {
+            $heroImage = SystemSetting::get('landing.slider.1.image', '');
+        }
+        $data['landing_hero_image'] = $heroImage;
+        
         $data['landing_features_image'] = SystemSetting::get('landing.features_image', '');
         $data['landing_slider_1_image'] = SystemSetting::get('landing.slider.1.image', '');
         $data['landing_slider_2_image'] = SystemSetting::get('landing.slider.2.image', '');
