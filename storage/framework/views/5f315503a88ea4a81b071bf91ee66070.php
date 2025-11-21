@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    @php
+    <?php
         $siteFavicon = \App\Models\SystemSetting::get('site.favicon');
         $siteName = \App\Models\SystemSetting::get('site.name', 'Fitrain');
         $siteLogoDefault = \App\Models\SystemSetting::get('site.logo', '');
@@ -11,9 +11,9 @@
         $siteLogoDark = \App\Models\SystemSetting::get('site.logo_dark');
         $crmLogoLight = $siteLogoLight ?: $siteLogoDefault;
         $crmLogoDark = $siteLogoDark ?: ($siteLogoLight ?: $siteLogoDefault);
-    @endphp
+    ?>
 
-    @php
+    <?php
         $faviconUrl = null;
         $appleTouchIconUrl = null;
         $faviconMime = 'image/x-icon';
@@ -42,28 +42,28 @@
             $faviconUrl = asset('favicon.ico') . '?v=' . time();
             $appleTouchIconUrl = $faviconUrl;
         }
-    @endphp
-    <link rel="icon" type="{{ $faviconMime }}" href="{{ $faviconUrl }}">
-    <link rel="shortcut icon" href="{{ $faviconUrl }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ $appleTouchIconUrl }}">
-    <link rel="apple-touch-icon" sizes="152x152" href="{{ $appleTouchIconUrl }}">
-    <link rel="apple-touch-icon" sizes="120x120" href="{{ $appleTouchIconUrl }}">
-    <link rel="apple-touch-icon" href="{{ $appleTouchIconUrl }}">
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="{{ $appleTouchIconUrl }}">
-    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="{{ $appleTouchIconUrl }}">
-    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="{{ $appleTouchIconUrl }}">
-    <link rel="apple-touch-icon-precomposed" href="{{ $appleTouchIconUrl }}">
+    ?>
+    <link rel="icon" type="<?php echo e($faviconMime); ?>" href="<?php echo e($faviconUrl); ?>">
+    <link rel="shortcut icon" href="<?php echo e($faviconUrl); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e($appleTouchIconUrl); ?>">
+    <link rel="apple-touch-icon" sizes="152x152" href="<?php echo e($appleTouchIconUrl); ?>">
+    <link rel="apple-touch-icon" sizes="120x120" href="<?php echo e($appleTouchIconUrl); ?>">
+    <link rel="apple-touch-icon" href="<?php echo e($appleTouchIconUrl); ?>">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="<?php echo e($appleTouchIconUrl); ?>">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="<?php echo e($appleTouchIconUrl); ?>">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="<?php echo e($appleTouchIconUrl); ?>">
+    <link rel="apple-touch-icon-precomposed" href="<?php echo e($appleTouchIconUrl); ?>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="{{ $siteName }}">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield("title", "Fitrain CRM")</title>
+    <meta name="apple-mobile-web-app-title" content="<?php echo e($siteName); ?>">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo $__env->yieldContent("title", "Fitrain CRM"); ?></title>
     
-    @vite(['resources/css/app.css'])
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css']); ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ asset('js/notifications.js') }}"></script>
+    <script src="<?php echo e(asset('js/notifications.js')); ?>"></script>
     <style>
         [x-cloak] { display: none !important; }
         
@@ -705,7 +705,7 @@
             }
         })();
     </script>
-    @stack("styles")
+    <?php echo $__env->yieldPushContent("styles"); ?>
 </head>
 <body class="theme-light">
     <!-- Мобильное меню -->
@@ -715,22 +715,22 @@
             <!-- Шапка мобильного меню -->
             <div class="mobile-menu-header">
                 <div class="flex items-center gap-3">
-                    @if($crmLogoLight || $crmLogoDark)
+                    <?php if($crmLogoLight || $crmLogoDark): ?>
                         <div class="flex items-center">
-                            @if($crmLogoLight)
-                                <img src="{{ asset('storage/' . $crmLogoLight) }}" alt="{{ $siteName }} logo" class="crm-logo-mobile crm-logo-mobile-light h-8 block">
-                            @endif
-                            @if($crmLogoDark)
-                                <img src="{{ asset('storage/' . $crmLogoDark) }}" alt="{{ $siteName }} logo" class="crm-logo-mobile crm-logo-mobile-dark h-8 hidden">
-                            @endif
+                            <?php if($crmLogoLight): ?>
+                                <img src="<?php echo e(asset('storage/' . $crmLogoLight)); ?>" alt="<?php echo e($siteName); ?> logo" class="crm-logo-mobile crm-logo-mobile-light h-8 block">
+                            <?php endif; ?>
+                            <?php if($crmLogoDark): ?>
+                                <img src="<?php echo e(asset('storage/' . $crmLogoDark)); ?>" alt="<?php echo e($siteName); ?> logo" class="crm-logo-mobile crm-logo-mobile-dark h-8 hidden">
+                            <?php endif; ?>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="w-8 h-8 bg-indigo-600/10 rounded-xl flex items-center justify-center">
                             <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
                 <button onclick="toggleMobileMenu()" class="mobile-menu-close">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -740,88 +740,99 @@
             </div>
             
             <nav class="mobile-menu-nav">
-                <a href="{{ route("crm.dashboard.main") }}" class="mobile-nav-link {{ request()->routeIs('crm.dashboard*') ? 'active' : '' }}">
+                <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.dashboard*') ? 'active' : ''); ?>">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                     </svg>
-                    {{ __('common.dashboard') }}
+                    <?php echo e(__('common.dashboard')); ?>
+
                 </a>
-                <a href="{{ route('crm.calendar') }}" class="mobile-nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }}">
+                <a href="<?php echo e(route('crm.calendar')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?>">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                     Календарь
                 </a>
-                <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.workouts.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.workouts') : route('crm.athlete.workouts')) }}" class="mobile-nav-link {{ request()->routeIs('crm.workouts.*') || request()->routeIs('crm.athlete.workouts*') || request()->routeIs('crm.self-athlete.workouts*') ? 'active' : '' }}">
+                <a href="<?php echo e(auth()->user()->hasRole('trainer') ? route('crm.workouts.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.workouts') : route('crm.athlete.workouts'))); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.workouts.*') || request()->routeIs('crm.athlete.workouts*') || request()->routeIs('crm.self-athlete.workouts*') ? 'active' : ''); ?>">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
-                    {{ __('common.workouts') }}
+                    <?php echo e(__('common.workouts')); ?>
+
                 </a>
-                @if(auth()->user()->hasRole('trainer'))
-                    <a href="{{ route("crm.exercises.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.exercises.*') ? 'active' : '' }}">
+                <?php if(auth()->user()->hasRole('trainer')): ?>
+                    <a href="<?php echo e(route("crm.exercises.index")); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.exercises.*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                         </svg>
-                        {{ __('common.exercises') }}
+                        <?php echo e(__('common.exercises')); ?>
+
                     </a>
-                    <a href="{{ route("crm.workout-templates.index") }}" class="mobile-nav-link {{ request()->routeIs('crm.workout-templates.*') ? 'active' : '' }}">
+                    <a href="<?php echo e(route("crm.workout-templates.index")); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.workout-templates.*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        {{ __('common.workout_templates') }}
+                        <?php echo e(__('common.workout_templates')); ?>
+
                     </a>
-                    <a href="{{ route('crm.trainer.athletes') }}" class="mobile-nav-link {{ request()->routeIs('crm.trainer.athletes*') ? 'active' : '' }}">
+                    <a href="<?php echo e(route('crm.trainer.athletes')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.trainer.athletes*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
-                        {{ __('common.athletes') }}
+                        <?php echo e(__('common.athletes')); ?>
+
                     </a>
-                    <a href="{{ route('crm.trainer.subscription') }}" class="mobile-nav-link {{ request()->routeIs('crm.trainer.subscription*') ? 'active' : '' }}">
+                    <a href="<?php echo e(route('crm.trainer.subscription')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.trainer.subscription*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                         </svg>
-                        {{ __('common.subscription') }}
+                        <?php echo e(__('common.subscription')); ?>
+
                     </a>
-                @else
-                    <a href="{{ auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.exercises') : route('crm.athlete.exercises') }}" class="mobile-nav-link {{ request()->routeIs('crm.athlete.exercises*') || request()->routeIs('crm.self-athlete.exercises*') ? 'active' : '' }}">
+                <?php else: ?>
+                    <a href="<?php echo e(auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.exercises') : route('crm.athlete.exercises')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.athlete.exercises*') || request()->routeIs('crm.self-athlete.exercises*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                         </svg>
-                        {{ __('common.exercises') }}
+                        <?php echo e(__('common.exercises')); ?>
+
                     </a>
-                    <a href="{{ auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.progress') : route('crm.athlete.progress') }}" class="mobile-nav-link {{ request()->routeIs('crm.athlete.progress*') || request()->routeIs('crm.self-athlete.progress*') ? 'active' : '' }}">
+                    <a href="<?php echo e(auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.progress') : route('crm.athlete.progress')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.athlete.progress*') || request()->routeIs('crm.self-athlete.progress*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                         </svg>
-                        {{ __('common.progress') }}
+                        <?php echo e(__('common.progress')); ?>
+
                     </a>
-                    <a href="{{ auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.measurements') : route('crm.athlete.measurements') }}" class="mobile-nav-link {{ request()->routeIs('crm.athlete.measurements*') || request()->routeIs('crm.self-athlete.measurements*') ? 'active' : '' }}">
+                    <a href="<?php echo e(auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.measurements') : route('crm.athlete.measurements')); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.athlete.measurements*') || request()->routeIs('crm.self-athlete.measurements*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        {{ __('common.measurements') }}
+                        <?php echo e(__('common.measurements')); ?>
+
                     </a>
-                    <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.nutrition.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.nutrition') : route('crm.athlete.nutrition')) }}" class="mobile-nav-link {{ request()->routeIs('crm.nutrition.*') || request()->routeIs('crm.athlete.nutrition*') || request()->routeIs('crm.self-athlete.nutrition*') ? 'active' : '' }}">
+                    <a href="<?php echo e(auth()->user()->hasRole('trainer') ? route('crm.nutrition.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.nutrition') : route('crm.athlete.nutrition'))); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.nutrition.*') || request()->routeIs('crm.athlete.nutrition*') || request()->routeIs('crm.self-athlete.nutrition*') ? 'active' : ''); ?>">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
-                        {{ __('common.nutrition') }}
+                        <?php echo e(__('common.nutrition')); ?>
+
                     </a>
-                @endif
-                <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.trainer.settings') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.settings') : route('crm.athlete.settings')) }}" class="mobile-nav-link {{ request()->routeIs('crm.trainer.settings*') || request()->routeIs('crm.athlete.settings*') || request()->routeIs('crm.self-athlete.settings*') ? 'active' : '' }}">
+                <?php endif; ?>
+                <a href="<?php echo e(auth()->user()->hasRole('trainer') ? route('crm.trainer.settings') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.settings') : route('crm.athlete.settings'))); ?>" class="mobile-nav-link <?php echo e(request()->routeIs('crm.trainer.settings*') || request()->routeIs('crm.athlete.settings*') || request()->routeIs('crm.self-athlete.settings*') ? 'active' : ''); ?>">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    {{ __('common.settings') }}
+                    <?php echo e(__('common.settings')); ?>
+
                 </a>
             </nav>
             
             <!-- Выход -->
             <div class="mobile-menu-footer">
-                <form method="POST" action="{{ route('crm.logout') }}">
-                    @csrf
+                <form method="POST" action="<?php echo e(route('crm.logout')); ?>">
+                    <?php echo csrf_field(); ?>
                     <button type="submit" class="mobile-logout-btn">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
@@ -840,102 +851,114 @@
             <div class="sidebar flex flex-col flex-grow backdrop-blur-md">
                 <!-- Логотип -->
                 <div class="flex items-center px-6 py-6 gap-3">
-                    @if($crmLogoLight || $crmLogoDark)
+                    <?php if($crmLogoLight || $crmLogoDark): ?>
                         <div class="flex items-center">
-                            @if($crmLogoLight)
-                                <img src="{{ asset('storage/' . $crmLogoLight) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-light">
-                            @endif
-                            @if($crmLogoDark)
-                                <img src="{{ asset('storage/' . $crmLogoDark) }}" alt="{{ $siteName }} logo" class="crm-logo crm-logo-dark {{ $crmLogoLight ? '' : 'block' }}">
-                            @endif
+                            <?php if($crmLogoLight): ?>
+                                <img src="<?php echo e(asset('storage/' . $crmLogoLight)); ?>" alt="<?php echo e($siteName); ?> logo" class="crm-logo crm-logo-light">
+                            <?php endif; ?>
+                            <?php if($crmLogoDark): ?>
+                                <img src="<?php echo e(asset('storage/' . $crmLogoDark)); ?>" alt="<?php echo e($siteName); ?> logo" class="crm-logo crm-logo-dark <?php echo e($crmLogoLight ? '' : 'block'); ?>">
+                            <?php endif; ?>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mr-3">
                             <svg class="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
                         </div>
-                        <span class="text-xl font-bold text-white">{{ $siteName }} CRM</span>
-                    @endif
+                        <span class="text-xl font-bold text-white"><?php echo e($siteName); ?> CRM</span>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Навигация -->
                 <nav class="flex-1 px-4 space-y-2">
-                    <a href="{{ route("crm.dashboard.main") }}" class="nav-link {{ request()->routeIs('crm.dashboard*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                    <a href="<?php echo e(route("crm.dashboard.main")); ?>" class="nav-link <?php echo e(request()->routeIs('crm.dashboard*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                         </svg>
-                        {{ __('common.dashboard') }}
+                        <?php echo e(__('common.dashboard')); ?>
+
                     </a>
-                    <a href="{{ route('crm.calendar') }}" class="nav-link {{ request()->routeIs('crm.calendar') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                    <a href="<?php echo e(route('crm.calendar')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.calendar') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        {{ __('common.calendar') }}
+                        <?php echo e(__('common.calendar')); ?>
+
                     </a>
-                    <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.workouts.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.workouts') : route('crm.athlete.workouts')) }}" class="nav-link {{ request()->routeIs('crm.workouts.*') || request()->routeIs('crm.athlete.workouts*') || request()->routeIs('crm.self-athlete.workouts*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                    <a href="<?php echo e(auth()->user()->hasRole('trainer') ? route('crm.workouts.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.workouts') : route('crm.athlete.workouts'))); ?>" class="nav-link <?php echo e(request()->routeIs('crm.workouts.*') || request()->routeIs('crm.athlete.workouts*') || request()->routeIs('crm.self-athlete.workouts*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
-                        {{ __('common.workouts') }}
+                        <?php echo e(__('common.workouts')); ?>
+
                     </a>
-                    @if(auth()->user()->hasRole('trainer'))
-                        <a href="{{ route("crm.exercises.index") }}" class="nav-link {{ request()->routeIs('crm.exercises.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                    <?php if(auth()->user()->hasRole('trainer')): ?>
+                        <a href="<?php echo e(route("crm.exercises.index")); ?>" class="nav-link <?php echo e(request()->routeIs('crm.exercises.*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
-                            {{ __('common.exercises') }}
+                            <?php echo e(__('common.exercises')); ?>
+
                         </a>
-                        <a href="{{ route("crm.workout-templates.index") }}" class="nav-link {{ request()->routeIs('crm.workout-templates.*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                        <a href="<?php echo e(route("crm.workout-templates.index")); ?>" class="nav-link <?php echo e(request()->routeIs('crm.workout-templates.*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            {{ __('common.workout_templates') }}
+                            <?php echo e(__('common.workout_templates')); ?>
+
                         </a>
-                        <a href="{{ route('crm.trainer.athletes') }}" class="nav-link {{ request()->routeIs('crm.trainer.athletes*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                        <a href="<?php echo e(route('crm.trainer.athletes')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.trainer.athletes*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
-                            {{ __('common.athletes') }}
+                            <?php echo e(__('common.athletes')); ?>
+
                         </a>
-                        <a href="{{ route('crm.trainer.subscription') }}" class="nav-link {{ request()->routeIs('crm.trainer.subscription*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                        <a href="<?php echo e(route('crm.trainer.subscription')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.trainer.subscription*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                             </svg>
-                            {{ __('common.subscription') }}
+                            <?php echo e(__('common.subscription')); ?>
+
                         </a>
-                    @else
-                        <a href="{{ auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.exercises') : route('crm.athlete.exercises') }}" class="nav-link {{ request()->routeIs('crm.athlete.exercises*') || request()->routeIs('crm.self-athlete.exercises*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                    <?php else: ?>
+                        <a href="<?php echo e(auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.exercises') : route('crm.athlete.exercises')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.athlete.exercises*') || request()->routeIs('crm.self-athlete.exercises*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                             </svg>
-                            {{ __('common.exercises') }}
+                            <?php echo e(__('common.exercises')); ?>
+
                         </a>
-                        <a href="{{ auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.progress') : route('crm.athlete.progress') }}" class="nav-link {{ request()->routeIs('crm.athlete.progress*') || request()->routeIs('crm.self-athlete.progress*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                        <a href="<?php echo e(auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.progress') : route('crm.athlete.progress')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.athlete.progress*') || request()->routeIs('crm.self-athlete.progress*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                             </svg>
-                            {{ __('common.progress') }}
+                            <?php echo e(__('common.progress')); ?>
+
                         </a>
-                        <a href="{{ auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.measurements') : route('crm.athlete.measurements') }}" class="nav-link {{ request()->routeIs('crm.athlete.measurements*') || request()->routeIs('crm.self-athlete.measurements*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                        <a href="<?php echo e(auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.measurements') : route('crm.athlete.measurements')); ?>" class="nav-link <?php echo e(request()->routeIs('crm.athlete.measurements*') || request()->routeIs('crm.self-athlete.measurements*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
-                            {{ __('common.measurements') }}
+                            <?php echo e(__('common.measurements')); ?>
+
                         </a>
-                        <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.nutrition.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.nutrition') : route('crm.athlete.nutrition')) }}" class="nav-link {{ request()->routeIs('crm.nutrition.*') || request()->routeIs('crm.athlete.nutrition*') || request()->routeIs('crm.self-athlete.nutrition*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                        <a href="<?php echo e(auth()->user()->hasRole('trainer') ? route('crm.nutrition.index') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.nutrition') : route('crm.athlete.nutrition'))); ?>" class="nav-link <?php echo e(request()->routeIs('crm.nutrition.*') || request()->routeIs('crm.athlete.nutrition*') || request()->routeIs('crm.self-athlete.nutrition*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                             </svg>
-                            {{ __('common.nutrition') }}
+                            <?php echo e(__('common.nutrition')); ?>
+
                         </a>
-                    @endif
-                    <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.trainer.settings') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.settings') : route('crm.athlete.settings')) }}" class="nav-link {{ request()->routeIs('crm.trainer.settings*') || request()->routeIs('crm.athlete.settings*') || request()->routeIs('crm.self-athlete.settings*') ? 'active' : '' }} flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
+                    <?php endif; ?>
+                    <a href="<?php echo e(auth()->user()->hasRole('trainer') ? route('crm.trainer.settings') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.settings') : route('crm.athlete.settings'))); ?>" class="nav-link <?php echo e(request()->routeIs('crm.trainer.settings*') || request()->routeIs('crm.athlete.settings*') || request()->routeIs('crm.self-athlete.settings*') ? 'active' : ''); ?> flex items-center px-4 py-3 rounded-xl mb-2 transition-colors">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        {{ __('common.settings') }}
+                        <?php echo e(__('common.settings')); ?>
+
                     </a>
                 </nav>
                 
@@ -948,24 +971,24 @@
                             </svg>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-white">{{ auth()->user()->name ?? 'Пользователь' }}</p>
+                            <p class="text-sm font-medium text-white"><?php echo e(auth()->user()->name ?? 'Пользователь'); ?></p>
                             <p class="text-xs text-white/70">
-                                @if(auth()->user()->hasRole('trainer'))
+                                <?php if(auth()->user()->hasRole('trainer')): ?>
                                     Тренер
-                                @elseif(auth()->user()->hasRole('self-athlete'))
+                                <?php elseif(auth()->user()->hasRole('self-athlete')): ?>
                                     Self-Athlete
-                                @elseif(auth()->user()->hasRole('athlete'))
+                                <?php elseif(auth()->user()->hasRole('athlete')): ?>
                                     Спортсмен
-                                @else
+                                <?php else: ?>
                                     Пользователь
-                                @endif
+                                <?php endif; ?>
                             </p>
                         </div>
                     </div>
                     
                     <!-- Кнопка выхода -->
-                    <form method="POST" action="{{ route('crm.logout') }}">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('crm.logout')); ?>">
+                        <?php echo csrf_field(); ?>
                         <button type="submit" class="w-full flex items-center px-4 py-3 text-red-300 hover:bg-red-500/20 rounded-xl transition-colors">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
@@ -990,7 +1013,7 @@
                     </button>
                     
                     <!-- Заголовок страницы -->
-                    <h1 class="page-title text-2xl font-bold">@yield("page-title", __('common.workouts'))</h1>
+                    <h1 class="page-title text-2xl font-bold"><?php echo $__env->yieldContent("page-title", __('common.workouts')); ?></h1>
                     
                     <!-- Действия -->
                     <div class="flex items-center space-x-4">
@@ -1021,30 +1044,33 @@
                                  x-transition:leave-end="transform opacity-0 scale-95"
                                  class="absolute right-0 mt-2 w-48 account-dropdown py-1 z-50">
                                 <div class="px-4 py-2 border-b border-gray-100">
-                                    <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name ?? 'Пользователь' }}</p>
-                                    <p class="text-xs text-gray-500">{{ auth()->user()->email ?? '' }}</p>
+                                    <p class="text-sm font-medium text-gray-900"><?php echo e(auth()->user()->name ?? 'Пользователь'); ?></p>
+                                    <p class="text-xs text-gray-500"><?php echo e(auth()->user()->email ?? ''); ?></p>
                                 </div>
-                                <a href="{{ route('crm.profile') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="<?php echo e(route('crm.profile')); ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                     </svg>
-                                    {{ __('common.profile') }}
+                                    <?php echo e(__('common.profile')); ?>
+
                                 </a>
-                                <a href="{{ auth()->user()->hasRole('trainer') ? route('crm.trainer.settings') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.settings') : route('crm.athlete.settings')) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="<?php echo e(auth()->user()->hasRole('trainer') ? route('crm.trainer.settings') : (auth()->user()->hasRole('self-athlete') ? route('crm.self-athlete.settings') : route('crm.athlete.settings'))); ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     </svg>
-                                    {{ __('common.settings') }}
+                                    <?php echo e(__('common.settings')); ?>
+
                                 </a>
                                 <div class="border-t border-gray-100"></div>
-                                <form method="POST" action="{{ route('crm.logout') }}">
-                                    @csrf
+                                <form method="POST" action="<?php echo e(route('crm.logout')); ?>">
+                                    <?php echo csrf_field(); ?>
                                     <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                                         <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                                         </svg>
-                                        {{ __('common.logout') }}
+                                        <?php echo e(__('common.logout')); ?>
+
                                     </button>
                                 </form>
                             </div>
@@ -1057,13 +1083,13 @@
             <!-- Контент -->
             <main class="flex-1 overflow-y-auto p-3">
                 <div class="max-w-7xl mx-auto">
-                    @yield("content")
+                    <?php echo $__env->yieldContent("content"); ?>
                 </div>
             </main>
         </div>
     </div>
 
-    @stack("scripts")
+    <?php echo $__env->yieldPushContent("scripts"); ?>
     <script>
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
@@ -1104,7 +1130,7 @@
     </script>
     
     <!-- Компоненты уведомлений и подтверждений -->
-    @include('components.notification')
-    @include('components.confirm-modal')
+    <?php echo $__env->make('components.notification', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    <?php echo $__env->make('components.confirm-modal', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 </body>
-</html>
+</html><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/crm/layouts/app.blade.php ENDPATH**/ ?>

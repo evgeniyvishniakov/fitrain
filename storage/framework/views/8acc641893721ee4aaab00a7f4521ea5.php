@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    @php
+    <?php
         $siteName = \App\Models\SystemSetting::get('site.name', 'Fitrain');
         $siteLogoDefault = \App\Models\SystemSetting::get('site.logo', '');
         $siteLogoLight = \App\Models\SystemSetting::get('site.logo_light');
@@ -26,13 +26,13 @@
         if (!$faviconUrl) {
             $faviconUrl = asset('favicon.ico') . '?v=' . time();
         }
-    @endphp
+    ?>
     
-    <title>{{ $siteName }} - CRM система для фитнес-тренеров и спортсменов</title>
+    <title><?php echo e($siteName); ?> - CRM система для фитнес-тренеров и спортсменов</title>
     <meta name="description" content="Профессиональная CRM система для управления тренировками, спортсменами и прогрессом. Удобный календарь, отслеживание прогресса, планы питания и многое другое.">
     
-    <link rel="icon" type="image/x-icon" href="{{ $faviconUrl }}">
-    <link rel="shortcut icon" href="{{ $faviconUrl }}">
+    <link rel="icon" type="image/x-icon" href="<?php echo e($faviconUrl); ?>">
+    <link rel="shortcut icon" href="<?php echo e($faviconUrl); ?>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -107,11 +107,11 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
                     <div class="flex items-center">
-                        @if($siteLogoLight || $siteLogoDefault)
-                            <img src="{{ $siteLogoLight ? url('storage/' . $siteLogoLight) : url('storage/' . $siteLogoDefault) }}" alt="{{ $siteName }}" class="h-10">
-                        @else
-                            <span class="text-2xl font-bold gradient-primary bg-clip-text text-transparent">{{ $siteName }}</span>
-                        @endif
+                        <?php if($siteLogoLight || $siteLogoDefault): ?>
+                            <img src="<?php echo e($siteLogoLight ? url('storage/' . $siteLogoLight) : url('storage/' . $siteLogoDefault)); ?>" alt="<?php echo e($siteName); ?>" class="h-10">
+                        <?php else: ?>
+                            <span class="text-2xl font-bold gradient-primary bg-clip-text text-transparent"><?php echo e($siteName); ?></span>
+                        <?php endif; ?>
                     </div>
                     
                     <!-- Desktop Menu -->
@@ -120,8 +120,8 @@
                         <a href="#for-trainers" class="text-gray-700 hover:text-green-600 transition">Для тренеров</a>
                         <a href="#for-athletes" class="text-gray-700 hover:text-green-600 transition">Для спортсменов</a>
                         <a href="#pricing" class="text-gray-700 hover:text-green-600 transition">Тарифы</a>
-                        <a href="{{ route('crm.login') }}" class="text-gray-700 hover:text-green-600 transition">Войти</a>
-                        <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">Начать</a>
+                        <a href="<?php echo e(route('crm.login')); ?>" class="text-gray-700 hover:text-green-600 transition">Войти</a>
+                        <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">Начать</a>
                     </div>
                     
                     <!-- Mobile Menu Button -->
@@ -140,8 +140,8 @@
                     <a href="#for-trainers" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для тренеров</a>
                     <a href="#for-athletes" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для спортсменов</a>
                     <a href="#pricing" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Тарифы</a>
-                    <a href="{{ route('crm.login') }}" class="block text-gray-700 hover:text-green-600">Войти</a>
-                    <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium inline-block text-center">Начать</a>
+                    <a href="<?php echo e(route('crm.login')); ?>" class="block text-gray-700 hover:text-green-600">Войти</a>
+                    <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-6 py-2 rounded-lg font-medium inline-block text-center">Начать</a>
                 </div>
             </div>
         </nav>
@@ -159,7 +159,7 @@
                             Управляйте спортсменами, создавайте тренировки, отслеживайте прогресс и многое другое в одной удобной системе.
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-8 py-4 rounded-lg font-semibold text-center">
+                            <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-8 py-4 rounded-lg font-semibold text-center">
                                 Попробовать бесплатно
                             </a>
                             <a href="#features" class="btn-secondary px-8 py-4 rounded-lg font-semibold text-center">
@@ -168,16 +168,16 @@
                         </div>
                     </div>
                     <div class="fade-in">
-                        @if($landingHeroImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage))
-                            <img src="{{ url('storage/' . $landingHeroImage) }}" alt="Fitrain CRM" class="rounded-2xl shadow-2xl">
-                        @else
+                        <?php if($landingHeroImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage)): ?>
+                            <img src="<?php echo e(url('storage/' . $landingHeroImage)); ?>" alt="Fitrain CRM" class="rounded-2xl shadow-2xl">
+                        <?php else: ?>
                             <div class="gradient-primary rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                 </svg>
                                 <p class="text-white text-lg mt-4">Загрузите изображение через настройки системы</p>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -266,15 +266,15 @@
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div>
-                        @if($landingFeaturesImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage))
-                            <img src="{{ url('storage/' . $landingFeaturesImage) }}" alt="Для тренеров" class="rounded-2xl shadow-2xl">
-                        @else
+                        <?php if($landingFeaturesImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage)): ?>
+                            <img src="<?php echo e(url('storage/' . $landingFeaturesImage)); ?>" alt="Для тренеров" class="rounded-2xl shadow-2xl">
+                        <?php else: ?>
                             <div class="gradient-blue rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                     <div>
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Для тренеров</h2>
@@ -314,7 +314,7 @@
                             </li>
                         </ul>
                         <div class="mt-8">
-                            <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-8 py-4 rounded-lg font-semibold inline-block">
+                            <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-8 py-4 rounded-lg font-semibold inline-block">
                                 Начать как тренер
                             </a>
                         </div>
@@ -381,13 +381,13 @@
             <div class="max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Готовы начать?</h2>
                 <p class="text-xl text-white/90 mb-8">
-                    Зарегистрируйтесь и начните использовать {{ $siteName }} уже сегодня
+                    Зарегистрируйтесь и начните использовать <?php echo e($siteName); ?> уже сегодня
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ route('crm.trainer.register') }}" class="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition">
+                    <a href="<?php echo e(route('crm.trainer.register')); ?>" class="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition">
                         Регистрация для тренера
                     </a>
-                    <a href="{{ route('crm.login') }}" class="bg-white/10 text-white border-2 border-white px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition">
+                    <a href="<?php echo e(route('crm.login')); ?>" class="bg-white/10 text-white border-2 border-white px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition">
                         Войти в систему
                     </a>
                 </div>
@@ -399,11 +399,11 @@
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-4 gap-8">
                     <div>
-                        @if($siteLogoLight || $siteLogoDefault)
-                            <img src="{{ $siteLogoLight ? url('storage/' . $siteLogoLight) : url('storage/' . $siteLogoDefault) }}" alt="{{ $siteName }}" class="h-10 mb-4">
-                        @else
-                            <h3 class="text-xl font-bold mb-4">{{ $siteName }}</h3>
-                        @endif
+                        <?php if($siteLogoLight || $siteLogoDefault): ?>
+                            <img src="<?php echo e($siteLogoLight ? url('storage/' . $siteLogoLight) : url('storage/' . $siteLogoDefault)); ?>" alt="<?php echo e($siteName); ?>" class="h-10 mb-4">
+                        <?php else: ?>
+                            <h3 class="text-xl font-bold mb-4"><?php echo e($siteName); ?></h3>
+                        <?php endif; ?>
                         <p class="text-gray-400">Профессиональная CRM система для фитнес-тренеров и спортсменов</p>
                     </div>
                     <div>
@@ -417,8 +417,8 @@
                     <div>
                         <h4 class="font-semibold mb-4">Ресурсы</h4>
                         <ul class="space-y-2 text-gray-400">
-                            <li><a href="{{ route('crm.login') }}" class="hover:text-white transition">Войти</a></li>
-                            <li><a href="{{ route('crm.trainer.register') }}" class="hover:text-white transition">Регистрация</a></li>
+                            <li><a href="<?php echo e(route('crm.login')); ?>" class="hover:text-white transition">Войти</a></li>
+                            <li><a href="<?php echo e(route('crm.trainer.register')); ?>" class="hover:text-white transition">Регистрация</a></li>
                         </ul>
                     </div>
                     <div>
@@ -427,10 +427,11 @@
                     </div>
                 </div>
                 <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                    <p>&copy; {{ date('Y') }} {{ $siteName }}. Все права защищены.</p>
+                    <p>&copy; <?php echo e(date('Y')); ?> <?php echo e($siteName); ?>. Все права защищены.</p>
                 </div>
             </div>
         </footer>
     </div>
 </body>
 </html>
+<?php /**PATH D:\OSPanel\domains\fitrain\resources\views/landing/home.blade.php ENDPATH**/ ?>
