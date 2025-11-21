@@ -89,7 +89,68 @@ class UserController extends BaseController
     public function show(User $user)
     {
         $user->load('roles');
-        return view('admin.users.show', compact('user'));
+        
+        // Собираем активность для тренера
+        $activities = collect();
+        
+        if ($user->hasRole('trainer')) {
+            // Созданные тренировки
+            $workouts = \App\Models\Trainer\Workout::where('trainer_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(function($workout) {
+                    return [
+                        'type' => 'workout_created',
+                        'message' => 'Создал тренировку "' . ($workout->title ?? 'Без названия') . '"',
+                        'date' => $workout->created_at,
+                        'icon' => 'fa-dumbbell',
+                        'color' => 'blue'
+                    ];
+                });
+            
+            // Созданные спортсмены
+            $athletesCreated = User::where('trainer_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(function($athlete) {
+                    return [
+                        'type' => 'athlete_created',
+                        'message' => 'Создал спортсмена "' . $athlete->name . '"',
+                        'date' => $athlete->created_at,
+                        'icon' => 'fa-user-plus',
+                        'color' => 'green'
+                    ];
+                });
+            
+            // Изменения статуса спортсменов (последние обновления с изменением is_active)
+            // Это упрощенная версия - показываем последние обновления спортсменов
+            $athletesUpdated = User::where('trainer_id', $user->id)
+                ->whereColumn('updated_at', '>', 'created_at')
+                ->orderBy('updated_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(function($athlete) {
+                    $status = $athlete->is_active ? 'активировал' : 'деактивировал';
+                    return [
+                        'type' => 'athlete_status_changed',
+                        'message' => $status . ' спортсмена "' . $athlete->name . '"',
+                        'date' => $athlete->updated_at,
+                        'icon' => $athlete->is_active ? 'fa-check-circle' : 'fa-pause-circle',
+                        'color' => $athlete->is_active ? 'green' : 'yellow'
+                    ];
+                });
+            
+            // Объединяем все активности и сортируем по дате
+            $activities = $workouts
+                ->concat($athletesCreated)
+                ->concat($athletesUpdated)
+                ->sortByDesc('date')
+                ->take(30);
+        }
+        
+        return view('admin.users.show', compact('user', 'activities'));
     }
 
     /**

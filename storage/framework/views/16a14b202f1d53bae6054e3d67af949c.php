@@ -1,30 +1,30 @@
-@extends('admin.layouts.app')
 
-@section('title', 'Пользователь: ' . $user->name)
-@section('page-title', 'Просмотр пользователя')
 
-@php
+<?php $__env->startSection('title', 'Пользователь: ' . $user->name); ?>
+<?php $__env->startSection('page-title', 'Просмотр пользователя'); ?>
+
+<?php
     $roleLabels = [
         'admin' => __('common.role_admin'),
         'trainer' => __('common.role_trainer'),
         'athlete' => __('common.role_athlete'),
         'self-athlete' => __('common.role_self_athlete'),
     ];
-@endphp
+?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="max-w-4xl mx-auto space-y-6">
     <!-- Заголовок и действия -->
     <div class="flex items-center justify-between">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900">{{ $user->name }}</h2>
-            <p class="text-gray-600">{{ $user->email }}</p>
+            <h2 class="text-2xl font-bold text-gray-900"><?php echo e($user->name); ?></h2>
+            <p class="text-gray-600"><?php echo e($user->email); ?></p>
         </div>
         <div class="flex items-center space-x-3">
-            <a href="{{ route('admin.users.edit', $user) }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            <a href="<?php echo e(route('admin.users.edit', $user)); ?>" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                 <i class="fas fa-edit mr-2"></i>Редактировать
             </a>
-            <a href="{{ route('admin.users.index') }}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
+            <a href="<?php echo e(route('admin.users.index')); ?>" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
                 <i class="fas fa-arrow-left mr-2"></i>Назад к списку
             </a>
         </div>
@@ -41,37 +41,37 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Имя</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $user->name }}</p>
+                        <p class="mt-1 text-sm text-gray-900"><?php echo e($user->name); ?></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Email</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $user->email }}</p>
+                        <p class="mt-1 text-sm text-gray-900"><?php echo e($user->email); ?></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Телефон</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $user->phone ?? 'Не указан' }}</p>
+                        <p class="mt-1 text-sm text-gray-900"><?php echo e($user->phone ?? 'Не указан'); ?></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Статус</label>
                         <div class="mt-1">
-                            @if($user->is_active)
+                            <?php if($user->is_active): ?>
                                 <span class="status-active">Активен</span>
-                            @else
+                            <?php else: ?>
                                 <span class="status-inactive">Неактивен</span>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Дата регистрации</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $user->created_at->format('d.m.Y H:i') }}</p>
+                        <p class="mt-1 text-sm text-gray-900"><?php echo e($user->created_at->format('d.m.Y H:i')); ?></p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-500">{{ __('common.last_activity') }}</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $user->last_activity_at ? $user->last_activity_at->format('d.m.Y H:i') : '—' }}</p>
+                        <label class="block text-sm font-medium text-gray-500"><?php echo e(__('common.last_activity')); ?></label>
+                        <p class="mt-1 text-sm text-gray-900"><?php echo e($user->last_activity_at ? $user->last_activity_at->format('d.m.Y H:i') : '—'); ?></p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Последнее обновление</label>
-                        <p class="mt-1 text-sm text-gray-900">{{ $user->updated_at->format('d.m.Y H:i') }}</p>
+                        <p class="mt-1 text-sm text-gray-900"><?php echo e($user->updated_at->format('d.m.Y H:i')); ?></p>
                     </div>
                 </div>
             </div>
@@ -82,29 +82,31 @@
                     <i class="fas fa-user-tag mr-2"></i>Роли и права
                 </h3>
                 <div class="space-y-3">
-                    @forelse($user->roles as $role)
+                    <?php $__empty_1 = true; $__currentLoopData = $user->roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div class="flex items-center">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                                    @if($role->name === 'admin') bg-purple-100 text-purple-800
-                                    @elseif($role->name === 'trainer') bg-blue-100 text-blue-800
-                                    @elseif($role->name === 'athlete') bg-green-100 text-green-800
-                                    @else bg-gray-100 text-gray-800 @endif">
-                                    {{ $roleLabels[$role->name] ?? ucfirst($role->name) }}
+                                    <?php if($role->name === 'admin'): ?> bg-purple-100 text-purple-800
+                                    <?php elseif($role->name === 'trainer'): ?> bg-blue-100 text-blue-800
+                                    <?php elseif($role->name === 'athlete'): ?> bg-green-100 text-green-800
+                                    <?php else: ?> bg-gray-100 text-gray-800 <?php endif; ?>">
+                                    <?php echo e($roleLabels[$role->name] ?? ucfirst($role->name)); ?>
+
                                 </span>
-                                <span class="ml-3 text-sm text-gray-600">{{ $role->description ?? 'Роль пользователя' }}</span>
+                                <span class="ml-3 text-sm text-gray-600"><?php echo e($role->description ?? 'Роль пользователя'); ?></span>
                             </div>
                             <div class="text-sm text-gray-500">
-                                Назначена: {{ $role->pivot->created_at ? $role->pivot->created_at->format('d.m.Y') : '—' }}
+                                Назначена: <?php echo e($role->pivot->created_at ? $role->pivot->created_at->format('d.m.Y') : '—'); ?>
+
                             </div>
                         </div>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <p class="text-gray-500 text-center py-4">У пользователя нет назначенных ролей</p>
-                    @endforelse
+                    <?php endif; ?>
                 </div>
             </div>
 
-            @if($user->hasRole('athlete'))
+            <?php if($user->hasRole('athlete')): ?>
                 <!-- Информация о спортсмене -->
                 <div class="bg-white rounded-xl shadow-sm p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">
@@ -113,48 +115,49 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Возраст</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->age ?? 'Не указан' }}</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->age ?? 'Не указан'); ?></p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Пол</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->gender ?? 'Не указан' }}</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->gender ?? 'Не указан'); ?></p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Вес</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->current_weight ?? $user->weight ?? 'Не указан' }} кг</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->current_weight ?? $user->weight ?? 'Не указан'); ?> кг</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Рост</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->current_height ?? $user->height ?? 'Не указан' }} см</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->current_height ?? $user->height ?? 'Не указан'); ?> см</p>
                         </div>
-                        @if($user->bmi)
+                        <?php if($user->bmi): ?>
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">ИМТ</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $user->bmi }}</p>
+                                <p class="mt-1 text-sm text-gray-900"><?php echo e($user->bmi); ?></p>
                             </div>
-                        @endif
+                        <?php endif; ?>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Уровень подготовки</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->sport_level ?? 'Не указан' }}</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->sport_level ?? 'Не указан'); ?></p>
                         </div>
                     </div>
                     
-                    @if($user->goals)
+                    <?php if($user->goals): ?>
                         <div class="mt-4">
                             <label class="block text-sm font-medium text-gray-500">Цели</label>
                             <div class="mt-1 flex flex-wrap gap-2">
-                                @foreach($user->goals as $goal)
+                                <?php $__currentLoopData = $user->goals; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $goal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {{ $goal }}
+                                        <?php echo e($goal); ?>
+
                                     </span>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
-            @endif
+            <?php endif; ?>
 
-            @if($user->hasRole('trainer'))
+            <?php if($user->hasRole('trainer')): ?>
                 <!-- Информация о тренере -->
                 <div class="bg-white rounded-xl shadow-sm p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">
@@ -163,19 +166,19 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Специализация</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->specialization ?? 'Не указана' }}</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->specialization ?? 'Не указана'); ?></p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500">Опыт работы</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->experience_years ?? 'Не указан' }} лет</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->experience_years ?? 'Не указан'); ?> лет</p>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-500">Количество спортсменов</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $user->athletes->count() }} спортсменов</p>
+                            <p class="mt-1 text-sm text-gray-900"><?php echo e($user->athletes->count()); ?> спортсменов</p>
                         </div>
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
 
         <!-- Боковая панель -->
@@ -186,31 +189,31 @@
                     <i class="fas fa-chart-line mr-2"></i>Статистика
                 </h3>
                 <div class="space-y-4">
-                    @if($user->hasRole('trainer'))
+                    <?php if($user->hasRole('trainer')): ?>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Спортсмены</span>
-                            <span class="text-sm font-medium text-gray-900">{{ $user->athletes->count() }}</span>
+                            <span class="text-sm font-medium text-gray-900"><?php echo e($user->athletes->count()); ?></span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Тренировки</span>
-                            <span class="text-sm font-medium text-gray-900">{{ $user->trainerWorkouts->count() }}</span>
+                            <span class="text-sm font-medium text-gray-900"><?php echo e($user->trainerWorkouts->count()); ?></span>
                         </div>
-                    @endif
+                    <?php endif; ?>
                     
-                    @if($user->hasRole('athlete'))
+                    <?php if($user->hasRole('athlete')): ?>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Тренировки</span>
-                            <span class="text-sm font-medium text-gray-900">{{ $user->workouts->count() }}</span>
+                            <span class="text-sm font-medium text-gray-900"><?php echo e($user->workouts->count()); ?></span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-sm text-gray-600">Завершено</span>
-                            <span class="text-sm font-medium text-gray-900">{{ $user->workouts->where('status', 'completed')->count() }}</span>
+                            <span class="text-sm font-medium text-gray-900"><?php echo e($user->workouts->where('status', 'completed')->count()); ?></span>
                         </div>
-                    @endif
+                    <?php endif; ?>
                     
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600">В системе</span>
-                        <span class="text-sm font-medium text-gray-900">{{ $user->created_at->diffForHumans() }}</span>
+                        <span class="text-sm font-medium text-gray-900"><?php echo e($user->created_at->diffForHumans()); ?></span>
                     </div>
                 </div>
             </div>
@@ -221,22 +224,23 @@
                     <i class="fas fa-bolt mr-2"></i>Быстрые действия
                 </h3>
                 <div class="space-y-3">
-                    <a href="{{ route('admin.users.edit', $user) }}" class="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <a href="<?php echo e(route('admin.users.edit', $user)); ?>" class="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                         <i class="fas fa-edit mr-2"></i>Редактировать
                     </a>
                     
-                    @if($user->id !== auth()->id())
-                        <button onclick="toggleStatus({{ $user->id }}, {{ $user->is_active ? 'false' : 'true' }})" 
-                                class="block w-full text-center px-4 py-2 bg-{{ $user->is_active ? 'yellow' : 'green' }}-600 text-white rounded-lg hover:bg-{{ $user->is_active ? 'yellow' : 'green' }}-700">
-                            <i class="fas fa-{{ $user->is_active ? 'pause' : 'play' }} mr-2"></i>
-                            {{ $user->is_active ? 'Деактивировать' : 'Активировать' }}
+                    <?php if($user->id !== auth()->id()): ?>
+                        <button onclick="toggleStatus(<?php echo e($user->id); ?>, <?php echo e($user->is_active ? 'false' : 'true'); ?>)" 
+                                class="block w-full text-center px-4 py-2 bg-<?php echo e($user->is_active ? 'yellow' : 'green'); ?>-600 text-white rounded-lg hover:bg-<?php echo e($user->is_active ? 'yellow' : 'green'); ?>-700">
+                            <i class="fas fa-<?php echo e($user->is_active ? 'pause' : 'play'); ?> mr-2"></i>
+                            <?php echo e($user->is_active ? 'Деактивировать' : 'Активировать'); ?>
+
                         </button>
                         
-                        <button onclick="deleteUser({{ $user->id }}, '{{ $user->name }}')" 
+                        <button onclick="deleteUser(<?php echo e($user->id); ?>, '<?php echo e($user->name); ?>')" 
                                 class="block w-full text-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                             <i class="fas fa-trash mr-2"></i>Удалить
                         </button>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -248,20 +252,20 @@
                 <div class="space-y-3">
                     <div class="flex items-center">
                         <i class="fas fa-envelope text-gray-400 mr-3"></i>
-                        <a href="mailto:{{ $user->email }}" class="text-sm text-blue-600 hover:text-blue-800">{{ $user->email }}</a>
+                        <a href="mailto:<?php echo e($user->email); ?>" class="text-sm text-blue-600 hover:text-blue-800"><?php echo e($user->email); ?></a>
                     </div>
-                    @if($user->phone)
+                    <?php if($user->phone): ?>
                         <div class="flex items-center">
                             <i class="fas fa-phone text-gray-400 mr-3"></i>
-                            <a href="tel:{{ $user->phone }}" class="text-sm text-blue-600 hover:text-blue-800">{{ $user->phone }}</a>
+                            <a href="tel:<?php echo e($user->phone); ?>" class="text-sm text-blue-600 hover:text-blue-800"><?php echo e($user->phone); ?></a>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
     
-    @if($user->hasRole('trainer') && isset($activities) && $activities->count() > 0)
+    <?php if($user->hasRole('trainer') && isset($activities) && $activities->count() > 0): ?>
         <!-- Блок активности -->
         <div class="mt-6">
             <div class="bg-white rounded-xl shadow-sm p-6">
@@ -269,32 +273,34 @@
                     <i class="fas fa-history mr-2"></i>Активность
                 </h3>
                 <div class="space-y-3 max-h-96 overflow-y-auto">
-                    @foreach($activities as $activity)
+                    <?php $__currentLoopData = $activities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $activity): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="flex-shrink-0 mt-1">
                                 <div class="w-8 h-8 rounded-full flex items-center justify-center
-                                    @if($activity['color'] === 'blue') bg-blue-100 text-blue-600
-                                    @elseif($activity['color'] === 'green') bg-green-100 text-green-600
-                                    @elseif($activity['color'] === 'red') bg-red-100 text-red-600
-                                    @else bg-yellow-100 text-yellow-600
-                                    @endif">
-                                    <i class="fas {{ $activity['icon'] }} text-sm"></i>
+                                    <?php if($activity['color'] === 'blue'): ?> bg-blue-100 text-blue-600
+                                    <?php elseif($activity['color'] === 'green'): ?> bg-green-100 text-green-600
+                                    <?php elseif($activity['color'] === 'red'): ?> bg-red-100 text-red-600
+                                    <?php else: ?> bg-yellow-100 text-yellow-600
+                                    <?php endif; ?>">
+                                    <i class="fas <?php echo e($activity['icon']); ?> text-sm"></i>
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-gray-900">
-                                    {{ $activity['message'] }}
+                                    <?php echo e($activity['message']); ?>
+
                                 </p>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    {{ $activity['date']->format('d.m.Y H:i') }}
+                                    <?php echo e($activity['date']->format('d.m.Y H:i')); ?>
+
                                 </p>
                             </div>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 </div>
 
 <!-- Модальное окно подтверждения удаления -->
@@ -320,8 +326,8 @@
                     Отмена
                 </button>
                 <form id="deleteForm" method="POST" class="inline">
-                    @csrf
-                    @method('DELETE')
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('DELETE'); ?>
                     <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
                         Удалить
                     </button>
@@ -330,9 +336,9 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('scripts')
+<?php $__env->startSection('scripts'); ?>
 <script>
     function toggleStatus(userId, newStatus) {
         fetch(`/admin/users/${userId}/toggle-status`, {
@@ -369,5 +375,7 @@
         document.getElementById('deleteModal').classList.add('hidden');
     }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
 
+
+<?php echo $__env->make('admin.layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/admin/users/show.blade.php ENDPATH**/ ?>
