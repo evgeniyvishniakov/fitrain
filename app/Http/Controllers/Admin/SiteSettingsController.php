@@ -41,10 +41,14 @@ class SiteSettingsController extends BaseController
             // Слайд 2 - Тренировка
             'landing.slider.2.title.ru' => 'Детальное планирование тренировок',
             'landing.slider.2.subtitle.ru' => 'Создавайте индивидуальные программы тренировок с подробным описанием упражнений, подходов и весов. Отслеживайте выполнение в реальном времени.',
+            'landing.slider.2.button_1.ru' => 'Попробовать бесплатно',
+            'landing.slider.2.button_2.ru' => 'Узнать больше',
             
             // Слайд 3 - Питание
             'landing.slider.3.title.ru' => 'Персональные планы питания',
             'landing.slider.3.subtitle.ru' => 'Разрабатывайте индивидуальные программы питания с расчетом калорий, БЖУ и приемов пищи. Помогайте спортсменам достигать своих целей.',
+            'landing.slider.3.button_1.ru' => 'Попробовать бесплатно',
+            'landing.slider.3.button_2.ru' => 'Узнать больше',
             
             // Возможности
             'landing.features.title.ru' => 'Возможности системы',
@@ -103,10 +107,8 @@ class SiteSettingsController extends BaseController
             for ($slide = 1; $slide <= 3; $slide++) {
                 $settings["landing_slider_{$slide}_title_{$lang}"] = SystemSetting::get("landing.slider.{$slide}.title.{$lang}", '');
                 $settings["landing_slider_{$slide}_subtitle_{$lang}"] = SystemSetting::get("landing.slider.{$slide}.subtitle.{$lang}", '');
-                if ($slide == 1) {
-                    $settings["landing_slider_{$slide}_button_1_{$lang}"] = SystemSetting::get("landing.slider.{$slide}.button_1.{$lang}", '');
-                    $settings["landing_slider_{$slide}_button_2_{$lang}"] = SystemSetting::get("landing.slider.{$slide}.button_2.{$lang}", '');
-                }
+                $settings["landing_slider_{$slide}_button_1_{$lang}"] = SystemSetting::get("landing.slider.{$slide}.button_1.{$lang}", '');
+                $settings["landing_slider_{$slide}_button_2_{$lang}"] = SystemSetting::get("landing.slider.{$slide}.button_2.{$lang}", '');
             }
             
             // Возможности (Features)
@@ -178,10 +180,8 @@ class SiteSettingsController extends BaseController
             for ($slide = 1; $slide <= 3; $slide++) {
                 $rules["landing_slider_{$slide}_title_{$lang}"] = ['nullable', 'string', 'max:255'];
                 $rules["landing_slider_{$slide}_subtitle_{$lang}"] = ['nullable', 'string', 'max:500'];
-                if ($slide == 1) {
-                    $rules["landing_slider_{$slide}_button_1_{$lang}"] = ['nullable', 'string', 'max:100'];
-                    $rules["landing_slider_{$slide}_button_2_{$lang}"] = ['nullable', 'string', 'max:100'];
-                }
+                $rules["landing_slider_{$slide}_button_1_{$lang}"] = ['nullable', 'string', 'max:100'];
+                $rules["landing_slider_{$slide}_button_2_{$lang}"] = ['nullable', 'string', 'max:100'];
             }
             
             // Возможности
@@ -224,10 +224,8 @@ class SiteSettingsController extends BaseController
             for ($slide = 1; $slide <= 3; $slide++) {
                 SystemSetting::set("landing.slider.{$slide}.title.{$lang}", $data["landing_slider_{$slide}_title_{$lang}"] ?? '', 'string', "Заголовок слайда {$slide} ({$lang})", true);
                 SystemSetting::set("landing.slider.{$slide}.subtitle.{$lang}", $data["landing_slider_{$slide}_subtitle_{$lang}"] ?? '', 'string', "Подзаголовок слайда {$slide} ({$lang})", true);
-                if ($slide == 1) {
-                    SystemSetting::set("landing.slider.{$slide}.button_1.{$lang}", $data["landing_slider_{$slide}_button_1_{$lang}"] ?? '', 'string', "Текст кнопки 1 слайда {$slide} ({$lang})", true);
-                    SystemSetting::set("landing.slider.{$slide}.button_2.{$lang}", $data["landing_slider_{$slide}_button_2_{$lang}"] ?? '', 'string', "Текст кнопки 2 слайда {$slide} ({$lang})", true);
-                }
+                SystemSetting::set("landing.slider.{$slide}.button_1.{$lang}", $data["landing_slider_{$slide}_button_1_{$lang}"] ?? '', 'string', "Текст кнопки 1 слайда {$slide} ({$lang})", true);
+                SystemSetting::set("landing.slider.{$slide}.button_2.{$lang}", $data["landing_slider_{$slide}_button_2_{$lang}"] ?? '', 'string', "Текст кнопки 2 слайда {$slide} ({$lang})", true);
             }
             
             // Возможности
