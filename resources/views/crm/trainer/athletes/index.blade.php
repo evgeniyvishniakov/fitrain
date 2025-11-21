@@ -4267,24 +4267,37 @@ function athletesApp() {
                             <div x-show="(currentAthlete?.workouts || []).length > 0" class="space-y-3">
                                 <template x-for="workout in (currentAthlete?.workouts || [])" :key="workout.id">
                                     <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                                        <div class="flex items-start justify-between">
-                                            <div class="flex-1">
-                                                <!-- Название и информация о тренировке -->
-                                                <div class="workout-header">
-                                                    <h4 class="text-lg font-semibold text-gray-900" x-text="workout.title"></h4>
-                                                    <div class="workout-info">
-                                                        <div class="workout-info-item">
-                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                            </svg>
-                                                            <span x-text="new Date(workout.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') + (workout.time ? ' в ' + workout.time : '')"></span>
-                                                        </div>
-                                                        <div class="workout-info-item">
-                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                            </svg>
-                                                            <span x-text="workout.duration + ' {{ __('common.min') }}'"></span>
-                                                        </div>
+                                        <div class="workout-container">
+                                            <!-- Название и статус -->
+                                            <div class="workout-header-row">
+                                                <h4 class="text-lg font-semibold text-gray-900 workout-title" x-text="workout.title"></h4>
+                                                <span class="px-3 py-1 text-sm rounded-full font-medium workout-status-badge"
+                                                      :class="{
+                                                          'bg-green-100 text-green-800': workout.status === 'completed',
+                                                          'bg-blue-100 text-blue-800': workout.status === 'planned',
+                                                          'bg-red-100 text-red-800': workout.status === 'cancelled'
+                                                      }"
+                                                      x-text="{
+                                                          'completed': '{{ __('common.workout_completed') }}',
+                                                          'planned': '{{ __('common.planned') }}', 
+                                                          'cancelled': '{{ __('common.cancelled') }}'
+                                                      }[workout.status] || workout.status"></span>
+                                            </div>
+                                            
+                                            <div class="workout-content">
+                                                <!-- Информация о тренировке -->
+                                                <div class="workout-info">
+                                                    <div class="workout-info-item">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                        </svg>
+                                                        <span x-text="new Date(workout.date).toLocaleDateString('{{ app()->getLocale() === 'ua' ? 'uk-UA' : (app()->getLocale() === 'ru' ? 'ru-RU' : 'en-US') }}') + (workout.time ? ' в ' + (workout.time.length >= 5 ? workout.time.substring(0, 5) : workout.time) : '')"></span>
+                                                    </div>
+                                                    <div class="workout-info-item">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                        <span x-text="workout.duration + ' {{ __('common.min') }}'"></span>
                                                     </div>
                                                 </div>
                                                 
@@ -4317,21 +4330,6 @@ function athletesApp() {
                                                         </button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            
-                                            <!-- Статус тренировки -->
-                                            <div class="flex items-center ml-4">
-                                                <span class="px-3 py-1 text-sm rounded-full font-medium"
-                                                      :class="{
-                                                          'bg-green-100 text-green-800': workout.status === 'completed',
-                                                          'bg-blue-100 text-blue-800': workout.status === 'planned',
-                                                          'bg-red-100 text-red-800': workout.status === 'cancelled'
-                                                      }"
-                                                      x-text="{
-                                                          'completed': '{{ __('common.workout_completed') }}',
-                                                          'planned': '{{ __('common.planned') }}', 
-                                                          'cancelled': '{{ __('common.cancelled') }}'
-                                                      }[workout.status] || workout.status"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -5599,20 +5597,63 @@ function athletesApp() {
 
 /* Тренировки на мобилке */
 @media (max-width: 640px) {
-    .workout-header {
-        flex-direction: column !important;
+    .bg-white.border.border-gray-200.rounded-lg {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .workout-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+    
+    .workout-header-row {
+        display: flex !important;
+        flex-direction: row !important;
         align-items: flex-start !important;
+        justify-content: space-between !important;
         gap: 8px !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .workout-title {
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        margin-right: 8px !important;
+    }
+    
+    .workout-status-badge {
+        flex-shrink: 0 !important;
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+        white-space: nowrap !important;
+    }
+    
+    .workout-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
     }
     
     .workout-info {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 8px !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: visible !important;
     }
     
     .workout-info-item {
         font-size: 13px;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
     
     .workout-status {
@@ -5621,8 +5662,34 @@ function athletesApp() {
     }
 }
 
-/* Тренировки на десктопе - принудительно в ряд */
+/* Тренировки на десктопе */
 @media (min-width: 641px) {
+    .workout-container {
+        width: 100%;
+    }
+    
+    .workout-header-row {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 8px;
+    }
+    
+    .workout-title {
+        flex: 1 1 0%;
+        min-width: 0;
+    }
+    
+    .workout-status-badge {
+        flex-shrink: 0;
+    }
+    
+    .workout-content {
+        width: 100%;
+    }
+    
     .workout-info {
         flex-direction: row !important;
         flex-wrap: nowrap !important;
