@@ -8,8 +8,8 @@
         $siteLogoDefault = \App\Models\SystemSetting::get('site.logo', '');
         $siteLogoLight = \App\Models\SystemSetting::get('site.logo_light');
         $siteLogoDark = \App\Models\SystemSetting::get('site.logo_dark');
-        $landingHeroImage = \App\Models\SystemSetting::get('landing.hero_image');
-        $landingFeaturesImage = \App\Models\SystemSetting::get('landing.features_image');
+        $landingHeroImage = $landing_hero_image ?? \App\Models\SystemSetting::get('landing.hero_image');
+        $landingFeaturesImage = $landing_features_image ?? \App\Models\SystemSetting::get('landing.features_image');
         $landingTestimonialImage = \App\Models\SystemSetting::get('landing.testimonial_image');
         $siteFavicon = \App\Models\SystemSetting::get('site.favicon');
         
@@ -125,10 +125,11 @@
                         <!-- Переключатель языков -->
                         <select id="language_select" 
                                 onchange="window.location.href='?lang='+this.value"
-                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer"
+                                title="<?php echo e($languages->firstWhere('code', $current_lang)->native_name ?? $languages->firstWhere('code', $current_lang)->name ?? ''); ?>">
                             <?php $__currentLoopData = $languages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $language): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <option value="<?php echo e($language->code); ?>" <?php echo e($current_lang === $language->code ? 'selected' : ''); ?>>
-                                    <?php echo e($language->flag); ?> <?php echo e($language->native_name ?? $language->name); ?>
+                                    <?php echo e($language->flag ?? strtoupper($language->code)); ?>
 
                                 </option>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -156,10 +157,11 @@
                     <!-- Переключатель языков -->
                     <select id="language_select_mobile" 
                             onchange="window.location.href='?lang='+this.value"
-                            class="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                            class="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer"
+                            title="<?php echo e($languages->firstWhere('code', $current_lang)->native_name ?? $languages->firstWhere('code', $current_lang)->name ?? ''); ?>">
                         <?php $__currentLoopData = $languages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $language): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <option value="<?php echo e($language->code); ?>" <?php echo e($current_lang === $language->code ? 'selected' : ''); ?>>
-                                <?php echo e($language->flag); ?> <?php echo e($language->native_name ?? $language->name); ?>
+                                <?php echo e($language->flag ?? strtoupper($language->code)); ?>
 
                             </option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -193,8 +195,18 @@
                         </div>
                     </div>
                     <div class="fade-in">
-                        <?php if($landingHeroImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage)): ?>
-                            <img src="<?php echo e(url('storage/' . $landingHeroImage)); ?>" alt="Fitrain CRM" class="rounded-2xl shadow-2xl">
+                        <?php
+                            $heroImageExists = false;
+                            if(!empty($landingHeroImage)) {
+                                try {
+                                    $heroImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage);
+                                } catch (\Exception $e) {
+                                    $heroImageExists = false;
+                                }
+                            }
+                        ?>
+                        <?php if($heroImageExists): ?>
+                            <img src="<?php echo e(asset('storage/' . $landingHeroImage)); ?>" alt="Fitrain CRM" class="rounded-2xl shadow-2xl w-full h-auto">
                         <?php else: ?>
                             <div class="gradient-primary rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,8 +259,18 @@
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div>
-                        <?php if($landingFeaturesImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage)): ?>
-                            <img src="<?php echo e(url('storage/' . $landingFeaturesImage)); ?>" alt="Для тренеров" class="rounded-2xl shadow-2xl">
+                        <?php
+                            $featuresImageExists = false;
+                            if(!empty($landingFeaturesImage)) {
+                                try {
+                                    $featuresImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage);
+                                } catch (\Exception $e) {
+                                    $featuresImageExists = false;
+                                }
+                            }
+                        ?>
+                        <?php if($featuresImageExists): ?>
+                            <img src="<?php echo e(asset('storage/' . $landingFeaturesImage)); ?>" alt="Для тренеров" class="rounded-2xl shadow-2xl w-full h-auto">
                         <?php else: ?>
                             <div class="gradient-blue rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

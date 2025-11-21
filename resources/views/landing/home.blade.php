@@ -8,8 +8,8 @@
         $siteLogoDefault = \App\Models\SystemSetting::get('site.logo', '');
         $siteLogoLight = \App\Models\SystemSetting::get('site.logo_light');
         $siteLogoDark = \App\Models\SystemSetting::get('site.logo_dark');
-        $landingHeroImage = \App\Models\SystemSetting::get('landing.hero_image');
-        $landingFeaturesImage = \App\Models\SystemSetting::get('landing.features_image');
+        $landingHeroImage = $landing_hero_image ?? \App\Models\SystemSetting::get('landing.hero_image');
+        $landingFeaturesImage = $landing_features_image ?? \App\Models\SystemSetting::get('landing.features_image');
         $landingTestimonialImage = \App\Models\SystemSetting::get('landing.testimonial_image');
         $siteFavicon = \App\Models\SystemSetting::get('site.favicon');
         
@@ -125,10 +125,11 @@
                         <!-- Переключатель языков -->
                         <select id="language_select" 
                                 onchange="window.location.href='?lang='+this.value"
-                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer"
+                                title="{{ $languages->firstWhere('code', $current_lang)->native_name ?? $languages->firstWhere('code', $current_lang)->name ?? '' }}">
                             @foreach($languages as $language)
                                 <option value="{{ $language->code }}" {{ $current_lang === $language->code ? 'selected' : '' }}>
-                                    {{ $language->flag }} {{ $language->native_name ?? $language->name }}
+                                    {{ $language->flag ?? strtoupper($language->code) }}
                                 </option>
                             @endforeach
                         </select>
@@ -155,10 +156,11 @@
                     <!-- Переключатель языков -->
                     <select id="language_select_mobile" 
                             onchange="window.location.href='?lang='+this.value"
-                            class="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                            class="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer"
+                            title="{{ $languages->firstWhere('code', $current_lang)->native_name ?? $languages->firstWhere('code', $current_lang)->name ?? '' }}">
                         @foreach($languages as $language)
                             <option value="{{ $language->code }}" {{ $current_lang === $language->code ? 'selected' : '' }}>
-                                {{ $language->flag }} {{ $language->native_name ?? $language->name }}
+                                {{ $language->flag ?? strtoupper($language->code) }}
                             </option>
                         @endforeach
                     </select>
@@ -187,8 +189,18 @@
                         </div>
                     </div>
                     <div class="fade-in">
-                        @if($landingHeroImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage))
-                            <img src="{{ url('storage/' . $landingHeroImage) }}" alt="Fitrain CRM" class="rounded-2xl shadow-2xl">
+                        @php
+                            $heroImageExists = false;
+                            if(!empty($landingHeroImage)) {
+                                try {
+                                    $heroImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingHeroImage);
+                                } catch (\Exception $e) {
+                                    $heroImageExists = false;
+                                }
+                            }
+                        @endphp
+                        @if($heroImageExists)
+                            <img src="{{ asset('storage/' . $landingHeroImage) }}" alt="Fitrain CRM" class="rounded-2xl shadow-2xl w-full h-auto">
                         @else
                             <div class="gradient-primary rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -241,8 +253,18 @@
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div>
-                        @if($landingFeaturesImage && \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage))
-                            <img src="{{ url('storage/' . $landingFeaturesImage) }}" alt="Для тренеров" class="rounded-2xl shadow-2xl">
+                        @php
+                            $featuresImageExists = false;
+                            if(!empty($landingFeaturesImage)) {
+                                try {
+                                    $featuresImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage);
+                                } catch (\Exception $e) {
+                                    $featuresImageExists = false;
+                                }
+                            }
+                        @endphp
+                        @if($featuresImageExists)
+                            <img src="{{ asset('storage/' . $landingFeaturesImage) }}" alt="Для тренеров" class="rounded-2xl shadow-2xl w-full h-auto">
                         @else
                             <div class="gradient-blue rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

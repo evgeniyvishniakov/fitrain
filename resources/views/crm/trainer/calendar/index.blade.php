@@ -627,7 +627,7 @@ function calendarApp() {
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
         <div @click.away="showWorkoutModal = false"
-             class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100"
+             class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 border border-gray-100"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 transform scale-95"
              x-transition:enter-end="opacity-100 transform scale-100"
@@ -657,7 +657,7 @@ function calendarApp() {
                     <div class="space-y-4">
                         <!-- Статус -->
                         <div class="flex justify-center">
-                            <span class="px-4 py-2 rounded-full text-sm font-bold"
+                            <span class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap max-w-full overflow-hidden text-ellipsis"
                                   :class="{
                                       'bg-green-100 text-green-800 border border-green-200': currentWorkoutDetails.status === 'completed',
                                       'bg-blue-100 text-blue-800 border border-blue-200': currentWorkoutDetails.status === 'planned',
@@ -826,41 +826,63 @@ function calendarApp() {
 
 /* Стили для карточек тренировок в модальном окне */
 .workout-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem 0.75rem;
+    padding: 0.75rem;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     margin-bottom: 8px;
-    gap: 16px;
+    align-items: center;
 }
 
 .workout-title {
+    grid-column: 1;
+    grid-row: 1;
     font-weight: 600;
     color: #111827;
-    min-width: 120px;
-}
-
-.workout-athlete {
-    color: #6b7280;
-    min-width: 150px;
-    display: flex;
-    align-items: center;
-}
-
-.workout-time {
-    color: #9ca3af;
-    min-width: 60px;
-    display: flex;
-    align-items: center;
+    font-size: 0.875rem;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .workout-status {
+    grid-column: 2;
+    grid-row: 1;
     padding: 4px 8px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
-    margin-left: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+    align-self: center;
+}
+
+.workout-athlete {
+    grid-column: 1;
+    grid-row: 2;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.workout-time {
+    grid-column: 2;
+    grid-row: 2;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    justify-self: end;
 }
 
 /* Убираем стиль --tw-space-y-reverse для space-y-6 */
@@ -879,8 +901,8 @@ function calendarApp() {
     /* Модальное окно календаря - белый контейнер */
     div[x-show*="showWorkoutModal"] .bg-white.rounded-2xl.shadow-2xl,
     .fixed.inset-0 .bg-white.rounded-2xl.shadow-2xl {
-        width: 95% !important;
-        max-width: 95% !important;
+        width: 98% !important;
+        max-width: 98% !important;
         margin: 0 !important;
         max-height: 90vh !important;
         display: flex !important;
@@ -913,47 +935,5 @@ function calendarApp() {
         min-height: 0 !important;
     }
     
-    /* Карточки тренировок на мобильных */
-    .workout-row {
-        display: grid !important;
-        grid-template-columns: 1fr auto !important;
-        gap: 0.5rem 0.75rem !important;
-        padding: 0.75rem !important;
-        align-items: center !important;
-    }
-    
-    .workout-title {
-        grid-column: 1 !important;
-        grid-row: 1 !important;
-        min-width: auto !important;
-        width: auto !important;
-        font-size: 0.875rem !important;
-        font-weight: 600 !important;
-    }
-    
-    .workout-status {
-        grid-column: 2 !important;
-        grid-row: 1 !important;
-        margin-left: 0 !important;
-        margin-top: 0 !important;
-        align-self: center !important;
-    }
-    
-    .workout-athlete {
-        grid-column: 1 !important;
-        grid-row: 2 !important;
-        min-width: auto !important;
-        width: auto !important;
-        font-size: 0.875rem !important;
-    }
-    
-    .workout-time {
-        grid-column: 2 !important;
-        grid-row: 2 !important;
-        min-width: auto !important;
-        width: auto !important;
-        font-size: 0.875rem !important;
-        justify-self: end !important;
-    }
 }
 </style>
