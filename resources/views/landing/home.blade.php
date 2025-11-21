@@ -107,16 +107,14 @@
         }
         
         .hero-image-container img {
-            max-width: 120%;
-            width: 120%;
-            transform: scale(1.1);
+            max-width: 110%;
+            width: 110%;
         }
         
         @media (max-width: 767px) {
             .hero-image-container img {
                 max-width: 100%;
                 width: 100%;
-                transform: scale(1);
             }
         }
     </style>
