@@ -3850,17 +3850,13 @@ function athletesApp() {
 
                         <!-- Вкладка "Финансы" -->
                         <div x-show="activeTab === 'finance'" class="space-y-6">
-                            <!-- Заголовок с кнопкой добавления -->
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.financial_data') }}</h3>
-                                <button @click="showAddPayment()" 
-                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
-                                    {{ __('common.add_payment') }}
-                                </button>
-                            </div>
+                            <button @click="showAddPayment()" 
+                                    class="w-full px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center text-xs md:text-base">
+                                <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                {{ __('common.add_payment') }}
+                            </button>
 
 
                             <!-- Общая статистика -->
@@ -3868,7 +3864,7 @@ function athletesApp() {
                                 <h4 class="text-md font-semibold text-gray-900 mb-4">{{ __('common.general_statistics') }}</h4>
                                 <div class="flex flex-wrap items-center justify-between gap-4">
                                     <div class="text-center">
-                                        <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.finance?.total_paid) || 0).toFixed(2)">0.00</div>
+                                        <div class="text-2xl font-bold text-green-600" x-text="(parseFloat(currentAthlete?.finance?.total_paid) || 0).toFixed(2).replace(/\.?0+$/, '')">0</div>
                                         <div class="text-sm text-gray-500">{{ __('common.total_paid') }}</div>
                                     </div>
                                     <div class="text-center">
@@ -3981,18 +3977,13 @@ function athletesApp() {
                         </div>
 
                         <div x-show="activeTab === 'measurements'" class="space-y-6">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-semibold text-gray-900">
-                                    {{ __('common.body_measurements') }} (<span x-text="measurements.length"></span>)
-                                </h3>
-                                <button @click="showAddMeasurement()" 
-                                        class="px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center text-xs md:text-base">
-                                    <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
-                                    Добавить измерение
-                                </button>
-                            </div>
+                            <button @click="showAddMeasurement()" 
+                                    class="w-full px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center text-xs md:text-base">
+                                <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Добавить измерение
+                            </button>
                             
                             <!-- История измерений -->
                             <div x-show="measurements.length > 0" class="space-y-4">
@@ -4337,16 +4328,13 @@ function athletesApp() {
                             </div>
                         </div>
                 
-                        <div x-show="activeTab === 'nutrition'" class="p-6">
-                            <div class="flex items-center justify-between mb-6">
-                                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.nutrition_plans') }}</h3>
-                                <button @click="showAddNutritionPlan()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
-                                    {{ __('common.create_nutrition_plan') }}
-                                </button>
-                            </div>
+                        <div x-show="activeTab === 'nutrition'" >
+                            <button @click="showAddNutritionPlan()" class="w-full mb-6 px-2 py-1 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center justify-center text-xs md:text-base">
+                                <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                {{ __('common.create_nutrition_plan') }}
+                            </button>
                             
                             <!-- Планы питания -->
                             <div>
@@ -5380,10 +5368,10 @@ function athletesApp() {
                                     <template x-for="day in fullMonthNutritionDays" :key="day.id">
                                         <tr>
                                             <td class="px-3 py-2 text-sm font-medium text-gray-900" x-text="(() => { const p = parseDateParts(day.date); return p ? p.d : '-'; })()"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.proteins || 0).toFixed(1)"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1)"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1)"></td>
-                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.calories || 0).toFixed(1)"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.proteins || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.fats || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.carbs || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
+                                            <td class="px-3 py-2 text-sm text-gray-900" x-text="parseFloat(day.calories || 0).toFixed(1).replace(/\.?0+$/, '')"></td>
                                             <td class="px-3 py-2 text-sm text-gray-900" x-text="day.notes || '-'"></td>
                                         </tr>
                                     </template>
