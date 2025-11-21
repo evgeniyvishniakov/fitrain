@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Landing\BaseController;
+use App\Models\SystemSetting;
+use App\Models\Language;
 use Illuminate\Http\Request;
 
 class HomeController extends BaseController
@@ -10,9 +12,80 @@ class HomeController extends BaseController
     /**
      * Главная страница лендинга
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('landing.home');
+        // Загружаем активные языки
+        $languages = Language::getActive();
+        
+        // Определяем язык: из параметра URL, сессии или локали приложения
+        $lang = 'ru'; // по умолчанию
+        if ($request->has('lang')) {
+            $requestedLang = $request->get('lang');
+            if ($languages->pluck('code')->contains($requestedLang)) {
+                $lang = $requestedLang;
+                session(['locale' => $lang]);
+            }
+        } elseif (session()->has('locale')) {
+            $sessionLang = session('locale');
+            if ($languages->pluck('code')->contains($sessionLang)) {
+                $lang = $sessionLang;
+            }
+        } elseif (app()->getLocale() === 'uk' || app()->getLocale() === 'ua') {
+            $lang = 'ua';
+        } else {
+            $lang = app()->getLocale() === 'ru' ? 'ru' : 'ru';
+        }
+        
+        // Устанавливаем локаль для текущего запроса
+        app()->setLocale($lang);
+        
+        // Загружаем данные для лендинга
+        $data = [
+            // Слайдер - берем первый слайд для Hero секции
+            'hero_title' => SystemSetting::get("landing.slider.1.title.{$lang}", 'Профессиональная CRM для фитнес-тренеров'),
+            'hero_subtitle' => SystemSetting::get("landing.slider.1.subtitle.{$lang}", 'Управляйте спортсменами, создавайте тренировки, отслеживайте прогресс и многое другое в одной удобной системе.'),
+            'hero_button_1' => SystemSetting::get("landing.slider.1.button_1.{$lang}", 'Попробовать бесплатно'),
+            'hero_button_2' => SystemSetting::get("landing.slider.1.button_2.{$lang}", 'Узнать больше'),
+            
+            // Возможности
+            'features_title' => SystemSetting::get("landing.features.title.{$lang}", 'Возможности системы'),
+            'features_subtitle' => SystemSetting::get("landing.features.subtitle.{$lang}", 'Все необходимое для управления тренировочным процессом'),
+            'features' => [],
+            
+            // Для тренера
+            'trainers_title' => SystemSetting::get("landing.trainers.title.{$lang}", 'Для тренеров'),
+            'trainers_subtitle' => SystemSetting::get("landing.trainers.subtitle.{$lang}", 'Управляйте всеми аспектами вашего тренировочного бизнеса в одном месте'),
+            'trainer_items' => [],
+            
+            // Для спортсмена
+            'athletes_title' => SystemSetting::get("landing.athletes.title.{$lang}", 'Для спортсменов'),
+            'athletes_subtitle' => SystemSetting::get("landing.athletes.subtitle.{$lang}", 'Следите за своими тренировками, прогрессом и планами питания'),
+            'athlete_items' => [],
+        ];
+        
+        // Загружаем 9 возможностей
+        for ($i = 1; $i <= 9; $i++) {
+            $data['features'][] = [
+                'title' => SystemSetting::get("landing.feature.{$i}.title.{$lang}", ''),
+                'description' => SystemSetting::get("landing.feature.{$i}.description.{$lang}", ''),
+            ];
+        }
+        
+        // Загружаем 5 пунктов для тренера
+        for ($i = 1; $i <= 5; $i++) {
+            $data['trainer_items'][] = SystemSetting::get("landing.trainer.item.{$i}.{$lang}", '');
+        }
+        
+        // Загружаем 5 пунктов для спортсмена
+        for ($i = 1; $i <= 5; $i++) {
+            $data['athlete_items'][] = SystemSetting::get("landing.athlete.item.{$i}.{$lang}", '');
+        }
+        
+        // Добавляем языки для переключателя
+        $data['languages'] = $languages;
+        $data['current_lang'] = $lang;
+        
+        return view('landing.home', $data);
     }
 
     /**

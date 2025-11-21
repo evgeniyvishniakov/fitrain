@@ -1,12 +1,10 @@
-@extends('admin.layouts.app')
+<?php $__env->startSection('title', 'Настройки сайта'); ?>
+<?php $__env->startSection('page-title', 'Настройки сайта'); ?>
 
-@section('title', 'Настройки сайта')
-@section('page-title', 'Настройки сайта')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="max-w-7xl mx-auto space-y-6">
-        <form action="{{ route('admin.site.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-            @csrf
+        <form action="<?php echo e(route('admin.site.update')); ?>" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <?php echo csrf_field(); ?>
 
         <!-- Вкладки -->
         <div class="bg-white rounded-xl shadow-sm border-b border-gray-200">
@@ -59,22 +57,36 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Название сайта *</label>
                         <input type="text"
                                name="site_name"
-                               value="{{ old('site_name', $settings['site_name'] ?? '') }}"
+                               value="<?php echo e(old('site_name', $settings['site_name'] ?? '')); ?>"
                                required
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @error('site_name')
-                            <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-                        @enderror
+                        <?php $__errorArgs = ['site_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-2"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Описание</label>
                         <textarea name="site_description"
                                   rows="3"
-                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old('site_description', $settings['site_description'] ?? '') }}</textarea>
-                        @error('site_description')
-                            <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-                        @enderror
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e(old('site_description', $settings['site_description'] ?? '')); ?></textarea>
+                        <?php $__errorArgs = ['site_description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-2"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
             </div>
@@ -92,22 +104,36 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
                         <input type="text"
                                name="meta_title"
-                               value="{{ old('meta_title', $settings['meta_title'] ?? '') }}"
+                               value="<?php echo e(old('meta_title', $settings['meta_title'] ?? '')); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @error('meta_title')
-                            <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-                        @enderror
+                        <?php $__errorArgs = ['meta_title'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-2"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
                         <input type="text"
                                name="meta_keywords"
-                               value="{{ old('meta_keywords', $settings['meta_keywords'] ?? '') }}"
+                               value="<?php echo e(old('meta_keywords', $settings['meta_keywords'] ?? '')); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @error('meta_keywords')
-                            <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-                        @enderror
+                        <?php $__errorArgs = ['meta_keywords'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600 mt-2"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
 
@@ -115,10 +141,17 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
                     <textarea name="meta_description"
                               rows="3"
-                              class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old('meta_description', $settings['meta_description'] ?? '') }}</textarea>
-                    @error('meta_description')
-                        <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-                    @enderror
+                              class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e(old('meta_description', $settings['meta_description'] ?? '')); ?></textarea>
+                    <?php $__errorArgs = ['meta_description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600 mt-2"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
             </div>
 
@@ -140,15 +173,22 @@
                             </div>
                             <input type="file" name="logo" accept="image/*" class="hidden">
                         </label>
-                        @if(!empty($settings['logo'] ?? ''))
+                        <?php if(!empty($settings['logo'] ?? '')): ?>
                             <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                <img src="{{ asset('storage/' . $settings['logo']) }}" alt="Текущий логотип" class="h-12 object-contain">
+                                <img src="<?php echo e(asset('storage/' . $settings['logo'])); ?>" alt="Текущий логотип" class="h-12 object-contain">
                                 <span class="text-xs text-gray-500">Текущий файл</span>
                             </div>
-                        @endif
-                        @error('logo')
-                            <p class="text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        <?php endif; ?>
+                        <?php $__errorArgs = ['logo'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div class="space-y-3">
@@ -160,15 +200,22 @@
                             </div>
                             <input type="file" name="favicon" accept=".ico,.png,.jpg,.jpeg" class="hidden">
                         </label>
-                        @if(!empty($settings['favicon'] ?? ''))
+                        <?php if(!empty($settings['favicon'] ?? '')): ?>
                             <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                <img src="{{ asset('storage/' . $settings['favicon']) }}" alt="Текущий favicon" class="h-10 w-10 object-contain">
+                                <img src="<?php echo e(asset('storage/' . $settings['favicon'])); ?>" alt="Текущий favicon" class="h-10 w-10 object-contain">
                                 <span class="text-xs text-gray-500">Текущий файл</span>
                             </div>
-                        @endif
-                        @error('favicon')
-                            <p class="text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        <?php endif; ?>
+                        <?php $__errorArgs = ['favicon'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
 
@@ -182,15 +229,22 @@
                             </div>
                             <input type="file" name="logo_light" accept="image/*" class="hidden">
                         </label>
-                        @if(!empty($settings['logo_light'] ?? ''))
+                        <?php if(!empty($settings['logo_light'] ?? '')): ?>
                             <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                <img src="{{ asset('storage/' . $settings['logo_light']) }}" alt="Логотип для светлой темы" class="h-12 object-contain">
+                                <img src="<?php echo e(asset('storage/' . $settings['logo_light'])); ?>" alt="Логотип для светлой темы" class="h-12 object-contain">
                                 <span class="text-xs text-gray-500">Текущий файл</span>
                             </div>
-                        @endif
-                        @error('logo_light')
-                            <p class="text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        <?php endif; ?>
+                        <?php $__errorArgs = ['logo_light'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div class="space-y-3">
@@ -202,15 +256,22 @@
                             </div>
                             <input type="file" name="logo_dark" accept="image/*" class="hidden">
                         </label>
-                        @if(!empty($settings['logo_dark'] ?? ''))
+                        <?php if(!empty($settings['logo_dark'] ?? '')): ?>
                             <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                <img src="{{ asset('storage/' . $settings['logo_dark']) }}" alt="Логотип для тёмной темы" class="h-12 object-contain">
+                                <img src="<?php echo e(asset('storage/' . $settings['logo_dark'])); ?>" alt="Логотип для тёмной темы" class="h-12 object-contain">
                                 <span class="text-xs text-gray-500">Текущий файл</span>
                             </div>
-                        @endif
-                        @error('logo_dark')
-                            <p class="text-sm text-red-600">{{ $message }}</p>
-                        @enderror
+                        <?php endif; ?>
+                        <?php $__errorArgs = ['logo_dark'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
             </div>
@@ -218,55 +279,62 @@
 
         <!-- Вкладка: Слайдер -->
         <div id="tab-content-slider" class="tab-content space-y-6" style="display: none;">
-            @php
+            <?php
                 $slideNames = [1 => 'Календарь', 2 => 'Тренировка', 3 => 'Питание'];
-            @endphp
+            ?>
             
-            @for($slide = 1; $slide <= 3; $slide++)
+            <?php for($slide = 1; $slide <= 3; $slide++): ?>
             <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
                 <div class="flex items-center justify-between border-b border-gray-100 pb-4">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900">Слайд {{ $slide }} - {{ $slideNames[$slide] }}</h3>
-                        <p class="text-sm text-gray-500 mt-1">Настройки {{ strtolower($slideNames[$slide]) }} слайда.</p>
+                        <h3 class="text-lg font-semibold text-gray-900">Слайд <?php echo e($slide); ?> - <?php echo e($slideNames[$slide]); ?></h3>
+                        <p class="text-sm text-gray-500 mt-1">Настройки <?php echo e(strtolower($slideNames[$slide])); ?> слайда.</p>
                     </div>
                 </div>
 
                 <!-- Изображение слайда -->
                 <div class="space-y-3">
-                    <label class="block text-sm font-medium text-gray-700">Изображение для слайда {{ $slide }}</label>
+                    <label class="block text-sm font-medium text-gray-700">Изображение для слайда <?php echo e($slide); ?></label>
                     <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
                         <div class="text-center px-4">
                             <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
                             <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
                         </div>
-                        <input type="file" name="landing_slider_{{$slide}}_image" accept="image/*" class="hidden">
+                        <input type="file" name="landing_slider_<?php echo e($slide); ?>_image" accept="image/*" class="hidden">
                     </label>
-                    @php
+                    <?php
                         $sliderImageKey = "landing_slider_{$slide}_image";
                         $sliderImageValue = $settings[$sliderImageKey] ?? '';
-                    @endphp
-                    @if(!empty($sliderImageValue))
+                    ?>
+                    <?php if(!empty($sliderImageValue)): ?>
                         <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                            <img src="{{ asset('storage/' . $sliderImageValue) }}" alt="Текущее изображение" class="h-20 object-contain">
+                            <img src="<?php echo e(asset('storage/' . $sliderImageValue)); ?>" alt="Текущее изображение" class="h-20 object-contain">
                             <span class="text-xs text-gray-500">Текущий файл</span>
                         </div>
-                    @endif
-                    @php
+                    <?php endif; ?>
+                    <?php
                         $errorKey = "landing_slider_{$slide}_image";
-                    @endphp
-                    @error($errorKey)
-                        <p class="text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    ?>
+                    <?php $__errorArgs = [$errorKey];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <!-- Мультиязычные поля -->
-                @foreach(['ru' => 'Русский', 'ua' => 'Українська'] as $lang => $langName)
+                <?php $__currentLoopData = ['ru' => 'Русский', 'ua' => 'Українська']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang => $langName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="border border-gray-200 rounded-lg p-4 space-y-4">
                     <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
-                        <span class="text-sm font-semibold text-gray-900">{{ $langName }}</span>
+                        <span class="text-sm font-semibold text-gray-900"><?php echo e($langName); ?></span>
                     </div>
                     
-                    @php
+                    <?php
                         $slideTitlesRu = [
                             1 => 'Профессиональная CRM для фитнес-тренеров',
                             2 => 'Детальное планирование тренировок',
@@ -283,44 +351,44 @@
                         $defaultSubtitle = ($lang === 'ru' && isset($slideSubtitlesRu[$slide])) ? $slideSubtitlesRu[$slide] : '';
                         $slideTitleValue = old($slideTitleKey, $settings[$slideTitleKey] ?? $defaultTitle);
                         $slideSubtitleValue = old($slideSubtitleKey, $settings[$slideSubtitleKey] ?? $defaultSubtitle);
-                    @endphp
+                    ?>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Заголовок</label>
                         <input type="text"
-                               name="landing_slider_{{$slide}}_title_{{ $lang }}"
-                               value="{{ $slideTitleValue }}"
+                               name="landing_slider_<?php echo e($slide); ?>_title_<?php echo e($lang); ?>"
+                               value="<?php echo e($slideTitleValue); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Подзаголовок</label>
-                        <textarea name="landing_slider_{{$slide}}_subtitle_{{ $lang }}"
+                        <textarea name="landing_slider_<?php echo e($slide); ?>_subtitle_<?php echo e($lang); ?>"
                                   rows="3"
-                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ $slideSubtitleValue }}</textarea>
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e($slideSubtitleValue); ?></textarea>
                     </div>
                     
-                    @if($slide == 1)
+                    <?php if($slide == 1): ?>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Текст кнопки 1</label>
                         <input type="text"
-                               name="landing_slider_1_button_1_{{ $lang }}"
-                               value="{{ old("landing_slider_1_button_1_{$lang}", $settings['landing_slider_1_button_1_' . $lang] ?? ($lang === 'ru' ? 'Попробовать бесплатно' : '')) }}"
+                               name="landing_slider_1_button_1_<?php echo e($lang); ?>"
+                               value="<?php echo e(old("landing_slider_1_button_1_{$lang}", $settings['landing_slider_1_button_1_' . $lang] ?? ($lang === 'ru' ? 'Попробовать бесплатно' : ''))); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Текст кнопки 2</label>
                         <input type="text"
-                               name="landing_slider_1_button_2_{{ $lang }}"
-                               value="{{ old("landing_slider_1_button_2_{$lang}", $settings['landing_slider_1_button_2_' . $lang] ?? ($lang === 'ru' ? 'Узнать больше' : '')) }}"
+                               name="landing_slider_1_button_2_<?php echo e($lang); ?>"
+                               value="<?php echo e(old("landing_slider_1_button_2_{$lang}", $settings['landing_slider_1_button_2_' . $lang] ?? ($lang === 'ru' ? 'Узнать больше' : ''))); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-            @endfor
+            <?php endfor; ?>
             
         </div>
 
@@ -347,39 +415,39 @@
                         </div>
                         <input type="file" name="landing_features_image" accept="image/*" class="hidden">
                     </label>
-                    @if(!empty($settings['landing_features_image'] ?? ''))
+                    <?php if(!empty($settings['landing_features_image'] ?? '')): ?>
                         <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                            <img src="{{ asset('storage/' . $settings['landing_features_image']) }}" alt="Текущее изображение" class="h-20 object-contain">
+                            <img src="<?php echo e(asset('storage/' . $settings['landing_features_image'])); ?>" alt="Текущее изображение" class="h-20 object-contain">
                             <span class="text-xs text-gray-500">Текущий файл</span>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
-                @foreach(['ru' => 'Русский', 'ua' => 'Українська'] as $lang => $langName)
+                <?php $__currentLoopData = ['ru' => 'Русский', 'ua' => 'Українська']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang => $langName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="border border-gray-200 rounded-lg p-4 space-y-4 mb-6">
                     <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
-                        <span class="text-sm font-semibold text-gray-900">{{ $langName }}</span>
+                        <span class="text-sm font-semibold text-gray-900"><?php echo e($langName); ?></span>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Заголовок секции</label>
                         <input type="text"
-                               name="landing_features_title_{{ $lang }}"
-                               value="{{ old("landing_features_title_{$lang}", $settings['landing_features_title_' . $lang] ?? ($lang === 'ru' ? 'Возможности системы' : '')) }}"
+                               name="landing_features_title_<?php echo e($lang); ?>"
+                               value="<?php echo e(old("landing_features_title_{$lang}", $settings['landing_features_title_' . $lang] ?? ($lang === 'ru' ? 'Возможности системы' : ''))); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Подзаголовок секции</label>
-                        <textarea name="landing_features_subtitle_{{ $lang }}"
+                        <textarea name="landing_features_subtitle_<?php echo e($lang); ?>"
                                   rows="2"
-                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old("landing_features_subtitle_{$lang}", $settings['landing_features_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Все необходимое для управления тренировочным процессом' : '')) }}</textarea>
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e(old("landing_features_subtitle_{$lang}", $settings['landing_features_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Все необходимое для управления тренировочным процессом' : ''))); ?></textarea>
                     </div>
                     
                     <div class="mt-6 pt-4 border-t border-gray-200">
                         <h4 class="text-md font-semibold text-gray-900 mb-4">Возможности (9 карточек)</h4>
                         
-                        @php
+                        <?php
                             $features_ru = [
                                 1 => ['title' => 'Календарь тренировок', 'description' => 'Удобное планирование и управление тренировками с визуальным календарем'],
                                 2 => ['title' => 'Управление спортсменами', 'description' => 'Полный профиль каждого спортсмена с историей тренировок и прогрессом'],
@@ -391,25 +459,25 @@
                                 8 => ['title' => 'История выполнения упражнений', 'description' => 'Просмотр истории выполнения упражнений за все время тренировок'],
                                 9 => ['title' => 'Отслеживание выполнения упражнений', 'description' => 'Отслеживание статуса выполнения: полностью или частично выполнено упражнение спортсменом']
                             ];
-                        @endphp
+                        ?>
                         
-                        @for($i = 1; $i <= 9; $i++)
+                        <?php for($i = 1; $i <= 9; $i++): ?>
                         <div class="mb-4 p-4 bg-gray-50 rounded-lg">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Возможность {{ $i }} - Заголовок</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Возможность <?php echo e($i); ?> - Заголовок</label>
                             <input type="text"
-                                   name="landing_feature_{{$i}}_title_{{ $lang }}"
-                                   value="{{ old("landing_feature_{$i}_title_{$lang}", $settings['landing_feature_' . $i . '_title_' . $lang] ?? ($lang === 'ru' ? ($features_ru[$i]['title'] ?? '') : '')) }}"
+                                   name="landing_feature_<?php echo e($i); ?>_title_<?php echo e($lang); ?>"
+                                   value="<?php echo e(old("landing_feature_{$i}_title_{$lang}", $settings['landing_feature_' . $i . '_title_' . $lang] ?? ($lang === 'ru' ? ($features_ru[$i]['title'] ?? '') : ''))); ?>"
                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-2">
                             
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Возможность {{ $i }} - Описание</label>
-                            <textarea name="landing_feature_{{$i}}_description_{{ $lang }}"
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Возможность <?php echo e($i); ?> - Описание</label>
+                            <textarea name="landing_feature_<?php echo e($i); ?>_description_<?php echo e($lang); ?>"
                                       rows="2"
-                                      class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old("landing_feature_{$i}_description_{$lang}", $settings['landing_feature_' . $i . '_description_' . $lang] ?? ($lang === 'ru' ? ($features_ru[$i]['description'] ?? '') : '')) }}</textarea>
+                                      class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e(old("landing_feature_{$i}_description_{$lang}", $settings['landing_feature_' . $i . '_description_' . $lang] ?? ($lang === 'ru' ? ($features_ru[$i]['description'] ?? '') : ''))); ?></textarea>
                         </div>
-                        @endfor
+                        <?php endfor; ?>
                     </div>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
 
@@ -423,31 +491,31 @@
                     </div>
                 </div>
 
-                @foreach(['ru' => 'Русский', 'ua' => 'Українська'] as $lang => $langName)
+                <?php $__currentLoopData = ['ru' => 'Русский', 'ua' => 'Українська']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang => $langName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="border border-gray-200 rounded-lg p-4 space-y-4 mb-6">
                     <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
-                        <span class="text-sm font-semibold text-gray-900">{{ $langName }}</span>
+                        <span class="text-sm font-semibold text-gray-900"><?php echo e($langName); ?></span>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Заголовок</label>
                         <input type="text"
-                               name="landing_trainers_title_{{ $lang }}"
-                               value="{{ old("landing_trainers_title_{$lang}", $settings['landing_trainers_title_' . $lang] ?? ($lang === 'ru' ? 'Для тренеров' : '')) }}"
+                               name="landing_trainers_title_<?php echo e($lang); ?>"
+                               value="<?php echo e(old("landing_trainers_title_{$lang}", $settings['landing_trainers_title_' . $lang] ?? ($lang === 'ru' ? 'Для тренеров' : ''))); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Подзаголовок</label>
-                        <textarea name="landing_trainers_subtitle_{{ $lang }}"
+                        <textarea name="landing_trainers_subtitle_<?php echo e($lang); ?>"
                                   rows="2"
-                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old("landing_trainers_subtitle_{$lang}", $settings['landing_trainers_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Управляйте всеми аспектами вашего тренировочного бизнеса в одном месте' : '')) }}</textarea>
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e(old("landing_trainers_subtitle_{$lang}", $settings['landing_trainers_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Управляйте всеми аспектами вашего тренировочного бизнеса в одном месте' : ''))); ?></textarea>
                     </div>
                     
                     <div class="mt-4 pt-4 border-t border-gray-200">
                         <h4 class="text-md font-semibold text-gray-900 mb-4">Список пунктов (5 шт.)</h4>
                         
-                        @php
+                        <?php
                             $trainer_items_ru = [
                                 1 => 'Управление базой спортсменов с полными профилями',
                                 2 => 'Создание и планирование тренировок в календаре',
@@ -455,20 +523,20 @@
                                 4 => 'Библиотека упражнений с видео и описаниями',
                                 5 => 'Финансовый учет и статистика платежей'
                             ];
-                        @endphp
+                        ?>
                         
-                        @for($i = 1; $i <= 5; $i++)
+                        <?php for($i = 1; $i <= 5; $i++): ?>
                         <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Пункт {{ $i }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Пункт <?php echo e($i); ?></label>
                             <input type="text"
-                                   name="landing_trainer_item_{{$i}}_{{ $lang }}"
-                                   value="{{ old("landing_trainer_item_{$i}_{$lang}", $settings['landing_trainer_item_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($trainer_items_ru[$i] ?? '') : '')) }}"
+                                   name="landing_trainer_item_<?php echo e($i); ?>_<?php echo e($lang); ?>"
+                                   value="<?php echo e(old("landing_trainer_item_{$i}_{$lang}", $settings['landing_trainer_item_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($trainer_items_ru[$i] ?? '') : ''))); ?>"
                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        @endfor
+                        <?php endfor; ?>
                     </div>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
 
@@ -482,31 +550,31 @@
                     </div>
                 </div>
 
-                @foreach(['ru' => 'Русский', 'ua' => 'Українська'] as $lang => $langName)
+                <?php $__currentLoopData = ['ru' => 'Русский', 'ua' => 'Українська']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang => $langName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="border border-gray-200 rounded-lg p-4 space-y-4 mb-6">
                     <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
-                        <span class="text-sm font-semibold text-gray-900">{{ $langName }}</span>
+                        <span class="text-sm font-semibold text-gray-900"><?php echo e($langName); ?></span>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Заголовок</label>
                         <input type="text"
-                               name="landing_athletes_title_{{ $lang }}"
-                               value="{{ old("landing_athletes_title_{$lang}", $settings['landing_athletes_title_' . $lang] ?? ($lang === 'ru' ? 'Для спортсменов' : '')) }}"
+                               name="landing_athletes_title_<?php echo e($lang); ?>"
+                               value="<?php echo e(old("landing_athletes_title_{$lang}", $settings['landing_athletes_title_' . $lang] ?? ($lang === 'ru' ? 'Для спортсменов' : ''))); ?>"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Подзаголовок</label>
-                        <textarea name="landing_athletes_subtitle_{{ $lang }}"
+                        <textarea name="landing_athletes_subtitle_<?php echo e($lang); ?>"
                                   rows="2"
-                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old("landing_athletes_subtitle_{$lang}", $settings['landing_athletes_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Следите за своими тренировками, прогрессом и планами питания' : '')) }}</textarea>
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e(old("landing_athletes_subtitle_{$lang}", $settings['landing_athletes_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Следите за своими тренировками, прогрессом и планами питания' : ''))); ?></textarea>
                     </div>
                     
                     <div class="mt-4 pt-4 border-t border-gray-200">
                         <h4 class="text-md font-semibold text-gray-900 mb-4">Список пунктов (5 шт.)</h4>
                         
-                        @php
+                        <?php
                             $athlete_items_ru = [
                                 1 => 'Просмотр запланированных тренировок',
                                 2 => 'Отслеживание личного прогресса и результатов',
@@ -514,20 +582,20 @@
                                 4 => 'История измерений тела и веса',
                                 5 => 'Связь с тренером через систему'
                             ];
-                        @endphp
+                        ?>
                         
-                        @for($i = 1; $i <= 5; $i++)
+                        <?php for($i = 1; $i <= 5; $i++): ?>
                         <div class="mb-3">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Пункт {{ $i }}</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Пункт <?php echo e($i); ?></label>
                             <input type="text"
-                                   name="landing_athlete_item_{{$i}}_{{ $lang }}"
-                                   value="{{ old("landing_athlete_item_{$i}_{$lang}", $settings['landing_athlete_item_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($athlete_items_ru[$i] ?? '') : '')) }}"
+                                   name="landing_athlete_item_<?php echo e($i); ?>_<?php echo e($lang); ?>"
+                                   value="<?php echo e(old("landing_athlete_item_{$i}_{$lang}", $settings['landing_athlete_item_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($athlete_items_ru[$i] ?? '') : ''))); ?>"
                                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        @endfor
+                        <?php endfor; ?>
                     </div>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
 
@@ -585,4 +653,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('admin.layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\OSPanel\domains\fitrain\resources\views/admin/site/index.blade.php ENDPATH**/ ?>

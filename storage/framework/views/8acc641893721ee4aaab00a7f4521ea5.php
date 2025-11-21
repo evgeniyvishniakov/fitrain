@@ -115,13 +115,24 @@
                     </div>
                     
                     <!-- Desktop Menu -->
-                    <div class="hidden md:flex items-center space-x-8">
+                    <div class="hidden md:flex items-center space-x-4">
                         <a href="#features" class="text-gray-700 hover:text-green-600 transition">Возможности</a>
                         <a href="#for-trainers" class="text-gray-700 hover:text-green-600 transition">Для тренеров</a>
                         <a href="#for-athletes" class="text-gray-700 hover:text-green-600 transition">Для спортсменов</a>
                         <a href="#pricing" class="text-gray-700 hover:text-green-600 transition">Тарифы</a>
                         <a href="<?php echo e(route('crm.login')); ?>" class="text-gray-700 hover:text-green-600 transition">Войти</a>
                         <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">Начать</a>
+                        <!-- Переключатель языков -->
+                        <select id="language_select" 
+                                onchange="window.location.href='?lang='+this.value"
+                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                            <?php $__currentLoopData = $languages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $language): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($language->code); ?>" <?php echo e($current_lang === $language->code ? 'selected' : ''); ?>>
+                                    <?php echo e($language->flag); ?> <?php echo e($language->native_name ?? $language->name); ?>
+
+                                </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </select>
                     </div>
                     
                     <!-- Mobile Menu Button -->
@@ -142,6 +153,17 @@
                     <a href="#pricing" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Тарифы</a>
                     <a href="<?php echo e(route('crm.login')); ?>" class="block text-gray-700 hover:text-green-600">Войти</a>
                     <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-6 py-2 rounded-lg font-medium inline-block text-center">Начать</a>
+                    <!-- Переключатель языков -->
+                    <select id="language_select_mobile" 
+                            onchange="window.location.href='?lang='+this.value"
+                            class="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                        <?php $__currentLoopData = $languages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $language): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($language->code); ?>" <?php echo e($current_lang === $language->code ? 'selected' : ''); ?>>
+                                <?php echo e($language->flag); ?> <?php echo e($language->native_name ?? $language->name); ?>
+
+                            </option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    </select>
                 </div>
             </div>
         </nav>
@@ -152,18 +174,21 @@
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div class="fade-in">
                         <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-                            Профессиональная CRM для
-                            <span class="gradient-primary bg-clip-text text-transparent">фитнес-тренеров</span>
+                            <?php echo e($hero_title); ?>
+
                         </h1>
                         <p class="text-xl text-gray-600 mb-8">
-                            Управляйте спортсменами, создавайте тренировки, отслеживайте прогресс и многое другое в одной удобной системе.
+                            <?php echo e($hero_subtitle); ?>
+
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4">
                             <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-8 py-4 rounded-lg font-semibold text-center">
-                                Попробовать бесплатно
+                                <?php echo e($hero_button_1); ?>
+
                             </a>
                             <a href="#features" class="btn-secondary px-8 py-4 rounded-lg font-semibold text-center">
-                                Узнать больше
+                                <?php echo e($hero_button_2); ?>
+
                             </a>
                         </div>
                     </div>
@@ -187,76 +212,32 @@
         <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div class="max-w-7xl mx-auto">
                 <div class="text-center mb-16">
-                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Возможности системы</h2>
-                    <p class="text-xl text-gray-600">Все необходимое для управления тренировочным процессом</p>
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4"><?php echo e($features_title); ?></h2>
+                    <p class="text-xl text-gray-600"><?php echo e($features_subtitle); ?></p>
                 </div>
                 
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Feature 1 -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg card-hover">
-                        <div class="w-16 h-16 gradient-green rounded-lg flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Календарь тренировок</h3>
-                        <p class="text-gray-600">Удобное планирование и управление тренировками с визуальным календарем</p>
-                    </div>
-                    
-                    <!-- Feature 2 -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg card-hover">
-                        <div class="w-16 h-16 gradient-blue rounded-lg flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Управление спортсменами</h3>
-                        <p class="text-gray-600">Полный профиль каждого спортсмена с историей тренировок и прогрессом</p>
-                    </div>
-                    
-                    <!-- Feature 3 -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg card-hover">
-                        <div class="w-16 h-16 gradient-primary rounded-lg flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Отслеживание прогресса</h3>
-                        <p class="text-gray-600">Визуализация прогресса спортсменов с графиками и статистикой</p>
-                    </div>
-                    
-                    <!-- Feature 4 -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg card-hover">
-                        <div class="w-16 h-16 gradient-green rounded-lg flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Шаблоны упражнений</h3>
-                        <p class="text-gray-600">Библиотека упражнений и создание шаблонов тренировок</p>
-                    </div>
-                    
-                    <!-- Feature 5 -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg card-hover">
-                        <div class="w-16 h-16 gradient-blue rounded-lg flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Планы питания</h3>
-                        <p class="text-gray-600">Создание и управление планами питания для спортсменов</p>
-                    </div>
-                    
-                    <!-- Feature 6 -->
-                    <div class="bg-white p-8 rounded-xl shadow-lg card-hover">
-                        <div class="w-16 h-16 gradient-primary rounded-lg flex items-center justify-center mb-6">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Финансовый учет</h3>
-                        <p class="text-gray-600">Отслеживание платежей и финансовой статистики</p>
-                    </div>
+                    <?php $__currentLoopData = $features; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $feature): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if(!empty($feature['title']) || !empty($feature['description'])): ?>
+                            <div class="bg-white p-8 rounded-xl shadow-lg card-hover">
+                                <?php
+                                    $gradients = ['gradient-green', 'gradient-blue', 'gradient-primary'];
+                                    $gradient = $gradients[$index % 3];
+                                ?>
+                                <div class="w-16 h-16 <?php echo e($gradient); ?> rounded-lg flex items-center justify-center mb-6">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <?php if(!empty($feature['title'])): ?>
+                                    <h3 class="text-xl font-bold text-gray-900 mb-3"><?php echo e($feature['title']); ?></h3>
+                                <?php endif; ?>
+                                <?php if(!empty($feature['description'])): ?>
+                                    <p class="text-gray-600"><?php echo e($feature['description']); ?></p>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
         </section>
@@ -277,41 +258,22 @@
                         <?php endif; ?>
                     </div>
                     <div>
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Для тренеров</h2>
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6"><?php echo e($trainers_title); ?></h2>
                         <p class="text-xl text-gray-600 mb-8">
-                            Управляйте всеми аспектами вашего тренировочного бизнеса в одном месте
+                            <?php echo e($trainers_subtitle); ?>
+
                         </p>
                         <ul class="space-y-4">
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Управление базой спортсменов с полными профилями</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Создание и планирование тренировок в календаре</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Отслеживание прогресса каждого спортсмена</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Библиотека упражнений с видео и описаниями</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Финансовый учет и статистика платежей</span>
-                            </li>
+                            <?php $__currentLoopData = $trainer_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if(!empty($item)): ?>
+                                    <li class="flex items-start">
+                                        <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-gray-700"><?php echo e($item); ?></span>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ul>
                         <div class="mt-8">
                             <a href="<?php echo e(route('crm.trainer.register')); ?>" class="btn-primary text-white px-8 py-4 rounded-lg font-semibold inline-block">
@@ -328,41 +290,22 @@
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div>
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Для спортсменов</h2>
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6"><?php echo e($athletes_title); ?></h2>
                         <p class="text-xl text-gray-600 mb-8">
-                            Следите за своими тренировками, прогрессом и планами питания
+                            <?php echo e($athletes_subtitle); ?>
+
                         </p>
                         <ul class="space-y-4">
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Просмотр запланированных тренировок</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Отслеживание личного прогресса и результатов</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Планы питания от вашего тренера</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">История измерений тела и веса</span>
-                            </li>
-                            <li class="flex items-start">
-                                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                <span class="text-gray-700">Связь с тренером через систему</span>
-                            </li>
+                            <?php $__currentLoopData = $athlete_items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if(!empty($item)): ?>
+                                    <li class="flex items-start">
+                                        <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-gray-700"><?php echo e($item); ?></span>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </ul>
                     </div>
                     <div>
