@@ -435,23 +435,41 @@
                     </div>
                 </div>
 
-                <!-- Изображение -->
-                <div class="space-y-3">
-                    <label class="block text-sm font-medium text-gray-700">Изображение для секции</label>
-                    <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
-                        <div class="text-center px-4">
-                            <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
-                            <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
+                <!-- Изображения для слайдера (до 5 шт.) -->
+                <div class="space-y-4">
+                    <label class="block text-sm font-medium text-gray-700">Изображения для слайдера (до 5 шт.)</label>
+                    <p class="text-xs text-gray-500 mb-4">Загрузите несколько изображений для создания слайдера. Изображения будут автоматически переключаться каждые 5 секунд.</p>
+                    
+                    @for($i = 1; $i <= 5; $i++)
+                        <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700">Изображение {{ $i }}</label>
+                            <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                                <div class="text-center px-4">
+                                    <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                                    <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
+                                </div>
+                                <input type="file" name="landing_trainers_images[]" accept="image/*" class="hidden" data-image-number="{{ $i }}">
+                            </label>
+                            @php
+                                $trainerImageKey = "landing_trainers_image_{$i}";
+                                $trainerImageValue = $settings[$trainerImageKey] ?? '';
+                            @endphp
+                            @if(!empty($trainerImageValue))
+                                <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                    <img src="{{ asset('storage/' . $trainerImageValue) }}" alt="Изображение {{ $i }}" class="h-20 object-contain">
+                                    <div class="flex-1">
+                                        <span class="text-xs text-gray-500 block">Текущий файл {{ $i }}</span>
+                                        <label class="flex items-center mt-2">
+                                            <input type="checkbox" name="landing_trainers_keep_existing[]" value="{{ $i }}" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-xs text-gray-600">Сохранить текущее изображение</span>
+                                        </label>
+                                    </div>
+                                    <input type="hidden" name="landing_trainers_existing_images[{{ $i }}]" value="{{ $trainerImageValue }}">
+                                </div>
+                            @endif
                         </div>
-                        <input type="file" name="landing_trainers_image" accept="image/*" class="hidden">
-                    </label>
-                    @if(!empty($settings['landing_trainers_image'] ?? ''))
-                        <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                            <img src="{{ asset('storage/' . $settings['landing_trainers_image']) }}" alt="Текущее изображение" class="h-20 object-contain">
-                            <span class="text-xs text-gray-500">Текущий файл</span>
-                        </div>
-                    @endif
-                    @error('landing_trainers_image')
+                    @endfor
+                    @error('landing_trainers_images.*')
                         <p class="text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -515,23 +533,41 @@
                     </div>
                 </div>
 
-                <!-- Изображение -->
-                <div class="space-y-3">
-                    <label class="block text-sm font-medium text-gray-700">Изображение для секции</label>
-                    <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
-                        <div class="text-center px-4">
-                            <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
-                            <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
+                <!-- Изображения для слайдера (до 5 шт.) -->
+                <div class="space-y-4">
+                    <label class="block text-sm font-medium text-gray-700">Изображения для слайдера (до 5 шт.)</label>
+                    <p class="text-xs text-gray-500 mb-4">Загрузите несколько изображений для создания слайдера. Изображения будут автоматически переключаться каждые 5 секунд.</p>
+                    
+                    @for($i = 1; $i <= 5; $i++)
+                        <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700">Изображение {{ $i }}</label>
+                            <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                                <div class="text-center px-4">
+                                    <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                                    <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
+                                </div>
+                                <input type="file" name="landing_athletes_images[]" accept="image/*" class="hidden" data-image-number="{{ $i }}">
+                            </label>
+                            @php
+                                $athleteImageKey = "landing_athletes_image_{$i}";
+                                $athleteImageValue = $settings[$athleteImageKey] ?? '';
+                            @endphp
+                            @if(!empty($athleteImageValue))
+                                <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                    <img src="{{ asset('storage/' . $athleteImageValue) }}" alt="Изображение {{ $i }}" class="h-20 object-contain">
+                                    <div class="flex-1">
+                                        <span class="text-xs text-gray-500 block">Текущий файл {{ $i }}</span>
+                                        <label class="flex items-center mt-2">
+                                            <input type="checkbox" name="landing_athletes_keep_existing[]" value="{{ $i }}" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-xs text-gray-600">Сохранить текущее изображение</span>
+                                        </label>
+                                    </div>
+                                    <input type="hidden" name="landing_athletes_existing_images[{{ $i }}]" value="{{ $athleteImageValue }}">
+                                </div>
+                            @endif
                         </div>
-                        <input type="file" name="landing_athletes_image" accept="image/*" class="hidden">
-                    </label>
-                    @if(!empty($settings['landing_athletes_image'] ?? ''))
-                        <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
-                            <img src="{{ asset('storage/' . $settings['landing_athletes_image']) }}" alt="Текущее изображение" class="h-20 object-contain">
-                            <span class="text-xs text-gray-500">Текущий файл</span>
-                        </div>
-                    @endif
-                    @error('landing_athletes_image')
+                    @endfor
+                    @error('landing_athletes_images.*')
                         <p class="text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>

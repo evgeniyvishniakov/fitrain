@@ -117,8 +117,39 @@ class HomeController extends BaseController
         $data['landing_hero_image'] = $heroImage;
         
         $data['landing_features_image'] = SystemSetting::get('landing.features_image', '');
-        $data['landing_trainers_image'] = SystemSetting::get('landing.trainers.image', '');
-        $data['landing_athletes_image'] = SystemSetting::get('landing.athletes.image', '');
+        
+        // Загружаем все изображения для тренера (до 5 шт.)
+        $trainerImages = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $image = SystemSetting::get("landing.trainers.image.{$i}", '');
+            if (!empty($image)) {
+                try {
+                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($image)) {
+                        $trainerImages[] = $image;
+                    }
+                } catch (\Exception $e) {
+                    // Игнорируем ошибки
+                }
+            }
+        }
+        $data['landing_trainers_images'] = $trainerImages;
+        
+        // Загружаем все изображения для спортсмена (до 5 шт.)
+        $athleteImages = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $image = SystemSetting::get("landing.athletes.image.{$i}", '');
+            if (!empty($image)) {
+                try {
+                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($image)) {
+                        $athleteImages[] = $image;
+                    }
+                } catch (\Exception $e) {
+                    // Игнорируем ошибки
+                }
+            }
+        }
+        $data['landing_athletes_images'] = $athleteImages;
+        
         $data['landing_slider_1_image'] = SystemSetting::get('landing.slider.1.image', '');
         $data['landing_slider_2_image'] = SystemSetting::get('landing.slider.2.image', '');
         $data['landing_slider_3_image'] = SystemSetting::get('landing.slider.3.image', '');

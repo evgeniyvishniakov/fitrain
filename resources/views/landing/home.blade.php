@@ -361,24 +361,48 @@
         <section id="for-trainers" class="py-20 px-4 sm:px-6 lg:px-8 hero-bg">
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-2 gap-12 items-center">
-                    <div>
+                    <div class="relative" 
+                         x-data="trainerImageSlider()"
+                         @mouseenter.stop="stopAutoplay()"
+                         @mouseleave.stop="startAutoplay()">
                         @php
-                            $trainersImageExists = false;
-                            if(!empty($landing_trainers_image ?? '')) {
-                                try {
-                                    $trainersImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_trainers_image);
-                                } catch (\Exception $e) {
-                                    $trainersImageExists = false;
-                                }
-                            }
+                            $trainerImages = $landing_trainers_images ?? [];
                         @endphp
-                        @if($trainersImageExists)
-                            <img src="{{ asset('storage/' . $landing_trainers_image) }}" alt="Для тренеров" class="rounded-2xl shadow-2xl w-full h-auto">
+                        @if(count($trainerImages) > 0)
+                            <div class="relative rounded-2xl shadow-2xl overflow-hidden" style="min-height: 400px;">
+                                <template x-for="(image, index) in images" :key="index">
+                                    <div x-show="currentImage === index" 
+                                         x-transition:enter="transition ease-in-out duration-700"
+                                         x-transition:enter-start="opacity-0"
+                                         x-transition:enter-end="opacity-100"
+                                         x-transition:leave="transition ease-in-out duration-700"
+                                         x-transition:leave-start="opacity-100"
+                                         x-transition:leave-end="opacity-0"
+                                         class="absolute inset-0">
+                                        <img :src="'{{ asset('storage/') }}/' + image" 
+                                             alt="Для тренеров" 
+                                             class="w-full h-auto object-cover rounded-2xl">
+                                    </div>
+                                </template>
+                                
+                                @if(count($trainerImages) > 1)
+                                    <!-- Навигация точками -->
+                                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                                        <template x-for="(image, index) in images" :key="index">
+                                            <button @click="goToImage(index)" 
+                                                    :class="currentImage === index ? 'bg-green-600 w-8' : 'bg-white/50 w-3'"
+                                                    class="h-3 rounded-full transition-all duration-300 hover:bg-green-500"></button>
+                                        </template>
+                                    </div>
+                                @endif
+                            </div>
                         @else
-                            <div class="gradient-blue rounded-2xl shadow-2xl p-12 text-center">
-                                <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
+                            <div class="gradient-blue rounded-2xl shadow-2xl p-12 text-center" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                                <div>
+                                    <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -431,24 +455,48 @@
                             @endforeach
                         </ul>
                     </div>
-                    <div>
+                    <div class="relative" 
+                         x-data="athleteImageSlider()"
+                         @mouseenter.stop="stopAutoplay()"
+                         @mouseleave.stop="startAutoplay()">
                         @php
-                            $athletesImageExists = false;
-                            if(!empty($landing_athletes_image ?? '')) {
-                                try {
-                                    $athletesImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_athletes_image);
-                                } catch (\Exception $e) {
-                                    $athletesImageExists = false;
-                                }
-                            }
+                            $athleteImages = $landing_athletes_images ?? [];
                         @endphp
-                        @if($athletesImageExists)
-                            <img src="{{ asset('storage/' . $landing_athletes_image) }}" alt="Для спортсменов" class="rounded-2xl shadow-2xl w-full h-auto">
+                        @if(count($athleteImages) > 0)
+                            <div class="relative rounded-2xl shadow-2xl overflow-hidden" style="min-height: 400px;">
+                                <template x-for="(image, index) in images" :key="index">
+                                    <div x-show="currentImage === index" 
+                                         x-transition:enter="transition ease-in-out duration-700"
+                                         x-transition:enter-start="opacity-0"
+                                         x-transition:enter-end="opacity-100"
+                                         x-transition:leave="transition ease-in-out duration-700"
+                                         x-transition:leave-start="opacity-100"
+                                         x-transition:leave-end="opacity-0"
+                                         class="absolute inset-0">
+                                        <img :src="'{{ asset('storage/') }}/' + image" 
+                                             alt="Для спортсменов" 
+                                             class="w-full h-auto object-cover rounded-2xl">
+                                    </div>
+                                </template>
+                                
+                                @if(count($athleteImages) > 1)
+                                    <!-- Навигация точками -->
+                                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                                        <template x-for="(image, index) in images" :key="index">
+                                            <button @click="goToImage(index)" 
+                                                    :class="currentImage === index ? 'bg-green-600 w-8' : 'bg-white/50 w-3'"
+                                                    class="h-3 rounded-full transition-all duration-300 hover:bg-green-500"></button>
+                                        </template>
+                                    </div>
+                                @endif
+                            </div>
                         @else
-                            <div class="gradient-green rounded-2xl shadow-2xl p-12 text-center">
-                                <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                </svg>
+                            <div class="gradient-green rounded-2xl shadow-2xl p-12 text-center" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                                <div>
+                                    <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -512,5 +560,91 @@
             </div>
         </footer>
     </div>
+
+    <script>
+        // Слайдер для изображений тренера
+        function trainerImageSlider() {
+            const images = @json($landing_trainers_images ?? []);
+            
+            return {
+                currentImage: 0,
+                images: images,
+                autoplayInterval: null,
+                autoplayDelay: 5000, // 5 секунд
+                init() {
+                    if (this.images.length > 1) {
+                        this.startAutoplay();
+                    }
+                },
+                startAutoplay() {
+                    this.stopAutoplay();
+                    if (this.images.length > 1) {
+                        this.autoplayInterval = setInterval(() => {
+                            this.nextImage();
+                        }, this.autoplayDelay);
+                    }
+                },
+                stopAutoplay() {
+                    if (this.autoplayInterval) {
+                        clearInterval(this.autoplayInterval);
+                        this.autoplayInterval = null;
+                    }
+                },
+                nextImage() {
+                    this.currentImage = (this.currentImage + 1) % this.images.length;
+                },
+                prevImage() {
+                    this.currentImage = (this.currentImage - 1 + this.images.length) % this.images.length;
+                },
+                goToImage(index) {
+                    this.stopAutoplay();
+                    this.currentImage = index;
+                    this.startAutoplay();
+                }
+            };
+        }
+
+        // Слайдер для изображений спортсмена
+        function athleteImageSlider() {
+            const images = @json($landing_athletes_images ?? []);
+            
+            return {
+                currentImage: 0,
+                images: images,
+                autoplayInterval: null,
+                autoplayDelay: 5000, // 5 секунд
+                init() {
+                    if (this.images.length > 1) {
+                        this.startAutoplay();
+                    }
+                },
+                startAutoplay() {
+                    this.stopAutoplay();
+                    if (this.images.length > 1) {
+                        this.autoplayInterval = setInterval(() => {
+                            this.nextImage();
+                        }, this.autoplayDelay);
+                    }
+                },
+                stopAutoplay() {
+                    if (this.autoplayInterval) {
+                        clearInterval(this.autoplayInterval);
+                        this.autoplayInterval = null;
+                    }
+                },
+                nextImage() {
+                    this.currentImage = (this.currentImage + 1) % this.images.length;
+                },
+                prevImage() {
+                    this.currentImage = (this.currentImage - 1 + this.images.length) % this.images.length;
+                },
+                goToImage(index) {
+                    this.stopAutoplay();
+                    this.currentImage = index;
+                    this.startAutoplay();
+                }
+            };
+        }
+    </script>
 </body>
 </html>
