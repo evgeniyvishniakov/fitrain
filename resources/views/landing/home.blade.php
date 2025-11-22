@@ -287,7 +287,7 @@
                 currentSlide: 0,
                 slides: finalSlides,
                 autoplayInterval: null,
-                isPlaying: false,
+                autoplayDelay: 5000,
                 init() {
                     if (this.slides.length > 1) {
                         this.startAutoplay();
@@ -295,11 +295,10 @@
                 },
                 startAutoplay() {
                     this.stopAutoplay();
-                    if (!this.isPlaying && this.slides.length > 1) {
-                        this.isPlaying = true;
+                    if (this.slides.length > 1) {
                         this.autoplayInterval = setInterval(() => {
                             this.nextSlide();
-                        }, 5000);
+                        }, this.autoplayDelay);
                     }
                 },
                 stopAutoplay() {
@@ -307,29 +306,18 @@
                         clearInterval(this.autoplayInterval);
                         this.autoplayInterval = null;
                     }
-                    this.isPlaying = false;
                 },
                 nextSlide() {
-                    this.stopAutoplay();
                     this.currentSlide = (this.currentSlide + 1) % this.slides.length;
-                    setTimeout(() => {
-                        this.startAutoplay();
-                    }, 100);
                 },
                 prevSlide() {
-                    this.stopAutoplay();
                     this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
-                    setTimeout(() => {
-                        this.startAutoplay();
-                    }, 100);
                 },
                 goToSlide(index) {
                     if (index === this.currentSlide) return;
                     this.stopAutoplay();
                     this.currentSlide = index;
-                    setTimeout(() => {
-                        this.startAutoplay();
-                    }, 500);
+                    this.startAutoplay();
                 }
             };
         }
