@@ -448,7 +448,7 @@
                                     <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
                                     <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
                                 </div>
-                                <input type="file" name="landing_trainers_images[]" accept="image/*" class="hidden" data-image-number="{{ $i }}">
+                                <input type="file" name="landing_trainers_image_{{$i}}" accept="image/*" class="hidden" data-image-number="{{ $i }}">
                             </label>
                             @php
                                 $trainerImageKey = "landing_trainers_image_{$i}";
@@ -459,12 +459,9 @@
                                     <img src="{{ asset('storage/' . $trainerImageValue) }}" alt="Изображение {{ $i }}" class="h-20 object-contain">
                                     <div class="flex-1">
                                         <span class="text-xs text-gray-500 block">Текущий файл {{ $i }}</span>
-                                        <label class="flex items-center mt-2">
-                                            <input type="checkbox" name="landing_trainers_keep_existing[]" value="{{ $i }}" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-xs text-gray-600">Сохранить текущее изображение</span>
-                                        </label>
+                                        <button type="button" onclick="removeTrainerImage({{ $i }})" class="mt-2 text-xs text-red-600 hover:text-red-800">Удалить изображение</button>
                                     </div>
-                                    <input type="hidden" name="landing_trainers_existing_images[{{ $i }}]" value="{{ $trainerImageValue }}">
+                                    <input type="hidden" name="landing_trainers_existing_image_{{$i}}" value="{{ $trainerImageValue }}" id="trainer_existing_{{$i}}">
                                 </div>
                             @endif
                         </div>
@@ -546,7 +543,7 @@
                                     <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
                                     <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
                                 </div>
-                                <input type="file" name="landing_athletes_images[]" accept="image/*" class="hidden" data-image-number="{{ $i }}">
+                                <input type="file" name="landing_athletes_image_{{$i}}" accept="image/*" class="hidden" data-image-number="{{ $i }}">
                             </label>
                             @php
                                 $athleteImageKey = "landing_athletes_image_{$i}";
@@ -557,12 +554,9 @@
                                     <img src="{{ asset('storage/' . $athleteImageValue) }}" alt="Изображение {{ $i }}" class="h-20 object-contain">
                                     <div class="flex-1">
                                         <span class="text-xs text-gray-500 block">Текущий файл {{ $i }}</span>
-                                        <label class="flex items-center mt-2">
-                                            <input type="checkbox" name="landing_athletes_keep_existing[]" value="{{ $i }}" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-xs text-gray-600">Сохранить текущее изображение</span>
-                                        </label>
+                                        <button type="button" onclick="removeAthleteImage({{ $i }})" class="mt-2 text-xs text-red-600 hover:text-red-800">Удалить изображение</button>
                                     </div>
-                                    <input type="hidden" name="landing_athletes_existing_images[{{ $i }}]" value="{{ $athleteImageValue }}">
+                                    <input type="hidden" name="landing_athletes_existing_image_{{$i}}" value="{{ $athleteImageValue }}" id="athlete_existing_{{$i}}">
                                 </div>
                             @endif
                         </div>
@@ -673,6 +667,37 @@ function switchTab(tabName) {
 document.addEventListener('DOMContentLoaded', function() {
     switchTab('basic');
 });
+
+// Функции для удаления изображений
+function removeTrainerImage(number) {
+    const existingInput = document.getElementById('trainer_existing_' + number);
+    if (!existingInput) return;
+    
+    const fileInput = document.querySelector('input[name="landing_trainers_image_' + number + '"]');
+    const container = existingInput.closest('.p-4');
+    
+    if (confirm('Вы уверены, что хотите удалить это изображение?')) {
+        existingInput.value = '';
+        if (fileInput) fileInput.value = '';
+        const existingDiv = container.querySelector('.bg-gray-50');
+        if (existingDiv) existingDiv.style.display = 'none';
+    }
+}
+
+function removeAthleteImage(number) {
+    const existingInput = document.getElementById('athlete_existing_' + number);
+    if (!existingInput) return;
+    
+    const fileInput = document.querySelector('input[name="landing_athletes_image_' + number + '"]');
+    const container = existingInput.closest('.p-4');
+    
+    if (confirm('Вы уверены, что хотите удалить это изображение?')) {
+        existingInput.value = '';
+        if (fileInput) fileInput.value = '';
+        const existingDiv = container.querySelector('.bg-gray-50');
+        if (existingDiv) existingDiv.style.display = 'none';
+    }
+}
 </script>
 
 @endsection
