@@ -289,15 +289,19 @@
                 currentSlide: 0,
                 slides: finalSlides,
                 autoplayInterval: null,
+                autoplayDelay: 5000,
                 init() {
                     if (this.slides.length > 1) {
                         this.startAutoplay();
                     }
                 },
                 startAutoplay() {
-                    this.autoplayInterval = setInterval(() => {
-                        this.nextSlide();
-                    }, 5000);
+                    this.stopAutoplay();
+                    if (this.slides.length > 1) {
+                        this.autoplayInterval = setInterval(() => {
+                            this.nextSlide();
+                        }, this.autoplayDelay);
+                    }
                 },
                 stopAutoplay() {
                     if (this.autoplayInterval) {
@@ -312,8 +316,9 @@
                     this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
                 },
                 goToSlide(index) {
-                    this.currentSlide = index;
+                    if (index === this.currentSlide) return;
                     this.stopAutoplay();
+                    this.currentSlide = index;
                     this.startAutoplay();
                 }
             };
@@ -360,17 +365,17 @@
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div>
                         <?php
-                            $featuresImageExists = false;
-                            if(!empty($landingFeaturesImage)) {
+                            $trainersImageExists = false;
+                            if(!empty($landing_trainers_image ?? '')) {
                                 try {
-                                    $featuresImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage);
+                                    $trainersImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_trainers_image);
                                 } catch (\Exception $e) {
-                                    $featuresImageExists = false;
+                                    $trainersImageExists = false;
                                 }
                             }
                         ?>
-                        <?php if($featuresImageExists): ?>
-                            <img src="<?php echo e(asset('storage/' . $landingFeaturesImage)); ?>" alt="Для тренеров" class="rounded-2xl shadow-2xl w-full h-auto">
+                        <?php if($trainersImageExists): ?>
+                            <img src="<?php echo e(asset('storage/' . $landing_trainers_image)); ?>" alt="Для тренеров" class="rounded-2xl shadow-2xl w-full h-auto">
                         <?php else: ?>
                             <div class="gradient-blue rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -431,11 +436,25 @@
                         </ul>
                     </div>
                     <div>
-                        <div class="gradient-green rounded-2xl shadow-2xl p-12 text-center">
-                            <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
+                        <?php
+                            $athletesImageExists = false;
+                            if(!empty($landing_athletes_image ?? '')) {
+                                try {
+                                    $athletesImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_athletes_image);
+                                } catch (\Exception $e) {
+                                    $athletesImageExists = false;
+                                }
+                            }
+                        ?>
+                        <?php if($athletesImageExists): ?>
+                            <img src="<?php echo e(asset('storage/' . $landing_athletes_image)); ?>" alt="Для спортсменов" class="rounded-2xl shadow-2xl w-full h-auto">
+                        <?php else: ?>
+                            <div class="gradient-green rounded-2xl shadow-2xl p-12 text-center">
+                                <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

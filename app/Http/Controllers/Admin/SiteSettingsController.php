@@ -141,6 +141,8 @@ class SiteSettingsController extends BaseController
         // Медиа
         $settings['landing_hero_image'] = SystemSetting::get('landing.hero_image', '');
         $settings['landing_features_image'] = SystemSetting::get('landing.features_image', '');
+        $settings['landing_trainers_image'] = SystemSetting::get('landing.trainers.image', '');
+        $settings['landing_athletes_image'] = SystemSetting::get('landing.athletes.image', '');
         
         // Изображения для слайдов
         $settings['landing_slider_1_image'] = SystemSetting::get('landing.slider.1.image', '');
@@ -169,6 +171,8 @@ class SiteSettingsController extends BaseController
             'favicon'          => ['nullable', 'file', 'mimetypes:image/png,image/x-png,image/apng,image/jpeg,image/jpg,image/pjpeg,image/x-icon,image/vnd.microsoft.icon', 'max:1024'],
             'landing_hero_image' => ['nullable', 'image', 'max:2048'],
             'landing_features_image' => ['nullable', 'image', 'max:2048'],
+            'landing_trainers_image' => ['nullable', 'image', 'max:2048'],
+            'landing_athletes_image' => ['nullable', 'image', 'max:2048'],
             'landing_slider_1_image' => ['nullable', 'image', 'max:2048'],
             'landing_slider_2_image' => ['nullable', 'image', 'max:2048'],
             'landing_slider_3_image' => ['nullable', 'image', 'max:2048'],
@@ -276,6 +280,14 @@ class SiteSettingsController extends BaseController
         
         if ($request->hasFile('landing_features_image')) {
             $this->storeImageSetting($request->file('landing_features_image'), 'landing.features_image', 'Изображение секции возможностей');
+        }
+        
+        if ($request->hasFile('landing_trainers_image')) {
+            $this->storeImageSetting($request->file('landing_trainers_image'), 'landing.trainers.image', 'Изображение секции для тренера');
+        }
+        
+        if ($request->hasFile('landing_athletes_image')) {
+            $this->storeImageSetting($request->file('landing_athletes_image'), 'landing.athletes.image', 'Изображение секции для спортсмена');
         }
         
         if ($request->hasFile('landing_slider_1_image')) {

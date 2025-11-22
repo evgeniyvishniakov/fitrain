@@ -503,6 +503,34 @@ unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
 
+                <!-- Изображение -->
+                <div class="space-y-3">
+                    <label class="block text-sm font-medium text-gray-700">Изображение для секции</label>
+                    <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                        <div class="text-center px-4">
+                            <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                            <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
+                        </div>
+                        <input type="file" name="landing_trainers_image" accept="image/*" class="hidden">
+                    </label>
+                    <?php if(!empty($settings['landing_trainers_image'] ?? '')): ?>
+                        <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <img src="<?php echo e(asset('storage/' . $settings['landing_trainers_image'])); ?>" alt="Текущее изображение" class="h-20 object-contain">
+                            <span class="text-xs text-gray-500">Текущий файл</span>
+                        </div>
+                    <?php endif; ?>
+                    <?php $__errorArgs = ['landing_trainers_image'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                </div>
+
                 <?php $__currentLoopData = ['ru' => 'Русский', 'ua' => 'Українська']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang => $langName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="border border-gray-200 rounded-lg p-4 space-y-4 mb-6">
                     <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
@@ -560,6 +588,34 @@ unset($__errorArgs, $__bag); ?>
                         <h3 class="text-lg font-semibold text-gray-900">Секция Для спортсмена</h3>
                         <p class="text-sm text-gray-500 mt-1">Настройки секции для спортсмена на лендинге.</p>
                     </div>
+                </div>
+
+                <!-- Изображение -->
+                <div class="space-y-3">
+                    <label class="block text-sm font-medium text-gray-700">Изображение для секции</label>
+                    <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                        <div class="text-center px-4">
+                            <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                            <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
+                        </div>
+                        <input type="file" name="landing_athletes_image" accept="image/*" class="hidden">
+                    </label>
+                    <?php if(!empty($settings['landing_athletes_image'] ?? '')): ?>
+                        <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <img src="<?php echo e(asset('storage/' . $settings['landing_athletes_image'])); ?>" alt="Текущее изображение" class="h-20 object-contain">
+                            <span class="text-xs text-gray-500">Текущий файл</span>
+                        </div>
+                    <?php endif; ?>
+                    <?php $__errorArgs = ['landing_athletes_image'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <?php $__currentLoopData = ['ru' => 'Русский', 'ua' => 'Українська']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang => $langName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>

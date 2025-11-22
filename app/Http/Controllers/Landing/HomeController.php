@@ -117,6 +117,8 @@ class HomeController extends BaseController
         $data['landing_hero_image'] = $heroImage;
         
         $data['landing_features_image'] = SystemSetting::get('landing.features_image', '');
+        $data['landing_trainers_image'] = SystemSetting::get('landing.trainers.image', '');
+        $data['landing_athletes_image'] = SystemSetting::get('landing.athletes.image', '');
         $data['landing_slider_1_image'] = SystemSetting::get('landing.slider.1.image', '');
         $data['landing_slider_2_image'] = SystemSetting::get('landing.slider.2.image', '');
         $data['landing_slider_3_image'] = SystemSetting::get('landing.slider.3.image', '');

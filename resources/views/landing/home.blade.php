@@ -363,17 +363,17 @@
                 <div class="grid md:grid-cols-2 gap-12 items-center">
                     <div>
                         @php
-                            $featuresImageExists = false;
-                            if(!empty($landingFeaturesImage)) {
+                            $trainersImageExists = false;
+                            if(!empty($landing_trainers_image ?? '')) {
                                 try {
-                                    $featuresImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landingFeaturesImage);
+                                    $trainersImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_trainers_image);
                                 } catch (\Exception $e) {
-                                    $featuresImageExists = false;
+                                    $trainersImageExists = false;
                                 }
                             }
                         @endphp
-                        @if($featuresImageExists)
-                            <img src="{{ asset('storage/' . $landingFeaturesImage) }}" alt="Для тренеров" class="rounded-2xl shadow-2xl w-full h-auto">
+                        @if($trainersImageExists)
+                            <img src="{{ asset('storage/' . $landing_trainers_image) }}" alt="Для тренеров" class="rounded-2xl shadow-2xl w-full h-auto">
                         @else
                             <div class="gradient-blue rounded-2xl shadow-2xl p-12 text-center">
                                 <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,11 +432,25 @@
                         </ul>
                     </div>
                     <div>
-                        <div class="gradient-green rounded-2xl shadow-2xl p-12 text-center">
-                            <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
+                        @php
+                            $athletesImageExists = false;
+                            if(!empty($landing_athletes_image ?? '')) {
+                                try {
+                                    $athletesImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_athletes_image);
+                                } catch (\Exception $e) {
+                                    $athletesImageExists = false;
+                                }
+                            }
+                        @endphp
+                        @if($athletesImageExists)
+                            <img src="{{ asset('storage/' . $landing_athletes_image) }}" alt="Для спортсменов" class="rounded-2xl shadow-2xl w-full h-auto">
+                        @else
+                            <div class="gradient-green rounded-2xl shadow-2xl p-12 text-center">
+                                <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
