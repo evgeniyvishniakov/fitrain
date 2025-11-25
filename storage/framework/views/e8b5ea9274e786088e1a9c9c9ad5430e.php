@@ -28,6 +28,12 @@
                     Возможности
                 </button>
                 <button type="button" 
+                        onclick="switchTab('how-it-works')"
+                        id="tab-btn-how-it-works"
+                        class="tab-button px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
+                    Как это работает
+                </button>
+                <button type="button" 
                         onclick="switchTab('trainers')"
                         id="tab-btn-trainers"
                         class="tab-button px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
@@ -493,6 +499,148 @@ unset($__errorArgs, $__bag); ?>
             </div>
         </div>
 
+        <!-- Вкладка: Как это работает -->
+        <div id="tab-content-how-it-works" class="tab-content space-y-6" style="display: none;">
+            <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Секция "Как это работает"</h3>
+                        <p class="text-sm text-gray-500 mt-1">Настройки секции с мобильными экранами тренера и спортсмена.</p>
+                    </div>
+                </div>
+
+                <!-- Изображения мобильных экранов -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">Изображение экрана тренера</label>
+                        <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                            <div class="text-center px-4">
+                                <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                                <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ (мобильный экран)</span>
+                            </div>
+                            <input type="file" name="landing_how_it_works_trainer_image" accept="image/*" class="hidden">
+                        </label>
+                        <?php if(!empty($settings['landing_how_it_works_trainer_image'] ?? '')): ?>
+                            <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <img src="<?php echo e(asset('storage/' . $settings['landing_how_it_works_trainer_image'])); ?>" alt="Экран тренера" class="h-20 object-contain">
+                                <span class="text-xs text-gray-500">Текущий файл</span>
+                            </div>
+                        <?php endif; ?>
+                        <?php $__errorArgs = ['landing_how_it_works_trainer_image'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">Изображение экрана спортсмена</label>
+                        <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                            <div class="text-center px-4">
+                                <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                                <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ (мобильный экран)</span>
+                            </div>
+                            <input type="file" name="landing_how_it_works_athlete_image" accept="image/*" class="hidden">
+                        </label>
+                        <?php if(!empty($settings['landing_how_it_works_athlete_image'] ?? '')): ?>
+                            <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <img src="<?php echo e(asset('storage/' . $settings['landing_how_it_works_athlete_image'])); ?>" alt="Экран спортсмена" class="h-20 object-contain">
+                                <span class="text-xs text-gray-500">Текущий файл</span>
+                            </div>
+                        <?php endif; ?>
+                        <?php $__errorArgs = ['landing_how_it_works_athlete_image'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="text-sm text-red-600"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                    </div>
+                </div>
+
+                <?php $__currentLoopData = ['ru' => 'Русский', 'ua' => 'Українська']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lang => $langName): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <div class="border border-gray-200 rounded-lg p-4 space-y-4 mb-6">
+                    <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
+                        <span class="text-sm font-semibold text-gray-900"><?php echo e($langName); ?></span>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Заголовок секции</label>
+                        <input type="text"
+                               name="landing_how_it_works_title_<?php echo e($lang); ?>"
+                               value="<?php echo e(old("landing_how_it_works_title_{$lang}", $settings['landing_how_it_works_title_' . $lang] ?? ($lang === 'ru' ? 'Как это работает' : ''))); ?>"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Подзаголовок секции</label>
+                        <textarea name="landing_how_it_works_subtitle_<?php echo e($lang); ?>"
+                                  rows="2"
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"><?php echo e(old("landing_how_it_works_subtitle_{$lang}", $settings['landing_how_it_works_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Простой процесс работы с системой' : ''))); ?></textarea>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mt-6 pt-4 border-t border-gray-200">
+                        <!-- Преимущества для тренера -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Преимущества для тренера (до 5 шт.)</h4>
+                            <?php
+                                $trainer_benefits_ru = [
+                                    1 => 'Быстрое создание аккаунтов спортсменов',
+                                    2 => 'Удобное управление всеми спортсменами',
+                                    3 => 'Планирование тренировок в календаре',
+                                    4 => 'Отслеживание прогресса каждого спортсмена',
+                                    5 => 'Финансовый учет и статистика'
+                                ];
+                            ?>
+                            
+                            <?php for($i = 1; $i <= 5; $i++): ?>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Пункт <?php echo e($i); ?></label>
+                                <input type="text"
+                                       name="landing_how_it_works_trainer_benefit_<?php echo e($i); ?>_<?php echo e($lang); ?>"
+                                       value="<?php echo e(old("landing_how_it_works_trainer_benefit_{$i}_{$lang}", $settings['landing_how_it_works_trainer_benefit_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($trainer_benefits_ru[$i] ?? '') : ''))); ?>"
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <?php endfor; ?>
+                        </div>
+                        
+                        <!-- Преимущества для спортсмена -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Преимущества для спортсмена (до 5 шт.)</h4>
+                            <?php
+                                $athlete_benefits_ru = [
+                                    1 => 'Доступ к тренировкам в любое время',
+                                    2 => 'Просмотр планов питания от тренера',
+                                    3 => 'Отслеживание личного прогресса',
+                                    4 => 'История всех тренировок',
+                                    5 => 'Связь с тренером через систему'
+                                ];
+                            ?>
+                            
+                            <?php for($i = 1; $i <= 5; $i++): ?>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Пункт <?php echo e($i); ?></label>
+                                <input type="text"
+                                       name="landing_how_it_works_athlete_benefit_<?php echo e($i); ?>_<?php echo e($lang); ?>"
+                                       value="<?php echo e(old("landing_how_it_works_athlete_benefit_{$i}_{$lang}", $settings['landing_how_it_works_athlete_benefit_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($athlete_benefits_ru[$i] ?? '') : ''))); ?>"
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </div>
+        </div>
+
         <!-- Вкладка: Для тренера -->
         <div id="tab-content-trainers" class="tab-content space-y-6" style="display: none;">
             <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
@@ -516,7 +664,7 @@ unset($__errorArgs, $__bag); ?>
                                     <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
                                     <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
                                 </div>
-                                <input type="file" name="landing_trainers_images[]" accept="image/*" class="hidden" data-image-number="<?php echo e($i); ?>">
+                                <input type="file" name="landing_trainers_image_<?php echo e($i); ?>" accept="image/*" class="hidden" data-image-number="<?php echo e($i); ?>">
                             </label>
                             <?php
                                 $trainerImageKey = "landing_trainers_image_{$i}";
@@ -527,12 +675,9 @@ unset($__errorArgs, $__bag); ?>
                                     <img src="<?php echo e(asset('storage/' . $trainerImageValue)); ?>" alt="Изображение <?php echo e($i); ?>" class="h-20 object-contain">
                                     <div class="flex-1">
                                         <span class="text-xs text-gray-500 block">Текущий файл <?php echo e($i); ?></span>
-                                        <label class="flex items-center mt-2">
-                                            <input type="checkbox" name="landing_trainers_keep_existing[]" value="<?php echo e($i); ?>" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-xs text-gray-600">Сохранить текущее изображение</span>
-                                        </label>
+                                        <button type="button" onclick="removeTrainerImage(<?php echo e($i); ?>)" class="mt-2 text-xs text-red-600 hover:text-red-800">Удалить изображение</button>
                                     </div>
-                                    <input type="hidden" name="landing_trainers_existing_images[<?php echo e($i); ?>]" value="<?php echo e($trainerImageValue); ?>">
+                                    <input type="hidden" name="landing_trainers_existing_image_<?php echo e($i); ?>" value="<?php echo e($trainerImageValue); ?>" id="trainer_existing_<?php echo e($i); ?>">
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -621,7 +766,7 @@ unset($__errorArgs, $__bag); ?>
                                     <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
                                     <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ</span>
                                 </div>
-                                <input type="file" name="landing_athletes_images[]" accept="image/*" class="hidden" data-image-number="<?php echo e($i); ?>">
+                                <input type="file" name="landing_athletes_image_<?php echo e($i); ?>" accept="image/*" class="hidden" data-image-number="<?php echo e($i); ?>">
                             </label>
                             <?php
                                 $athleteImageKey = "landing_athletes_image_{$i}";
@@ -632,12 +777,9 @@ unset($__errorArgs, $__bag); ?>
                                     <img src="<?php echo e(asset('storage/' . $athleteImageValue)); ?>" alt="Изображение <?php echo e($i); ?>" class="h-20 object-contain">
                                     <div class="flex-1">
                                         <span class="text-xs text-gray-500 block">Текущий файл <?php echo e($i); ?></span>
-                                        <label class="flex items-center mt-2">
-                                            <input type="checkbox" name="landing_athletes_keep_existing[]" value="<?php echo e($i); ?>" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-xs text-gray-600">Сохранить текущее изображение</span>
-                                        </label>
+                                        <button type="button" onclick="removeAthleteImage(<?php echo e($i); ?>)" class="mt-2 text-xs text-red-600 hover:text-red-800">Удалить изображение</button>
                                     </div>
-                                    <input type="hidden" name="landing_athletes_existing_images[<?php echo e($i); ?>]" value="<?php echo e($athleteImageValue); ?>">
+                                    <input type="hidden" name="landing_athletes_existing_image_<?php echo e($i); ?>" value="<?php echo e($athleteImageValue); ?>" id="athlete_existing_<?php echo e($i); ?>">
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -755,6 +897,37 @@ function switchTab(tabName) {
 document.addEventListener('DOMContentLoaded', function() {
     switchTab('basic');
 });
+
+// Функции для удаления изображений
+function removeTrainerImage(number) {
+    const existingInput = document.getElementById('trainer_existing_' + number);
+    if (!existingInput) return;
+    
+    const fileInput = document.querySelector('input[name="landing_trainers_image_' + number + '"]');
+    const container = existingInput.closest('.p-4');
+    
+    if (confirm('Вы уверены, что хотите удалить это изображение?')) {
+        existingInput.value = '';
+        if (fileInput) fileInput.value = '';
+        const existingDiv = container.querySelector('.bg-gray-50');
+        if (existingDiv) existingDiv.style.display = 'none';
+    }
+}
+
+function removeAthleteImage(number) {
+    const existingInput = document.getElementById('athlete_existing_' + number);
+    if (!existingInput) return;
+    
+    const fileInput = document.querySelector('input[name="landing_athletes_image_' + number + '"]');
+    const container = existingInput.closest('.p-4');
+    
+    if (confirm('Вы уверены, что хотите удалить это изображение?')) {
+        existingInput.value = '';
+        if (fileInput) fileInput.value = '';
+        const existingDiv = container.querySelector('.bg-gray-50');
+        if (existingDiv) existingDiv.style.display = 'none';
+    }
+}
 </script>
 
 <?php $__env->stopSection(); ?>

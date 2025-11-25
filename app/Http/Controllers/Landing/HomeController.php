@@ -49,6 +49,12 @@ class HomeController extends BaseController
             'features_subtitle' => SystemSetting::get("landing.features.subtitle.{$lang}", 'Все необходимое для управления тренировочным процессом'),
             'features' => [],
             
+            // Как это работает
+            'how_it_works_title' => SystemSetting::get("landing.how_it_works.title.{$lang}", 'Как это работает'),
+            'how_it_works_subtitle' => SystemSetting::get("landing.how_it_works.subtitle.{$lang}", 'Простой процесс работы с системой'),
+            'trainer_benefits' => [],
+            'athlete_benefits' => [],
+            
             // Для тренера
             'trainers_title' => SystemSetting::get("landing.trainers.title.{$lang}", 'Для тренеров'),
             'trainers_subtitle' => SystemSetting::get("landing.trainers.subtitle.{$lang}", 'Управляйте всеми аспектами вашего тренировочного бизнеса в одном месте'),
@@ -95,6 +101,12 @@ class HomeController extends BaseController
             ];
         }
         
+        // Загружаем преимущества для секции "Как это работает"
+        for ($i = 1; $i <= 5; $i++) {
+            $data['trainer_benefits'][] = SystemSetting::get("landing.how_it_works.trainer_benefit.{$i}.{$lang}", '');
+            $data['athlete_benefits'][] = SystemSetting::get("landing.how_it_works.athlete_benefit.{$i}.{$lang}", '');
+        }
+        
         // Загружаем 5 пунктов для тренера
         for ($i = 1; $i <= 5; $i++) {
             $data['trainer_items'][] = SystemSetting::get("landing.trainer.item.{$i}.{$lang}", '');
@@ -117,6 +129,8 @@ class HomeController extends BaseController
         $data['landing_hero_image'] = $heroImage;
         
         $data['landing_features_image'] = SystemSetting::get('landing.features_image', '');
+        $data['landing_how_it_works_trainer_image'] = SystemSetting::get('landing.how_it_works.trainer_image', '');
+        $data['landing_how_it_works_athlete_image'] = SystemSetting::get('landing.how_it_works.athlete_image', '');
         
         // Загружаем все изображения для тренера (до 5 шт.)
         $trainerImages = [];

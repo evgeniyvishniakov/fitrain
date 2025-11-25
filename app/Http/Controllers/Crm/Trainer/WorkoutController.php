@@ -18,7 +18,7 @@ class WorkoutController extends BaseController
                 $query->select('exercises.*')
                     ->addSelect('workout_exercise.*')
                     ->orderBy('workout_exercise.order_index', 'asc');
-            }])->latest()->paginate(10);
+            }])->orderBy('date', 'desc')->orderBy('time', 'desc')->paginate(10);
             $athletes = $user->athletes()->get();
             
         } elseif ($user->hasRole('self-athlete')) {

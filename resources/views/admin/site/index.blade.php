@@ -30,6 +30,12 @@
                     Возможности
                 </button>
                 <button type="button" 
+                        onclick="switchTab('how-it-works')"
+                        id="tab-btn-how-it-works"
+                        class="tab-button px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
+                    Как это работает
+                </button>
+                <button type="button" 
                         onclick="switchTab('trainers')"
                         id="tab-btn-trainers"
                         class="tab-button px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 transition whitespace-nowrap">
@@ -419,6 +425,134 @@
                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old("landing_feature_{$i}_description_{$lang}", $settings['landing_feature_' . $i . '_description_' . $lang] ?? ($lang === 'ru' ? ($features_ru[$i]['description'] ?? '') : '')) }}</textarea>
                         </div>
                         @endfor
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Вкладка: Как это работает -->
+        <div id="tab-content-how-it-works" class="tab-content space-y-6" style="display: none;">
+            <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Секция "Как это работает"</h3>
+                        <p class="text-sm text-gray-500 mt-1">Настройки секции с мобильными экранами тренера и спортсмена.</p>
+                    </div>
+                </div>
+
+                <!-- Изображения мобильных экранов -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">Изображение экрана тренера</label>
+                        <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                            <div class="text-center px-4">
+                                <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                                <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ (мобильный экран)</span>
+                            </div>
+                            <input type="file" name="landing_how_it_works_trainer_image" accept="image/*" class="hidden">
+                        </label>
+                        @if(!empty($settings['landing_how_it_works_trainer_image'] ?? ''))
+                            <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <img src="{{ asset('storage/' . $settings['landing_how_it_works_trainer_image']) }}" alt="Экран тренера" class="h-20 object-contain">
+                                <span class="text-xs text-gray-500">Текущий файл</span>
+                            </div>
+                        @endif
+                        @error('landing_how_it_works_trainer_image')
+                            <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">Изображение экрана спортсмена</label>
+                        <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:border-blue-300 transition cursor-pointer">
+                            <div class="text-center px-4">
+                                <span class="block text-base font-medium text-gray-700">Выберите изображение</span>
+                                <span class="block text-xs text-gray-500 mt-1">PNG/JPG до 2 МБ (мобильный экран)</span>
+                            </div>
+                            <input type="file" name="landing_how_it_works_athlete_image" accept="image/*" class="hidden">
+                        </label>
+                        @if(!empty($settings['landing_how_it_works_athlete_image'] ?? ''))
+                            <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <img src="{{ asset('storage/' . $settings['landing_how_it_works_athlete_image']) }}" alt="Экран спортсмена" class="h-20 object-contain">
+                                <span class="text-xs text-gray-500">Текущий файл</span>
+                            </div>
+                        @endif
+                        @error('landing_how_it_works_athlete_image')
+                            <p class="text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                @foreach(['ru' => 'Русский', 'ua' => 'Українська'] as $lang => $langName)
+                <div class="border border-gray-200 rounded-lg p-4 space-y-4 mb-6">
+                    <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
+                        <span class="text-sm font-semibold text-gray-900">{{ $langName }}</span>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Заголовок секции</label>
+                        <input type="text"
+                               name="landing_how_it_works_title_{{ $lang }}"
+                               value="{{ old("landing_how_it_works_title_{$lang}", $settings['landing_how_it_works_title_' . $lang] ?? ($lang === 'ru' ? 'Как это работает' : '')) }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Подзаголовок секции</label>
+                        <textarea name="landing_how_it_works_subtitle_{{ $lang }}"
+                                  rows="2"
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old("landing_how_it_works_subtitle_{$lang}", $settings['landing_how_it_works_subtitle_' . $lang] ?? ($lang === 'ru' ? 'Простой процесс работы с системой' : '')) }}</textarea>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mt-6 pt-4 border-t border-gray-200">
+                        <!-- Преимущества для тренера -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Преимущества для тренера (до 5 шт.)</h4>
+                            @php
+                                $trainer_benefits_ru = [
+                                    1 => 'Быстрое создание аккаунтов спортсменов',
+                                    2 => 'Удобное управление всеми спортсменами',
+                                    3 => 'Планирование тренировок в календаре',
+                                    4 => 'Отслеживание прогресса каждого спортсмена',
+                                    5 => 'Финансовый учет и статистика'
+                                ];
+                            @endphp
+                            
+                            @for($i = 1; $i <= 5; $i++)
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Пункт {{ $i }}</label>
+                                <input type="text"
+                                       name="landing_how_it_works_trainer_benefit_{{$i}}_{{ $lang }}"
+                                       value="{{ old("landing_how_it_works_trainer_benefit_{$i}_{$lang}", $settings['landing_how_it_works_trainer_benefit_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($trainer_benefits_ru[$i] ?? '') : '')) }}"
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            @endfor
+                        </div>
+                        
+                        <!-- Преимущества для спортсмена -->
+                        <div>
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Преимущества для спортсмена (до 5 шт.)</h4>
+                            @php
+                                $athlete_benefits_ru = [
+                                    1 => 'Доступ к тренировкам в любое время',
+                                    2 => 'Просмотр планов питания от тренера',
+                                    3 => 'Отслеживание личного прогресса',
+                                    4 => 'История всех тренировок',
+                                    5 => 'Связь с тренером через систему'
+                                ];
+                            @endphp
+                            
+                            @for($i = 1; $i <= 5; $i++)
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Пункт {{ $i }}</label>
+                                <input type="text"
+                                       name="landing_how_it_works_athlete_benefit_{{$i}}_{{ $lang }}"
+                                       value="{{ old("landing_how_it_works_athlete_benefit_{$i}_{$lang}", $settings['landing_how_it_works_athlete_benefit_' . $i . '_' . $lang] ?? ($lang === 'ru' ? ($athlete_benefits_ru[$i] ?? '') : '')) }}"
+                                       class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            @endfor
+                        </div>
                     </div>
                 </div>
                 @endforeach

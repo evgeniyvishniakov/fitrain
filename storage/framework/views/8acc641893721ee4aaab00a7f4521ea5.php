@@ -140,6 +140,7 @@
                     <!-- Desktop Menu -->
                     <div class="hidden md:flex items-center space-x-4">
                         <a href="#features" class="text-gray-700 hover:text-green-600 transition">Возможности</a>
+                        <a href="#how-it-works" class="text-gray-700 hover:text-green-600 transition">Как это работает</a>
                         <a href="#for-trainers" class="text-gray-700 hover:text-green-600 transition">Для тренеров</a>
                         <a href="#for-athletes" class="text-gray-700 hover:text-green-600 transition">Для спортсменов</a>
                         <a href="#pricing" class="text-gray-700 hover:text-green-600 transition">Тарифы</a>
@@ -172,6 +173,7 @@
             <div x-show="mobileMenuOpen" x-transition class="md:hidden bg-white border-t">
                 <div class="px-4 py-4 space-y-4">
                     <a href="#features" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Возможности</a>
+                    <a href="#how-it-works" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Как это работает</a>
                     <a href="#for-trainers" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для тренеров</a>
                     <a href="#for-athletes" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для спортсменов</a>
                     <a href="#pricing" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Тарифы</a>
@@ -324,6 +326,169 @@
             };
         }
         </script>
+        
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-green-50 via-white to-blue-50">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4"><?php echo e($how_it_works_title); ?></h2>
+                    <p class="text-xl text-gray-600"><?php echo e($how_it_works_subtitle); ?></p>
+                </div>
+                
+                <div class="grid lg:grid-cols-4 gap-8 items-center">
+                    <!-- Левая колонка: Преимущества для тренера -->
+                    <div class="lg:col-span-1 space-y-4 order-2 lg:order-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 text-center lg:text-left">
+                            <span class="inline-flex items-center">
+                                <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                Для тренера
+                            </span>
+                        </h3>
+                        <ul class="space-y-3">
+                            <?php $__currentLoopData = $trainer_benefits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $benefit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if(!empty($benefit)): ?>
+                                    <li class="flex items-start">
+                                        <svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-gray-700"><?php echo e($benefit); ?></span>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </ul>
+                    </div>
+                    
+                    <!-- Центральная часть: Два мобильных экрана -->
+                    <div class="lg:col-span-2 grid md:grid-cols-2 gap-6 order-1 lg:order-2">
+                        <!-- Мобильный экран тренера -->
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-64 max-w-full">
+                                <!-- Рамка телефона -->
+                                <div class="bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
+                                    <div class="bg-white rounded-[2rem] overflow-hidden">
+                                        <!-- Заголовок экрана -->
+                                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 text-white text-center">
+                                            <p class="text-sm font-semibold">Тренер</p>
+                                        </div>
+                                        <!-- Контент экрана -->
+                                        <div class="h-[420px] overflow-y-auto bg-gray-50">
+                                            <?php
+                                                $trainerImageExists = false;
+                                                if(!empty($landing_how_it_works_trainer_image ?? '')) {
+                                                    try {
+                                                        $trainerImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_how_it_works_trainer_image);
+                                                    } catch (\Exception $e) {
+                                                        $trainerImageExists = false;
+                                                    }
+                                                }
+                                            ?>
+                                            <?php if($trainerImageExists): ?>
+                                                <img src="<?php echo e(asset('storage/' . $landing_how_it_works_trainer_image)); ?>" 
+                                                     alt="Экран тренера" 
+                                                     class="w-full h-auto object-cover">
+                                            <?php else: ?>
+                                                <div class="p-4 space-y-3">
+                                                    <div class="bg-white p-3 rounded-lg shadow">
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                    </div>
+                                                    <div class="bg-white p-3 rounded-lg shadow">
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                    </div>
+                                                    <div class="bg-white p-3 rounded-lg shadow">
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Кнопка Home (внизу телефона) -->
+                                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-800 rounded-full"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Мобильный экран спортсмена -->
+                        <div class="flex flex-col items-center">
+                            <div class="relative w-64 max-w-full">
+                                <!-- Рамка телефона -->
+                                <div class="bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
+                                    <div class="bg-white rounded-[2rem] overflow-hidden">
+                                        <!-- Заголовок экрана -->
+                                        <div class="bg-gradient-to-r from-green-600 to-green-700 px-4 py-3 text-white text-center">
+                                            <p class="text-sm font-semibold">Спортсмен</p>
+                                        </div>
+                                        <!-- Контент экрана -->
+                                        <div class="h-[420px] overflow-y-auto bg-gray-50">
+                                            <?php
+                                                $athleteImageExists = false;
+                                                if(!empty($landing_how_it_works_athlete_image ?? '')) {
+                                                    try {
+                                                        $athleteImageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($landing_how_it_works_athlete_image);
+                                                    } catch (\Exception $e) {
+                                                        $athleteImageExists = false;
+                                                    }
+                                                }
+                                            ?>
+                                            <?php if($athleteImageExists): ?>
+                                                <img src="<?php echo e(asset('storage/' . $landing_how_it_works_athlete_image)); ?>" 
+                                                     alt="Экран спортсмена" 
+                                                     class="w-full h-auto object-cover">
+                                            <?php else: ?>
+                                                <div class="p-4 space-y-3">
+                                                    <div class="bg-white p-3 rounded-lg shadow">
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                    </div>
+                                                    <div class="bg-white p-3 rounded-lg shadow">
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                    </div>
+                                                    <div class="bg-white p-3 rounded-lg shadow">
+                                                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                        <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Кнопка Home (внизу телефона) -->
+                                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gray-800 rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Правая колонка: Преимущества для спортсмена -->
+                    <div class="lg:col-span-1 space-y-4 order-3">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4 text-center lg:text-right">
+                            <span class="inline-flex items-center">
+                                <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Для спортсмена
+                            </span>
+                        </h3>
+                        <ul class="space-y-3">
+                            <?php $__currentLoopData = $athlete_benefits; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $benefit): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <?php if(!empty($benefit)): ?>
+                                    <li class="flex items-start">
+                                        <svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-gray-700"><?php echo e($benefit); ?></span>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
         
         <!-- Features Section -->
         <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -542,6 +707,7 @@
                         <h4 class="font-semibold mb-4">Навигация</h4>
                         <ul class="space-y-2 text-gray-400">
                             <li><a href="#features" class="hover:text-white transition">Возможности</a></li>
+                            <li><a href="#how-it-works" class="hover:text-white transition">Как это работает</a></li>
                             <li><a href="#for-trainers" class="hover:text-white transition">Для тренеров</a></li>
                             <li><a href="#for-athletes" class="hover:text-white transition">Для спортсменов</a></li>
                         </ul>

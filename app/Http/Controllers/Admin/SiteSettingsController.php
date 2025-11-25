@@ -74,6 +74,20 @@ class SiteSettingsController extends BaseController
             'landing.feature.9.title.ru' => 'Отслеживание выполнения упражнений',
             'landing.feature.9.description.ru' => 'Отслеживание статуса выполнения: полностью или частично выполнено упражнение спортсменом',
             
+            // Как это работает
+            'landing.how_it_works.title.ru' => 'Как это работает',
+            'landing.how_it_works.subtitle.ru' => 'Простой процесс работы с системой',
+            'landing.how_it_works.trainer_benefit.1.ru' => 'Быстрое создание аккаунтов спортсменов',
+            'landing.how_it_works.trainer_benefit.2.ru' => 'Удобное управление всеми спортсменами',
+            'landing.how_it_works.trainer_benefit.3.ru' => 'Планирование тренировок в календаре',
+            'landing.how_it_works.trainer_benefit.4.ru' => 'Отслеживание прогресса каждого спортсмена',
+            'landing.how_it_works.trainer_benefit.5.ru' => 'Финансовый учет и статистика',
+            'landing.how_it_works.athlete_benefit.1.ru' => 'Доступ к тренировкам в любое время',
+            'landing.how_it_works.athlete_benefit.2.ru' => 'Просмотр планов питания от тренера',
+            'landing.how_it_works.athlete_benefit.3.ru' => 'Отслеживание личного прогресса',
+            'landing.how_it_works.athlete_benefit.4.ru' => 'История всех тренировок',
+            'landing.how_it_works.athlete_benefit.5.ru' => 'Связь с тренером через систему',
+            
             // Для тренера
             'landing.trainers.title.ru' => 'Для тренеров',
             'landing.trainers.subtitle.ru' => 'Управляйте всеми аспектами вашего тренировочного бизнеса в одном месте',
@@ -121,6 +135,18 @@ class SiteSettingsController extends BaseController
                 $settings["landing_feature_{$i}_description_{$lang}"] = SystemSetting::get("landing.feature.{$i}.description.{$lang}", '');
             }
             
+            // Как это работает
+            $settings["landing_how_it_works_title_{$lang}"] = SystemSetting::get("landing.how_it_works.title.{$lang}", '');
+            $settings["landing_how_it_works_subtitle_{$lang}"] = SystemSetting::get("landing.how_it_works.subtitle.{$lang}", '');
+            // 5 преимуществ для тренера
+            for ($i = 1; $i <= 5; $i++) {
+                $settings["landing_how_it_works_trainer_benefit_{$i}_{$lang}"] = SystemSetting::get("landing.how_it_works.trainer_benefit.{$i}.{$lang}", '');
+            }
+            // 5 преимуществ для спортсмена
+            for ($i = 1; $i <= 5; $i++) {
+                $settings["landing_how_it_works_athlete_benefit_{$i}_{$lang}"] = SystemSetting::get("landing.how_it_works.athlete_benefit.{$i}.{$lang}", '');
+            }
+            
             // Для тренера
             $settings["landing_trainers_title_{$lang}"] = SystemSetting::get("landing.trainers.title.{$lang}", '');
             $settings["landing_trainers_subtitle_{$lang}"] = SystemSetting::get("landing.trainers.subtitle.{$lang}", '');
@@ -141,6 +167,8 @@ class SiteSettingsController extends BaseController
         // Медиа
         $settings['landing_hero_image'] = SystemSetting::get('landing.hero_image', '');
         $settings['landing_features_image'] = SystemSetting::get('landing.features_image', '');
+        $settings['landing_how_it_works_trainer_image'] = SystemSetting::get('landing.how_it_works.trainer_image', '');
+        $settings['landing_how_it_works_athlete_image'] = SystemSetting::get('landing.how_it_works.athlete_image', '');
         
         // Изображения для тренера (до 5 шт.)
         for ($i = 1; $i <= 5; $i++) {
@@ -179,6 +207,8 @@ class SiteSettingsController extends BaseController
             'favicon'          => ['nullable', 'file', 'mimetypes:image/png,image/x-png,image/apng,image/jpeg,image/jpg,image/pjpeg,image/x-icon,image/vnd.microsoft.icon', 'max:1024'],
             'landing_hero_image' => ['nullable', 'image', 'max:2048'],
             'landing_features_image' => ['nullable', 'image', 'max:2048'],
+            'landing_how_it_works_trainer_image' => ['nullable', 'image', 'max:2048'],
+            'landing_how_it_works_athlete_image' => ['nullable', 'image', 'max:2048'],
             'landing_slider_1_image' => ['nullable', 'image', 'max:2048'],
             'landing_slider_2_image' => ['nullable', 'image', 'max:2048'],
             'landing_slider_3_image' => ['nullable', 'image', 'max:2048'],
@@ -208,6 +238,14 @@ class SiteSettingsController extends BaseController
             for ($i = 1; $i <= 9; $i++) {
                 $rules["landing_feature_{$i}_title_{$lang}"] = ['nullable', 'string', 'max:255'];
                 $rules["landing_feature_{$i}_description_{$lang}"] = ['nullable', 'string', 'max:500'];
+            }
+            
+            // Как это работает
+            $rules["landing_how_it_works_title_{$lang}"] = ['nullable', 'string', 'max:255'];
+            $rules["landing_how_it_works_subtitle_{$lang}"] = ['nullable', 'string', 'max:500'];
+            for ($i = 1; $i <= 5; $i++) {
+                $rules["landing_how_it_works_trainer_benefit_{$i}_{$lang}"] = ['nullable', 'string', 'max:500'];
+                $rules["landing_how_it_works_athlete_benefit_{$i}_{$lang}"] = ['nullable', 'string', 'max:500'];
             }
             
             // Для тренера
@@ -254,6 +292,14 @@ class SiteSettingsController extends BaseController
                 SystemSetting::set("landing.feature.{$i}.description.{$lang}", $data["landing_feature_{$i}_description_{$lang}"] ?? '', 'string', "Описание возможности {$i} ({$lang})", true);
             }
             
+            // Как это работает
+            SystemSetting::set("landing.how_it_works.title.{$lang}", $data["landing_how_it_works_title_{$lang}"] ?? '', 'string', "Заголовок секции 'Как это работает' ({$lang})", true);
+            SystemSetting::set("landing.how_it_works.subtitle.{$lang}", $data["landing_how_it_works_subtitle_{$lang}"] ?? '', 'string', "Подзаголовок секции 'Как это работает' ({$lang})", true);
+            for ($i = 1; $i <= 5; $i++) {
+                SystemSetting::set("landing.how_it_works.trainer_benefit.{$i}.{$lang}", $data["landing_how_it_works_trainer_benefit_{$i}_{$lang}"] ?? '', 'string', "Преимущество тренера {$i} ({$lang})", true);
+                SystemSetting::set("landing.how_it_works.athlete_benefit.{$i}.{$lang}", $data["landing_how_it_works_athlete_benefit_{$i}_{$lang}"] ?? '', 'string', "Преимущество спортсмена {$i} ({$lang})", true);
+            }
+            
             // Для тренера
             SystemSetting::set("landing.trainers.title.{$lang}", $data["landing_trainers_title_{$lang}"] ?? '', 'string', "Заголовок секции для тренера ({$lang})", true);
             SystemSetting::set("landing.trainers.subtitle.{$lang}", $data["landing_trainers_subtitle_{$lang}"] ?? '', 'string', "Подзаголовок секции для тренера ({$lang})", true);
@@ -292,6 +338,14 @@ class SiteSettingsController extends BaseController
         
         if ($request->hasFile('landing_features_image')) {
             $this->storeImageSetting($request->file('landing_features_image'), 'landing.features_image', 'Изображение секции возможностей');
+        }
+        
+        if ($request->hasFile('landing_how_it_works_trainer_image')) {
+            $this->storeImageSetting($request->file('landing_how_it_works_trainer_image'), 'landing.how_it_works.trainer_image', 'Изображение экрана тренера');
+        }
+        
+        if ($request->hasFile('landing_how_it_works_athlete_image')) {
+            $this->storeImageSetting($request->file('landing_how_it_works_athlete_image'), 'landing.how_it_works.athlete_image', 'Изображение экрана спортсмена');
         }
         
         // Обработка изображений для тренера (до 5 шт.)
