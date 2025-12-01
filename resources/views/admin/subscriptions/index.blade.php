@@ -16,6 +16,78 @@
         </a>
     </div>
 
+    <!-- Настройки доната -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-heart text-red-500 mr-2"></i>Настройки доната
+        </h3>
+        <form method="POST" action="{{ route('admin.subscriptions.donation-settings') }}" enctype="multipart/form-data" class="space-y-6">
+            @csrf
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Банковская карта -->
+                <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-credit-card mr-2"></i>Банковская карта
+                    </h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Номер карты</label>
+                            <input type="text" name="bank_card_number" value="{{ \App\Models\SystemSetting::get('donation.bank_card_number', '') }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="0000 0000 0000 0000">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Имя получателя</label>
+                            <input type="text" name="bank_card_holder" value="{{ \App\Models\SystemSetting::get('donation.bank_card_holder', '') }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                                   placeholder="Имя получателя">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">QR-код</label>
+                            @if(\App\Models\SystemSetting::get('donation.bank_qr_code'))
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/' . \App\Models\SystemSetting::get('donation.bank_qr_code')) }}" alt="QR" class="w-24 h-24 object-contain border rounded">
+                                </div>
+                            @endif
+                            <input type="file" name="bank_qr_code" accept="image/*" class="w-full text-sm">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Криптовалюта -->
+                <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-coins mr-2"></i>USDT TRC20
+                    </h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Адрес кошелька</label>
+                            <input type="text" name="crypto_wallet_address" value="{{ \App\Models\SystemSetting::get('donation.crypto_wallet_address', '') }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" 
+                                   placeholder="Txxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">QR-код</label>
+                            @if(\App\Models\SystemSetting::get('donation.crypto_qr_code'))
+                                <div class="mb-2">
+                                    <img src="{{ asset('storage/' . \App\Models\SystemSetting::get('donation.crypto_qr_code')) }}" alt="QR" class="w-24 h-24 object-contain border rounded">
+                                </div>
+                            @endif
+                            <input type="file" name="crypto_qr_code" accept="image/*" class="w-full text-sm">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-save mr-2"></i>Сохранить настройки доната
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- Таблица подписок -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">

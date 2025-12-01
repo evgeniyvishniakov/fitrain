@@ -85,6 +85,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Управление планами подписок
     Route::prefix('subscriptions')->name('admin.subscriptions.')->group(function () {
         Route::get('/', [SubscriptionController::class, 'index'])->name('index');
+        Route::post('/donation-settings', [SubscriptionController::class, 'donationSettings'])->name('donation-settings');
         Route::get('/create', [SubscriptionController::class, 'create'])->name('create');
         Route::post('/', [SubscriptionController::class, 'store'])->name('store');
         Route::post('/{subscription}/toggle-status', [SubscriptionController::class, 'toggleStatus'])->name('toggle-status');

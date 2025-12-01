@@ -286,71 +286,49 @@
     <!-- Текущий план -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-900">{{ __('common.current_plan') }}</h3>
-                <span class="px-3 py-1 
-                    @if($currentSubscription->status === 'trial') bg-blue-100 text-blue-800
-                    @elseif($currentSubscription->status === 'active') bg-green-100 text-green-800
-                    @elseif($currentSubscription->status === 'expired') bg-red-100 text-red-800
-                    @else bg-gray-100 text-gray-800
-                    @endif
-                    text-sm font-medium rounded-full">
-                    @if($currentSubscription->status === 'trial')
-                        {{ __('common.trial') }}
-                    @elseif($currentSubscription->status === 'active')
-                        {{ __('common.subscription_active') }}
-                    @elseif($currentSubscription->status === 'expired')
-                        {{ __('common.subscription_expired') }}
-                    @else
-                        {{ ucfirst($currentSubscription->status) }}
-                    @endif
-                </span>
+            <h3 class="text-lg font-semibold text-gray-900">{{ __('common.current_plan') }}</h3>
+            <span class="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+                {{ __('common.subscription_active') }}
+            </span>
         </div>
         
-        <div class="grid md:grid-cols-3 gap-6">
+        <div class="grid md:grid-cols-2 gap-6">
             <div class="text-center">
-                    <div class="text-2xl font-bold text-indigo-600">
-                        {{ $currentSubscription->plan->name ?? __('common.not_specified') }}
+                <div class="text-2xl font-bold text-indigo-600">
+                    {{ $currentSubscription->plan->name ?? __('common.not_specified') }}
+                </div>
+                <div class="text-gray-600 mt-1">{{ __('common.subscription_plan') }}</div>
             </div>
-                    <div class="text-gray-600 mt-1">{{ __('common.subscription_plan') }}</div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-gray-900">
+                    @if($currentSubscription->currency)
+                        {{ $currentSubscription->currency->format($currentSubscription->price) }}
+                    @else
+                        {{ number_format($currentSubscription->price, 2) }} {{ $currentSubscription->currency_code }}
+                    @endif
                 </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        @if($currentSubscription->currency)
-                            {{ $currentSubscription->currency->format($currentSubscription->price) }}
-                        @else
-                            {{ number_format($currentSubscription->price, 2) }} {{ $currentSubscription->currency_code }}
-                        @endif
-                    </div>
-                    <div class="text-gray-600 mt-1">{{ __('common.per_month') }}</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-lg font-semibold text-gray-900">
-                        {{ $currentSubscription->expires_date->format('d.m.Y') }}
-                    </div>
-                    <div class="text-gray-600 mt-1">{{ __('common.valid_until') }}</div>
-                </div>
-            </div>
-            
-            @if($currentSubscription->plan && $currentSubscription->plan->description)
-                <div class="mt-6 pt-6 border-t border-gray-100">
-                    <div class="text-sm text-gray-600">
-                        <h4 class="font-medium text-gray-900 mb-3">{{ __('common.description') }}</h4>
-                        <p>{{ $currentSubscription->plan->description }}</p>
-                    </div>
-                </div>
-            @endif
-            
-            <div class="mt-6 pt-6 border-t border-gray-100 text-center">
-                @if($currentSubscription->is_trial)
-                    <p class="text-sm text-gray-600 mb-3">{{ __('common.trial_period') }}: {{ $currentSubscription->trial_days }} {{ __('common.days') }}</p>
-                @endif
-                @if($currentSubscription->status === 'trial' || $currentSubscription->status === 'active')
-                    <button class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
-                        {{ __('common.extend_subscription') }}
-                    </button>
-                @endif
+                <div class="text-gray-600 mt-1">{{ __('common.per_month') }}</div>
             </div>
         </div>
+        
+        <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+            <div class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="font-medium">{{ __('common.unlimited_subscription') }}</span>
+            </div>
+        </div>
+        
+        @if($currentSubscription->plan && $currentSubscription->plan->description)
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <div class="text-sm text-gray-600">
+                    <h4 class="font-medium text-gray-900 mb-3">{{ __('common.description') }}</h4>
+                    <p>{{ $currentSubscription->plan->description }}</p>
+                </div>
+            </div>
+        @endif
+    </div>
     @else
         <!-- Нет подписки -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
@@ -362,76 +340,158 @@
         </div>
     @endif
 
-    @if($subscriptionHistory && $subscriptionHistory->count() > 0)
-        <!-- История подписок -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-6">{{ __('common.subscription_history') }}</h3>
-            
-            <div class="space-y-4">
-                @foreach($subscriptionHistory as $subscription)
-                    <div class="flex items-center justify-between py-4 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
-                <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-4
-                                @if($subscription->status === 'trial') bg-blue-100
-                                @elseif($subscription->status === 'active') bg-green-100
-                                @elseif($subscription->status === 'expired') bg-red-100
-                                @else bg-gray-100
-                                @endif">
-                                @if($subscription->status === 'trial')
-                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                @elseif($subscription->status === 'active' || $subscription->status === 'expired')
-                                    <svg class="w-5 h-5 {{ $subscription->status === 'active' ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                                @else
-                                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                @endif
-                    </div>
-                    <div>
-                                <div class="font-medium text-gray-900">
-                                    @if($subscription->is_trial)
-                                        {{ __('common.trial') }} {{ __('common.subscription') }}
-                                    @else
-                                        {{ $subscription->plan->name ?? __('common.subscription') }}
-                                    @endif
+    <!-- Секция доната -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Поддержка проекта</h3>
+        
+        <!-- Переключатель способов оплаты -->
+        <div class="flex gap-4 mb-6 border-b border-gray-200">
+            <button onclick="switchPaymentMethod('bank')" id="payment-bank-btn" class="payment-method-btn active px-4 py-2 font-medium text-sm border-b-2 border-indigo-600 text-indigo-600">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+                Банковская карта
+            </button>
+            <button onclick="switchPaymentMethod('crypto')" id="payment-crypto-btn" class="payment-method-btn px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Криптовалюта
+            </button>
+        </div>
+        
+        <!-- Банковская карта -->
+        <div id="payment-bank" class="payment-method-content">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">Реквизиты для перевода</h4>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-gray-600">Номер карты:</label>
+                                <div class="mt-1 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200">
+                                    <span class="font-mono text-lg font-semibold" id="card-number">{{ \App\Models\SystemSetting::get('donation.bank_card_number', '0000 0000 0000 0000') }}</span>
+                                    <button onclick="copyToClipboard('card-number')" class="ml-2 text-indigo-600 hover:text-indigo-700">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        </svg>
+                                    </button>
                                 </div>
-                                <div class="text-sm text-gray-600">
-                                    {{ $subscription->start_date->format('d.m.Y') }} - {{ $subscription->expires_date->format('d.m.Y') }}
-                                </div>
-                    </div>
-                </div>
-                <div class="text-right">
-                            <div class="font-medium text-gray-900">
-                                @if($subscription->currency)
-                                    {{ $subscription->currency->format($subscription->price) }}
-                                @else
-                                    {{ number_format($subscription->price, 2) }} {{ $subscription->currency_code }}
-                                @endif
                             </div>
-                            <div class="text-sm 
-                                @if($subscription->status === 'active' || $subscription->status === 'trial') text-green-600
-                                @elseif($subscription->status === 'expired') text-red-600
-                                @else text-gray-600
-                                @endif">
-                                @if($subscription->status === 'trial')
-                                    {{ __('common.trial') }}
-                                @elseif($subscription->status === 'active')
-                                    {{ __('common.subscription_active') }}
-                                @elseif($subscription->status === 'expired')
-                                    {{ __('common.subscription_expired') }}
-                                @else
-                                    {{ ucfirst($subscription->status) }}
-                                @endif
+                            <div>
+                                <label class="text-sm text-gray-600">Получатель:</label>
+                                <div class="mt-1 bg-white px-4 py-3 rounded-lg border border-gray-200">
+                                    <span class="font-medium" id="card-holder">{{ \App\Models\SystemSetting::get('donation.bank_card_holder', 'Имя получателя') }}</span>
+                                </div>
                             </div>
                         </div>
+                    </div>
                 </div>
-                @endforeach
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">QR-код для оплаты</h4>
+                    <div class="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                        <div class="bg-white p-4 rounded-lg">
+                            @php($bankQrCode = \App\Models\SystemSetting::get('donation.bank_qr_code'))
+                            @if($bankQrCode)
+                                <img id="bank-qr-code" src="{{ asset('storage/' . $bankQrCode) }}" alt="QR код для оплаты" class="w-48 h-48 object-contain">
+                            @else
+                                <div class="w-48 h-48 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                                    QR-код не загружен
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    @endif
+        
+        <!-- Криптовалюта -->
+        <div id="payment-crypto" class="payment-method-content" style="display: none;">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">USDT TRC20</h4>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-sm text-gray-600">Адрес кошелька:</label>
+                                <div class="mt-1 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200">
+                                    <span class="font-mono text-sm break-all" id="crypto-wallet">{{ \App\Models\SystemSetting::get('donation.crypto_wallet_address', 'Txxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') }}</span>
+                                    <button onclick="copyToClipboard('crypto-wallet')" class="ml-2 text-indigo-600 hover:text-indigo-700 flex-shrink-0">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-sm text-gray-600">Сеть:</label>
+                                <div class="mt-1 bg-white px-4 py-3 rounded-lg border border-gray-200">
+                                    <span class="font-medium">TRC20 (Tron)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">QR-код для оплаты</h4>
+                    <div class="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                        <div class="bg-white p-4 rounded-lg">
+                            @php($cryptoQrCode = \App\Models\SystemSetting::get('donation.crypto_qr_code'))
+                            @if($cryptoQrCode)
+                                <img id="crypto-qr-code" src="{{ asset('storage/' . $cryptoQrCode) }}" alt="QR код для оплаты" class="w-48 h-48 object-contain">
+                            @else
+                                <div class="w-48 h-48 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                                    QR-код не загружен
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+function switchPaymentMethod(method) {
+    // Убираем активный класс со всех кнопок
+    document.querySelectorAll('.payment-method-btn').forEach(btn => {
+        btn.classList.remove('active', 'border-indigo-600', 'text-indigo-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Скрываем весь контент
+    document.querySelectorAll('.payment-method-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // Показываем выбранный метод
+    if (method === 'bank') {
+        document.getElementById('payment-bank-btn').classList.add('active', 'border-indigo-600', 'text-indigo-600');
+        document.getElementById('payment-bank-btn').classList.remove('border-transparent', 'text-gray-500');
+        document.getElementById('payment-bank').style.display = 'block';
+    } else if (method === 'crypto') {
+        document.getElementById('payment-crypto-btn').classList.add('active', 'border-indigo-600', 'text-indigo-600');
+        document.getElementById('payment-crypto-btn').classList.remove('border-transparent', 'text-gray-500');
+        document.getElementById('payment-crypto').style.display = 'block';
+    }
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent.trim();
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Показываем уведомление об успешном копировании
+        const btn = element.nextElementSibling || element.parentElement.querySelector('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+        }, 2000);
+    }).catch(err => {
+        console.error('Ошибка копирования:', err);
+    });
+}
+</script>
 @endsection
