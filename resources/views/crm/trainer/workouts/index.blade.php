@@ -456,6 +456,49 @@ function workoutApp() {
             }
             return isVideoMedia(path);
         },
+        
+        translateCategoryDisplay(category) {
+            if (!category) return '';
+            const translations = {
+                'Грудь': '{{ __('common.chest') }}',
+                'Спина': '{{ __('common.back_muscles') }}',
+                'Ноги(Бедра)': '{{ __('common.legs_thighs') }}',
+                'Ноги(Икры)': '{{ __('common.legs_calves') }}',
+                'Ягодицы': '{{ __('common.glutes') }}',
+                'Плечи': '{{ __('common.shoulders') }}',
+                'Руки(Бицепс)': '{{ __('common.arms_biceps') }}',
+                'Руки(Трицепс)': '{{ __('common.arms_triceps') }}',
+                'Руки(Предплечье)': '{{ __('common.arms_forearm') }}',
+                'Пресс': '{{ __('common.abs') }}',
+                'Шея': '{{ __('common.neck') }}',
+                'Кардио': '{{ __('common.cardio') }}',
+                'Гибкость': '{{ __('common.flexibility') }}'
+            };
+            return translations[category] || category;
+        },
+        
+        translateEquipmentDisplay(equipment) {
+            if (!equipment) return '';
+            const translations = {
+                'Штанга': '{{ __('common.barbell') }}',
+                'Гриф': '{{ __('common.barbell_bar') }}',
+                'Трап-гриф': '{{ __('common.trap_bar') }}',
+                'EZ-гриф': '{{ __('common.ez_bar') }}',
+                'Отягощения': '{{ __('common.weight_plate') }}',
+                'Гантели': '{{ __('common.dumbbells') }}',
+                'Гири': '{{ __('common.kettlebells') }}',
+                'Собственный вес': '{{ __('common.body_weight') }}',
+                'Тренажер': '{{ __('common.machines') }}',
+                'Машина Смита': '{{ __('common.smith_machine') }}',
+                'Кроссовер / Блок': '{{ __('common.crossover_block') }}',
+                'Скакалка': '{{ __('common.jump_rope') }}',
+                'Турник': '{{ __('common.pull_up_bar') }}',
+                'Брусья': '{{ __('common.parallel_bars') }}',
+                'Скамейка': '{{ __('common.bench') }}',
+                'Резина / Экспандер': '{{ __('common.resistance_band') }}'
+            };
+            return translations[equipment] || equipment;
+        },
 
         setupTouchHandlers() {
             if (this.touchHandlersSetup) return;
@@ -2091,7 +2134,7 @@ function workoutApp() {
                                     <div class="cursor-pointer flex-1" onclick="toggleExerciseDetails(${exercise.id})" onmousedown="event.stopPropagation()">
                                         <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
                                         <span class="text-sm font-medium text-gray-900">${exercise.name}</span>
-                                        <span class="text-xs text-gray-500">${exercise.category || ''}</span>
+                                        <span class="text-xs text-gray-500">${translateCategoryDisplay(exercise.category || '')}</span>
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
@@ -2493,10 +2536,10 @@ function workoutApp() {
                         <h3 style="margin: 0; font-size: 22px; font-weight: bold; color: #111827;">${exercise.name}</h3>
                         <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
                             <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-size: 12px; font-weight: 500;">
-                                ${exercise.category || 'Не указано'}
+                                ${translateCategoryDisplay(exercise.category) || '{{ __('common.not_specified') }}'}
                             </span>
                             <span style="display: inline-flex; align-items: center; padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 12px; font-weight: 500;">
-                                ${exercise.equipment || 'Не указано'}
+                                ${translateEquipmentDisplay(exercise.equipment) || '{{ __('common.not_specified') }}'}
                             </span>
                         </div>
                     </div>
@@ -3852,7 +3895,7 @@ function workoutApp() {
                                     <span class="text-sm font-medium text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
                                           @click="openExerciseDetailModal(exercise)"
                                           x-text="exercise.name || '{{ __('common.no_title') }}'"></span>
-                                    <span class="text-xs text-gray-500" x-text="(exercise.category || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (exercise.equipment || '')"></span>
+                                    <span class="text-xs text-gray-500" x-text="(translateCategoryDisplay(exercise.category) || '') + (exercise.category && exercise.equipment ? ' • ' : '') + (translateEquipmentDisplay(exercise.equipment) || '')"></span>
                                 </div>
                                 <div class="exercise-video-link">
                                     <button x-show="exercise.video_url && exercise.video_url !== 'null' && exercise.video_url !== null && exercise.video_url !== ''"
@@ -4430,6 +4473,50 @@ async function loadTemplates() {
     }
 }
 
+// Функции перевода категорий и оборудования
+function translateCategoryDisplay(category) {
+    if (!category) return '';
+    const translations = {
+        'Грудь': '{{ __('common.chest') }}',
+        'Спина': '{{ __('common.back_muscles') }}',
+        'Ноги(Бедра)': '{{ __('common.legs_thighs') }}',
+        'Ноги(Икры)': '{{ __('common.legs_calves') }}',
+        'Ягодицы': '{{ __('common.glutes') }}',
+        'Плечи': '{{ __('common.shoulders') }}',
+        'Руки(Бицепс)': '{{ __('common.arms_biceps') }}',
+        'Руки(Трицепс)': '{{ __('common.arms_triceps') }}',
+        'Руки(Предплечье)': '{{ __('common.arms_forearm') }}',
+        'Пресс': '{{ __('common.abs') }}',
+        'Шея': '{{ __('common.neck') }}',
+        'Кардио': '{{ __('common.cardio') }}',
+        'Гибкость': '{{ __('common.flexibility') }}'
+    };
+    return translations[category] || category;
+}
+
+function translateEquipmentDisplay(equipment) {
+    if (!equipment) return '';
+    const translations = {
+        'Штанга': '{{ __('common.barbell') }}',
+        'Гриф': '{{ __('common.barbell_bar') }}',
+        'Трап-гриф': '{{ __('common.trap_bar') }}',
+        'EZ-гриф': '{{ __('common.ez_bar') }}',
+        'Отягощения': '{{ __('common.weight_plate') }}',
+        'Гантели': '{{ __('common.dumbbells') }}',
+        'Гири': '{{ __('common.kettlebells') }}',
+        'Собственный вес': '{{ __('common.body_weight') }}',
+        'Тренажер': '{{ __('common.machines') }}',
+        'Машина Смита': '{{ __('common.smith_machine') }}',
+        'Кроссовер / Блок': '{{ __('common.crossover_block') }}',
+        'Скакалка': '{{ __('common.jump_rope') }}',
+        'Турник': '{{ __('common.pull_up_bar') }}',
+        'Брусья': '{{ __('common.parallel_bars') }}',
+        'Скамейка': '{{ __('common.bench') }}',
+        'Резина / Экспандер': '{{ __('common.resistance_band') }}'
+    };
+    return translations[equipment] || equipment;
+}
+
 // Отображение упражнений
 function isVideoMedia(path = '') {
     return /\.(mp4|webm|mov|m4v)$/i.test((path || '').toLowerCase());
@@ -4513,8 +4600,8 @@ function renderExercises() {
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 600; color: #111827; margin-bottom: 6px; font-size: 16px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</div>
                     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-                        ${displayCategory ? `<span style="display:inline-flex; align-items:center; padding:4px 12px; background:#f3f4f6; border-radius:9999px; font-size:12px; font-weight:500; color:#1f2937;">${displayCategory}</span>` : ''}
-                        ${displayEquipment ? `<span style="display:inline-flex; align-items:center; padding:4px 12px; background:#e2e8f0; border-radius:9999px; font-size:12px; font-weight:500; color:#334155;">${displayEquipment}</span>` : ''}
+                        ${displayCategory ? `<span style="display:inline-flex; align-items:center; padding:4px 12px; background:#f3f4f6; border-radius:9999px; font-size:12px; font-weight:500; color:#1f2937;">${translateCategoryDisplay(displayCategory)}</span>` : ''}
+                        ${displayEquipment ? `<span style="display:inline-flex; align-items:center; padding:4px 12px; background:#e2e8f0; border-radius:9999px; font-size:12px; font-weight:500; color:#334155;">${translateEquipmentDisplay(displayEquipment)}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -4556,7 +4643,7 @@ function populateExerciseFilters() {
     exerciseCategories.forEach(category => {
         const option = document.createElement('option');
         option.value = category;
-        option.textContent = category;
+        option.textContent = translateCategoryDisplay(category);
         categorySelect.appendChild(option);
     });
 
@@ -4568,7 +4655,7 @@ function populateExerciseFilters() {
     exerciseEquipments.forEach(eq => {
         const option = document.createElement('option');
         option.value = eq;
-        option.textContent = eq;
+        option.textContent = translateEquipmentDisplay(eq);
         equipmentSelect.appendChild(option);
     });
 }
@@ -4686,7 +4773,7 @@ function filterExercises() {
         Array.from(equipmentSet).sort().forEach(eq => {
             const opt = document.createElement('option');
             opt.value = eq;
-            opt.textContent = eq;
+            opt.textContent = translateEquipmentDisplay(eq);
             equipmentSelect.appendChild(opt);
         });
         // Восстанавливаем значение, если оно по-прежнему доступно
@@ -5158,7 +5245,7 @@ function displaySelectedExercises(exercises, isViewMode = false) {
                             <div class="flex-1 cursor-pointer" onclick="toggleExerciseDetails(${exercise.id})" onmousedown="event.stopPropagation()">
                             <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
                             <span class="font-medium text-gray-900">${exercise.name}</span>
-                            <span class="text-sm text-gray-600">(${exercise.category || '{{ __('common.not_specified') }}'} • ${exercise.equipment || '{{ __('common.not_specified') }}'})</span>
+                            <span class="text-sm text-gray-600">(${translateCategoryDisplay(exercise.category) || '{{ __('common.not_specified') }}'} • ${translateEquipmentDisplay(exercise.equipment) || '{{ __('common.not_specified') }}'})</span>
                         </div>
                             <div onclick="toggleExerciseDetails(${exercise.id})" 
                                  onmousedown="event.stopPropagation()" 
