@@ -977,8 +977,8 @@ function templatesApp() {
                                 <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s;" 
                                      onclick="this.style.background = this.style.background === 'rgb(239, 246, 255)' ? 'white' : 'rgb(239, 246, 255)'; this.style.borderColor = this.style.borderColor === 'rgb(147, 197, 253)' ? '#e5e7eb' : 'rgb(147, 197, 253)';">
                                     <h4 style="font-weight: 500; color: #111827; margin-bottom: 8px;">${exercise.name}</h4>
-                                    <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${exercise.category}</p>
-                                    <p style="font-size: 14px; color: #9ca3af;">${exercise.equipment}</p>
+                                    <p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${translateCategoryDisplay(exercise.category)}</p>
+                                    <p style="font-size: 14px; color: #9ca3af;">${translateEquipmentDisplay(exercise.equipment)}</p>
                                 </div>
                             `).join('')}
                         </div>
@@ -1090,7 +1090,7 @@ function templatesApp() {
                         <div class="flex items-center space-x-3">
                             <span class="text-sm text-indigo-600 font-medium">${index + 1}.</span>
                             <span class="font-medium text-gray-900">${exercise.name}</span>
-                            <span class="text-sm text-gray-600">(${exercise.category} • ${exercise.equipment})</span>
+                            <span class="text-sm text-gray-600">(${translateCategoryDisplay(exercise.category)} • ${translateEquipmentDisplay(exercise.equipment)})</span>
                         </div>
                         <button type="button" onclick="removeExerciseFromAlpine(${exercise.id})" class="text-red-600 hover:text-red-800">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1107,6 +1107,50 @@ function templatesApp() {
         }
         
     }
+}
+
+// Простые функции перевода только для отображения (не трогаем логику!)
+function translateCategoryDisplay(category) {
+    if (!category) return '';
+    const translations = {
+        'Грудь': '{{ __('common.chest') }}',
+        'Спина': '{{ __('common.back_muscles') }}',
+        'Ноги(Бедра)': '{{ __('common.legs_thighs') }}',
+        'Ноги(Икры)': '{{ __('common.legs_calves') }}',
+        'Ягодицы': '{{ __('common.glutes') }}',
+        'Плечи': '{{ __('common.shoulders') }}',
+        'Руки(Бицепс)': '{{ __('common.arms_biceps') }}',
+        'Руки(Трицепс)': '{{ __('common.arms_triceps') }}',
+        'Руки(Предплечье)': '{{ __('common.arms_forearm') }}',
+        'Пресс': '{{ __('common.abs') }}',
+        'Шея': '{{ __('common.neck') }}',
+        'Кардио': '{{ __('common.cardio') }}',
+        'Гибкость': '{{ __('common.flexibility') }}'
+    };
+    return translations[category] || category;
+}
+
+function translateEquipmentDisplay(equipment) {
+    if (!equipment) return '';
+    const translations = {
+        'Штанга': '{{ __('common.barbell') }}',
+        'Гриф': '{{ __('common.barbell_bar') }}',
+        'Трап-гриф': '{{ __('common.trap_bar') }}',
+        'EZ-гриф': '{{ __('common.ez_bar') }}',
+        'Отягощения': '{{ __('common.weight_plate') }}',
+        'Гантели': '{{ __('common.dumbbells') }}',
+        'Гири': '{{ __('common.kettlebells') }}',
+        'Собственный вес': '{{ __('common.body_weight') }}',
+        'Тренажер': '{{ __('common.machines') }}',
+        'Машина Смита': '{{ __('common.smith_machine') }}',
+        'Кроссовер / Блок': '{{ __('common.crossover_block') }}',
+        'Скакалка': '{{ __('common.jump_rope') }}',
+        'Турник': '{{ __('common.pull_up_bar') }}',
+        'Брусья': '{{ __('common.parallel_bars') }}',
+        'Скамейка': '{{ __('common.bench') }}',
+        'Резина / Экспандер': '{{ __('common.resistance_band') }}'
+    };
+    return translations[equipment] || equipment;
 }
 
 // Простая функция для открытия модального окна
@@ -1343,8 +1387,8 @@ function templatesApp() {
                                 ` : ''}
                                 <div style="flex: 1; min-width: 0;">
                                     <h4 style="font-weight: 600; color: #111827; margin-bottom: 5px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${exercise.name}</h4>
-                                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 3px;">${exercise.category}</p>
-                                    <p style="font-size: 13px; color: #9ca3af;">${exercise.equipment}</p>
+                                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 3px;">${translateCategoryDisplay(exercise.category)}</p>
+                                    <p style="font-size: 13px; color: #9ca3af;">${translateEquipmentDisplay(exercise.equipment)}</p>
                                 </div>
                             </div>
                         `;
@@ -1464,8 +1508,8 @@ function toggleExercise(element, id, name, category, equipment) {
             equipmentSelect.appendChild(emptyOpt);
                     desiredOptions.slice(1).forEach(eq => {
                 const opt = document.createElement('option');
-                opt.value = eq;
-                opt.textContent = eq;
+                opt.value = eq; // Оставляем оригинальное значение для фильтрации
+                opt.textContent = translateEquipmentDisplay(eq); // Переводим только для отображения
                 equipmentSelect.appendChild(opt);
             });
                 }
@@ -1542,8 +1586,8 @@ function toggleExercise(element, id, name, category, equipment) {
             categorySelect.appendChild(defaultCategory);
             categoryOptions.forEach(category => {
                 const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category;
+                option.value = category; // Оставляем оригинальное значение для фильтрации
+                option.textContent = translateCategoryDisplay(category); // Переводим только для отображения
                 categorySelect.appendChild(option);
             });
 
@@ -1554,8 +1598,8 @@ function toggleExercise(element, id, name, category, equipment) {
             equipmentSelect.appendChild(defaultEquipment);
             equipmentOptions.forEach(eq => {
                 const option = document.createElement('option');
-                option.value = eq;
-                option.textContent = eq;
+                option.value = eq; // Оставляем оригинальное значение для фильтрации
+                option.textContent = translateEquipmentDisplay(eq); // Переводим только для отображения
                 equipmentSelect.appendChild(option);
             });
 
