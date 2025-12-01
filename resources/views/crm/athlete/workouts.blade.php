@@ -2391,6 +2391,36 @@ input[type="number"].no-spinner:hover {
         gap: 1.5rem !important;
     }
 }
+
+/* Уменьшаем карточки статистики на мобильных */
+@media (max-width: 767px) {
+    .stats-container {
+        gap: 0.625rem !important;
+    }
+    
+    .stat-card {
+        padding: 0.75rem !important;
+        border-radius: 0.75rem !important;
+    }
+    
+    .stat-icon {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .stat-icon svg {
+        width: 1.125rem !important;
+        height: 1.125rem !important;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem !important;
+        margin-bottom: 0.1875rem !important;
+    }
+    
+    .stat-value {
+        font-size: 1.125rem !important;
+    }
+}
 </style>
 
 <!-- Модальное окно деталей упражнения -->
