@@ -400,7 +400,28 @@ function exerciseApp() {
             return Array.from(equipmentsSet).sort();
         },
         
-        // Перевод оборудования на текущий язык
+        // Перевод категорий на текущий язык (только для отображения)
+        getCategoryTranslation(category) {
+            if (!category) return '';
+            const translations = {
+                'Грудь': '{{ __('common.chest') }}',
+                'Спина': '{{ __('common.back_muscles') }}',
+                'Ноги(Бедра)': '{{ __('common.legs_thighs') }}',
+                'Ноги(Икры)': '{{ __('common.legs_calves') }}',
+                'Ягодицы': '{{ __('common.glutes') }}',
+                'Плечи': '{{ __('common.shoulders') }}',
+                'Руки(Бицепс)': '{{ __('common.arms_biceps') }}',
+                'Руки(Трицепс)': '{{ __('common.arms_triceps') }}',
+                'Руки(Предплечье)': '{{ __('common.arms_forearm') }}',
+                'Пресс': '{{ __('common.abs') }}',
+                'Шея': '{{ __('common.neck') }}',
+                'Кардио': '{{ __('common.cardio') }}',
+                'Гибкость': '{{ __('common.flexibility') }}'
+            };
+            return translations[category] || category;
+        },
+        
+        // Перевод оборудования на текущий язык (только для отображения)
         getEquipmentTranslation(equipment) {
             if (!equipment) return '';
             const translations = {
@@ -1165,8 +1186,8 @@ function exerciseApp() {
                 window.dispatchEvent(new CustomEvent('show-notification', {
                     detail: {
                         type: 'error',
-                        title: 'Ошибка',
-                        message: 'Не удалось обновить избранное'
+                        title: '{{ __('common.error') }}',
+                        message: '{{ __('common.failed_to_update_favorites') }}'
                     }
                 }));
             }
@@ -1259,7 +1280,7 @@ function exerciseApp() {
                                 <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                                 </svg>
-                                Открыть видео
+                                {{ __('common.open_video') }}
                             </a>
                         </div>
                     `;
@@ -1618,8 +1639,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка',
-                            message: 'Пожалуйста, выберите файл изображения'
+                            title: '{{ __('common.error') }}',
+                            message: '{{ __('common.please_select_image_file') }}'
                         }
                     }));
                     event.target.value = '';
@@ -1631,8 +1652,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 5MB'
+                            title: '{{ __('common.error') }}',
+                            message: '{{ __('common.file_size_exceeds_5mb') }}'
                         }
                     }));
                     event.target.value = '';
@@ -1641,12 +1662,24 @@ function exerciseApp() {
                 
                 this.formImage = file;
                 
+                // Обновляем текст кнопки
+                const fileNameSpan = document.getElementById('image-file-name');
+                if (fileNameSpan) {
+                    fileNameSpan.textContent = file.name;
+                }
+                
                 // Создаём превью
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.formImagePreview = e.target.result;
                 };
                 reader.readAsDataURL(file);
+            } else {
+                // Сбрасываем текст кнопки, если файл не выбран
+                const fileNameSpan = document.getElementById('image-file-name');
+                if (fileNameSpan) {
+                    fileNameSpan.textContent = '{{ __('common.select_file') }}';
+                }
             }
         },
         
@@ -1657,6 +1690,11 @@ function exerciseApp() {
             const fileInput = document.querySelector('input[name="image"]');
             if (fileInput) {
                 fileInput.value = '';
+            }
+            // Сбрасываем текст кнопки
+            const fileNameSpan = document.getElementById('image-file-name');
+            if (fileNameSpan) {
+                fileNameSpan.textContent = '{{ __('common.select_file') }}';
             }
         },
         
@@ -1669,8 +1707,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка',
-                            message: 'Пожалуйста, выберите файл изображения'
+                            title: '{{ __('common.error') }}',
+                            message: '{{ __('common.please_select_image_file') }}'
                         }
                     }));
                     event.target.value = '';
@@ -1682,8 +1720,8 @@ function exerciseApp() {
                     window.dispatchEvent(new CustomEvent('show-notification', {
                         detail: {
                             type: 'error',
-                            title: 'Ошибка',
-                            message: 'Размер файла не должен превышать 5MB'
+                            title: '{{ __('common.error') }}',
+                            message: '{{ __('common.file_size_exceeds_5mb') }}'
                         }
                     }));
                     event.target.value = '';
@@ -1692,12 +1730,24 @@ function exerciseApp() {
                 
                 this.formImage2 = file;
                 
+                // Обновляем текст кнопки
+                const fileNameSpan = document.getElementById('image-2-file-name');
+                if (fileNameSpan) {
+                    fileNameSpan.textContent = file.name;
+                }
+                
                 // Создаём превью
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.formImagePreview2 = e.target.result;
                 };
                 reader.readAsDataURL(file);
+            } else {
+                // Сбрасываем текст кнопки, если файл не выбран
+                const fileNameSpan = document.getElementById('image-2-file-name');
+                if (fileNameSpan) {
+                    fileNameSpan.textContent = '{{ __('common.select_file') }}';
+                }
             }
         },
         
@@ -1708,6 +1758,11 @@ function exerciseApp() {
             const fileInput = document.querySelector('input[name="image_2"]');
             if (fileInput) {
                 fileInput.value = '';
+            }
+            // Сбрасываем текст кнопки
+            const fileNameSpan = document.getElementById('image-2-file-name');
+            if (fileNameSpan) {
+                fileNameSpan.textContent = '{{ __('common.select_file') }}';
             }
         },
         
@@ -1857,11 +1912,11 @@ function exerciseApp() {
                     <button @click="search = ''" class="ml-1 text-blue-600 hover:text-blue-800">×</button>
                 </span>
                 <span x-show="category" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {{ __('common.category') }}: <span x-text="category"></span>
+                    {{ __('common.category') }}: <span x-text="getCategoryTranslation(category)"></span>
                     <button @click="category = ''" class="ml-1 text-green-600 hover:text-green-800">×</button>
                 </span>
                 <span x-show="equipment" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    {{ __('common.equipment') }}: <span x-text="equipment"></span>
+                    {{ __('common.equipment') }}: <span x-text="getEquipmentTranslation(equipment)"></span>
                     <button @click="equipment = ''" class="ml-1 text-purple-600 hover:text-purple-800">×</button>
                 </span>
             </div>
@@ -1919,7 +1974,7 @@ function exerciseApp() {
                                         <div class="flex items-center justify-between mb-4">
                                     <h3 class="text-xl font-semibold text-gray-900 cursor-pointer hover:text-indigo-600 transition-colors" 
                                         @click.stop="showView(exercise.id)"
-                                        :title="'Нажмите чтобы открыть: ' + exercise.name">
+                                        :title="'{{ __('common.click_to_open') }}: ' + exercise.name">
                                         <span x-text="exercise.name"></span>
                                     </h3>
                                     <button x-show="hasVideo(exercise)" 
@@ -1935,18 +1990,18 @@ function exerciseApp() {
                                         <!-- Теги -->
                                         <div class="flex flex-wrap gap-2 mb-4 justify-between exercise-badge-row">
                                             <div class="flex flex-wrap gap-2 exercise-tag-group">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.category"></span>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="exercise.equipment"></span>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="getCategoryTranslation(exercise.category)"></span>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800" x-text="getEquipmentTranslation(exercise.equipment)"></span>
                                             </div>
                                             <span x-show="exercise.is_system" 
                                                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 cursor-help exercise-system-tag"
-                                                  title="Системное упражнение нельзя редактировать или удалять">
-                                                Системное
+                                                  :title="'{{ __('common.system_exercise_cannot_edit_delete') }}'">
+                                                {{ __('common.system_exercise') }}
                                             </span>
                                             <span x-show="!exercise.is_system" 
                                                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 exercise-user-tag"
-                                                  title="Пользовательское упражнение можно редактировать и удалять">
-                                                Пользовательское
+                                                  :title="'{{ __('common.user_exercise_can_edit_delete') }}'">
+                                                {{ __('common.user_exercise') }}
                                             </span>
                                         </div>
                                         
@@ -1979,7 +2034,7 @@ function exerciseApp() {
                                     <button @click.stop="toggleFavorite(exercise.id)" 
                                             class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
                                             :class="isFavorite(exercise.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                                            :title="isFavorite(exercise.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                                            :title="isFavorite(exercise.id) ? '{{ __('common.remove_from_favorites') }}' : '{{ __('common.add_to_favorites') }}'">
                                         <!-- Заполненная звезда (в избранном) -->
                                         <svg x-show="isFavorite(exercise.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -2002,7 +2057,7 @@ function exerciseApp() {
             <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
                 <span class="text-3xl text-gray-400">💪</span>
             </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет упражнений</h3>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ __('common.no_exercises') }}</h3>
             <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ __('common.add_exercises_to_database_for_workouts') }}</p>
             @if(auth()->user()->hasRole('trainer'))
                 <button @click="showCreate()" 
@@ -2105,11 +2160,20 @@ function exerciseApp() {
                         <p class="text-xs text-gray-500 mt-2">{{ __('common.upload_new_file_to_replace') }}</p>
                     </div>
                     
-                    <input type="file" 
-                           name="image"
-                           accept="image/*"
-                           @change="handleImageSelect($event)"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <label class="block">
+                        <input type="file" 
+                               name="image"
+                               accept="image/*"
+                               @change="handleImageSelect($event)"
+                               class="hidden"
+                               id="image-input">
+                        <span class="inline-flex items-center px-4 py-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <span id="image-file-name" class="text-sm text-gray-700">{{ __('common.select_file') }}</span>
+                        </span>
+                    </label>
                     <p class="mt-1 text-sm text-gray-500">{{ __('common.max_size_5mb_formats') }}</p>
                     
                     <!-- Превью нового изображения при создании -->
@@ -2141,11 +2205,20 @@ function exerciseApp() {
                         <p class="text-xs text-gray-500 mt-2">{{ __('common.upload_new_file_to_replace') }}</p>
                     </div>
                     
-                    <input type="file" 
-                           name="image_2"
-                           accept="image/*"
-                           @change="handleImageSelect2($event)"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                    <label class="block">
+                        <input type="file" 
+                               name="image_2"
+                               accept="image/*"
+                               @change="handleImageSelect2($event)"
+                               class="hidden"
+                               id="image-2-input">
+                        <span class="inline-flex items-center px-4 py-3 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
+                            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <span id="image-2-file-name" class="text-sm text-gray-700">{{ __('common.select_file') }}</span>
+                        </span>
+                    </label>
                     <p class="mt-1 text-sm text-gray-500">{{ __('common.additional_image_max_5mb') }}</p>
                     
                     <!-- Превью второго изображения при создании -->
@@ -2500,13 +2573,13 @@ function exerciseApp() {
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.video_description') }}</label>
                     <textarea x-model="userVideoDescription" 
                               rows="3"
-                              placeholder="Дополнительные заметки о видео..."
+                              placeholder="{{ __('common.additional_video_notes') }}"
                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
                 </div>
                 
                 <!-- Предпросмотр видео -->
                 <div x-show="userVideoUrl && isYouTubeUrl(userVideoUrl)" class="bg-gray-50 rounded-lg p-4">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Предпросмотр видео</h3>
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">{{ __('common.video_preview') }}</h3>
                     <div class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                         <iframe :src="getYouTubeEmbedUrl(userVideoUrl)" 
                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
@@ -2556,7 +2629,7 @@ function exerciseApp() {
                 <button @click.stop="toggleFavorite(currentExercise?.id)" 
                         class="px-3 py-2 text-sm font-medium transition-all duration-200 hover:opacity-70 rounded-lg border"
                         :class="isFavorite(currentExercise?.id) ? 'bg-yellow-50 border-yellow-300' : 'bg-gray-50 border-gray-300'"
-                        :title="isFavorite(currentExercise?.id) ? 'Удалить из избранного' : 'Добавить в избранное'">
+                        :title="isFavorite(currentExercise?.id) ? '{{ __('common.remove_from_favorites') }}' : '{{ __('common.add_to_favorites') }}'">
                     <!-- Заполненная звезда (в избранном) -->
                     <svg x-show="isFavorite(currentExercise?.id)" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -2599,7 +2672,7 @@ function exerciseApp() {
                         
                         <!-- Пользовательское видео (приоритет) -->
                         <div x-show="userVideos[currentExercise?.id]?.video_url">
-                            <p class="text-xs text-gray-500 mb-1 font-medium">Ваше видео</p>
+                            <p class="text-xs text-gray-500 mb-1 font-medium">{{ __('common.your_video') }}</p>
                             <div class="bg-gray-50 rounded-lg p-2">
                                 <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                                     <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
@@ -2615,7 +2688,7 @@ function exerciseApp() {
                                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                                         </svg>
-                                        Видео
+                                        {{ __('common.video') }}
                                     </a>
                                 </div>
                             </div>
@@ -2623,7 +2696,7 @@ function exerciseApp() {
                         
                         <!-- Системное видео (если нет пользовательского) -->
                         <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url">
-                            <p class="text-xs text-gray-500 mb-1 font-medium">Системное видео</p>
+                            <p class="text-xs text-gray-500 mb-1 font-medium">{{ __('common.system_video') }}</p>
                             <div class="bg-gray-50 rounded-lg p-2">
                                 <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                                     <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
@@ -2639,7 +2712,7 @@ function exerciseApp() {
                                         <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                                         </svg>
-                                        Видео
+                                        {{ __('common.video') }}
                                     </a>
                                 </div>
                             </div>
@@ -2658,11 +2731,11 @@ function exerciseApp() {
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.category') }}</h3>
-                            <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
+                            <p class="text-lg font-semibold text-gray-900" x-text="getCategoryTranslation(currentExercise?.category)"></p>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.equipment') }}</h3>
-                            <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.equipment"></p>
+                            <p class="text-lg font-semibold text-gray-900" x-text="getEquipmentTranslation(currentExercise?.equipment)"></p>
                         </div>
                     </div>
                     
@@ -2710,8 +2783,8 @@ function exerciseApp() {
                 
                     <!-- Пользовательское видео (приоритет) - сразу под изображением -->
                     <div x-show="userVideos[currentExercise?.id]?.video_url" class="w-full">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
-                    <p class="text-xs text-gray-500 mb-1 text-center">Ваше видео</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">{{ __('common.video') }}</h3>
+                    <p class="text-xs text-gray-500 mb-1 text-center">{{ __('common.your_video') }}</p>
                     <div class="bg-gray-50 rounded-lg p-2">
                         <div x-show="isYouTubeUrl(userVideos[currentExercise?.id]?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe :src="getYouTubeEmbedUrl(userVideos[currentExercise?.id]?.video_url)" 
@@ -2735,8 +2808,8 @@ function exerciseApp() {
                 
                     <!-- Системное видео (если нет пользовательского) - сразу под изображением -->
                     <div x-show="currentExercise?.video_url && !userVideos[currentExercise?.id]?.video_url" class="w-full">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Видео</h3>
-                    <p class="text-xs text-gray-500 mb-1 text-center">Системное видео</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">{{ __('common.video') }}</h3>
+                    <p class="text-xs text-gray-500 mb-1 text-center">{{ __('common.system_video') }}</p>
                     <div class="bg-gray-50 rounded-lg p-2">
                         <div x-show="isYouTubeUrl(currentExercise?.video_url)" class="relative" style="padding-bottom: 56.25%; height: 0; overflow: hidden;">
                             <iframe :src="getYouTubeEmbedUrl(currentExercise?.video_url)" 
@@ -2768,11 +2841,11 @@ function exerciseApp() {
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.category') }}</h3>
-                        <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.category"></p>
+                        <p class="text-lg font-semibold text-gray-900" x-text="getCategoryTranslation(currentExercise?.category)"></p>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4">
                         <h3 class="text-sm font-medium text-gray-500 mb-1">{{ __('common.equipment') }}</h3>
-                        <p class="text-lg font-semibold text-gray-900" x-text="currentExercise?.equipment"></p>
+                        <p class="text-lg font-semibold text-gray-900" x-text="getEquipmentTranslation(currentExercise?.equipment)"></p>
                     </div>
                 </div>
                 
