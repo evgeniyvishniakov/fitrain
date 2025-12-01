@@ -1952,7 +1952,7 @@ function exerciseApp() {
                                         
                                         <!-- Группы мышц -->
                                         <div class="text-sm text-gray-500 exercise-muscle-groups" x-show="exercise.muscle_groups && Array.isArray(exercise.muscle_groups) && exercise.muscle_groups.length > 0">
-                                            <span x-text="'Группы мышц: '"></span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
+                                            <span>{{ __('common.muscle_groups_comma_separated') }}: </span><span class="text-black" x-text="Array.isArray(exercise.muscle_groups) ? exercise.muscle_groups.join(', ') : ''"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -2003,7 +2003,7 @@ function exerciseApp() {
                 <span class="text-3xl text-gray-400">💪</span>
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Нет упражнений</h3>
-            <p class="text-gray-600 mb-8 max-w-md mx-auto">Добавьте упражнения в базу для создания тренировок.</p>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">{{ __('common.add_exercises_to_database_for_workouts') }}</p>
             @if(auth()->user()->hasRole('trainer'))
                 <button @click="showCreate()" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -2053,7 +2053,7 @@ function exerciseApp() {
         <div class="mb-6 flex justify-between items-start">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '{{ __('common.create_exercise') }}' : '{{ __('common.edit_exercise') }}'"></h2>
-                <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новое упражнение в базу' : 'Внесите изменения в упражнение'"></p>
+                <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? '{{ __('common.add_new_exercise_to_database') }}' : '{{ __('common.make_changes_to_exercise') }}'"></p>
             </div>
             <button x-show="currentView === 'edit'" 
                     @click="showList()" 
@@ -2075,7 +2075,7 @@ function exerciseApp() {
                     </div>
                     
                     <div style="flex: 1; min-width: 200px;">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Ссылка на видео</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.video_link') }}</label>
                         <input type="url" 
                                x-model="formVideoUrl" 
                                placeholder="https://youtube.com/watch?v=..."
@@ -2085,24 +2085,24 @@ function exerciseApp() {
                 
                 <!-- Загрузка главного изображения -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Главное изображение упражнения</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.main_exercise_image') }}</label>
                     
                     <!-- Текущая картинка при редактировании -->
                     <div x-show="currentView === 'edit' && formImageUrl && formImageUrl !== '/storage/' && formImageUrl !== '/storage/undefined' && formImageUrl !== '/storage/null'" class="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="flex items-start justify-between mb-2">
-                            <p class="text-sm text-gray-600">Текущее изображение:</p>
+                            <p class="text-sm text-gray-600">{{ __('common.current_image') }}:</p>
                             <button type="button"
                                     @click="formImageUrl = ''; formImagePreview = ''"
                                     class="text-xs text-red-600 hover:text-red-800 font-medium">
-                                Удалить картинку
+                                {{ __('common.delete_image') }}
                             </button>
                         </div>
                         <template x-if="formImagePreview || formImageUrl">
                             <img :src="formImagePreview || formImageUrl" 
-                                 alt="Текущая картинка"
+                                 alt="{{ __('common.current_image') }}"
                                  class="max-w-xs max-h-32 object-contain rounded-lg border border-gray-300">
                         </template>
-                        <p class="text-xs text-gray-500 mt-2">Загрузите новый файл ниже, чтобы заменить</p>
+                        <p class="text-xs text-gray-500 mt-2">{{ __('common.upload_new_file_to_replace') }}</p>
                     </div>
                     
                     <input type="file" 
@@ -2110,35 +2110,35 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-sm text-gray-500">Максимальный размер: 5MB. Форматы: JPG, PNG, GIF</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('common.max_size_5mb_formats') }}</p>
                     
                     <!-- Превью нового изображения при создании -->
                     <div x-show="currentView === 'create' && formImagePreview" class="mt-4">
-                        <p class="text-xs text-gray-500 mb-1">Превью:</p>
-                        <img :src="formImagePreview" alt="Превью" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                        <p class="text-xs text-gray-500 mb-1">{{ __('common.preview') }}:</p>
+                        <img :src="formImagePreview" alt="{{ __('common.preview') }}" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                     </div>
                 </div>
                 
                 <!-- Загрузка второго изображения -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Второе изображение (необязательно)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.second_image_optional') }}</label>
                     
                     <!-- Текущая вторая картинка при редактировании -->
                     <div x-show="currentView === 'edit' && formImageUrl2 && formImageUrl2 !== '/storage/' && formImageUrl2 !== '/storage/undefined' && formImageUrl2 !== '/storage/null'" class="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="flex items-start justify-between mb-2">
-                            <p class="text-sm text-gray-600">Текущее второе изображение:</p>
+                            <p class="text-sm text-gray-600">{{ __('common.current_second_image') }}:</p>
                             <button type="button"
                                     @click="formImageUrl2 = ''; formImagePreview2 = ''"
                                     class="text-xs text-red-600 hover:text-red-800 font-medium">
-                                Удалить картинку
+                                {{ __('common.delete_image') }}
                             </button>
                         </div>
                         <template x-if="formImagePreview2 || formImageUrl2">
                             <img :src="formImagePreview2 || formImageUrl2" 
-                                 alt="Текущая вторая картинка"
+                                 alt="{{ __('common.current_second_image') }}"
                                  class="max-w-xs max-h-32 object-contain rounded-lg border border-gray-300">
                         </template>
-                        <p class="text-xs text-gray-500 mt-2">Загрузите новый файл ниже, чтобы заменить</p>
+                        <p class="text-xs text-gray-500 mt-2">{{ __('common.upload_new_file_to_replace') }}</p>
                     </div>
                     
                     <input type="file" 
@@ -2146,12 +2146,12 @@ function exerciseApp() {
                            accept="image/*"
                            @change="handleImageSelect2($event)"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
-                    <p class="mt-1 text-sm text-gray-500">Дополнительное изображение. Макс 5MB. Форматы: JPG, PNG, GIF</p>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('common.additional_image_max_5mb') }}</p>
                     
                     <!-- Превью второго изображения при создании -->
                     <div x-show="currentView === 'create' && formImagePreview2" class="mt-4">
-                        <p class="text-xs text-gray-500 mb-1">Превью:</p>
-                        <img :src="formImagePreview2" alt="Превью 2" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+                        <p class="text-xs text-gray-500 mb-1">{{ __('common.preview') }}:</p>
+                        <img :src="formImagePreview2" alt="{{ __('common.preview') }} 2" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
                     </div>
                 </div>
                 
@@ -2229,10 +2229,10 @@ function exerciseApp() {
                     
                     <!-- Группы мышц -->
                     <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Группы мышц (через запятую)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.muscle_groups_comma_separated') }}</label>
                         <input type="text" 
                                x-model="formMuscleGroupsText" 
-                               placeholder="например: грудь, плечи, трицепс"
+                               placeholder="{{ __('common.for_example_muscle_groups') }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                     </div>
                 </div>
@@ -2250,7 +2250,7 @@ function exerciseApp() {
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.execution_instructions') }}</label>
                     <textarea x-model="formInstructions" 
                               rows="4"
-                              placeholder="Пошаговые инструкции по выполнению упражнения..."
+                              placeholder="{{ __('common.step_by_step_instructions') }}"
                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"></textarea>
                 </div>
                 
@@ -2263,8 +2263,8 @@ function exerciseApp() {
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900">Поля для ввода данных</h3>
-                            <p class="text-sm text-gray-600">Выберите какие поля будут доступны при добавлении этого упражнения в тренировку</p>
+                            <h3 class="text-lg font-semibold text-gray-900">{{ __('common.fields_for_input_data') }}</h3>
+                            <p class="text-sm text-gray-600">{{ __('common.select_which_fields_available') }}</p>
                         </div>
                     </div>
                     
@@ -2283,8 +2283,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('weight') ? 'text-orange-900' : 'text-gray-900'">Вес (кг)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'">Рабочий вес</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('weight') ? 'text-orange-900' : 'text-gray-900'">{{ __('common.weight_kg') }}</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('weight') ? 'text-orange-600' : 'text-gray-500'">{{ __('common.working_weight') }}</div>
                                 </div>
                             </div>
                         </label>
@@ -2303,8 +2303,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('reps') ? 'text-green-900' : 'text-gray-900'">Повторения</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('reps') ? 'text-green-600' : 'text-gray-500'">Количество повторений</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('reps') ? 'text-green-900' : 'text-gray-900'">{{ __('common.repetitions') }}</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('reps') ? 'text-green-600' : 'text-gray-500'">{{ __('common.number_of_repetitions') }}</div>
                                 </div>
                             </div>
                         </label>
@@ -2323,8 +2323,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('sets') ? 'text-indigo-900' : 'text-gray-900'">Подходы</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'">Количество подходов</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('sets') ? 'text-indigo-900' : 'text-gray-900'">{{ __('common.sets') }}</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('sets') ? 'text-indigo-600' : 'text-gray-500'">{{ __('common.number_of_sets') }}</div>
                                 </div>
                             </div>
                         </label>
@@ -2344,7 +2344,7 @@ function exerciseApp() {
                                 </div>
                                 <div>
                                     <div class="font-medium text-sm" :class="formFieldsConfig.includes('rest') ? 'text-purple-900' : 'text-gray-900"">{{ __('common.rest') }} ({{ __('common.min') }})</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500"">Время отдыха</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('rest') ? 'text-purple-600' : 'text-gray-500"">{{ __('common.rest_time') }}</div>
                                 </div>
                             </div>
                         </label>
@@ -2363,8 +2363,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('time') ? 'text-blue-900' : 'text-gray-900"">Время (мин)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500"">Продолжительность</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('time') ? 'text-blue-900' : 'text-gray-900"">{{ __('common.time_seconds') }}</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('time') ? 'text-blue-600' : 'text-gray-500"">{{ __('common.duration') }}</div>
                                 </div>
                             </div>
                         </label>
@@ -2383,8 +2383,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('distance') ? 'text-emerald-900' : 'text-gray-900"">Дистанция (м)</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500"">Пройденное расстояние</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('distance') ? 'text-emerald-900' : 'text-gray-900"">{{ __('common.distance_meters') }}</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('distance') ? 'text-emerald-600' : 'text-gray-500"">{{ __('common.distance_traveled') }}</div>
                                 </div>
                             </div>
                         </label>
@@ -2403,8 +2403,8 @@ function exerciseApp() {
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('tempo') ? 'text-pink-900' : 'text-gray-900"">Темп/Скорость</div>
-                                    <div class="text-xs" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500"">Скорость выполнения</div>
+                                    <div class="font-medium text-sm" :class="formFieldsConfig.includes('tempo') ? 'text-pink-900' : 'text-gray-900"">{{ __('common.tempo_speed') }}</div>
+                                    <div class="text-xs" :class="formFieldsConfig.includes('tempo') ? 'text-pink-600' : 'text-gray-500"">{{ __('common.execution_speed') }}</div>
                                 </div>
                             </div>
                         </label>
@@ -2412,32 +2412,32 @@ function exerciseApp() {
                     
                     <!-- Быстрые шаблоны -->
                     <div class="mt-6">
-                        <h4 class="text-sm font-medium text-gray-700 mb-3">Быстрые шаблоны</h4>
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">{{ __('common.quick_templates') }}</h4>
                         <div class="flex flex-wrap gap-2">
                             <button type="button" 
                                     @click="formFieldsConfig = ['weight', 'reps', 'sets', 'rest']"
                                     class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
-                                💪 Силовое
+                                💪 {{ __('common.strength_type') }}
                             </button>
                             <button type="button" 
                                     @click="formFieldsConfig = ['sets', 'reps', 'rest']"
                                     class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
-                                🏃 Собственный вес
+                                🏃 {{ __('common.body_weight_type') }}
                             </button>
                             <button type="button" 
                                     @click="formFieldsConfig = ['time', 'tempo']"
                                     class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
-                                🏃‍♂️ Кардио
+                                🏃‍♂️ {{ __('common.cardio_type') }}
                             </button>
                             <button type="button" 
                                     @click="formFieldsConfig = ['sets', 'time', 'rest']"
                                     class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
-                                ⏱️ Статическое
+                                ⏱️ {{ __('common.static_type') }}
                             </button>
                             <button type="button" 
                                     @click="formFieldsConfig = ['distance', 'time', 'tempo']"
                                     class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
-                                🏃‍♀️ Бег/Ходьба
+                                🏃‍♀️ {{ __('common.running_walking') }}
                             </button>
                         </div>
                     </div>
@@ -2447,7 +2447,7 @@ function exerciseApp() {
                             <svg class="w-4 h-4 text-amber-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            <span class="text-sm text-amber-800 font-medium">Примечания будут доступны всегда для всех упражнений</span>
+                            <span class="text-sm text-amber-800 font-medium">{{ __('common.notes_always_available') }}</span>
                         </div>
                     </div>
                 </div>
@@ -2458,7 +2458,7 @@ function exerciseApp() {
                 <button type="button" 
                         @click="showList()" 
                         class="px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
-                    Отмена
+                    {{ __('common.cancel') }}
                 </button>
                 <button type="submit" 
                         class="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
@@ -2471,14 +2471,14 @@ function exerciseApp() {
     <!-- Форма добавления пользовательского видео -->
     <div id="trainer-exercise-add-video-section" x-show="currentView === 'add-video'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-3">
         <div class="mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">Добавить видео</h2>
+            <h2 class="text-2xl font-bold text-gray-900">{{ __('common.add_video') }}</h2>
         </div>
         
         <form @submit.prevent="saveUserVideo()" class="space-y-6">
             <div class="space-y-6">
                 <!-- URL видео -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Ссылка на видео *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.video_link') }} *</label>
                     <input type="url" 
                            x-model="userVideoUrl" 
                            required
@@ -2524,7 +2524,7 @@ function exerciseApp() {
                     <svg class="w-5 h-5 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
-                    <span class="add-video-cancel-text">Отмена</span>
+                    <span class="add-video-cancel-text">{{ __('common.cancel') }}</span>
                 </button>
                 <button x-show="currentUserVideo" 
                         type="button" 
@@ -2668,7 +2668,7 @@ function exerciseApp() {
                     
                     <!-- Группы мышц -->
                     <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Группы мышц</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ __('common.muscle_groups_comma_separated') }}</h3>
                         <div class="flex flex-wrap gap-2">
                             <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" x-text="group"></span>
@@ -2778,7 +2778,7 @@ function exerciseApp() {
                 
                 <!-- Группы мышц -->
                 <div x-show="currentExercise?.muscle_groups && currentExercise?.muscle_groups.length > 0">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">Группы мышц</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 text-center">{{ __('common.muscle_groups_comma_separated') }}</h3>
                     <div class="flex flex-wrap gap-2 justify-center">
                         <template x-for="group in currentExercise?.muscle_groups || []" :key="group">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" x-text="group"></span>
