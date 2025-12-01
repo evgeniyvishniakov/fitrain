@@ -342,7 +342,7 @@
 
     <!-- Секция доната -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">Поддержка проекта</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">{{ __('common.support_project') }}</h3>
         
         <!-- Переключатель способов оплаты -->
         <div class="flex gap-4 mb-6 border-b border-gray-200">
@@ -350,13 +350,13 @@
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
                 </svg>
-                Банковская карта
+                {{ __('common.bank_card') }}
             </button>
             <button onclick="switchPaymentMethod('crypto')" id="payment-crypto-btn" class="payment-method-btn px-4 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700">
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Криптовалюта
+                {{ __('common.cryptocurrency') }}
             </button>
         </div>
         
@@ -364,11 +364,11 @@
         <div id="payment-bank" class="payment-method-content">
             <div class="grid md:grid-cols-2 gap-6">
                 <div>
-                    <h4 class="text-base font-semibold text-gray-900 mb-4">Реквизиты для перевода</h4>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">{{ __('common.payment_details') }}</h4>
                     <div class="bg-gray-50 rounded-lg p-4 mb-4">
                         <div class="space-y-3">
                             <div>
-                                <label class="text-sm text-gray-600">Номер карты:</label>
+                                <label class="text-sm text-gray-600">{{ __('common.card_number') }}:</label>
                                 <div class="mt-1 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200">
                                     <span class="font-mono text-lg font-semibold" id="card-number">{{ \App\Models\SystemSetting::get('donation.bank_card_number', '0000 0000 0000 0000') }}</span>
                                     <button onclick="copyToClipboard('card-number')" class="ml-2 text-indigo-600 hover:text-indigo-700">
@@ -379,7 +379,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600">Банк:</label>
+                                <label class="text-sm text-gray-600">{{ __('common.bank') }}:</label>
                                 <div class="mt-1 bg-white px-4 py-3 rounded-lg border border-gray-200">
                                     <span class="font-medium" id="bank-name">{{ \App\Models\SystemSetting::get('donation.bank_name', '') }}</span>
                                 </div>
@@ -388,15 +388,15 @@
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-base font-semibold text-gray-900 mb-4">QR-код для оплаты</h4>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">{{ __('common.qr_code_for_payment') }}</h4>
                     <div class="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
                         <div class="bg-white p-4 rounded-lg">
                             @php($bankQrCode = \App\Models\SystemSetting::get('donation.bank_qr_code'))
                             @if($bankQrCode)
-                                <img id="bank-qr-code" src="{{ asset('storage/' . $bankQrCode) }}" alt="QR код для оплаты" class="w-64 h-64 object-contain">
+                                <img id="bank-qr-code" src="{{ asset('storage/' . $bankQrCode) }}" alt="{{ __('common.qr_code_for_payment') }}" class="w-64 h-64 object-contain">
                             @else
                                 <div class="w-64 h-64 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
-                                    QR-код не загружен
+                                    {{ __('common.qr_code_not_loaded') }}
                                 </div>
                             @endif
                         </div>
@@ -413,7 +413,7 @@
                     <div class="bg-gray-50 rounded-lg p-4 mb-4">
                         <div class="space-y-3">
                             <div>
-                                <label class="text-sm text-gray-600">Адрес кошелька:</label>
+                                <label class="text-sm text-gray-600">{{ __('common.wallet_address') }}:</label>
                                 <div class="mt-1 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-gray-200">
                                     <span class="font-mono text-sm break-all" id="crypto-wallet">{{ \App\Models\SystemSetting::get('donation.crypto_wallet_address', 'Txxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') }}</span>
                                     <button onclick="copyToClipboard('crypto-wallet')" class="ml-2 text-indigo-600 hover:text-indigo-700 flex-shrink-0">
@@ -424,7 +424,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600">Сеть:</label>
+                                <label class="text-sm text-gray-600">{{ __('common.network') }}:</label>
                                 <div class="mt-1 bg-white px-4 py-3 rounded-lg border border-gray-200">
                                     <span class="font-medium">TRC20 (Tron)</span>
                                 </div>
@@ -433,15 +433,15 @@
                     </div>
                 </div>
                 <div>
-                    <h4 class="text-base font-semibold text-gray-900 mb-4">QR-код для оплаты</h4>
+                    <h4 class="text-base font-semibold text-gray-900 mb-4">{{ __('common.qr_code_for_payment') }}</h4>
                     <div class="bg-gray-50 rounded-lg p-4 flex items-center justify-center">
                         <div class="bg-white p-4 rounded-lg">
                             @php($cryptoQrCode = \App\Models\SystemSetting::get('donation.crypto_qr_code'))
                             @if($cryptoQrCode)
-                                <img id="crypto-qr-code" src="{{ asset('storage/' . $cryptoQrCode) }}" alt="QR код для оплаты" class="w-64 h-64 object-contain">
+                                <img id="crypto-qr-code" src="{{ asset('storage/' . $cryptoQrCode) }}" alt="{{ __('common.qr_code_for_payment') }}" class="w-64 h-64 object-contain">
                             @else
                                 <div class="w-64 h-64 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
-                                    QR-код не загружен
+                                    {{ __('common.qr_code_not_loaded') }}
                                 </div>
                             @endif
                         </div>

@@ -1370,4 +1370,13 @@ return [
     'features' => 'Можливості',
     'trial_period' => 'Пробний період',
     'please_select_month_year' => 'Будь ласка, оберіть місяць та рік',
+    'support_project' => 'Підтримка проекту',
+    'cryptocurrency' => 'Криптовалюта',
+    'payment_details' => 'Реквізити для переказу',
+    'card_number' => 'Номер картки',
+    'bank' => 'Банк',
+    'qr_code_for_payment' => 'QR-код для оплати',
+    'qr_code_not_loaded' => 'QR-код не завантажено',
+    'wallet_address' => 'Адреса гаманця',
+    'network' => 'Мережа',
 ];

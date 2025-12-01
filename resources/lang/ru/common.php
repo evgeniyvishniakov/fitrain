@@ -1341,4 +1341,13 @@ return [
     'subscription_expired' => 'Истекла',
     'features' => 'Возможности',
     'trial_period' => 'Пробный период',
+    'support_project' => 'Поддержка проекта',
+    'cryptocurrency' => 'Криптовалюта',
+    'payment_details' => 'Реквизиты для перевода',
+    'card_number' => 'Номер карты',
+    'bank' => 'Банк',
+    'qr_code_for_payment' => 'QR-код для оплаты',
+    'qr_code_not_loaded' => 'QR-код не загружен',
+    'wallet_address' => 'Адрес кошелька',
+    'network' => 'Сеть',
 ];
