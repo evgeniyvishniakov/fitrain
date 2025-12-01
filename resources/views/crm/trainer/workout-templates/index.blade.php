@@ -1173,7 +1173,7 @@ function templatesApp() {
                 justify-content: space-between;
                 align-items: center;
             ">
-                <h3 style="font-size: 18px; font-weight: 600; color: #111827;">Выбор упражнений</h3>
+                <h3 style="font-size: 18px; font-weight: 600; color: #111827;">{{ __('common.exercise_selection') }}</h3>
                 <button onclick="closeSimpleModal()" style="
                     color: #6b7280;
                     background: none;
@@ -1844,7 +1844,7 @@ function removeExerciseFromAlpine(exerciseId) {
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900" x-text="currentView === 'create' ? '{{ __('common.create_template') }}' : '{{ __('common.edit_template') }}'"></h2>
-                <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? 'Добавьте новый шаблон упражнений' : 'Внесите изменения в шаблон'"></p>
+                <p class="mt-2 text-gray-600" x-text="currentView === 'create' ? '{{ __('common.add_new_exercise_template') }}' : '{{ __('common.make_changes_to_template') }}'"></p>
             </div>
         </div>
         
@@ -1859,7 +1859,7 @@ function removeExerciseFromAlpine(exerciseId) {
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                 </div>
                 
-                <!-- Выбор упражнений -->
+                <!-- {{ __('common.exercise_selection') }} -->
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-900 template-exercises-title">{{ __('common.exercises_in_template') }}</h3>

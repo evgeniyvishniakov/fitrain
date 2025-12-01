@@ -699,6 +699,8 @@ return [
     'add_template' => 'Додати шаблон',
     'create_template' => 'Створити шаблон',
     'edit_template' => 'Редагувати шаблон',
+    'add_new_exercise_template' => 'Додайте новий шаблон вправ',
+    'make_changes_to_template' => 'Внесіть зміни в шаблон',
     'template_name' => 'Назва шаблону *',
     'template_description' => 'Опис шаблону',
     'add_exercises' => 'Додати вправи',
