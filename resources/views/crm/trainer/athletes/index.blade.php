@@ -3972,7 +3972,7 @@ function athletesApp() {
                             <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                     </svg>
-                            <h3 class="text-lg font-medium text-gray-900 mb-2">Медицинские данные</h3>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">{{ __('common.medical_data') }}</h3>
                             <p class="mb-4">{{ __('common.medical_data_placeholder') }}</p>
                         </div>
 
@@ -3982,7 +3982,7 @@ function athletesApp() {
                                     <svg class="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    Добавить измерение
+                                    {{ __('common.add_measurement') }}
                                 </button>
                             
                             <!-- История измерений -->
@@ -4777,7 +4777,7 @@ function athletesApp() {
     <!-- ДОБАВЛЕНИЕ ИЗМЕРЕНИЙ -->
     <div id="trainer-athletes-add-measurement-section" x-show="currentView === 'addMeasurement'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Добавить измерение</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.add_measurement') }}</h3>
             <button @click="currentView = 'view'; activeTab = 'measurements'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 {{ __('common.back') }}
@@ -4791,7 +4791,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.measurement_date') }}</label>
                             <input type="date" x-model="measurementDate" required
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4813,7 +4813,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.fat_percentage') }}</label>
                             <input type="number" step="0.1" x-model="measurementBodyFat" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4823,7 +4823,7 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% воды</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.water_percentage_pct') }}</label>
                             <input type="number" step="0.1" x-model="measurementWaterPercentage" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4835,32 +4835,32 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.chest') }}</label>
                             <input type="number" step="0.1" x-model="measurementChest" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Талия</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.waist') }}</label>
                             <input type="number" step="0.1" x-model="measurementWaist" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бедра</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.hips') }}</label>
                             <input type="number" step="0.1" x-model="measurementHips" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бицепс</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.bicep') }}</label>
                             <input type="number" step="0.1" x-model="measurementBicep" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бедро</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.thigh') }}</label>
                             <input type="number" step="0.1" x-model="measurementThigh" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Шея</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.neck') }}</label>
                             <input type="number" step="0.1" x-model="measurementNeck" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4869,7 +4869,7 @@ function athletesApp() {
 
                 <!-- Медицинские показатели -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.medical_indicators') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.resting_heart_rate') }} ({{ __('common.bpm') }})</label>
@@ -4877,12 +4877,12 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Систолическое давление</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.systolic_pressure') }}</label>
                             <input type="number" x-model="measurementBloodPressureSystolic" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Диастолическое давление</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.diastolic_pressure') }}</label>
                             <input type="number" x-model="measurementBloodPressureDiastolic" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4893,10 +4893,10 @@ function athletesApp() {
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.notes') }}</h4>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Дополнительная информация</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_info') }}</label>
                         <textarea x-model="measurementNotes" rows="3" 
                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  placeholder="Любые дополнительные заметки о состоянии спортсмена..."></textarea>
+                                  placeholder="{{ __('common.add_notes_placeholder') }}"></textarea>
                     </div>
                 </div>
                 
@@ -4931,7 +4931,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.basic_info') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Дата измерения</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.measurement_date') }}</label>
                             <input type="date" x-model="measurementDate" required
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4953,7 +4953,7 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_composition') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% жира</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.fat_percentage') }}</label>
                             <input type="number" step="0.1" x-model="measurementBodyFat" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4963,7 +4963,7 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% воды</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.water_percentage_pct') }}</label>
                             <input type="number" step="0.1" x-model="measurementWaterPercentage" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -4975,32 +4975,32 @@ function athletesApp() {
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.body_volumes') }} ({{ __('common.cm') }})</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Грудь</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.chest') }}</label>
                             <input type="number" step="0.1" x-model="measurementChest" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Талия</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.waist') }}</label>
                             <input type="number" step="0.1" x-model="measurementWaist" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бедра</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.hips') }}</label>
                             <input type="number" step="0.1" x-model="measurementHips" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бицепс</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.bicep') }}</label>
                             <input type="number" step="0.1" x-model="measurementBicep" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Бедро</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.thigh') }}</label>
                             <input type="number" step="0.1" x-model="measurementThigh" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Шея</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.neck') }}</label>
                             <input type="number" step="0.1" x-model="measurementNeck" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -5009,7 +5009,7 @@ function athletesApp() {
 
                 <!-- Медицинские показатели -->
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Медицинские показатели</h4>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.medical_indicators') }}</h4>
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.resting_heart_rate') }} ({{ __('common.bpm') }})</label>
@@ -5017,12 +5017,12 @@ function athletesApp() {
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Систолическое давление</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.systolic_pressure') }}</label>
                             <input type="number" x-model="measurementBloodPressureSystolic" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Диастолическое давление</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.diastolic_pressure') }}</label>
                             <input type="number" x-model="measurementBloodPressureDiastolic" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
@@ -5033,10 +5033,10 @@ function athletesApp() {
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h4 class="text-lg font-semibold text-gray-900 mb-4">{{ __('common.notes') }}</h4>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Дополнительная информация</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.additional_info') }}</label>
                         <textarea x-model="measurementNotes" rows="3" 
                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                  placeholder="Любые дополнительные заметки о состоянии спортсмена..."></textarea>
+                                  placeholder="{{ __('common.add_notes_placeholder') }}"></textarea>
                     </div>
                 </div>
                 
@@ -5057,7 +5057,7 @@ function athletesApp() {
     <!-- ДОБАВЛЕНИЕ ПЛАНА ПИТАНИЯ -->
     <div id="trainer-athletes-add-nutrition-section" x-show="currentView === 'addNutrition'" x-transition class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-900">Создать план питания</h3>
+            <h3 class="text-xl font-semibold text-gray-900">{{ __('common.create_nutrition_plan') }}</h3>
             <button @click="currentView = 'view'; activeTab = 'nutrition'" 
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
                 {{ __('common.back') }}
@@ -5073,18 +5073,18 @@ function athletesApp() {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.month') }}</label>
                             <select x-model="nutritionMonth" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="1">Январь</option>
-                                <option value="2">Февраль</option>
-                                <option value="3">Март</option>
-                                <option value="4">Апрель</option>
-                                <option value="5">Май</option>
-                                <option value="6">Июнь</option>
-                                <option value="7">Июль</option>
-                                <option value="8">Август</option>
-                                <option value="9">Сентябрь</option>
-                                <option value="10">Октябрь</option>
-                                <option value="11">Ноябрь</option>
-                                <option value="12">Декабрь</option>
+                                <option value="1">{{ __('common.months.january') }}</option>
+                                <option value="2">{{ __('common.months.february') }}</option>
+                                <option value="3">{{ __('common.months.march') }}</option>
+                                <option value="4">{{ __('common.months.april') }}</option>
+                                <option value="5">{{ __('common.months.may') }}</option>
+                                <option value="6">{{ __('common.months.june') }}</option>
+                                <option value="7">{{ __('common.months.july') }}</option>
+                                <option value="8">{{ __('common.months.august') }}</option>
+                                <option value="9">{{ __('common.months.september') }}</option>
+                                <option value="10">{{ __('common.months.october') }}</option>
+                                <option value="11">{{ __('common.months.november') }}</option>
+                                <option value="12">{{ __('common.months.december') }}</option>
                             </select>
                         </div>
                         <div>
@@ -6022,7 +6022,7 @@ function athletesApp() {
         <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
             <!-- Заголовок модального окна -->
             <div class="flex items-center justify-between p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900" id="nutrition-modal-title">Создать план питания</h3>
+                <h3 class="text-lg font-semibold text-gray-900" id="nutrition-modal-title">{{ __('common.create_nutrition_plan') }}</h3>
                 <button onclick="closeNutritionPlanModal()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -6046,7 +6046,7 @@ let currentNutritionPlan = null;
 
 function openNutritionPlanModal() {
     currentNutritionPlan = null;
-    document.getElementById('nutrition-modal-title').textContent = 'Создать план питания';
+    document.getElementById('nutrition-modal-title').textContent = '{{ __('common.create_nutrition_plan') }}';
     showCreatePlanForm();
     document.getElementById('nutrition-plan-modal').classList.remove('hidden');
 }
@@ -6067,18 +6067,18 @@ function showCreatePlanForm() {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('common.month') }}</label>
                     <select id="plan-month" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="1" ${currentMonth === 1 ? 'selected' : ''}>Январь</option>
-                        <option value="2" ${currentMonth === 2 ? 'selected' : ''}>Февраль</option>
-                        <option value="3" ${currentMonth === 3 ? 'selected' : ''}>Март</option>
-                        <option value="4" ${currentMonth === 4 ? 'selected' : ''}>Апрель</option>
-                        <option value="5" ${currentMonth === 5 ? 'selected' : ''}>Май</option>
-                        <option value="6" ${currentMonth === 6 ? 'selected' : ''}>Июнь</option>
-                        <option value="7" ${currentMonth === 7 ? 'selected' : ''}>Июль</option>
-                        <option value="8" ${currentMonth === 8 ? 'selected' : ''}>Август</option>
-                        <option value="9" ${currentMonth === 9 ? 'selected' : ''}>Сентябрь</option>
-                        <option value="10" ${currentMonth === 10 ? 'selected' : ''}>Октябрь</option>
-                        <option value="11" ${currentMonth === 11 ? 'selected' : ''}>Ноябрь</option>
-                        <option value="12" ${currentMonth === 12 ? 'selected' : ''}>Декабрь</option>
+                        <option value="1" ${currentMonth === 1 ? 'selected' : ''}>{{ __('common.months.january') }}</option>
+                        <option value="2" ${currentMonth === 2 ? 'selected' : ''}>{{ __('common.months.february') }}</option>
+                        <option value="3" ${currentMonth === 3 ? 'selected' : ''}>{{ __('common.months.march') }}</option>
+                        <option value="4" ${currentMonth === 4 ? 'selected' : ''}>{{ __('common.months.april') }}</option>
+                        <option value="5" ${currentMonth === 5 ? 'selected' : ''}>{{ __('common.months.may') }}</option>
+                        <option value="6" ${currentMonth === 6 ? 'selected' : ''}>{{ __('common.months.june') }}</option>
+                        <option value="7" ${currentMonth === 7 ? 'selected' : ''}>{{ __('common.months.july') }}</option>
+                        <option value="8" ${currentMonth === 8 ? 'selected' : ''}>{{ __('common.months.august') }}</option>
+                        <option value="9" ${currentMonth === 9 ? 'selected' : ''}>{{ __('common.months.september') }}</option>
+                        <option value="10" ${currentMonth === 10 ? 'selected' : ''}>{{ __('common.months.october') }}</option>
+                        <option value="11" ${currentMonth === 11 ? 'selected' : ''}>{{ __('common.months.november') }}</option>
+                        <option value="12" ${currentMonth === 12 ? 'selected' : ''}>{{ __('common.months.december') }}</option>
                     </select>
                 </div>
                 <div>
@@ -6120,7 +6120,7 @@ async function saveNutritionPlan_DISABLED() {
     const description = document.getElementById('plan-description').value;
     
     if (!month || !year) {
-        alert('Пожалуйста, выберите месяц и год');
+        alert('{{ __('common.please_select_month_year') }}');
         return;
     }
     

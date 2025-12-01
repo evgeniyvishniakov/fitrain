@@ -1318,4 +1318,5 @@ return [
     'subscription_expired' => 'Закінчилась',
     'features' => 'Можливості',
     'trial_period' => 'Пробний період',
+    'please_select_month_year' => 'Будь ласка, оберіть місяць та рік',
 ];
