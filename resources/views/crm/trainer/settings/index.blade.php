@@ -376,7 +376,7 @@ function settingsApp() {
                     </svg>
                     {{ __('common.language') }} и {{ __('common.currency') }}
                 </button>
-                    <button onclick="switchTab('notifications')" id="tab-notifications" class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap">
+                    <button onclick="switchTab('notifications')" id="tab-notifications" class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap" style="display: none;">
                     <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4.828 7l2.586 2.586a2 2 0 002.828 0L12.828 7H4.828zM4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
@@ -521,7 +521,7 @@ function settingsApp() {
                     </div>
 
                     <!-- Часовой пояс -->
-                    <div class="space-y-4">
+                    <div class="space-y-4" style="display: none;">
                         <h3 class="text-base font-medium text-gray-900">
                             <i class="fas fa-clock mr-2"></i>{{ __('common.timezone') }}
                         </h3>
@@ -544,7 +544,7 @@ function settingsApp() {
             </div>
 
             <!-- Вкладка Уведомления -->
-            <div id="content-notifications" class="tab-content" style="display: none;">
+            <div id="content-notifications" class="tab-content" style="display: none !important;">
                 <form method="POST" action="{{ route('crm.trainer.settings.notifications') }}" class="space-y-6">
                     @csrf
                     <div class="space-y-4">
