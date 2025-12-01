@@ -379,9 +379,9 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="text-sm text-gray-600">Получатель:</label>
+                                <label class="text-sm text-gray-600">Банк:</label>
                                 <div class="mt-1 bg-white px-4 py-3 rounded-lg border border-gray-200">
-                                    <span class="font-medium" id="card-holder">{{ \App\Models\SystemSetting::get('donation.bank_card_holder', 'Имя получателя') }}</span>
+                                    <span class="font-medium" id="bank-name">{{ \App\Models\SystemSetting::get('donation.bank_name', '') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -393,9 +393,9 @@
                         <div class="bg-white p-4 rounded-lg">
                             @php($bankQrCode = \App\Models\SystemSetting::get('donation.bank_qr_code'))
                             @if($bankQrCode)
-                                <img id="bank-qr-code" src="{{ asset('storage/' . $bankQrCode) }}" alt="QR код для оплаты" class="w-48 h-48 object-contain">
+                                <img id="bank-qr-code" src="{{ asset('storage/' . $bankQrCode) }}" alt="QR код для оплаты" class="w-64 h-64 object-contain">
                             @else
-                                <div class="w-48 h-48 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                                <div class="w-64 h-64 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                                     QR-код не загружен
                                 </div>
                             @endif
@@ -438,9 +438,9 @@
                         <div class="bg-white p-4 rounded-lg">
                             @php($cryptoQrCode = \App\Models\SystemSetting::get('donation.crypto_qr_code'))
                             @if($cryptoQrCode)
-                                <img id="crypto-qr-code" src="{{ asset('storage/' . $cryptoQrCode) }}" alt="QR код для оплаты" class="w-48 h-48 object-contain">
+                                <img id="crypto-qr-code" src="{{ asset('storage/' . $cryptoQrCode) }}" alt="QR код для оплаты" class="w-64 h-64 object-contain">
                             @else
-                                <div class="w-48 h-48 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
+                                <div class="w-64 h-64 flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-lg">
                                     QR-код не загружен
                                 </div>
                             @endif

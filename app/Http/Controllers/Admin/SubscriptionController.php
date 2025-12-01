@@ -125,22 +125,16 @@ class SubscriptionController extends BaseController
     {
         $request->validate([
             'bank_card_number' => 'nullable|string|max:255',
-            'bank_card_holder' => 'nullable|string|max:255',
+            'bank_name' => 'nullable|string|max:255',
             'bank_qr_code' => 'nullable|image|max:5120',
             'crypto_wallet_address' => 'nullable|string|max:255',
             'crypto_qr_code' => 'nullable|image|max:5120'
         ]);
 
         // Сохраняем текстовые данные
-        if ($request->has('bank_card_number')) {
-            SystemSetting::set('donation.bank_card_number', $request->bank_card_number, 'string', 'Номер банковской карты для доната', true);
-        }
-        if ($request->has('bank_card_holder')) {
-            SystemSetting::set('donation.bank_card_holder', $request->bank_card_holder, 'string', 'Имя получателя для доната', true);
-        }
-        if ($request->has('crypto_wallet_address')) {
-            SystemSetting::set('donation.crypto_wallet_address', $request->crypto_wallet_address, 'string', 'Адрес криптокошелька для доната', true);
-        }
+        SystemSetting::set('donation.bank_card_number', $request->input('bank_card_number', ''), 'string', 'Номер банковской карты для доната', true);
+        SystemSetting::set('donation.bank_name', $request->input('bank_name', ''), 'string', 'Название банка для доната', true);
+        SystemSetting::set('donation.crypto_wallet_address', $request->input('crypto_wallet_address', ''), 'string', 'Адрес криптокошелька для доната', true);
 
         // Загрузка QR-кода для банка
         if ($request->hasFile('bank_qr_code')) {

@@ -38,16 +38,16 @@
                                    placeholder="0000 0000 0000 0000">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Имя получателя</label>
-                            <input type="text" name="bank_card_holder" value="{{ \App\Models\SystemSetting::get('donation.bank_card_holder', '') }}" 
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Название банка</label>
+                            <input type="text" name="bank_name" value="{{ \App\Models\SystemSetting::get('donation.bank_name', '') }}" 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                                   placeholder="Имя получателя">
+                                   placeholder="Название банка">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">QR-код</label>
                             @if(\App\Models\SystemSetting::get('donation.bank_qr_code'))
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . \App\Models\SystemSetting::get('donation.bank_qr_code')) }}" alt="QR" class="w-24 h-24 object-contain border rounded">
+                                    <img src="{{ asset('storage/' . \App\Models\SystemSetting::get('donation.bank_qr_code')) }}" alt="QR" class="w-48 h-48 object-contain border rounded">
                                 </div>
                             @endif
                             <input type="file" name="bank_qr_code" accept="image/*" class="w-full text-sm">
