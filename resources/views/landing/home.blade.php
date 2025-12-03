@@ -201,6 +201,104 @@
                 display: flex !important;
                 flex-direction: column !important;
             }
+            
+            /* Слайдер для тренеров и спортсменов на мобильных */
+            #for-trainers .relative.rounded-2xl.shadow-2xl,
+            #for-athletes .relative.rounded-2xl.shadow-2xl {
+                min-height: 300px !important;
+                height: 300px !important;
+                position: relative !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            #for-trainers .relative.rounded-2xl.shadow-2xl > div[x-show],
+            #for-athletes .relative.rounded-2xl.shadow-2xl > div[x-show] {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                display: flex !important;
+                visibility: visible !important;
+            }
+            
+            #for-trainers .relative.rounded-2xl.shadow-2xl > div[x-show] img,
+            #for-athletes .relative.rounded-2xl.shadow-2xl > div[x-show] img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                display: block !important;
+                visibility: visible !important;
+            }
+            
+            /* Убеждаемся, что контейнер слайдера для тренеров виден на мобильных */
+            #for-trainers > div > div > div.relative {
+                display: block !important;
+                visibility: visible !important;
+                width: 100% !important;
+                margin-top: 2rem !important;
+            }
+            
+            /* Скрываем статическое fallback изображение на мобильных */
+            #for-trainers .trainer-static-image {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            
+            /* Убеждаемся, что слайдер для тренеров виден на мобильных */
+            #for-trainers .grid > div.relative {
+                display: block !important;
+                visibility: visible !important;
+                width: 100% !important;
+                margin-top: 2rem !important;
+                min-height: 300px !important;
+            }
+            
+            #for-trainers .relative.rounded-2xl.shadow-2xl {
+                margin-top: 0 !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            /* Убеждаемся, что изображения слайдера для тренеров видны */
+            #for-trainers .relative.rounded-2xl.shadow-2xl img {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            /* Убеждаемся, что все элементы слайдера тренеров видны на мобильных */
+            #for-trainers .relative.rounded-2xl.shadow-2xl template {
+                display: block !important;
+            }
+            
+            #for-trainers .relative.rounded-2xl.shadow-2xl template > div {
+                display: flex !important;
+                visibility: visible !important;
+            }
+            
+            /* Дополнительная проверка видимости слайдера тренеров на мобильных */
+            #for-trainers .grid > div.relative.order-2 {
+                display: block !important;
+                visibility: visible !important;
+                width: 100% !important;
+                margin-top: 2rem !important;
+                position: relative !important;
+            }
+            
+            /* Десктоп - возвращаем исходные стили */
+            @media (min-width: 768px) {
+                #for-trainers .relative.rounded-2xl.shadow-2xl > div[x-show] img,
+                #for-athletes .relative.rounded-2xl.shadow-2xl > div[x-show] img {
+                    height: auto !important;
+                    object-fit: contain !important;
+                }
+            }
         }
         
         [x-cloak] {
@@ -420,7 +518,7 @@
                 
                 <div class="grid lg:grid-cols-4 gap-8 items-center">
                     <!-- Левая колонка: Преимущества для тренера -->
-                    <div class="lg:col-span-1 space-y-4 order-2 lg:order-1">
+                    <div class="lg:col-span-1 space-y-4 order-1 lg:order-1">
                         <h3 class="text-xl font-bold text-gray-900 mb-4 text-center lg:text-left">
                             <span class="inline-flex items-center">
                                 <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -444,7 +542,7 @@
                     </div>
                     
                     <!-- Центральная часть: Два мобильных экрана -->
-                    <div class="lg:col-span-2 grid md:grid-cols-2 gap-6 order-1 lg:order-2">
+                    <div class="lg:col-span-2 grid md:grid-cols-2 gap-6 order-2 lg:order-2">
                         <!-- Мобильный экран тренера -->
                         <div class="flex flex-col items-center">
                             <div class="relative w-64 max-w-full">
@@ -633,8 +731,8 @@
         <!-- For Trainers Section -->
         <section id="for-trainers" class="py-20 px-4 sm:px-6 lg:px-8 hero-bg">
             <div class="max-w-7xl mx-auto">
-                <div class="grid md:grid-cols-2 items-center">
-                    <div class="relative" 
+                <div class="grid md:grid-cols-2 md:gap-8 items-center">
+                    <div class="relative order-2 md:order-1" 
                          x-data="trainerImageSlider()"
                          @mouseenter.stop="stopAutoplay()"
                          @mouseleave.stop="startAutoplay()">
@@ -651,16 +749,26 @@
                                          x-transition:leave="transition ease-in-out duration-700"
                                          x-transition:leave-start="opacity-100"
                                          x-transition:leave-end="opacity-0"
-                                         class="absolute inset-0">
+                                         class="absolute inset-0"
+                                         style="display: flex; align-items: center; justify-content: center; z-index: 1;">
                                         <img :src="'{{ asset('storage/') }}/' + image" 
                                              alt="Для тренеров" 
-                                             class="w-full h-auto object-cover rounded-2xl">
+                                             class="w-full h-full object-cover rounded-2xl"
+                                             style="max-width: 100%; max-height: 100%; display: block;">
                                     </div>
                                 </template>
                                 
+                                <!-- Статическое первое изображение как fallback -->
+                                <div class="absolute inset-0 trainer-static-image" style="display: block; z-index: 0;" x-show="false">
+                                    <img src="{{ asset('storage/' . $trainerImages[0]) }}" 
+                                         alt="Для тренеров" 
+                                         class="w-full h-full object-cover rounded-2xl"
+                                         style="max-width: 100%; max-height: 100%; display: block;">
+                                </div>
+                                
                                 @if(count($trainerImages) > 1)
                                     <!-- Навигация точками -->
-                                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                                         <template x-for="(image, index) in images" :key="index">
                                             <button @click="goToImage(index)" 
                                                     :class="currentImage === index ? 'bg-green-600 w-8' : 'bg-white/50 w-3'"
@@ -679,7 +787,7 @@
                             </div>
                         @endif
                     </div>
-                    <div>
+                    <div class="order-1 md:order-2">
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">{{ $trainers_title }}</h2>
                         <p class="text-xl text-gray-600 mb-8">
                             {{ $trainers_subtitle }}
@@ -745,16 +853,18 @@
                                          x-transition:leave="transition ease-in-out duration-700"
                                          x-transition:leave-start="opacity-100"
                                          x-transition:leave-end="opacity-0"
-                                         class="absolute inset-0">
+                                         class="absolute inset-0"
+                                         style="display: flex; align-items: center; justify-content: center;">
                                         <img :src="'{{ asset('storage/') }}/' + image" 
                                              alt="Для спортсменов" 
-                                             class="w-full h-auto object-cover rounded-2xl">
+                                             class="w-full h-full object-cover rounded-2xl"
+                                             style="max-width: 100%; max-height: 100%;">
                                     </div>
                                 </template>
                                 
                                 @if(count($athleteImages) > 1)
                                     <!-- Навигация точками -->
-                                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                                         <template x-for="(image, index) in images" :key="index">
                                             <button @click="goToImage(index)" 
                                                     :class="currentImage === index ? 'bg-green-600 w-8' : 'bg-white/50 w-3'"
@@ -846,6 +956,11 @@
                 autoplayInterval: null,
                 autoplayDelay: 5000, // 5 секунд
                 init() {
+                    // Скрываем статическое изображение когда Alpine.js загрузился
+                    const staticImg = document.querySelector('.trainer-static-image');
+                    if (staticImg) {
+                        staticImg.style.display = 'none';
+                    }
                     if (this.images.length > 1) {
                         this.startAutoplay();
                     }
