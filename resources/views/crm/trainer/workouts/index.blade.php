@@ -614,50 +614,67 @@ function workoutApp() {
 
         handleTouchStart(event) {
             if (event.touches.length !== 1) return;
-            this.syncMenuState();
+            if (this.isAnyModalOpen()) return;
+            
+            // Проверка: если клик по кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                return;
+            }
+
+            if (this.popStateLocked) return;
+
+            if (event.target.closest('[data-swipe-ignore="true"]')) {
+                return;
+            }
 
             const touch = event.touches[0];
             const startX = touch.clientX;
             const startY = touch.clientY;
+            const nearEdge = startX <= this.getEdgeThreshold();
             const menu = document.getElementById('mobile-menu');
             const menuContent = menu ? menu.querySelector('.mobile-menu-content') : null;
             const targetInsideMenu = menuContent ? menuContent.contains(event.target) : false;
             const isMenuToggle = event.target.closest('.mobile-menu-btn');
             const isMenuClose = event.target.closest('.mobile-menu-close');
-            const menuOpen = this.menuIsOpen;
+            const menuOpen = !!(menu && menu.classList.contains('open'));
+            this.menuIsOpen = menuOpen;
 
             this.menuGesture = null;
             this.menuGestureHandled = false;
 
             if (isMenuToggle || isMenuClose) {
-                this.touchStartX = null;
-                this.touchStartY = null;
+                // Оставляем стандартное поведение кнопок меню
                 return;
             }
 
             if (this.currentView === 'list') {
                 if (menuOpen) {
-                    if (startX <= this.menuCloseEdgeGuard) {
+                    const guard = this.menuCloseEdgeGuard;
+                    const menuWidth = this.getMobileMenuWidth();
+                    if (startX <= guard) {
+                        // Блокируем системный жест "назад", но меню не трогаем
                         event.preventDefault();
                         event.stopPropagation();
                         if (event.stopImmediatePropagation) {
                             event.stopImmediatePropagation();
                         }
-                        this.touchStartX = null;
-                        this.touchStartY = null;
+                        this.menuGesture = null;
+                        this.menuGestureHandled = false;
                         return;
                     }
-                    const menuWidth = this.getMobileMenuWidth();
-                    if (targetInsideMenu || startX <= menuWidth + this.menuCloseEdgeGuard) {
-                        this.touchStartX = null;
-                        this.touchStartY = null;
-                        this.menuGestureHandled = true;
+                    if (startX <= menuWidth + guard) {
+                        // Любое касание в пределах панели игнорируем
+                        this.menuGesture = null;
+                        this.menuGestureHandled = false;
                         return;
                     }
+                    // свайп из остальной части экрана – закрываем
                     this.menuGesture = 'close';
                 } else {
                     // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем открытие меню
-                    if (startX <= this.menuCloseEdgeGuard) {
+                    const guard = this.menuCloseEdgeGuard;
+                    if (startX <= guard) {
                         // Блокируем системный жест "назад", но продолжаем обработку для открытия меню
                         event.preventDefault();
                         event.stopPropagation();
@@ -666,9 +683,6 @@ function workoutApp() {
                         }
                         // Не делаем return, чтобы меню могло открыться, если касание в пределах nearEdge
                     }
-                    
-                    // Проверяем, что касание в пределах зоны свайпа
-                    const nearEdge = startX <= this.getEdgeThreshold();
                     if (!nearEdge) {
                         return;
                     }
@@ -690,7 +704,8 @@ function workoutApp() {
             if (!['view', 'create', 'edit'].includes(this.currentView)) return;
             
             // Блокируем системный жест "назад" с самого края (первые 60px), но разрешаем свайп назад
-            if (startX <= this.menuCloseEdgeGuard) {
+            const guard = this.menuCloseEdgeGuard;
+            if (startX <= guard) {
                 // Блокируем системный жест "назад", но продолжаем обработку для свайпа назад
                 event.preventDefault();
                 event.stopPropagation();
@@ -700,13 +715,7 @@ function workoutApp() {
                 // Не делаем return, чтобы свайп назад мог работать, если касание в пределах nearEdge
             }
             
-            // Проверяем, что касание в пределах зоны свайпа
-            const nearEdge = startX <= this.getEdgeThreshold();
-            if (!nearEdge) {
-                this.touchStartX = null;
-                this.touchStartY = null;
-                return;
-            }
+            if (!nearEdge) return;
 
             this.closeMobileMenuIfOpen();
             this.clearSwipeAnimationTimeout();
@@ -725,21 +734,29 @@ function workoutApp() {
         handleTouchMove(event) {
             if (this.touchStartX === null) return;
             
-            // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
-            if (this.touchStartX <= this.getEdgeThreshold()) {
-                event.preventDefault();
-                event.stopPropagation();
-                if (event.stopImmediatePropagation) {
-                    event.stopImmediatePropagation();
-                }
-            }
-            
-            if (this.isAnyModalOpen()) {
+            // Проверка: если касание идет по кнопке, сбрасываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
                 this.touchStartX = null;
                 this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
                 return;
             }
+            
+            if (this.popStateLocked) return;
             if (this.currentView === 'list') {
+                // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+                if (this.touchStartX <= this.getEdgeThreshold()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.stopImmediatePropagation) {
+                        event.stopImmediatePropagation();
+                    }
+                }
                 if (!this.menuGesture) return;
                 if (this.menuGestureHandled) return;
                 const touch = event.touches[0];
@@ -763,8 +780,8 @@ function workoutApp() {
                 }
                 return;
             }
-
             if (!['view', 'create', 'edit'].includes(this.currentView)) return;
+            if (this.isAnyModalOpen()) return;
             const touch = event.touches[0];
             const deltaX = Math.max(0, touch.clientX - this.touchStartX);
             const deltaY = touch.clientY - (this.touchStartY ?? 0);
@@ -776,7 +793,8 @@ function workoutApp() {
                 this.handleSwipeRight(event, this.swipeTargetElement);
                 return;
             }
-            if (event && this.touchStartX <= this.getEdgeThreshold()) {
+            // Блокируем события только при реальном движении вправо (свайпе), чтобы не мешать выделению текста
+            if (event && this.touchStartX <= this.getEdgeThreshold() && deltaX > 10) {
                 event.preventDefault();
                 event.stopPropagation();
                 if (event.stopImmediatePropagation) {
@@ -786,6 +804,29 @@ function workoutApp() {
         },
 
         handleTouchEnd(event) {
+            // Проверка: если касание закончилось на кнопке, не обрабатываем свайп
+            const isButton = event.target.closest('button') || event.target.tagName === 'BUTTON';
+            if (isButton && this.touchStartX !== null) {
+                this.resetSwipeTransform(true);
+                this.swipeTargetElement = null;
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+
+            if (this.popStateLocked) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                this.touchStartTime = null;
+                this.swipeTargetElement = null;
+                this.menuGesture = null;
+                this.menuGestureHandled = false;
+                return;
+            }
+
             if (this.currentView === 'list') {
                 if (this.menuGesture && !this.menuGestureHandled && event.changedTouches.length === 1) {
                     const touch = event.changedTouches[0];
@@ -816,7 +857,6 @@ function workoutApp() {
                 this.touchStartTime = null;
                 return;
             }
-
             const targetElement = this.swipeTargetElement;
             if (this.swipeHandled) {
                 this.touchStartX = null;
@@ -825,7 +865,6 @@ function workoutApp() {
                 this.swipeHandled = false;
                 return;
             }
-
             const touch = event.changedTouches[0];
             const startX = this.touchStartX;
             const startY = this.touchStartY ?? 0;
@@ -857,12 +896,16 @@ function workoutApp() {
         handleSwipeRight(event, targetElement = null) {
             if (!['view', 'create', 'edit'].includes(this.currentView)) return;
             if (this.isAnyModalOpen()) return;
+            if (this.popStateLocked) return;
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
             }
             this.swipeHandled = true;
-            this.closeGlobalMobileMenu();
+            this.closeMobileMenuIfOpen();
             this.clearSwipeAnimationTimeout();
             const target = targetElement || this.swipeTargetElement || this.getSwipeTargetElement();
             if (target) {
