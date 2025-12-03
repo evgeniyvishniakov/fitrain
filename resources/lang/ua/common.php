@@ -1397,4 +1397,10 @@ return [
     'landing.footer.contact_text' => 'З питань звертайтесь через систему',
     'landing.footer.register' => 'Реєстрація',
     'landing.footer.all_rights' => 'Всі права захищені',
+    
+    // Landing - CTA Section
+    'landing.cta.title' => 'Готові почати?',
+    'landing.cta.description' => 'Зареєструйтесь і почніть використовувати :name вже сьогодні',
+    'landing.cta.register_trainer' => 'Реєстрація для тренера',
+    'landing.cta.login' => 'Увійти в систему',
 ];

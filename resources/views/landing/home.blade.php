@@ -888,16 +888,16 @@
         <!-- CTA Section -->
         <section class="py-20 px-4 sm:px-6 lg:px-8 gradient-primary">
             <div class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Готовы начать?</h2>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">{{ __('common.landing.cta.title') }}</h2>
                 <p class="text-xl text-white/90 mb-8">
-                    Зарегистрируйтесь и начните использовать {{ $siteName }} уже сегодня
+                    {{ __('common.landing.cta.description', ['name' => $siteName]) }}
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="{{ route('crm.trainer.register') }}" class="bg-white text-green-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition">
-                        Регистрация для тренера
+                        {{ __('common.landing.cta.register_trainer') }}
                     </a>
                     <a href="{{ route('crm.login') }}" class="bg-white/10 text-white border-2 border-white px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition">
-                        Войти в систему
+                        {{ __('common.landing.cta.login') }}
                     </a>
                 </div>
             </div>

@@ -1350,4 +1350,10 @@ return [
     'landing.footer.contact_text' => 'For inquiries, please contact through the system',
     'landing.footer.register' => 'Registration',
     'landing.footer.all_rights' => 'All rights reserved',
+    
+    // Landing - CTA Section
+    'landing.cta.title' => 'Ready to start?',
+    'landing.cta.description' => 'Register and start using :name today',
+    'landing.cta.register_trainer' => 'Register as Trainer',
+    'landing.cta.login' => 'Login to System',
 ];
