@@ -517,6 +517,14 @@ function workoutApp() {
             
             if (this.popStateLocked) return;
             if (this.currentView === 'list') {
+                // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+                if (this.touchStartX <= this.getEdgeThreshold()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.stopImmediatePropagation) {
+                        event.stopImmediatePropagation();
+                    }
+                }
                 if (!this.menuGesture) return;
                 if (this.menuGestureHandled) return;
                 const touch = event.touches[0];
@@ -4977,16 +4985,16 @@ async function loadExerciseHistory(exerciseId) {
             
             // Автозаполняем поля значениями из последней тренировки ТОЛЬКО если не в режиме редактирования
             if (!isEditMode) {
-                const fieldsToFill = data.plan;
-                
-                // Если есть факт - используем его, иначе план
-                const valuesToUse = data.fact || fieldsToFill;
-                
-                for (const [field, value] of Object.entries(valuesToUse)) {
-                    const input = document.querySelector(`input[name="${field}_${exerciseId}"]`);
+            const fieldsToFill = data.plan;
+            
+            // Если есть факт - используем его, иначе план
+            const valuesToUse = data.fact || fieldsToFill;
+            
+            for (const [field, value] of Object.entries(valuesToUse)) {
+                const input = document.querySelector(`input[name="${field}_${exerciseId}"]`);
                     // Заполняем только если поле пустое
                     if (input && value && (!input.value || input.value === '' || input.value === '0')) {
-                        input.value = value;
+                    input.value = value;
                     }
                 }
             }

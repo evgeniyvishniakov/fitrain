@@ -1029,6 +1029,11 @@ function athleteSettingsApp() {
             return;
         }
         
+        // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+        if (touchStartX <= getEdgeThreshold()) {
+            preventEvent(event);
+        }
+        
         if (!menuGesture) return;
 
         const touch = event.touches[0];

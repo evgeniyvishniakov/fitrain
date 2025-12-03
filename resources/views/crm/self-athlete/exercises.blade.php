@@ -24,7 +24,6 @@ function exerciseApp() {
         touchHandlersSetup: false,
         touchStartTime: null,
         maxVerticalDeviation: 80,
-        edgeThreshold: 80, // Базовое значение, будет переопределено через getEdgeThreshold()
         swipeHandled: false,
         swipeActivationThreshold: 120,
         swipeVisualLimit: 140,
@@ -444,6 +443,14 @@ function exerciseApp() {
             
             if (this.popStateLocked) return;
             if (this.currentView === 'list') {
+                // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+                if (this.touchStartX <= this.getEdgeThreshold()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.stopImmediatePropagation) {
+                        event.stopImmediatePropagation();
+                    }
+                }
                 if (!this.menuGesture) return;
                 if (this.menuGestureHandled) return;
                 const touch = event.touches[0];

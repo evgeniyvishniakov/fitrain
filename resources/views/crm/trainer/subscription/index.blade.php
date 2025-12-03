@@ -219,6 +219,12 @@
 
     const handleTouchMove = (event) => {
         if (touchStartX === null) return;
+        
+        // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+        if (touchStartX <= getEdgeThreshold()) {
+            preventEvent(event);
+        }
+        
         if (!menuGesture) return;
         if (menuGestureHandled) return;
 
@@ -233,11 +239,6 @@
         } else if (menuGesture === 'close' && (touchStartX - touch.clientX) > menuSwipeThreshold) {
             closeMobileMenuIfOpen();
             menuGestureHandled = true;
-        }
-
-        // Блокируем события только при реальном движении (свайпе), чтобы не мешать выделению текста
-        if (!menuGestureHandled && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
-            preventEvent(event);
         }
     };
 

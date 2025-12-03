@@ -344,6 +344,12 @@
 
     const handleTouchMove = (event) => {
         if (touchStartX === null) return;
+        
+        // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+        if (touchStartX <= getEdgeThreshold()) {
+            preventEvent(event);
+        }
+        
         if (!menuGesture) return;
 
         // Проверка: если касание идет по кнопке, сбрасываем свайп
