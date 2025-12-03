@@ -294,33 +294,6 @@ function calendarApp() {
     const handleTouchStart = (event) => {
         if (event.touches.length !== 1) return;
 
-        // Проверка: если клик по интерактивному элементу, не обрабатываем свайп (проверяем в самом начале)
-        const isInteractive = event.target.closest('button') || 
-                              event.target.closest('a') || 
-                              event.target.closest('input') || 
-                              event.target.closest('select') || 
-                              event.target.closest('textarea') ||
-                              event.target.tagName === 'BUTTON' ||
-                              event.target.tagName === 'A' ||
-                              event.target.tagName === 'INPUT' ||
-                              event.target.tagName === 'SELECT' ||
-                              event.target.tagName === 'TEXTAREA';
-        if (isInteractive) {
-            return;
-        }
-
-        // Проверка: если клик по ячейке календаря или элементам внутри нее, не обрабатываем свайп
-        const isCalendarCell = event.target.closest('.calendar-day-cell') ||
-                              event.target.closest('.desktop-workouts') ||
-                              event.target.closest('.mobile-workouts') ||
-                              event.target.closest('[class*="cursor-pointer"]') ||
-                              (event.target.closest('[x-data*="calendarApp"]') && 
-                               (event.target.closest('.calendar-day-cell') || 
-                                event.target.closest('[class*="cursor-pointer"]')));
-        if (isCalendarCell) {
-            return;
-        }
-
         syncMenuState();
 
         const touch = event.touches[0];
@@ -336,19 +309,22 @@ function calendarApp() {
         menuGestureHandled = false;
 
         if (isMenuToggle || isMenuClose) {
-            resetTouchState();
+            touchStartX = null;
+            touchStartY = null;
             return;
         }
 
         if (menuIsOpen) {
             if (startX <= menuCloseEdgeGuard) {
                 preventEvent(event);
-                resetTouchState();
+                touchStartX = null;
+                touchStartY = null;
                 return;
             }
             const menuWidth = getMobileMenuWidth();
             if (targetInsideMenu || startX <= menuWidth + menuCloseEdgeGuard) {
-                resetTouchState();
+                touchStartX = null;
+                touchStartY = null;
                 menuGestureHandled = true;
                 return;
             }
@@ -364,7 +340,8 @@ function calendarApp() {
             // Проверяем, что касание в пределах зоны свайпа (как в тренировках)
             const nearEdge = startX <= getEdgeThreshold();
             if (!nearEdge) {
-                resetTouchState();
+                touchStartX = null;
+                touchStartY = null;
                 return;
             }
             menuGesture = 'open';
@@ -379,52 +356,26 @@ function calendarApp() {
 
     const handleTouchMove = (event) => {
         if (touchStartX === null) return;
+        
+        // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+        if (touchStartX <= getEdgeThreshold()) {
+            preventEvent(event);
+        }
+        
         if (!menuGesture) return;
-
-        // Проверка: если касание идет по интерактивному элементу, сбрасываем свайп
-        const isInteractive = event.target.closest('button') || 
-                              event.target.closest('a') || 
-                              event.target.closest('input') || 
-                              event.target.closest('select') || 
-                              event.target.closest('textarea') ||
-                              event.target.tagName === 'BUTTON' ||
-                              event.target.tagName === 'A' ||
-                              event.target.tagName === 'INPUT' ||
-                              event.target.tagName === 'SELECT' ||
-                              event.target.tagName === 'TEXTAREA';
-        if (isInteractive) {
-            resetTouchState();
-            return;
-        }
-
-        // Проверка: если касание идет по ячейке календаря, сбрасываем свайп
-        const isCalendarCell = event.target.closest('.calendar-day-cell') ||
-                              event.target.closest('.desktop-workouts') ||
-                              event.target.closest('.mobile-workouts') ||
-                              event.target.closest('[class*="cursor-pointer"]');
-        if (isCalendarCell) {
-            resetTouchState();
-            return;
-        }
+        if (menuGestureHandled) return;
 
         const touch = event.touches[0];
         const deltaX = touch.clientX - touchStartX;
         const deltaY = touch.clientY - (touchStartY ?? 0);
         if (Math.abs(deltaY) > maxVerticalDeviation) return;
 
-        if (!menuGestureHandled) {
-            if (menuGesture === 'open' && deltaX > menuSwipeThreshold) {
-                openMobileMenu();
-                menuGestureHandled = true;
-            } else if (menuGesture === 'close' && (touchStartX - touch.clientX) > menuSwipeThreshold) {
-                closeMobileMenuIfOpen();
-                menuGestureHandled = true;
-            }
-        }
-
-        // Блокируем события только при реальном движении (свайпе), чтобы не мешать выделению текста
-        if (!menuGestureHandled && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
-            preventEvent(event);
+        if (menuGesture === 'open' && deltaX > menuSwipeThreshold) {
+            openMobileMenu();
+            menuGestureHandled = true;
+        } else if (menuGesture === 'close' && (touchStartX - touch.clientX) > menuSwipeThreshold) {
+            closeMobileMenuIfOpen();
+            menuGestureHandled = true;
         }
     };
 

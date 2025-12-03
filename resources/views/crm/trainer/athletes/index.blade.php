@@ -467,7 +467,21 @@ function athletesApp() {
 
         handleTouchMove(event) {
             if (this.touchStartX === null) return;
-            if (this.isAnyModalOpen()) return;
+            
+            // Блокируем системный жест "назад" если касание началось с левого края (в зоне свайпа меню)
+            if (this.touchStartX <= this.getEdgeThreshold()) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.stopImmediatePropagation) {
+                    event.stopImmediatePropagation();
+                }
+            }
+            
+            if (this.isAnyModalOpen()) {
+                this.touchStartX = null;
+                this.touchStartY = null;
+                return;
+            }
             if (this.currentView === 'list') {
                 if (!this.menuGesture) return;
                 if (this.menuGestureHandled) return;
