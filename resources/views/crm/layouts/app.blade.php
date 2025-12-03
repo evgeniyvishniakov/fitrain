@@ -980,7 +980,7 @@
         <!-- Основная область -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Верхняя панель -->
-            <header class="header backdrop-blur-md px-6 py-4">
+            <header class="header backdrop-blur-md px-6 py-4" style="position: relative; z-index: 10000;">
                 <div class="flex items-center justify-between">
                     <!-- Кнопка мобильного меню -->
                     <button onclick="toggleMobileMenu()" class="mobile-menu-btn text-white hover:text-gray-200 transition-colors">
@@ -1019,7 +1019,7 @@
                                  x-transition:leave="transition ease-in duration-75"
                                  x-transition:leave-start="transform opacity-100 scale-100"
                                  x-transition:leave-end="transform opacity-0 scale-95"
-                                 class="absolute right-0 mt-2 w-48 account-dropdown py-1 z-50">
+                                 class="absolute right-0 mt-2 w-48 account-dropdown py-1" style="z-index: 10050;">
                                 <div class="px-4 py-2 border-b border-gray-100">
                                     <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name ?? 'Пользователь' }}</p>
                                     <p class="text-xs text-gray-500">{{ auth()->user()->email ?? '' }}</p>
