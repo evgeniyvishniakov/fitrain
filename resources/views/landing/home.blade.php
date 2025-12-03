@@ -73,6 +73,20 @@
             font-family: 'Inter', sans-serif;
         }
         
+        * {
+            box-sizing: border-box;
+        }
+        
+        @media (max-width: 767px) {
+            body {
+                overflow-x: hidden;
+            }
+            
+            html {
+                overflow-x: hidden;
+            }
+        }
+        
         .gradient-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -141,9 +155,51 @@
         }
         
         @media (max-width: 767px) {
-            .hero-image-container img {
-                max-width: 100%;
+            .hero-text-container {
+                height: 350px !important;
+                min-height: 350px !important;
+                position: relative !important;
                 width: 100%;
+                overflow: hidden;
+            }
+            
+            .hero-text-container > div {
+                position: relative !important;
+                width: 100%;
+            }
+            
+            .hero-image-container {
+                height: 300px !important;
+                min-height: 300px !important;
+                position: relative !important;
+                margin-top: 2rem;
+                width: 100%;
+                overflow: hidden;
+            }
+            
+            .hero-image-container > div {
+                position: relative !important;
+                height: 100% !important;
+                width: 100%;
+            }
+            
+            .hero-image-container img {
+                max-width: 100% !important;
+                width: 100% !important;
+                height: auto;
+                max-height: 100%;
+                object-fit: contain;
+                display: block;
+                position: relative;
+            }
+            
+            section.hero-bg {
+                padding-bottom: 2rem !important;
+            }
+            
+            section.hero-bg .grid {
+                display: flex !important;
+                flex-direction: column !important;
             }
         }
         
@@ -228,8 +284,8 @@
                  @mouseenter.stop="stopAutoplay()"
                  @mouseleave.stop="startAutoplay()">
             <div class="max-w-7xl mx-auto relative">
-                <div class="grid md:grid-cols-2 gap-12 items-center">
-                    <div class="fade-in relative" style="min-height: 400px;">
+                <div class="grid md:grid-cols-2 items-center">
+                    <div class="fade-in relative hero-text-container" style="min-height: 400px;">
                         <template x-for="(slide, index) in slides" :key="index">
                             <div x-show="currentSlide === index" 
                                  x-transition:enter="transition ease-in-out duration-700"
@@ -268,15 +324,15 @@
                                  x-transition:leave="transition ease-in-out duration-700"
                                  x-transition:leave-start="opacity-100 transform scale-100"
                                  x-transition:leave-end="opacity-0 transform scale-95"
-                                 class="absolute inset-0">
+                                 class="absolute inset-0 flex items-center justify-center">
                                 <img x-show="slide.image" 
                                      x-cloak
                                      :src="slide.image ? '{{ asset('storage/') }}/' + slide.image : ''" 
                                      alt="Fitrain CRM" 
-                                     class="rounded-2xl shadow-2xl w-full h-auto object-contain">
+                                     class="rounded-2xl shadow-2xl w-full h-auto object-contain max-h-full">
                                 <div x-show="!slide.image" 
                                      x-cloak
-                                     class="gradient-primary rounded-2xl shadow-2xl p-12 text-center h-full flex flex-col items-center justify-center">
+                                     class="gradient-primary rounded-2xl shadow-2xl p-12 text-center w-full flex flex-col items-center justify-center" style="min-height: 300px;">
                                     <svg class="w-full h-64 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
@@ -577,7 +633,7 @@
         <!-- For Trainers Section -->
         <section id="for-trainers" class="py-20 px-4 sm:px-6 lg:px-8 hero-bg">
             <div class="max-w-7xl mx-auto">
-                <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="grid md:grid-cols-2 items-center">
                     <div class="relative" 
                          x-data="trainerImageSlider()"
                          @mouseenter.stop="stopAutoplay()"
@@ -653,7 +709,7 @@
         <!-- For Athletes Section -->
         <section id="for-athletes" class="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div class="max-w-7xl mx-auto">
-                <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="grid md:grid-cols-2 items-center">
                     <div>
                         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">{{ $athletes_title }}</h2>
                         <p class="text-xl text-gray-600 mb-8">
