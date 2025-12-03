@@ -323,10 +323,9 @@
                     <!-- Desktop Menu -->
                     <div class="hidden md:flex items-center space-x-4">
                         <a href="#features" class="text-gray-700 hover:text-green-600 transition">Возможности</a>
-                        <a href="#how-it-works" class="text-gray-700 hover:text-green-600 transition">Как это работает</a>
+                        <a href="#how-it-works" class="text-gray-700 hover:text-green-600 transition">Синхронизация</a>
                         <a href="#for-trainers" class="text-gray-700 hover:text-green-600 transition">Для тренеров</a>
                         <a href="#for-athletes" class="text-gray-700 hover:text-green-600 transition">Для спортсменов</a>
-                        <a href="#pricing" class="text-gray-700 hover:text-green-600 transition">Тарифы</a>
                         <a href="{{ route('crm.login') }}" class="text-gray-700 hover:text-green-600 transition">Войти</a>
                         <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">Начать</a>
                         <!-- Переключатель языков -->
@@ -355,10 +354,9 @@
             <div x-show="mobileMenuOpen" x-transition class="md:hidden bg-white border-t">
                 <div class="px-4 py-4 space-y-4">
                     <a href="#features" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Возможности</a>
-                    <a href="#how-it-works" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Как это работает</a>
+                    <a href="#how-it-works" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Синхронизация</a>
                     <a href="#for-trainers" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для тренеров</a>
                     <a href="#for-athletes" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для спортсменов</a>
-                    <a href="#pricing" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Тарифы</a>
                     <a href="{{ route('crm.login') }}" class="block text-gray-700 hover:text-green-600">Войти</a>
                     <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium inline-block text-center">Начать</a>
                     <!-- Переключатель языков -->
@@ -910,8 +908,8 @@
             <div class="max-w-7xl mx-auto">
                 <div class="grid md:grid-cols-4 gap-8">
                     <div>
-                        @if($siteLogoLight || $siteLogoDefault)
-                            <img src="{{ $siteLogoLight ? url('storage/' . $siteLogoLight) : url('storage/' . $siteLogoDefault) }}" alt="{{ $siteName }}" class="h-10 mb-4">
+                        @if($siteLogoDark || $siteLogoLight || $siteLogoDefault)
+                            <img src="{{ $siteLogoDark ? url('storage/' . $siteLogoDark) : ($siteLogoLight ? url('storage/' . $siteLogoLight) : url('storage/' . $siteLogoDefault)) }}" alt="{{ $siteName }}" class="h-10 mb-4">
                         @else
                             <h3 class="text-xl font-bold mb-4">{{ $siteName }}</h3>
                         @endif
@@ -921,7 +919,7 @@
                         <h4 class="font-semibold mb-4">Навигация</h4>
                         <ul class="space-y-2 text-gray-400">
                             <li><a href="#features" class="hover:text-white transition">Возможности</a></li>
-                            <li><a href="#how-it-works" class="hover:text-white transition">Как это работает</a></li>
+                            <li><a href="#how-it-works" class="hover:text-white transition">Синхронизация</a></li>
                             <li><a href="#for-trainers" class="hover:text-white transition">Для тренеров</a></li>
                             <li><a href="#for-athletes" class="hover:text-white transition">Для спортсменов</a></li>
                         </ul>
