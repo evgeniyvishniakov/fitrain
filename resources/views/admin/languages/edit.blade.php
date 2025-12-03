@@ -105,12 +105,22 @@
                     <label class="flex items-center">
                         <input type="checkbox" name="is_active" value="1" 
                                {{ old('is_active', $language->is_active) ? 'checked' : '' }}
-                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                               {{ $language->is_default ? 'disabled' : '' }}
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 {{ $language->is_default ? 'opacity-50 cursor-not-allowed' : '' }}">
                         <span class="ml-2 text-sm text-gray-700">
                             <i class="fas fa-check-circle mr-1"></i>Активный язык
                         </span>
                     </label>
-                    <p class="mt-1 text-xs text-gray-500">Неактивные языки не будут доступны пользователям</p>
+                    <p class="mt-1 text-xs text-gray-500">
+                        @if($language->is_default)
+                            Язык по умолчанию не может быть деактивирован
+                        @else
+                            Неактивные языки не будут доступны пользователям
+                        @endif
+                    </p>
+                    @if($language->is_default)
+                        <input type="hidden" name="is_active" value="1">
+                    @endif
                 </div>
 
                 <div>

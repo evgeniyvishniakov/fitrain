@@ -60,12 +60,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/', [LanguageController::class, 'index'])->name('index');
         Route::get('/create', [LanguageController::class, 'create'])->name('create');
         Route::post('/', [LanguageController::class, 'store'])->name('store');
-        Route::get('/{language}', [LanguageController::class, 'show'])->name('show');
+        Route::post('/{language}/set-default', [LanguageController::class, 'setDefault'])->name('set-default');
+        Route::post('/{language}/toggle-status', [LanguageController::class, 'toggleStatus'])->name('toggle-status');
         Route::get('/{language}/edit', [LanguageController::class, 'edit'])->name('edit');
         Route::put('/{language}', [LanguageController::class, 'update'])->name('update');
         Route::delete('/{language}', [LanguageController::class, 'destroy'])->name('destroy');
-        Route::post('/{language}/set-default', [LanguageController::class, 'setDefault'])->name('set-default');
-        Route::post('/{language}/toggle-status', [LanguageController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/{language}', [LanguageController::class, 'show'])->name('show');
     });
     
     // Управление валютами

@@ -91,7 +91,7 @@
                                             <i class="fas fa-star"></i>
                                         </button>
                                         
-                                        <button onclick="toggleStatus({{ $language->id }}, {{ $language->is_active ? 'false' : 'true' }})" 
+                                        <button onclick="toggleStatus({{ $language->id }}, '{{ route('admin.languages.toggle-status', $language) }}')" 
                                                 class="text-{{ $language->is_active ? 'yellow' : 'green' }}-600 hover:text-{{ $language->is_active ? 'yellow' : 'green' }}-900" 
                                                 title="{{ $language->is_active ? 'Деактивировать' : 'Активировать' }}">
                                             <i class="fas fa-{{ $language->is_active ? 'pause' : 'play' }}"></i>
@@ -200,28 +200,53 @@
         }
     }
 
-    function toggleStatus(languageId, newStatus) {
-        fetch(`/admin/languages/${languageId}/toggle-status`, {
+    function toggleStatus(languageId, url) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken) {
+            alert('CSRF токен не найден');
+            return;
+        }
+
+        fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                is_active: newStatus
-            })
+                'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(response => response.json())
+        .then(response => {
+            const contentType = response.headers.get('content-type');
+            if (!response.ok) {
+                // Если ответ не JSON, читаем как текст для отладки
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Ошибка сервера');
+                    });
+                } else {
+                    return response.text().then(text => {
+                        console.error('Non-JSON response:', text);
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+            }
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                throw new Error('Ожидался JSON ответ, но получен ' + contentType);
+            }
+        })
         .then(data => {
             if (data.success) {
                 location.reload();
             } else {
-                alert('Ошибка: ' + data.error);
+                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Произошла ошибка');
+            alert('Произошла ошибка: ' + error.message);
         });
     }
 

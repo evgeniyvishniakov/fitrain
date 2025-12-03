@@ -87,7 +87,20 @@ class LanguageController extends BaseController
             'sort_order' => 'integer|min:0'
         ]);
 
-        $language->update($request->all());
+        // Правильная обработка чекбоксов - если их нет в запросе, устанавливаем false
+        $updateData = $request->only(['code', 'name', 'native_name', 'flag', 'sort_order']);
+        $updateData['is_active'] = $request->has('is_active') && $request->boolean('is_active');
+        $updateData['is_default'] = $request->has('is_default') && $request->boolean('is_default');
+
+        // Нельзя деактивировать язык по умолчанию
+        if ($language->is_default && !$updateData['is_active']) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Нельзя деактивировать язык по умолчанию');
+        }
+
+        $language->update($updateData);
 
         // Если установлен как дефолтный, снимаем флаг с других
         if ($request->boolean('is_default')) {
@@ -146,21 +159,30 @@ class LanguageController extends BaseController
      */
     public function toggleStatus($id)
     {
-        $language = Language::findOrFail($id);
-        
-        // Нельзя деактивировать дефолтный язык
-        if ($language->is_default && $language->is_active) {
+        try {
+            $language = Language::findOrFail($id);
+            
+            // Нельзя деактивировать дефолтный язык
+            if ($language->is_default && $language->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Нельзя деактивировать язык по умолчанию'
+                ], 403);
+            }
+
+            $language->update(['is_active' => !$language->is_active]);
+            $language->refresh();
+
             return response()->json([
-                'error' => 'Нельзя деактивировать язык по умолчанию'
-            ], 403);
+                'success' => true,
+                'is_active' => $language->is_active,
+                'message' => $language->is_active ? 'Язык активирован' : 'Язык деактивирован'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Ошибка: ' . $e->getMessage()
+            ], 500);
         }
-
-        $language->update(['is_active' => !$language->is_active]);
-
-        return response()->json([
-            'success' => true,
-            'is_active' => $language->is_active,
-            'message' => $language->is_active ? 'Язык активирован' : 'Язык деактивирован'
-        ]);
     }
 }
