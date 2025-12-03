@@ -1342,6 +1342,7 @@ return [
     'features' => 'Возможности',
     'trial_period' => 'Пробный период',
     'support_project' => 'Поддержка проекта',
+    'your_donation_helps_project_grow' => 'Ваш донат помогает проекту расти',
     'cryptocurrency' => 'Криптовалюта',
     'payment_details' => 'Реквизиты для перевода',
     'card_number' => 'Номер карты',

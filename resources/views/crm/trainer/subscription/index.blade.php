@@ -332,7 +332,7 @@
     </div>
     @else
         <!-- Нет подписки -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center" style="display: none;">
             <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
             </svg>
@@ -343,7 +343,7 @@
 
     <!-- Секция доната -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-6">{{ __('common.support_project') }}</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">{{ __('common.your_donation_helps_project_grow') }}</h3>
         
         <!-- Переключатель способов оплаты -->
         <div class="flex gap-4 mb-6 border-b border-gray-200">

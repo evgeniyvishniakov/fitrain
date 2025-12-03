@@ -1371,6 +1371,7 @@ return [
     'trial_period' => 'Пробний період',
     'please_select_month_year' => 'Будь ласка, оберіть місяць та рік',
     'support_project' => 'Підтримка проекту',
+    'your_donation_helps_project_grow' => 'Ваш донат допомагає проекту рости',
     'cryptocurrency' => 'Криптовалюта',
     'payment_details' => 'Реквізити для переказу',
     'card_number' => 'Номер картки',
