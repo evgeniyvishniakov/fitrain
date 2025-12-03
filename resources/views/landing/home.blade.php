@@ -322,12 +322,12 @@
                     
                     <!-- Desktop Menu -->
                     <div class="hidden md:flex items-center space-x-4">
-                        <a href="#features" class="text-gray-700 hover:text-green-600 transition">Возможности</a>
-                        <a href="#how-it-works" class="text-gray-700 hover:text-green-600 transition">Синхронизация</a>
-                        <a href="#for-trainers" class="text-gray-700 hover:text-green-600 transition">Для тренеров</a>
-                        <a href="#for-athletes" class="text-gray-700 hover:text-green-600 transition">Для спортсменов</a>
-                        <a href="{{ route('crm.login') }}" class="text-gray-700 hover:text-green-600 transition">Войти</a>
-                        <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">Начать</a>
+                        <a href="#features" class="text-gray-700 hover:text-green-600 transition">{{ __('common.landing.menu.features') }}</a>
+                        <a href="#how-it-works" class="text-gray-700 hover:text-green-600 transition">{{ __('common.landing.menu.synchronization') }}</a>
+                        <a href="#for-trainers" class="text-gray-700 hover:text-green-600 transition">{{ __('common.landing.menu.for_trainers') }}</a>
+                        <a href="#for-athletes" class="text-gray-700 hover:text-green-600 transition">{{ __('common.landing.menu.for_athletes') }}</a>
+                        <a href="{{ route('crm.login') }}" class="text-gray-700 hover:text-green-600 transition">{{ __('common.landing.menu.login') }}</a>
+                        <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">{{ __('common.landing.menu.start') }}</a>
                         <!-- Переключатель языков -->
                         <select id="language_select" 
                                 onchange="window.location.href='?lang='+this.value"
@@ -353,12 +353,12 @@
             <!-- Mobile Menu -->
             <div x-show="mobileMenuOpen" x-transition class="md:hidden bg-white border-t">
                 <div class="px-4 py-4 space-y-4">
-                    <a href="#features" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Возможности</a>
-                    <a href="#how-it-works" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Синхронизация</a>
-                    <a href="#for-trainers" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для тренеров</a>
-                    <a href="#for-athletes" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">Для спортсменов</a>
-                    <a href="{{ route('crm.login') }}" class="block text-gray-700 hover:text-green-600">Войти</a>
-                    <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium inline-block text-center">Начать</a>
+                    <a href="#features" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">{{ __('common.landing.menu.features') }}</a>
+                    <a href="#how-it-works" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">{{ __('common.landing.menu.synchronization') }}</a>
+                    <a href="#for-trainers" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">{{ __('common.landing.menu.for_trainers') }}</a>
+                    <a href="#for-athletes" @click="mobileMenuOpen = false" class="block text-gray-700 hover:text-green-600">{{ __('common.landing.menu.for_athletes') }}</a>
+                    <a href="{{ route('crm.login') }}" class="block text-gray-700 hover:text-green-600">{{ __('common.landing.menu.login') }}</a>
+                    <a href="{{ route('crm.trainer.register') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium inline-block text-center">{{ __('common.landing.menu.start') }}</a>
                     <!-- Переключатель языков -->
                     <select id="language_select_mobile" 
                             onchange="window.location.href='?lang='+this.value"
@@ -913,31 +913,31 @@
                         @else
                             <h3 class="text-xl font-bold mb-4">{{ $siteName }}</h3>
                         @endif
-                        <p class="text-gray-400">Профессиональная CRM система для фитнес-тренеров и спортсменов</p>
+                        <p class="text-gray-400">{{ __('common.landing.footer.description') }}</p>
                     </div>
                     <div>
-                        <h4 class="font-semibold mb-4">Навигация</h4>
+                        <h4 class="font-semibold mb-4">{{ __('common.landing.footer.navigation') }}</h4>
                         <ul class="space-y-2 text-gray-400">
-                            <li><a href="#features" class="hover:text-white transition">Возможности</a></li>
-                            <li><a href="#how-it-works" class="hover:text-white transition">Синхронизация</a></li>
-                            <li><a href="#for-trainers" class="hover:text-white transition">Для тренеров</a></li>
-                            <li><a href="#for-athletes" class="hover:text-white transition">Для спортсменов</a></li>
+                            <li><a href="#features" class="hover:text-white transition">{{ __('common.landing.menu.features') }}</a></li>
+                            <li><a href="#how-it-works" class="hover:text-white transition">{{ __('common.landing.menu.synchronization') }}</a></li>
+                            <li><a href="#for-trainers" class="hover:text-white transition">{{ __('common.landing.menu.for_trainers') }}</a></li>
+                            <li><a href="#for-athletes" class="hover:text-white transition">{{ __('common.landing.menu.for_athletes') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-semibold mb-4">Ресурсы</h4>
+                        <h4 class="font-semibold mb-4">{{ __('common.landing.footer.resources') }}</h4>
                         <ul class="space-y-2 text-gray-400">
-                            <li><a href="{{ route('crm.login') }}" class="hover:text-white transition">Войти</a></li>
-                            <li><a href="{{ route('crm.trainer.register') }}" class="hover:text-white transition">Регистрация</a></li>
+                            <li><a href="{{ route('crm.login') }}" class="hover:text-white transition">{{ __('common.landing.menu.login') }}</a></li>
+                            <li><a href="{{ route('crm.trainer.register') }}" class="hover:text-white transition">{{ __('common.landing.footer.register') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-semibold mb-4">Контакты</h4>
-                        <p class="text-gray-400">По вопросам обращайтесь через систему</p>
+                        <h4 class="font-semibold mb-4">{{ __('common.landing.footer.contacts') }}</h4>
+                        <p class="text-gray-400">{{ __('common.landing.footer.contact_text') }}</p>
                     </div>
                 </div>
                 <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                    <p>&copy; {{ date('Y') }} {{ $siteName }}. Все права защищены.</p>
+                    <p>&copy; {{ date('Y') }} {{ $siteName }}. {{ __('common.landing.footer.all_rights') }}</p>
                 </div>
             </div>
         </footer>

@@ -1333,4 +1333,21 @@ return [
     'qr_code_not_loaded' => 'QR Code not loaded',
     'wallet_address' => 'Wallet Address',
     'network' => 'Network',
+    
+    // Landing - Header
+    'landing.menu.features' => 'Features',
+    'landing.menu.synchronization' => 'Synchronization',
+    'landing.menu.for_trainers' => 'For Trainers',
+    'landing.menu.for_athletes' => 'For Athletes',
+    'landing.menu.login' => 'Login',
+    'landing.menu.start' => 'Get Started',
+    
+    // Landing - Footer
+    'landing.footer.description' => 'Professional CRM system for fitness trainers and athletes',
+    'landing.footer.navigation' => 'Navigation',
+    'landing.footer.resources' => 'Resources',
+    'landing.footer.contacts' => 'Contacts',
+    'landing.footer.contact_text' => 'For inquiries, please contact through the system',
+    'landing.footer.register' => 'Registration',
+    'landing.footer.all_rights' => 'All rights reserved',
 ];

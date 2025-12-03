@@ -1351,4 +1351,21 @@ return [
     'qr_code_not_loaded' => 'QR-код не загружен',
     'wallet_address' => 'Адрес кошелька',
     'network' => 'Сеть',
+    
+    // Landing - Header
+    'landing.menu.features' => 'Возможности',
+    'landing.menu.synchronization' => 'Синхронизация',
+    'landing.menu.for_trainers' => 'Для тренеров',
+    'landing.menu.for_athletes' => 'Для спортсменов',
+    'landing.menu.login' => 'Войти',
+    'landing.menu.start' => 'Начать',
+    
+    // Landing - Footer
+    'landing.footer.description' => 'Профессиональная CRM система для фитнес-тренеров и спортсменов',
+    'landing.footer.navigation' => 'Навигация',
+    'landing.footer.resources' => 'Ресурсы',
+    'landing.footer.contacts' => 'Контакты',
+    'landing.footer.contact_text' => 'По вопросам обращайтесь через систему',
+    'landing.footer.register' => 'Регистрация',
+    'landing.footer.all_rights' => 'Все права защищены',
 ];

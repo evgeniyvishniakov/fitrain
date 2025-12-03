@@ -1380,4 +1380,21 @@ return [
     'qr_code_not_loaded' => 'QR-код не завантажено',
     'wallet_address' => 'Адреса гаманця',
     'network' => 'Мережа',
+    
+    // Landing - Header
+    'landing.menu.features' => 'Можливості',
+    'landing.menu.synchronization' => 'Синхронізація',
+    'landing.menu.for_trainers' => 'Для тренерів',
+    'landing.menu.for_athletes' => 'Для спортсменів',
+    'landing.menu.login' => 'Увійти',
+    'landing.menu.start' => 'Почати',
+    
+    // Landing - Footer
+    'landing.footer.description' => 'Професійна CRM система для фітнес-тренерів та спортсменів',
+    'landing.footer.navigation' => 'Навігація',
+    'landing.footer.resources' => 'Ресурси',
+    'landing.footer.contacts' => 'Контакти',
+    'landing.footer.contact_text' => 'З питань звертайтесь через систему',
+    'landing.footer.register' => 'Реєстрація',
+    'landing.footer.all_rights' => 'Всі права захищені',
 ];
