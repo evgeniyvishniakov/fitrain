@@ -89,18 +89,26 @@
                 <div class="flex items-center justify-between border-b border-gray-100 pb-4">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900">SEO-настройки</h3>
-                        <p class="text-sm text-gray-500 mt-1">Заполняются для мета-тегов и улучшения поисковой выдачи.</p>
+                        <p class="text-sm text-gray-500 mt-1">Заполняются для мета-тегов и улучшения поисковой выдачи. Настройки для каждого языка отдельно.</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Мультиязычные SEO поля -->
+                @foreach(['ru' => 'Русский', 'ua' => 'Українська', 'en' => 'English'] as $lang => $langName)
+                <div class="border border-gray-200 rounded-lg p-4 space-y-4 mb-6">
+                    <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
+                        <span class="text-sm font-semibold text-gray-900">{{ $langName }}</span>
+                    </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
                         <input type="text"
-                               name="meta_title"
-                               value="{{ old('meta_title', $settings['meta_title'] ?? '') }}"
+                               name="meta_title_{{ $lang }}"
+                               value="{{ old("meta_title_{$lang}", $settings["meta_title_{$lang}"] ?? '') }}"
+                               placeholder="Fitrain - CRM система для фитнес-тренеров и спортсменов"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @error('meta_title')
+                        <p class="text-xs text-gray-500 mt-1">Рекомендуемая длина: 50-60 символов</p>
+                        @error("meta_title_{$lang}")
                             <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                         @enderror
                     </div>
@@ -108,24 +116,29 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Meta Keywords</label>
                         <input type="text"
-                               name="meta_keywords"
-                               value="{{ old('meta_keywords', $settings['meta_keywords'] ?? '') }}"
+                               name="meta_keywords_{{ $lang }}"
+                               value="{{ old("meta_keywords_{$lang}", $settings["meta_keywords_{$lang}"] ?? '') }}"
+                               placeholder="фитнес CRM, управление тренировками, фитнес тренер"
                                class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        @error('meta_keywords')
+                        <p class="text-xs text-gray-500 mt-1">Ключевые слова через запятую</p>
+                        @error("meta_keywords_{$lang}")
+                            <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                        <textarea name="meta_description_{{ $lang }}"
+                                  rows="3"
+                                  placeholder="Профессиональная CRM система Fitrain для фитнес-тренеров и спортсменов..."
+                                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old("meta_description_{$lang}", $settings["meta_description_{$lang}"] ?? '') }}</textarea>
+                        <p class="text-xs text-gray-500 mt-1">Рекомендуемая длина: 150-160 символов</p>
+                        @error("meta_description_{$lang}")
                             <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
-                    <textarea name="meta_description"
-                              rows="3"
-                              class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none">{{ old('meta_description', $settings['meta_description'] ?? '') }}</textarea>
-                    @error('meta_description')
-                        <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
-                    @enderror
-                </div>
+                @endforeach
             </div>
 
             <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
@@ -266,7 +279,7 @@
                 </div>
 
                 <!-- Мультиязычные поля -->
-                @foreach(['ru' => 'Русский', 'ua' => 'Українська'] as $lang => $langName)
+                @foreach(['ru' => 'Русский', 'ua' => 'Українська', 'en' => 'English'] as $lang => $langName)
                 <div class="border border-gray-200 rounded-lg p-4 space-y-4">
                     <div class="flex items-center gap-2 pb-3 border-b border-gray-200">
                         <span class="text-sm font-semibold text-gray-900">{{ $langName }}</span>

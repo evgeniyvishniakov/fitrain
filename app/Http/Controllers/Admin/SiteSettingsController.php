@@ -14,20 +14,24 @@ class SiteSettingsController extends BaseController
      */
     public function index()
     {
-        $languages = ['ru', 'ua'];
+        $languages = ['ru', 'ua', 'en'];
         
         $settings = [
             // Основные настройки
             'site_name'        => SystemSetting::get('site.name', ''),
             'site_description' => SystemSetting::get('site.description', ''),
-            'meta_title'       => SystemSetting::get('site.meta_title', ''),
-            'meta_description' => SystemSetting::get('site.meta_description', ''),
-            'meta_keywords'    => SystemSetting::get('site.meta_keywords', ''),
             'logo'             => SystemSetting::get('site.logo', ''),
             'logo_light'       => SystemSetting::get('site.logo_light', ''),
             'logo_dark'        => SystemSetting::get('site.logo_dark', ''),
             'favicon'          => SystemSetting::get('site.favicon', ''),
         ];
+        
+        // Загружаем SEO настройки для каждого языка
+        foreach ($languages as $lang) {
+            $settings["meta_title_{$lang}"] = SystemSetting::get("site.meta_title.{$lang}", '');
+            $settings["meta_description_{$lang}"] = SystemSetting::get("site.meta_description.{$lang}", '');
+            $settings["meta_keywords_{$lang}"] = SystemSetting::get("site.meta_keywords.{$lang}", '');
+        }
         
         // Дефолтные значения для русского языка
         $defaultsRu = [
@@ -193,14 +197,11 @@ class SiteSettingsController extends BaseController
      */
     public function update(Request $request)
     {
-        $languages = ['ru', 'ua'];
+        $languages = ['ru', 'ua', 'en'];
         
         $rules = [
             'site_name'        => ['required', 'string', 'max:255'],
             'site_description' => ['nullable', 'string', 'max:1000'],
-            'meta_title'       => ['nullable', 'string', 'max:255'],
-            'meta_description' => ['nullable', 'string', 'max:500'],
-            'meta_keywords'    => ['nullable', 'string', 'max:255'],
             'logo'             => ['nullable', 'image', 'max:2048'],
             'logo_light'       => ['nullable', 'image', 'max:2048'],
             'logo_dark'        => ['nullable', 'image', 'max:2048'],
@@ -213,6 +214,13 @@ class SiteSettingsController extends BaseController
             'landing_slider_2_image' => ['nullable', 'image', 'max:2048'],
             'landing_slider_3_image' => ['nullable', 'image', 'max:2048'],
         ];
+        
+        // Добавляем правила валидации для SEO полей каждого языка
+        foreach ($languages as $lang) {
+            $rules["meta_title_{$lang}"] = ['nullable', 'string', 'max:255'];
+            $rules["meta_description_{$lang}"] = ['nullable', 'string', 'max:500'];
+            $rules["meta_keywords_{$lang}"] = ['nullable', 'string', 'max:500'];
+        }
         
         // Добавляем правила валидации для изображений тренера и спортсмена
         for ($i = 1; $i <= 5; $i++) {
@@ -268,12 +276,16 @@ class SiteSettingsController extends BaseController
         // Основные настройки
         SystemSetting::set('site.name', $data['site_name'], 'string', 'Название сайта', true);
         SystemSetting::set('site.description', $data['site_description'] ?? '', 'string', 'Описание сайта', true);
-        SystemSetting::set('site.meta_title', $data['meta_title'] ?? '', 'string', 'SEO meta title', true);
-        SystemSetting::set('site.meta_description', $data['meta_description'] ?? '', 'string', 'SEO meta description', true);
-        SystemSetting::set('site.meta_keywords', $data['meta_keywords'] ?? '', 'string', 'SEO meta keywords', true);
-
-        // Сохраняем мультиязычные настройки лендинга
+        
+        // Сохраняем SEO настройки для каждого языка
         foreach ($languages as $lang) {
+            SystemSetting::set("site.meta_title.{$lang}", $data["meta_title_{$lang}"] ?? '', 'string', "SEO meta title ({$lang})", true);
+            SystemSetting::set("site.meta_description.{$lang}", $data["meta_description_{$lang}"] ?? '', 'string', "SEO meta description ({$lang})", true);
+            SystemSetting::set("site.meta_keywords.{$lang}", $data["meta_keywords_{$lang}"] ?? '', 'string', "SEO meta keywords ({$lang})", true);
+        }
+
+        // Сохраняем мультиязычные настройки лендинга (только ru и ua для лендинга)
+        foreach (['ru', 'ua'] as $lang) {
             // Слайдер - 3 слайда
             for ($slide = 1; $slide <= 3; $slide++) {
                 SystemSetting::set("landing.slider.{$slide}.title.{$lang}", $data["landing_slider_{$slide}_title_{$lang}"] ?? '', 'string', "Заголовок слайда {$slide} ({$lang})", true);

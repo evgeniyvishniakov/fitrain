@@ -28,8 +28,37 @@
         }
     @endphp
     
-    <title>{{ $siteName }} - CRM система для фитнес-тренеров и спортсменов</title>
-    <meta name="description" content="Профессиональная CRM система для управления тренировками, спортсменами и прогрессом. Удобный календарь, отслеживание прогресса, планы питания и многое другое.">
+    @php
+        $currentLang = app()->getLocale();
+        // Если язык не поддерживается, используем русский
+        if (!in_array($currentLang, ['ru', 'ua', 'en'])) {
+            $currentLang = 'ru';
+        }
+        
+        // Получаем SEO настройки для текущего языка
+        $metaTitle = \App\Models\SystemSetting::get("site.meta_title.{$currentLang}", '');
+        $metaDescription = \App\Models\SystemSetting::get("site.meta_description.{$currentLang}", '');
+        $metaKeywords = \App\Models\SystemSetting::get("site.meta_keywords.{$currentLang}", '');
+        
+        // Если нет настроек для текущего языка, используем русский как fallback
+        if (empty($metaTitle)) {
+            $metaTitle = \App\Models\SystemSetting::get("site.meta_title.ru", $siteName . ' - CRM система для фитнес-тренеров и спортсменов');
+        }
+        if (empty($metaDescription)) {
+            $metaDescription = \App\Models\SystemSetting::get("site.meta_description.ru", 'Профессиональная CRM система для управления тренировками, спортсменами и прогрессом. Удобный календарь, отслеживание прогресса, планы питания и многое другое.');
+        }
+        if (empty($metaKeywords)) {
+            $metaKeywords = \App\Models\SystemSetting::get("site.meta_keywords.ru", '');
+        }
+    @endphp
+    
+    <title>{{ $metaTitle }}</title>
+    @if(!empty($metaDescription))
+    <meta name="description" content="{{ $metaDescription }}">
+    @endif
+    @if(!empty($metaKeywords))
+    <meta name="keywords" content="{{ $metaKeywords }}">
+    @endif
     
     <link rel="icon" type="image/x-icon" href="{{ $faviconUrl }}">
     <link rel="shortcut icon" href="{{ $faviconUrl }}">
